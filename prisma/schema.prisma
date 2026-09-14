@@ -1,0 +1,419 @@
+// Schéma CanCham Connect — traduit depuis lib/types.ts.
+//
+// Deux principes structurants hérités de la conception :
+//   1. `Member` (l'entreprise adhérente, porteuse de la cotisation) et `User`
+//      (la personne qui se connecte) sont deux entités distinctes. Une
+//      entreprise peut avoir plusieurs utilisateurs.
+//   2. Le retard de cotisation n'est PAS stocké : seule la date de bascule
+//      (`retardDepuis`) l'est, et le nombre de jours se recalcule à la volée.
+//      Aucun job nocturne, aucune désynchronisation possible.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================ Énumérations ============================
+
+/// Statut d'adhésion. Pilote l'accès à toute l'application.
+enum MemberStatus {
+  candidature // demande déposée, pas encore examinée
+  en_attente // approuvée, en attente du paiement
+  a_jour // cotisation réglée
+  en_retard // cotisation non renouvelée
+}
+
+enum MemberType {
+  morale // entreprise
+  physique // indépendant
+}
+
+enum UserRole {
+  visiteur
+  membre
+  admin
+}
+
+enum EventFormat {
+  presentiel @map("Présentiel")
+  webinaire  @map("Webinaire")
+  hybride    @map("Hybride")
+}
+
+enum AttendeeStatus {
+  confirme @map("confirmé")
+  present  @map("présent")
+  absent
+}
+
+enum NewsCategory {
+  programmation      @map("Programmation")
+  evenement_passe    @map("Événement passé")
+  vie_de_la_chambre  @map("Vie de la chambre")
+  formation          @map("Formation")
+}
+
+enum MediaType {
+  image
+  video
+}
+
+enum MediaTheme {
+  navy
+  green
+}
+
+enum ResourceCategory {
+  guide     @map("Guide")
+  modele    @map("Modèle")
+  formation @map("Formation")
+  rapport   @map("Rapport")
+}
+
+enum ResourceFormat {
+  pdf   @map("PDF")
+  docx  @map("DOCX")
+  video @map("Vidéo")
+}
+
+/// Gratuit ou facturé. Partagé par les services de la chambre et les ressources.
+enum PricingType {
+  gratuit
+  payant
+}
+
+enum InvoiceStatus {
+  payee
+  envoyee
+}
+
+enum ThreadType {
+  individuel
+  groupe
+}
+
+// ============================ Membres & utilisateurs ============================
+
+model Member {
+  id           String       @id @default(cuid())
+  type         MemberType   @default(morale)
+  nom          String
+  secteur      String
+  ville        String
+  statut       MemberStatus @default(candidature)
+  /// Date d'adhésion.
+  adhesion     DateTime     @db.Date
+  /// Date de bascule en retard. Le nombre de jours s'en déduit.
+  retardDepuis DateTime?    @db.Date
+
+  /// Description courte, en tête de fiche.
+  activite String
+  /// Description détaillée.
+  desc     String
+  /// Ce que le membre recherche — moteur de la mise en relation.
+  besoins  String?
+  /// Secteurs et collaborations qui l'intéressent.
+  interets String?
+
+  // Renseignés à la candidature, consultés par l'équipe CanCham.
+  statutJuridique String?
+  pays            String?
+  siteweb         String?
+  motivation      String?
+
+  /// Trace du dernier règlement enregistré.
+  paiementNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  produits      Produit[]
+  offres        Offer[]
+  factures      Invoice[]
+  inscriptions  Registration[]
+
+  @@index([statut])
+  @@map("members")
+}
+
+model User {
+  id       String   @id @default(cuid())
+  role     UserRole @default(membre)
+  nom      String
+  fonction String
+  email    String   @unique
+  tel      String?
+
+  /// `null` pour l'équipe CanCham et les visiteurs.
+  memberId String?
+  member   Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  /// Contact principal de l'entreprise — un seul par membre.
+  contactPrincipal Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@map("users")
+}
+
+model Produit {
+  id    String  @id @default(cuid())
+  label String
+  /// Chemin de l'image. `null` = dégradé décoratif généré.
+  photo String?
+  /// Ordre d'affichage sur la fiche membre.
+  ordre Int     @default(0)
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@map("produits")
+}
+
+// ============================ Événements ============================
+
+model Event {
+  id      String      @id @default(cuid())
+  titre   String
+  date    DateTime    @db.Date
+  lieu    String
+  format  EventFormat
+  /// Capacité d'accueil.
+  cap     Int
+  payant  Boolean     @default(false)
+  /// En Ariary. 0 si gratuit.
+  prix    Int         @default(0)
+  desc    String
+  photo   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inscriptions Registration[]
+  participants Attendee[]
+
+  @@index([date])
+  @@map("events")
+}
+
+/// Inscription d'un membre à un événement.
+model Registration {
+  id String @id @default(cuid())
+  /// Code présenté à l'accueil.
+  code String @unique
+
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  /// Un membre ne s'inscrit qu'une fois par événement.
+  @@unique([eventId, memberId])
+  @@map("registrations")
+}
+
+/// Personne présente à un événement, membre ou non.
+model Attendee {
+  id         String         @id @default(cuid())
+  nom        String
+  entreprise String
+  email      String
+  statut     AttendeeStatus @default(confirme)
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@map("attendees")
+}
+
+// ============================ Contenus ============================
+
+model News {
+  id      String       @id @default(cuid())
+  titre   String
+  date    DateTime     @db.Date
+  cat     NewsCategory
+  extrait String
+  corps   String
+
+  mediaType     MediaType
+  mediaTheme    MediaTheme
+  /// Durée de la vidéo, au format mm:ss. `null` pour une photo.
+  mediaDuration String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  commentaires Comment[]
+
+  @@index([date])
+  @@map("news")
+}
+
+model Resource {
+  id     String           @id @default(cuid())
+  titre  String
+  cat    ResourceCategory
+  fmt    ResourceFormat
+  /// Poids du fichier ou durée de la vidéo — c'est une étiquette, pas une mesure.
+  taille String
+  date   DateTime         @db.Date
+
+  /// Inclus dans l'adhésion, ou facturé en supplément.
+  type PricingType @default(gratuit)
+  /// En Ariary. 0 si gratuit.
+  prix Int         @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  commentaires Comment[]
+
+  @@index([type])
+  @@map("resources")
+}
+
+/// Commentaire sur une actualité ou sur une ressource.
+model Comment {
+  id         String   @id @default(cuid())
+  auteur     String
+  entreprise String
+  texte      String
+  date       DateTime @db.Date
+
+  newsId     String?
+  news       News?     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  resourceId String?
+  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([newsId])
+  @@index([resourceId])
+  @@map("comments")
+}
+
+/// Promotion publiée PAR un membre, à destination des autres membres.
+model Offer {
+  id    String @id @default(cuid())
+  titre String
+  desc  String
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@map("offers")
+}
+
+/// Service proposé PAR la chambre à ses membres. À ne pas confondre avec Offer.
+model CanchamService {
+  id    String      @id @default(cuid())
+  titre String
+  desc  String
+  type  PricingType @default(gratuit)
+  /// En Ariary. 0 si gratuit.
+  prix  Int         @default(0)
+  icon  String      @default("award")
+  ordre Int         @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cancham_services")
+}
+
+// ============================ Facturation ============================
+
+model Invoice {
+  id      String        @id @default(cuid())
+  numero  String        @unique
+  date    DateTime      @db.Date
+  objet   String
+  /// En Ariary.
+  montant Int
+  statut  InvoiceStatus @default(envoyee)
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId])
+  @@map("invoices")
+}
+
+// ============================ Messagerie ============================
+
+model MessageThread {
+  id        String     @id @default(cuid())
+  type      ThreadType
+  nom       String
+  sousTitre String
+  /// Initiales affichées sur l'avatar du fil.
+  init      String
+  /// Messages non lus. Provisoire : un vrai accusé de lecture par utilisateur
+  /// remplacera ce compteur global quand l'authentification sera en place.
+  unread    Int        @default(0)
+
+  createdAt DateTime @default(now())
+
+  messages Message[]
+
+  @@map("message_threads")
+}
+
+model Message {
+  id     String   @id @default(cuid())
+  auteur String
+  texte  String
+  sentAt DateTime
+
+  threadId String
+  thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  /// Auteur du message, quand il s'agit d'un utilisateur connu.
+  userId String?
+
+  @@index([threadId])
+  @@map("messages")
+}
+
+// ============================ Journal ============================
+
+/// Journal des opérations sensibles.
+///
+/// Une opération financière ne doit jamais disparaître silencieusement : une
+/// suppression de membre ou une validation de paiement laisse une trace ici.
+model AuditLog {
+  id       String   @id @default(cuid())
+  action   String
+  /// Modèle concerné, ex. « Member » ou « Invoice ».
+  entite   String
+  entiteId String
+  /// Qui a agi.
+  acteur   String
+  /// Détail libre de l'opération.
+  detail   String?
+  createdAt DateTime @default(now())
+
+  @@index([entite, entiteId])
+  @@map("audit_logs")
+}
