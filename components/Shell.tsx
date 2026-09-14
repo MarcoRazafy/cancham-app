@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useState, type ReactNode } from "react";
 import { Bell, Menu, Search, SquareArrowOutUpRight } from "lucide-react";
+import type { Notification } from "@/lib/notifications";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { Avatar } from "@/components/ui";
 import { TITLES, type NavGroup } from "@/lib/nav";
@@ -20,6 +21,8 @@ interface ShellProps {
    * visibles mais inertes — le membre doit voir ce qu'il débloquera.
    */
   lockedHrefs?: string[];
+  /** Calculées côté serveur à partir de l'état réel de la base. */
+  notifications?: Notification[];
   children: ReactNode;
 }
 
@@ -29,6 +32,7 @@ export function Shell({
   nav,
   badges = {},
   lockedHrefs = [],
+  notifications = [],
   children,
 }: ShellProps) {
   const pathname = usePathname();
@@ -156,12 +160,12 @@ export function Shell({
             </div>
           </div>
           <div className="flex-1" />
-          <IconButton label="Recherche">
-            <Search size={16} />
-          </IconButton>
-          <IconButton label="Notifications" dot>
-            <Bell size={16} />
-          </IconButton>
+          {/* useSearchParams exige une frontière Suspense, sans quoi toutes
+              les pages du Shell basculent hors du rendu statique. */}
+          <Suspense fallback={<div className="w-[150px] h-[33px]" />}>
+            <SearchBox space={space} />
+          </Suspense>
+          <NotificationsMenu space={space} notifications={notifications} />
         </header>
 
         <main className="px-4 md:px-7 pt-6 pb-16 max-w-[1180px] w-full mx-auto">
@@ -172,26 +176,116 @@ export function Shell({
   );
 }
 
-function IconButton({
-  label,
-  dot = false,
-  children,
-}: {
-  label: string;
-  dot?: boolean;
-  children: ReactNode;
-}) {
+/**
+ * Recherche transversale.
+ *
+ * Un simple formulaire GET : la requête part dans l'URL, la page de résultats
+ * la lit côté serveur. Fonctionne sans JavaScript, et le résultat est
+ * partageable par lien.
+ */
+function SearchBox({ space }: { space: Space }) {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const surPageRecherche = pathname === `/${space}/recherche`;
+
   return (
-    <button
-      title={label}
-      aria-label={label}
-      className="relative border border-line bg-surface w-9 h-9 rounded-[var(--radius-s)] flex items-center justify-center cursor-pointer text-muted hover:text-ink hover:border-faint"
-    >
-      {children}
-      {dot ? (
-        <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full bg-bad border-[1.5px] border-surface" />
-      ) : null}
-    </button>
+    <form action={`/${space}/recherche`} className="flex items-center">
+      <div className="relative">
+        <Search
+          size={15}
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
+        />
+        <input
+          type="search"
+          name="q"
+          defaultValue={surPageRecherche ? (params.get("q") ?? "") : ""}
+          placeholder="Rechercher…"
+          aria-label="Rechercher"
+          className="w-[150px] focus:w-[230px] transition-[width] border border-line bg-surface text-ink rounded-[var(--radius-s)] pl-8 pr-2.5 py-[7px] text-[13px]"
+        />
+      </div>
+    </form>
+  );
+}
+
+const TONS: Record<Notification["ton"], string> = {
+  info: "bg-navy",
+  warn: "bg-warn",
+  bad: "bg-bad",
+};
+
+/**
+ * Menu des notifications.
+ *
+ * Construit sur `<details>` : l'ouverture, la fermeture et le clavier sont
+ * gérés par le navigateur, sans état React ni gestionnaire de clic extérieur.
+ */
+function NotificationsMenu({
+  space,
+  notifications,
+}: {
+  space: Space;
+  notifications: Notification[];
+}) {
+  const urgentes = notifications.filter((n) => n.ton !== "info").length;
+
+  return (
+    <details className="relative group">
+      <summary
+        aria-label={`Notifications (${notifications.length})`}
+        className="list-none border border-line bg-surface w-9 h-9 rounded-[var(--radius-s)] flex items-center justify-center cursor-pointer text-muted hover:text-ink hover:border-faint [&::-webkit-details-marker]:hidden"
+      >
+        <Bell size={16} />
+        {notifications.length ? (
+          <span
+            className={`absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-[1.5px] border-surface ${
+              urgentes ? "bg-bad" : "bg-navy"
+            }`}
+          />
+        ) : null}
+      </summary>
+
+      <div className="absolute right-0 top-11 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-surface border border-line rounded-[var(--radius-m)] shadow-[var(--shadow)] overflow-hidden">
+        <div className="px-3.5 py-2.5 border-b border-line text-[11px] uppercase tracking-[0.08em] text-faint font-semibold">
+          Notifications
+        </div>
+
+        {notifications.length ? (
+          <div className="max-h-[60vh] overflow-y-auto">
+            {notifications.map((n, i) => (
+              <Link
+                key={n.id}
+                href={n.href}
+                className={`flex gap-2.5 px-3.5 py-3 no-underline hover:bg-surface-2 ${
+                  i < notifications.length - 1 ? "border-b border-line" : ""
+                }`}
+              >
+                <span
+                  className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${TONS[n.ton]}`}
+                />
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-medium text-ink">
+                    {n.titre}
+                  </span>
+                  <span className="block text-[11.5px] text-faint">{n.temps}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="px-3.5 py-6 text-center text-[13px] text-muted">
+            Rien de nouveau.
+          </div>
+        )}
+
+        <Link
+          href={space === "admin" ? "/admin" : "/membre"}
+          className="block px-3.5 py-2.5 border-t border-line text-[12.4px] font-semibold text-accent no-underline hover:bg-surface-2"
+        >
+          Voir le tableau de bord
+        </Link>
+      </div>
+    </details>
   );
 }
 
