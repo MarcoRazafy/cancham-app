@@ -162,6 +162,78 @@ h3 {
   }
 }
 
+
+/* ============================================================
+   Charte CanCham — appliquée à l'espace public uniquement.
+
+   Les espaces membre et back-office gardent la palette applicative
+   définie plus haut : ce sont des outils de travail, pas des supports
+   de communication. Ici on suit la charte de la chambre à la lettre.
+   ============================================================ */
+
+@theme inline {
+  --color-marque-nuit: var(--marque-nuit);
+  --color-marque-nuit-2: var(--marque-nuit-2);
+  --color-marque-rouge: var(--marque-rouge);
+  --color-marque-vert: var(--marque-vert);
+  --color-marque-texte: var(--marque-texte);
+
+  --font-titre: var(--font-montserrat), "Segoe UI", sans-serif;
+  --font-texte: var(--font-open-sans), -apple-system, sans-serif;
+}
+
+:root {
+  /* Valeurs exactes de la charte, page « Couleurs ». */
+  --marque-nuit: #0f1d2c;
+  --marque-rouge: #ad0707;
+  --marque-vert: #007140;
+  --marque-texte: #163254;
+
+  /* Déclinaisons nécessaires à l'écran, dérivées des trois couleurs ci-dessus. */
+  --marque-nuit-2: #16283c;
+  --marque-nuit-3: #1d3450;
+  --marque-rouge-clair: #d32020;
+  --marque-vert-clair: #14a05f;
+  --marque-degrade: linear-gradient(90deg, #ad0707, #007140);
+}
+
+/* Le public suit la charte quel que soit le thème du visiteur : c'est une
+   vitrine, son apparence ne doit pas dépendre des réglages du navigateur. */
+.marque {
+  background: var(--marque-nuit);
+  color: #ffffff;
+  font-family: var(--font-texte);
+  color-scheme: dark;
+}
+
+.marque h1,
+.marque h2,
+.marque h3,
+.marque .titre {
+  font-family: var(--font-titre);
+  text-wrap: balance;
+  letter-spacing: -0.015em;
+}
+
+/* Surtitre en capitales espacées, motif récurrent de la charte. */
+.marque .surtitre {
+  font-family: var(--font-titre);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.marque ::selection {
+  background: var(--marque-rouge);
+  color: #ffffff;
+}
+
+.marque :focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
 /* Le certificat et les factures s'impriment seuls, comme dans le prototype. */
 @media print {
   .no-print {
