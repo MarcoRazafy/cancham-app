@@ -61,34 +61,22 @@ export function Coquille({
         } lg:translate-x-0`}
         style={{ background: "var(--laterale)" }}
       >
-        <div className="px-5 pt-6 pb-6">
-          <Link href="/membre" className="no-underline flex items-center gap-3.5">
-            {/*
-              Le sigle officiel, que la charte autorise en élément de mise en
-              page. Il repose sur une pastille claire : son rouge et son vert
-              ne passeraient pas sur le crimson de la barre.
-            */}
-            <span className="shrink-0 w-[52px] h-[52px] rounded-xl bg-white flex items-center justify-center p-1.5">
-              <Image
-                src="/marque/sigle.png"
-                alt="CanCham"
-                width={1888}
-                height={1159}
-                priority
-                sizes="52px"
-                className="w-full h-auto"
-              />
-            </span>
-            <span className="min-w-0">
-              <span className="titre block text-[21px] leading-[1.08] text-white">
-                CanCham
-                <br />
-                Connect
-              </span>
-              <span className="block text-[9px] tracking-[0.16em] uppercase text-white/55 mt-1.5">
-                Canada · Madagascar
-              </span>
-            </span>
+        <div className="px-5 pt-7 pb-6">
+          {/*
+            Logo officiel en version renversée, comme la charte le prescrit sur
+            fond foncé. Il porte déjà le nom complet de la chambre : aucun texte
+            ne l'accompagne.
+          */}
+          <Link href="/membre" className="no-underline block" aria-label="CanCham Connect">
+            <Image
+              src="/marque/logo-blanc.png"
+              alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar"
+              width={2383}
+              height={711}
+              priority
+              sizes="230px"
+              className="w-full h-auto"
+            />
           </Link>
         </div>
 
