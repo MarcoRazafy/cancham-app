@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
@@ -60,16 +61,34 @@ export function Coquille({
         } lg:translate-x-0`}
         style={{ background: "var(--laterale)" }}
       >
-        <div className="px-6 pt-7 pb-6">
-          <Link href="/membre" className="no-underline block">
-            <div className="titre text-[26px] leading-[1.06] text-white">
-              CanCham
-              <br />
-              Connect
-            </div>
-            <div className="text-[10px] tracking-[0.18em] uppercase text-white/55 mt-2">
-              Canada · Madagascar
-            </div>
+        <div className="px-5 pt-6 pb-6">
+          <Link href="/membre" className="no-underline flex items-center gap-3.5">
+            {/*
+              Le sigle officiel, que la charte autorise en élément de mise en
+              page. Il repose sur une pastille claire : son rouge et son vert
+              ne passeraient pas sur le crimson de la barre.
+            */}
+            <span className="shrink-0 w-[52px] h-[52px] rounded-xl bg-white flex items-center justify-center p-1.5">
+              <Image
+                src="/marque/sigle.png"
+                alt="CanCham"
+                width={1888}
+                height={1159}
+                priority
+                sizes="52px"
+                className="w-full h-auto"
+              />
+            </span>
+            <span className="min-w-0">
+              <span className="titre block text-[21px] leading-[1.08] text-white">
+                CanCham
+                <br />
+                Connect
+              </span>
+              <span className="block text-[9px] tracking-[0.16em] uppercase text-white/55 mt-1.5">
+                Canada · Madagascar
+              </span>
+            </span>
           </Link>
         </div>
 
