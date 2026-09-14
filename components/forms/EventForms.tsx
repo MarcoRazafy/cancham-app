@@ -33,18 +33,21 @@ export function RegisterButton({
   nom,
   email,
   tel,
+  libelle = "S’inscrire",
 }: {
   event: CanchamEvent;
   nom: string;
   email: string;
   tel?: string;
+  /** Intitulé du bouton déclencheur — « M’inscrire » sur la vue d'ensemble. */
+  libelle?: string;
 }) {
   return (
     <Modal
       title="Inscription à l’événement"
       trigger={(ouvrir) => (
-        <button onClick={ouvrir} className={`${BTN_PRIMARY} w-full justify-center text-[13.4px] px-[15px] py-[9px]`}>
-          S’inscrire
+        <button onClick={ouvrir} className={`${BTN_PRIMARY} justify-center text-[13.4px] px-[18px] py-[10px]`}>
+          {libelle}
         </button>
       )}
     >

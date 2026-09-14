@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import { MediaBanner } from "@/components/domain";
 import { BtnLink, Card, Kicker } from "@/components/ui";
 import { CommentForm } from "@/components/forms/ContentForms";
@@ -24,7 +25,20 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
         <h1 className="mt-2 mb-1.5 text-[24px]">{n.titre}</h1>
         <div className="text-[12.5px] text-faint mb-4">{fmtDate(n.date)}</div>
 
-        <MediaBanner media={n.media} lg />
+        {n.image ? (
+          <div className="relative w-full aspect-[16/7] rounded-[var(--radius-m)] overflow-hidden">
+            <Image
+              src={n.image}
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 760px"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <MediaBanner media={n.media} lg />
+        )}
 
         <p className="text-[14.6px] leading-[1.75] mt-[18px]">{n.corps}</p>
 

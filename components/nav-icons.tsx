@@ -1,10 +1,13 @@
 import {
   Award,
+  Briefcase,
   Building2,
   CalendarDays,
   CreditCard,
   FolderClosed,
   Gauge,
+  Headset,
+  HelpCircle,
   Home,
   Lock,
   MessageSquare,
@@ -28,5 +31,8 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   folder: FolderClosed,
   gauge: Gauge,
   card: CreditCard,
+  briefcase: Briefcase,
+  help: HelpCircle,
+  support: Headset,
   lock: Lock,
 };

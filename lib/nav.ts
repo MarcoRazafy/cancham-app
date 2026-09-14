@@ -14,24 +14,29 @@ export interface NavGroup {
 
 export const NAV_MEMBRE: NavGroup[] = [
   {
-    label: "Vue d’ensemble",
-    items: [{ href: "/membre", label: "Accueil", icon: "home" }],
-  },
-  {
-    label: "Mon organisation",
+    label: "Espace membre",
     items: [
-      { href: "/membre/profil", label: "Profil & adhésion", icon: "building" },
-      { href: "/membre/offres-cancham", label: "Offres CanCham", icon: "award" },
+      { href: "/membre", label: "Vue d’ensemble", icon: "home" },
+      { href: "/membre/annuaire", label: "Annuaire", icon: "users" },
+      { href: "/membre/evenements", label: "Événements", icon: "calendar" },
+      { href: "/membre/actualites", label: "Actualités & offres", icon: "news" },
+      { href: "/membre/messagerie", label: "Messagerie", icon: "chat" },
+      { href: "/membre/ressources", label: "Ressources", icon: "folder" },
+      { href: "/membre/offres-cancham", label: "Services CanCham", icon: "briefcase" },
     ],
   },
   {
-    label: "La communauté",
+    label: "",
     items: [
-      { href: "/membre/annuaire", label: "Annuaire des membres", icon: "users" },
-      { href: "/membre/evenements", label: "Événements", icon: "calendar" },
-      { href: "/membre/actualites", label: "Actualités", icon: "news" },
-      { href: "/membre/messagerie", label: "Messagerie", icon: "chat" },
-      { href: "/membre/ressources", label: "Ressources", icon: "folder" },
+      { href: "/membre/profil", label: "Mon entreprise", icon: "building" },
+      { href: "/membre/cotisations", label: "Cotisations & factures", icon: "card" },
+    ],
+  },
+  {
+    label: "",
+    items: [
+      { href: "/membre/ressources?type=gratuit", label: "Besoin d’aide ?", icon: "help" },
+      { href: "/membre/messagerie?t=t2", label: "Contacter l’équipe", icon: "support" },
     ],
   },
 ];
@@ -66,15 +71,16 @@ export function navFor(space: Space): NavGroup[] {
 
 /** Fil d'Ariane et titre de la barre supérieure, par route. */
 export const TITLES: Record<string, [string, string]> = {
-  "/membre": ["Espace membre", "Accueil"],
+  "/membre": ["Espace membre", "Vue d’ensemble"],
   "/membre/recherche": ["Espace membre", "Recherche"],
-  "/membre/profil": ["Mon organisation", "Profil & adhésion"],
-  "/membre/offres-cancham": ["Mon organisation", "Offres CanCham"],
-  "/membre/annuaire": ["Communauté", "Annuaire des membres"],
-  "/membre/evenements": ["Communauté", "Événements"],
-  "/membre/actualites": ["Communauté", "Actualités"],
-  "/membre/messagerie": ["Communauté", "Messagerie"],
-  "/membre/ressources": ["Communauté", "Ressources"],
+  "/membre/profil": ["Espace membre", "Mon entreprise"],
+  "/membre/cotisations": ["Espace membre", "Cotisations & factures"],
+  "/membre/offres-cancham": ["Espace membre", "Services CanCham"],
+  "/membre/annuaire": ["Espace membre", "Annuaire"],
+  "/membre/evenements": ["Espace membre", "Événements"],
+  "/membre/actualites": ["Espace membre", "Actualités & offres"],
+  "/membre/messagerie": ["Espace membre", "Messagerie"],
+  "/membre/ressources": ["Espace membre", "Ressources"],
   "/admin": ["Back-office", "Tableau de bord"],
   "/admin/recherche": ["Back-office", "Recherche"],
   "/admin/membres": ["Back-office", "Gestion des membres"],

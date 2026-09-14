@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Shell } from "@/components/Shell";
+import { Coquille } from "@/components/membre/Coquille";
 import { getMember, getUnreadTotal } from "@/lib/queries";
 import { getNotifications } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/session";
@@ -12,31 +12,36 @@ export default async function MembreLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser("membre");
-  const member = user.memberId ? await getMember(user.memberId) : null;
-  if (!member) notFound();
+  const membre = user.memberId ? await getMember(user.memberId) : null;
+  if (!membre) notFound();
 
   const [unread, notifications] = await Promise.all([
     getUnreadTotal(),
-    getNotifications("membre", member.id),
+    getNotifications("membre", membre.id),
   ]);
-  const locked = isAccessLocked(member);
+
+  const verrouille = isAccessLocked(membre);
+
+  // Le profil et les cotisations restent accessibles : c'est là que le membre
+  // régularise sa situation.
+  const toujoursOuvert = ["/membre/profil", "/membre/cotisations"];
 
   return (
-    <Shell
-      space="membre"
+    <Coquille
       user={user}
+      membre={membre}
       nav={NAV_MEMBRE}
       badges={{ "/membre/messagerie": unread }}
       notifications={notifications}
       lockedHrefs={
-        locked
+        verrouille
           ? NAV_MEMBRE.flatMap((g) => g.items)
               .map((i) => i.href)
-              .filter((h) => h !== "/membre/profil")
+              .filter((h) => !toujoursOuvert.includes(h))
           : []
       }
     >
       {children}
-    </Shell>
+    </Coquille>
   );
 }

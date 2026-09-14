@@ -28,7 +28,10 @@ export function CarteEvenement({
     .toLocaleDateString("fr-FR", { month: "short" })
     .replace(".", "")
     .toUpperCase();
-  const visuel = visuelEvenement(evenement.id, index);
+  // La photo enregistrée en base prime sur le visuel générique.
+  const visuel = evenement.photo
+    ? { url: evenement.photo, alt: "" }
+    : visuelEvenement(evenement.id, index);
 
   return (
     <Link

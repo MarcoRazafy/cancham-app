@@ -53,6 +53,7 @@ type MembreRow = {
   siteweb: string | null;
   motivation: string | null;
   paiementNote: string | null;
+  cover: string | null;
   produits: { label: string; photo: string | null }[];
 };
 
@@ -75,6 +76,7 @@ function versMembre(m: MembreRow): Member {
     siteweb: m.siteweb ?? undefined,
     motivation: m.motivation ?? undefined,
     paiementNote: m.paiementNote ?? undefined,
+    cover: m.cover,
     produits: m.produits.map((p) => ({ label: p.label, photo: p.photo })),
   };
 }
@@ -215,6 +217,7 @@ export async function getNews(): Promise<NewsItem[]> {
     },
     extrait: n.extrait,
     corps: n.corps,
+    image: n.image,
     commentaires: versCommentaires(n.commentaires),
   }));
 }
@@ -237,6 +240,7 @@ export async function getNewsItem(id: string): Promise<NewsItem | null> {
     },
     extrait: n.extrait,
     corps: n.corps,
+    image: n.image,
     commentaires: versCommentaires(n.commentaires),
   };
 }

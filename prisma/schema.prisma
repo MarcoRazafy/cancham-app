@@ -128,6 +128,9 @@ model Member {
   /// Trace du dernier règlement enregistré.
   paiementNote String?
 
+  /// Photo de couverture de la fiche, par URL. `null` = dégradé décoratif.
+  cover String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -251,6 +254,8 @@ model News {
 
   mediaType     MediaType
   mediaTheme    MediaTheme
+  /// Illustration de l'article, par URL. `null` = dégradé décoratif.
+  image         String?
   /// Durée de la vidéo, au format mm:ss. `null` pour une photo.
   mediaDuration String?
 

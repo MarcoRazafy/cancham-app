@@ -299,6 +299,83 @@ h3 {
   background-color: #ffffff;
 }
 
+
+/* ============================================================
+   Espace membre — habillage sombre aux couleurs de la chambre.
+
+   Le bloc redéfinit les tokens applicatifs plutôt que d'introduire une
+   palette parallèle : toutes les primitives de components/ui.tsx s'y
+   conforment sans qu'aucune page n'ait à changer.
+   ============================================================ */
+
+.espace-membre {
+  --bg: #0b131d;
+  --surface: #111d29;
+  --surface-2: #16242f;
+  --surface-3: #1d2f3d;
+  --border: #1f3140;
+  --text: #eef4f2;
+  --text-muted: #9fb2bf;
+  --text-faint: #6b8090;
+
+  /* Rouge de la charte, éclairci pour rester lisible sur fond sombre. */
+  --accent: #d81f3a;
+  --accent-strong: #ef3350;
+  --accent-soft: #2d0d15;
+
+  --success: #2fae6a;
+  --success-strong: #56d18c;
+  --success-soft: #0f2a1f;
+
+  --bad: #e5495f;
+  --bad-soft: #2d1118;
+
+  --warn: #d9a94a;
+  --warn-soft: #2e2510;
+
+  --navy: #16304a;
+  --navy-2: #0f2238;
+  --navy-soft: #16273a;
+
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 16px 32px -20px rgb(0 0 0 / 0.7);
+
+  /*
+   * Dégradé vertical de la barre latérale : bordeaux en tête, nuit en pied.
+   * La bascule intervient tôt — dès le premier tiers — pour que les entrées
+   * de menu se détachent sur un fond calme plutôt que sur du rouge.
+   */
+  --laterale: linear-gradient(180deg, #8d1326 0%, #6a1020 10%, #3a1220 22%, #1a2231 38%, #101a26 60%, #0b131d 100%);
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-texte);
+  color-scheme: dark;
+}
+
+.espace-membre h1,
+.espace-membre h2,
+.espace-membre h3,
+.espace-membre .titre {
+  font-family: var(--font-titre);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.espace-membre .surtitre {
+  font-family: var(--font-texte);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* Le menu déroulant natif hérite sinon du texte clair du formulaire. */
+.espace-membre select option {
+  color: #0f1d2c;
+  background-color: #ffffff;
+}
+
 /* Le certificat et les factures s'impriment seuls, comme dans le prototype. */
 @media print {
   .no-print {
