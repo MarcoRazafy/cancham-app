@@ -478,3 +478,71 @@ export async function rechercher(
     })),
   ];
 }
+
+/* ============================ Espace public ============================ */
+
+export interface StatsPubliques {
+  membres: number;
+  secteurs: number;
+  villes: number;
+  evenementsAVenir: number;
+}
+
+/**
+ * Chiffres du bandeau de la page d'accueil publique.
+ *
+ * Ils sont comptés en base plutôt qu'écrits en dur : la vitrine dit ce que
+ * l'annuaire contient réellement, et se met à jour toute seule à mesure que
+ * la chambre recrute.
+ */
+export async function getStatsPubliques(): Promise<StatsPubliques> {
+  const [membres, groupes, evenements] = await Promise.all([
+    prisma.member.count({ where: { statut: { not: "candidature" } } }),
+    prisma.member.findMany({
+      where: { statut: { not: "candidature" } },
+      select: { secteur: true, ville: true },
+    }),
+    prisma.event.count({ where: { date: { gte: new Date() } } }),
+  ]);
+
+  return {
+    membres,
+    secteurs: new Set(groupes.map((g) => g.secteur)).size,
+    villes: new Set(groupes.map((g) => g.ville)).size,
+    evenementsAVenir: evenements,
+  };
+}
+
+/** Secteurs représentés, pour le menu déroulant du formulaire d'adhésion. */
+export async function getSecteurs(): Promise<string[]> {
+  const rows = await prisma.member.findMany({
+    where: { statut: { not: "candidature" } },
+    select: { secteur: true },
+    distinct: ["secteur"],
+    orderBy: { secteur: "asc" },
+  });
+  return rows.map((r) => r.secteur);
+}
+
+/** Les prochains rendez-vous mis en avant sur la page publique. */
+export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
+  const rows = await prisma.event.findMany({
+    where: { date: { gte: new Date() } },
+    include: { _count: { select: { participants: true } } },
+    orderBy: { date: "asc" },
+    take: n,
+  });
+  return rows.map((e) => ({
+    id: e.id,
+    titre: e.titre,
+    date: toISODate(e.date),
+    lieu: e.lieu,
+    format: EVENT_FORMAT_LABEL[e.format],
+    cap: e.cap,
+    inscrits: e._count.participants,
+    payant: e.payant,
+    prix: e.prix,
+    desc: e.desc,
+    photo: e.photo,
+  }));
+}

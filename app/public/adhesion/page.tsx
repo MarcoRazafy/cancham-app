@@ -1,16 +1,17 @@
-import { Card, Kicker } from "@/components/ui";
-import { SubmitAdhesionButton } from "@/components/forms/AdhesionForm";
+import { EnTetePublique } from "@/components/public/Marque";
+import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { submitAdhesion } from "@/lib/actions/members";
 
 export default function AdhesionPage() {
   return (
-    <div className="max-w-[620px] mx-auto">
-      <Card className="p-[22px]">
-        <Kicker>Formulaire public</Kicker>
-        <h1 className="mt-1.5 mb-1.5 text-[23px]">
+    <>
+      <EnTetePublique />
+      <main className="max-w-[660px] mx-auto px-5 py-12 w-full">
+        <span className="surtitre text-white/45">Formulaire public</span>
+        <h1 className="titre text-[clamp(26px,4vw,36px)] font-extrabold mt-2.5 mb-3">
           Devenir membre de CanCham Madagascar
         </h1>
-        <p className="text-muted text-[13.6px] m-0 mb-[22px]">
+        <p className="text-[15px] leading-relaxed text-white/70 m-0 mb-8 max-w-[56ch]">
           Complétez ce formulaire pour soumettre votre candidature. Un profil est créé
           immédiatement : vous pourrez le compléter, mais l’accès aux autres services
           ne sera activé qu’après validation par l’équipe et paiement de la cotisation.
@@ -94,25 +95,27 @@ export default function AdhesionPage() {
             />
           </Field>
 
-          <SubmitAdhesionButton />
+          <BoutonEnvoi enCours="Envoi de la demande…">
+            Envoyer ma demande d’adhésion
+          </BoutonEnvoi>
         </form>
 
-        <p className="text-[11.5px] text-faint mt-4 text-center">
+        <p className="text-[12px] text-white/50 mt-5 text-center">
           Votre candidature est enregistrée et apparaît immédiatement dans le
           back-office de l’équipe CanCham.
         </p>
-      </Card>
-    </div>
+      </main>
+    </>
   );
 }
 
 const INPUT =
-  "w-full border border-line bg-surface text-ink rounded-[var(--radius-s)] px-3 py-[9px] text-[13.6px]";
+  "w-full rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/35 px-3.5 py-3 text-[13.8px] outline-none focus:border-marque-vert focus:bg-white/[0.07]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-[12.3px] font-semibold text-muted mb-1.5">{label}</span>
+      <span className="block text-[12.5px] font-semibold text-white/70 mb-1.5">{label}</span>
       {children}
     </label>
   );
