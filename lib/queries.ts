@@ -20,6 +20,7 @@ import type {
   Offer,
   Registration,
   Resource,
+  Space,
 } from "@/lib/types";
 
 /**
@@ -381,4 +382,99 @@ export async function getMembresATraiter(): Promise<Member[]> {
     orderBy: { nom: "asc" },
   });
   return rows.map(versMembre);
+}
+
+/* ============================ Recherche ============================ */
+
+export interface ResultatRecherche {
+  type: "membre" | "evenement" | "actualite" | "ressource";
+  id: string;
+  titre: string;
+  detail: string;
+  href: string;
+}
+
+/**
+ * Recherche transversale : annuaire, événements, actualités, ressources.
+ *
+ * Insensible à la casse et aux fragments — « tana » trouve Antananarivo. Les
+ * candidatures restent exclues de l'annuaire côté membre.
+ */
+export async function rechercher(
+  q: string,
+  space: Space,
+): Promise<ResultatRecherche[]> {
+  const terme = q.trim();
+  if (terme.length < 2) return [];
+
+  const like = { contains: terme, mode: "insensitive" } as const;
+  const base = space === "admin" ? "/admin" : "/membre";
+
+  const [membres, evenements, actualites, ressources] = await Promise.all([
+    prisma.member.findMany({
+      where: {
+        ...(space === "admin" ? {} : { statut: { not: "candidature" as const } }),
+        OR: [
+          { nom: like },
+          { secteur: like },
+          { ville: like },
+          { activite: like },
+          { desc: like },
+        ],
+      },
+      select: { id: true, nom: true, secteur: true, ville: true },
+      take: 8,
+      orderBy: { nom: "asc" },
+    }),
+    prisma.event.findMany({
+      where: { OR: [{ titre: like }, { lieu: like }, { desc: like }] },
+      select: { id: true, titre: true, lieu: true, date: true },
+      take: 8,
+      orderBy: { date: "desc" },
+    }),
+    prisma.news.findMany({
+      where: { OR: [{ titre: like }, { extrait: like }, { corps: like }] },
+      select: { id: true, titre: true, date: true },
+      take: 8,
+      orderBy: { date: "desc" },
+    }),
+    prisma.resource.findMany({
+      where: { titre: like },
+      select: { id: true, titre: true, taille: true, type: true },
+      take: 8,
+      orderBy: { date: "desc" },
+    }),
+  ]);
+
+  return [
+    ...membres.map((m) => ({
+      type: "membre" as const,
+      id: m.id,
+      titre: m.nom,
+      detail: `${m.secteur} · ${m.ville}`,
+      // Le back-office ouvre la fiche de gestion, le membre la fiche d'annuaire.
+      href: space === "admin" ? `/admin/membres/${m.id}` : `/membre/annuaire/${m.id}`,
+    })),
+    ...evenements.map((e) => ({
+      type: "evenement" as const,
+      id: e.id,
+      titre: e.titre,
+      detail: `${e.lieu} · ${toISODate(e.date)}`,
+      href: space === "admin" ? `/admin/evenements` : `/membre/evenements/${e.id}`,
+    })),
+    ...actualites.map((n) => ({
+      type: "actualite" as const,
+      id: n.id,
+      titre: n.titre,
+      detail: toISODate(n.date),
+      href: `${base}/actualites/${n.id}`,
+    })),
+    ...ressources.map((r) => ({
+      type: "ressource" as const,
+      id: r.id,
+      titre: r.titre,
+      detail: `${r.taille} · ${r.type}`,
+      href: `${base}/ressources`,
+    })),
+  ];
 }

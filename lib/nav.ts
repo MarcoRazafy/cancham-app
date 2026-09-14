@@ -67,6 +67,7 @@ export function navFor(space: Space): NavGroup[] {
 /** Fil d'Ariane et titre de la barre supérieure, par route. */
 export const TITLES: Record<string, [string, string]> = {
   "/membre": ["Espace membre", "Accueil"],
+  "/membre/recherche": ["Espace membre", "Recherche"],
   "/membre/profil": ["Mon organisation", "Profil & adhésion"],
   "/membre/offres-cancham": ["Mon organisation", "Offres CanCham"],
   "/membre/annuaire": ["Communauté", "Annuaire des membres"],
@@ -75,6 +76,7 @@ export const TITLES: Record<string, [string, string]> = {
   "/membre/messagerie": ["Communauté", "Messagerie"],
   "/membre/ressources": ["Communauté", "Ressources"],
   "/admin": ["Back-office", "Tableau de bord"],
+  "/admin/recherche": ["Back-office", "Recherche"],
   "/admin/membres": ["Back-office", "Gestion des membres"],
   "/admin/evenements": ["Back-office", "Gestion des événements"],
   "/admin/paiements": ["Back-office", "Paiements & factures"],
