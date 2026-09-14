@@ -43,18 +43,22 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
             <label htmlFor="ad-secteur" className={ETIQUETTE}>
               Secteur d’activité
             </label>
-            <select id="ad-secteur" name="secteur" className={CHAMP} defaultValue="">
+            <select
+              id="ad-secteur"
+              name="secteur"
+              className={CHAMP}
+              defaultValue=""
+              style={{ colorScheme: "light" }}
+            >
               <option value="" disabled>
                 Sélectionner
               </option>
               {secteurs.map((s) => (
-                <option key={s} value={s} className="text-ink">
+                <option key={s} value={s}>
                   {s}
                 </option>
               ))}
-              <option value="Autre secteur" className="text-ink">
-                Autre secteur
-              </option>
+              <option value="Autre secteur">Autre secteur</option>
             </select>
           </div>
         </div>

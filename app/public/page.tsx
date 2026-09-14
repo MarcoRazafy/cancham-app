@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, FileText, Users } from "lucide-react";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
+import { Compteur } from "@/components/public/Compteur";
 import { FormulaireAdhesion } from "@/components/public/FormulaireAdhesion";
 import { LogoOfficiel } from "@/components/public/Marque";
 import { VISUELS } from "@/lib/images-publiques";
@@ -25,16 +26,18 @@ export default async function PublicHome() {
   ]);
 
   const chiffres = [
-    { valeur: "10 ans", libelle: "de coopération" },
+    { nombre: 10, apres: " ans", libelle: "de coopération" },
     {
-      valeur: `${stats.membres}`,
+      nombre: stats.membres,
+      apres: "",
       libelle: `entreprise${stats.membres > 1 ? "s" : ""} dans le réseau`,
     },
     {
-      valeur: `${stats.secteurs}`,
+      nombre: stats.secteurs,
+      apres: "",
       libelle: `secteur${stats.secteurs > 1 ? "s" : ""} représentés`,
     },
-    { valeur: "2 pays", libelle: "une ambition commune" },
+    { nombre: 2, apres: " pays", libelle: "une ambition commune" },
   ];
 
   const avantages = [
@@ -47,11 +50,12 @@ export default async function PublicHome() {
     <>
       {/* ==================== Bannière ==================== */}
       <section className="relative overflow-hidden">
-        {/* Toronto à gauche, Madagascar à droite : les deux pays encadrent la
-            bannière, le dégradé rouge → vert de la charte fait la jonction. */}
+        {/* Toronto à gauche, les baobabs à droite : les deux pays encadrent la
+            bannière. Entre eux, le dégradé linéaire 90° de la charte, posé
+            franchement — le rouge et le vert doivent se lire, pas se deviner. */}
         <div className="absolute inset-0" aria-hidden="true">
           {VISUELS.toronto.url ? (
-            <div className="absolute inset-y-0 left-0 w-1/2 md:w-[38%]">
+            <div className="absolute inset-y-0 left-0 w-[52%] md:w-[42%]">
               <Image
                 src={VISUELS.toronto.url}
                 alt=""
@@ -60,12 +64,13 @@ export default async function PublicHome() {
                 sizes="50vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-r from-[#ad0707]/55 to-[var(--marque-nuit)]" />
+              {/* Estompe le bord droit de la photo vers le fond de page. */}
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-[var(--marque-nuit)]/40 to-[var(--marque-nuit)]" />
             </div>
           ) : null}
 
           {VISUELS.madagascar.url ? (
-            <div className="absolute inset-y-0 right-0 w-1/2 md:w-[32%]">
+            <div className="absolute inset-y-0 right-0 w-[44%] md:w-[34%]">
               <Image
                 src={VISUELS.madagascar.url}
                 alt=""
@@ -73,38 +78,67 @@ export default async function PublicHome() {
                 sizes="50vw"
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-linear-to-l from-[#007140]/55 to-[var(--marque-nuit)]" />
+              <div className="absolute inset-0 bg-linear-to-l from-transparent via-[var(--marque-nuit)]/45 to-[var(--marque-nuit)]" />
             </div>
           ) : null}
 
-          <div className="absolute inset-0 bg-[var(--marque-nuit)]/55" />
+          {/* Le dégradé de la charte, en teinte : il colore les photos au lieu
+              de les masquer, d'où le mode « overlay ». */}
+          <div
+            className="absolute inset-0 mix-blend-overlay"
+            style={{
+              background:
+                "linear-gradient(90deg, #ad0707 0%, #ad0707 16%, rgba(173,7,7,0) 42%, rgba(0,113,64,0) 58%, #007140 86%, #007140 100%)",
+            }}
+          />
+          {/* Reprise en opacité franche pour retrouver la densité de la charte. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(173,7,7,0.62) 0%, rgba(140,20,40,0.30) 24%, rgba(15,29,44,0.80) 45%, rgba(15,29,44,0.80) 56%, rgba(0,113,64,0.32) 78%, rgba(0,113,64,0.60) 100%)",
+            }}
+          />
+          {/* Voile minimal, juste de quoi garantir la lisibilité du texte. */}
+          <div className="absolute inset-0 bg-[var(--marque-nuit)]/22" />
         </div>
 
         <div className="relative max-w-[1120px] mx-auto px-5 pt-8 pb-0">
-          <Link href="/public" aria-label="CanCham Connect">
+          <Link href="/public" aria-label="CanCham Connect" className="apparition inline-block">
             <LogoOfficiel className="w-[240px] md:w-[300px] h-auto" priority />
           </Link>
 
           <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center mt-9">
             <div>
-              <span className="surtitre inline-block px-3.5 py-1.5 rounded-full border border-white/30 text-white/85">
+              <span
+                className="surtitre apparition inline-block px-3.5 py-1.5 rounded-full border border-white/30 text-white/85"
+                style={{ animationDelay: "0.08s" }}
+              >
                 Le réseau Canada–Madagascar
               </span>
 
-              <h1 className="text-[clamp(38px,6vw,62px)] font-extrabold leading-[1.04] m-0 mt-5">
-                Deux pays.
-                <br />
-                Un réseau.
-                <br />
-                Des <span className="text-[#3fc98a]">opportunités.</span>
+              <h1 className="text-[clamp(34px,5.2vw,58px)] font-extrabold leading-[1.06] m-0 mt-5">
+                <span className="apparition block" style={{ animationDelay: "0.16s" }}>
+                  Deux pays.
+                </span>
+                <span className="apparition block" style={{ animationDelay: "0.26s" }}>
+                  Un réseau.
+                </span>
+                {/* Insécable : « Des opportunités. » ne doit jamais se couper. */}
+                <span className="apparition block whitespace-nowrap" style={{ animationDelay: "0.36s" }}>
+                  Des <span className="text-[#3fc98a]">opportunités.</span>
+                </span>
               </h1>
 
-              <p className="text-[16px] leading-relaxed text-white/80 max-w-[46ch] mt-5 mb-0">
+              <p
+                className="apparition text-[16px] leading-relaxed text-white/80 max-w-[46ch] mt-5 mb-0"
+                style={{ animationDelay: "0.46s" }}
+              >
                 Rencontrez des entreprises, développez vos partenariats et donnez une
                 nouvelle dimension à vos projets.
               </p>
 
-              <div className="flex gap-3 flex-wrap mt-7">
+              <div className="apparition flex gap-3 flex-wrap mt-7" style={{ animationDelay: "0.56s" }}>
                 <Link
                   href="#adhesion"
                   className="inline-flex items-center gap-2.5 font-[family-name:var(--font-titre)] font-bold text-[14.5px] px-6 py-3.5 rounded-lg bg-marque-rouge text-white no-underline transition-colors hover:bg-[#c00d0d]"
@@ -121,7 +155,10 @@ export default async function PublicHome() {
             </div>
 
             {VISUELS.hero.url ? (
-              <figure className="relative m-0 rounded-xl overflow-hidden border border-white/15 aspect-[16/11]">
+              <figure
+                className="apparition relative m-0 rounded-xl overflow-hidden border border-white/15 aspect-[16/11]"
+                style={{ animationDelay: "0.3s" }}
+              >
                 <Image
                   src={VISUELS.hero.url}
                   alt={VISUELS.hero.alt}
@@ -138,7 +175,10 @@ export default async function PublicHome() {
           </div>
 
           {/* ==================== Chiffres ==================== */}
-          <dl className="grid grid-cols-2 md:grid-cols-4 gap-y-7 mt-12 mb-0 pb-11 border-t border-white/12 pt-9">
+          <dl
+            className="apparition grid grid-cols-2 md:grid-cols-4 gap-y-7 mt-12 mb-0 pb-11 border-t border-white/12 pt-9"
+            style={{ animationDelay: "0.68s" }}
+          >
             {chiffres.map((c, i) => (
               <div
                 key={c.libelle}
@@ -147,7 +187,8 @@ export default async function PublicHome() {
                 }`}
               >
                 <dt className="titre text-[clamp(26px,3.4vw,34px)] font-extrabold text-white">
-                  {c.valeur}
+                  <Compteur valeur={c.nombre} />
+                  {c.apres}
                 </dt>
                 <dd className="m-0 text-[13px] text-white/60">{c.libelle}</dd>
               </div>
@@ -162,16 +203,18 @@ export default async function PublicHome() {
         className="scroll-mt-6 bg-[var(--marque-nuit)] border-t border-white/10"
       >
         <div className="max-w-[1120px] mx-auto px-5 py-16">
-          <span className="surtitre text-white/45">Rencontrons-nous</span>
+          <div className="apparition-defilement">
+            <span className="surtitre text-white/45">Rencontrons-nous</span>
           <h2 className="titre text-[clamp(28px,4vw,40px)] font-extrabold m-0 mt-2.5">
             Les prochains rendez-vous
           </h2>
-          <p className="text-[15px] text-white/65 m-0 mt-2.5">
-            Des rencontres pour apprendre, échanger et créer des liens.
-          </p>
+            <p className="text-[15px] text-white/65 m-0 mt-2.5">
+              Des rencontres pour apprendre, échanger et créer des liens.
+            </p>
+          </div>
 
           {evenements.length ? (
-            <div className="grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="apparition-defilement grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
               {evenements.map((e, i) => (
                 <CarteEvenement key={e.id} evenement={e} index={i} />
               ))}
@@ -187,7 +230,7 @@ export default async function PublicHome() {
       {/* ==================== Adhésion ==================== */}
       <section id="adhesion" className="scroll-mt-6">
         <div className="max-w-[1120px] mx-auto px-5 pb-16">
-          <div className="rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-10">
+          <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-10">
             <div className="grid gap-10 lg:grid-cols-2 items-start">
               <div>
                 <span className="surtitre text-white/45">Rejoignez CanCham</span>
