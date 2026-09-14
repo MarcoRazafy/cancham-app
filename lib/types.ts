@@ -80,6 +80,8 @@ export interface Member {
   motivation?: string;
   /** Trace du dernier règlement enregistré. */
   paiementNote?: string;
+  /** Photo de couverture de la fiche, par URL. */
+  cover?: string | null;
 }
 
 export type EventFormat = "Présentiel" | "Webinaire" | "Hybride";
@@ -141,6 +143,8 @@ export interface NewsItem {
   media: NewsMedia;
   extrait: string;
   corps: string;
+  /** Illustration de l'article, par URL. */
+  image?: string | null;
   commentaires: Comment[];
 }
 

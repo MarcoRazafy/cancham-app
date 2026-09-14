@@ -102,6 +102,7 @@ export default async function EvenementDetailPage({
                 {e.cap - e.inscrits > 0 ? (
                   <RegisterButton
                     event={e}
+                    libelle="S’inscrire"
                     nom={user.nom}
                     email={user.email}
                     tel={user.tel}

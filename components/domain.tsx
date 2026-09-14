@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
@@ -96,16 +97,65 @@ export function LogoMark({
   );
 }
 
+/**
+ * Visuel réel s'il existe, dégradé décoratif sinon.
+ *
+ * Toutes les vignettes de l'application passent par ici : le jour où la chambre
+ * fournit ses propres photos, il n'y a qu'un champ à renseigner en base.
+ */
+export function Visuel({
+  src,
+  alt,
+  seed,
+  className = "",
+  icon,
+  iconSize = 20,
+  sizes = "400px",
+}: {
+  src?: string | null;
+  alt: string;
+  seed: string;
+  className?: string;
+  icon?: ReactNode;
+  iconSize?: number;
+  sizes?: string;
+}) {
+  if (!src) {
+    return (
+      <PhotoPlaceholder
+        seed={seed}
+        className={className}
+        icon={icon}
+        iconSize={iconSize}
+      />
+    );
+  }
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image src={src} alt={alt} fill sizes={sizes} className="object-cover" />
+    </div>
+  );
+}
+
 /* ==================== Membres ==================== */
 
 export function MemberCard({ member, href }: { member: Member; href: string }) {
-  const swatches = ["bg-accent-soft text-accent-strong", "bg-navy-soft text-navy", "bg-surface-3 text-faint"];
+  // Trois fonds sobres : le bleu marine sur bleu marine du jeu précédent
+  // rendait le libellé illisible sur fond sombre.
+  const swatches = [
+    "bg-surface-2 text-muted",
+    "bg-surface-3 text-muted",
+    "bg-accent-soft text-accent-strong",
+  ];
   return (
     <Link href={href} className="no-underline">
       <Card className="overflow-hidden h-full flex flex-col hover:border-accent transition-colors p-0">
-        <PhotoPlaceholder
+        <Visuel
+          src={member.cover}
+          alt=""
           seed={member.id}
-          className="h-[72px] w-full"
+          className="h-[104px] w-full"
+          sizes="(max-width: 768px) 100vw, 380px"
           icon={member.type === "physique" ? <UserIcon size={20} /> : <Building2 size={20} />}
         />
         <div className="flex gap-3 px-4 pt-4 pb-3">
@@ -194,9 +244,12 @@ export function EventCard({
   const body = (
     <Card className="overflow-hidden h-full flex flex-col hover:border-accent transition-colors p-0">
       <div className="relative">
-        <PhotoPlaceholder
+        <Visuel
+          src={event.photo}
+          alt=""
           seed={event.id}
           className="h-[150px] w-full"
+          sizes="(max-width: 768px) 100vw, 420px"
           icon={<CalendarDays size={28} />}
         />
         <div className="absolute top-2.5 left-2.5 bg-white rounded-[var(--radius-s)] px-2.5 py-[5px] text-center shadow-[var(--shadow)] min-w-[38px]">
@@ -267,9 +320,12 @@ export function EventRow({
   return (
     <Link href={href} className="no-underline">
       <div className="flex gap-4 p-4 border border-line rounded-[var(--radius-m)] bg-surface items-center hover:border-accent transition-colors">
-        <PhotoPlaceholder
+        <Visuel
+          src={event.photo}
+          alt=""
           seed={event.id}
-          className="w-[62px] h-[62px] rounded-[var(--radius-s)]"
+          className="w-[62px] h-[62px] rounded-[var(--radius-s)] shrink-0"
+          sizes="62px"
           icon={<CalendarDays size={20} />}
         />
         <div className="shrink-0 w-[62px] text-center bg-accent-soft text-accent-strong rounded-[var(--radius-s)] px-1 py-2">
@@ -351,7 +407,19 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
         <b className="block text-[14.6px] mb-1">{news.titre}</b>
         {news.extrait}
       </div>
-      <MediaBanner media={news.media} />
+      {news.image ? (
+        <div className="relative w-full aspect-[16/8] rounded-[var(--radius-m)] overflow-hidden mt-2.5">
+          <Image
+            src={news.image}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            className="object-cover"
+          />
+        </div>
+      ) : (
+        <MediaBanner media={news.media} />
+      )}
       <div className="flex gap-4 mt-3 text-xs text-muted">
         <Link
           href={`${base}/${news.id}`}

@@ -16,14 +16,18 @@ import { isAccessLocked } from "@/lib/membership";
  * propres autorisations : un proxy protège des URL, pas des données.
  */
 
-/** Seule page de l'espace membre accessible quand l'adhésion n'est pas effective. */
-const ALWAYS_ALLOWED = "/membre/profil";
+/**
+ * Pages de l'espace membre restant accessibles quand l'adhésion n'est pas
+ * effective : c'est là que le membre consulte sa situation et régularise.
+ */
+const TOUJOURS_OUVERT = ["/membre/profil", "/membre/cotisations"];
+const REPLI = "/membre/profil";
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/membre")) return NextResponse.next();
-  if (pathname.startsWith(ALWAYS_ALLOWED)) return NextResponse.next();
+  if (TOUJOURS_OUVERT.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
   const user = await prisma.user.findFirst({
     where: { role: "membre" },
@@ -50,7 +54,7 @@ export default async function proxy(request: NextRequest) {
 
   if (isAccessLocked(vue as Parameters<typeof isAccessLocked>[0])) {
     const url = request.nextUrl.clone();
-    url.pathname = ALWAYS_ALLOWED;
+    url.pathname = REPLI;
     url.searchParams.set("verrouille", "1");
     return NextResponse.redirect(url);
   }

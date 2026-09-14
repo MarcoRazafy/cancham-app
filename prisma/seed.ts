@@ -144,6 +144,7 @@ async function main() {
         siteweb: m.siteweb ?? null,
         motivation: m.motivation ?? null,
         paiementNote: m.paiementNote ?? null,
+        cover: m.cover ?? null,
         produits: {
           create: m.produits.map((p, i) => ({
             label: p.label,
@@ -217,6 +218,7 @@ async function main() {
         mediaType: n.media.type,
         mediaTheme: n.media.theme,
         mediaDuration: n.media.duration ?? null,
+        image: n.image ?? null,
         commentaires: {
           create: n.commentaires.map((c) => ({
             auteur: c.auteur,
