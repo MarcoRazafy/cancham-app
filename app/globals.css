@@ -234,6 +234,60 @@ h3 {
   outline-offset: 3px;
 }
 
+
+/* ---------- Animations de l'espace public ---------- */
+
+@keyframes marque-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * `both` conserve l'état final : le contenu reste visible une fois l'animation
+ * jouée. Sans cela, un rechargement interrompu laisserait la page vide.
+ */
+.marque .apparition {
+  animation: marque-apparition 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/*
+ * Apparition au défilement, via la timeline native du navigateur — aucun
+ * observateur JavaScript, donc rien à charger ni à désynchroniser. Les
+ * navigateurs qui ne la gèrent pas affichent simplement le contenu, visible
+ * d'emblée : c'est une bonification, jamais une condition de lecture.
+ */
+@supports (animation-timeline: view()) {
+  .marque .apparition-defilement {
+    animation: marque-apparition linear both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 26%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marque .apparition,
+  .marque .apparition-defilement {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * Le menu déroulant natif hérite sinon du blanc du formulaire, ce qui rend les
+ * options illisibles sur le fond clair que le système leur applique.
+ */
+.marque select option {
+  color: #0f1d2c;
+  background-color: #ffffff;
+}
+
 /* Le certificat et les factures s'impriment seuls, comme dans le prototype. */
 @media print {
   .no-print {
