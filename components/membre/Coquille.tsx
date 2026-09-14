@@ -135,7 +135,7 @@ export function Coquille({
           href="/membre/profil"
           className="mx-3.5 mb-5 mt-1 px-3 py-3 rounded-lg flex items-center gap-3 border-t border-white/10 pt-4 no-underline hover:bg-white/[0.06]"
         >
-          <Avatar initiales={user.initiales} taille={40} />
+          <Avatar initiales={user.initiales} taille={40} neutre />
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold text-white truncate">
               {abreger(user.nom)}
@@ -205,10 +205,23 @@ function abreger(nom: string): string {
   return `${mots[0]} ${mots[mots.length - 1][0]}.`;
 }
 
-function Avatar({ initiales, taille }: { initiales: string; taille: number }) {
+function Avatar({
+  initiales,
+  taille,
+  neutre = false,
+}: {
+  initiales: string;
+  taille: number;
+  /** Sur le pied de la barre latérale, le fond est vert : le rouge y jure. */
+  neutre?: boolean;
+}) {
   return (
     <span
-      className="rounded-full flex items-center justify-center font-bold shrink-0 bg-accent-soft text-accent-strong border border-accent/40"
+      className={`rounded-full flex items-center justify-center font-bold shrink-0 ${
+        neutre
+          ? "bg-white/15 text-white border border-white/25"
+          : "bg-accent-soft text-accent-strong border border-accent/40"
+      }`}
       style={{ width: taille, height: taille, fontSize: taille * 0.36 }}
     >
       {initiales}

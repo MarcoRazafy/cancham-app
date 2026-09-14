@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Coquille } from "@/components/membre/Coquille";
-import { getMember, getUnreadTotal } from "@/lib/queries";
+import { getMember, getStatsPubliques, getUnreadTotal } from "@/lib/queries";
 import { getNotifications } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/session";
 import { isAccessLocked } from "@/lib/membership";
@@ -15,8 +15,9 @@ export default async function MembreLayout({
   const membre = user.memberId ? await getMember(user.memberId) : null;
   if (!membre) notFound();
 
-  const [unread, notifications] = await Promise.all([
+  const [unread, stats, notifications] = await Promise.all([
     getUnreadTotal(),
+    getStatsPubliques(),
     getNotifications("membre", membre.id),
   ]);
 
@@ -31,7 +32,10 @@ export default async function MembreLayout({
       user={user}
       membre={membre}
       nav={NAV_MEMBRE}
-      badges={{ "/membre/messagerie": unread }}
+      badges={{
+        "/membre/evenements": stats.evenementsAVenir,
+        "/membre/messagerie": unread,
+      }}
       notifications={notifications}
       lockedHrefs={
         verrouille
