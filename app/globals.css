@@ -178,8 +178,8 @@ h3 {
   --color-marque-vert: var(--marque-vert);
   --color-marque-texte: var(--marque-texte);
 
-  --font-titre: var(--font-montserrat), "Segoe UI", sans-serif;
-  --font-texte: var(--font-open-sans), -apple-system, sans-serif;
+  --font-titre: var(--font-hammersmith), Georgia, serif;
+  --font-texte: var(--font-inter), -apple-system, sans-serif;
 }
 
 :root {
@@ -206,18 +206,29 @@ h3 {
   color-scheme: dark;
 }
 
+/*
+ * Hammersmith One n'a qu'une graisse. On la force ici : sans cela, un
+ * `font-bold` hérité ferait fabriquer un faux gras par le navigateur, plus
+ * lourd et moins net que la fonte réelle.
+ */
 .marque h1,
 .marque h2,
 .marque h3,
 .marque .titre {
   font-family: var(--font-titre);
+  font-weight: 400;
   text-wrap: balance;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.005em;
+}
+
+.marque .surtitre,
+.marque [class*="font-bold"].surtitre {
+  font-weight: 600;
 }
 
 /* Surtitre en capitales espacées, motif récurrent de la charte. */
 .marque .surtitre {
-  font-family: var(--font-titre);
+  font-family: var(--font-texte);
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.22em;
