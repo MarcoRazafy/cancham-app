@@ -8,6 +8,8 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
+import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
+import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { EnTetePublique } from "@/components/public/Marque";
 import { visuelEvenement } from "@/lib/images-publiques";
 import { fmtDate, fmtMoney } from "@/lib/format";
@@ -25,10 +27,19 @@ export default async function EvenementPublic({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [e, prochains] = await Promise.all([getEvent(id), getProchainsEvenements(6)]);
+  const [e, prochains] = await Promise.all([getEvent(id), getProchainsEvenements(8)]);
   if (!e) notFound();
 
   const index = Math.max(0, prochains.findIndex((p) => p.id === e.id));
+
+  /**
+   * Les autres rendez-vous, chacun accompagné de son rang d'origine : le visuel
+   * d'un événement est choisi à partir de ce rang, il doit donc rester le même
+   * ici que sur la page d'accueil.
+   */
+  const autres = prochains
+    .map((evenement, rang) => ({ evenement, rang }))
+    .filter(({ evenement }) => evenement.id !== e.id);
   const visuel = visuelEvenement(e.id, index);
   const restantes = Math.max(0, e.cap - e.inscrits);
 
@@ -113,32 +124,34 @@ export default async function EvenementPublic({
           </aside>
         </div>
 
-        {prochains.filter((p) => p.id !== e.id).length ? (
-          <section className="mt-14 pt-10 border-t border-white/10">
-            <h2 className="titre text-[22px] m-0 mb-5">
-              Les autres rendez-vous
-            </h2>
-            <div className="grid gap-3">
-              {prochains
-                .filter((p) => p.id !== e.id)
-                .slice(0, 4)
-                .map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/public/evenements/${p.id}`}
-                    className="flex items-center justify-between gap-4 flex-wrap px-4 py-3.5 rounded-lg border border-white/10 hover:border-white/25 no-underline"
-                  >
-                    <span className="text-[14.5px] font-semibold text-white">
-                      {p.titre}
-                    </span>
-                    <span className="text-[13px] text-white/55">
-                      {fmtDate(p.date, { day: "numeric", month: "long" })} · {p.lieu}
-                    </span>
-                  </Link>
+        {autres.length ? (
+          <section className="mt-14">
+            <div className="rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-8">
+              <div className="flex items-end justify-between gap-6 flex-wrap mb-7">
+                <div>
+                  <span className="surtitre text-white/45">Ne manquez rien</span>
+                  <h2 className="titre text-[clamp(22px,3vw,30px)] m-0 mt-2">
+                    Les autres rendez-vous
+                  </h2>
+                </div>
+                <span className="text-[13px] text-white/45">
+                  {autres.length} à venir
+                </span>
+              </div>
+
+              <CarrouselEvenements>
+                {autres.map(({ evenement, rang }) => (
+                  <CarteEvenement
+                    key={evenement.id}
+                    evenement={evenement}
+                    index={rang}
+                  />
                 ))}
+              </CarrouselEvenements>
             </div>
           </section>
         ) : null}
+
       </main>
     </>
   );
