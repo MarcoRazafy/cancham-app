@@ -6,21 +6,39 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:start": "/usr/lib/postgresql/16/bin/pg_ctl -D .pgdata -o '-p 5434 -c unix_socket_directories=/tmp' -l .pgdata/server.log start || true",
+    "db:stop": "/usr/lib/postgresql/16/bin/pg_ctl -D .pgdata stop || true",
+    "db:status": "/usr/lib/postgresql/16/bin/pg_ctl -D .pgdata status",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio",
+    "predev": "npm run db:start"
   },
   "dependencies": {
-    "next": "16.2.10",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "lucide-react": "^1.45.0",
+    "next": "^16.3.4",
+    "pg": "^8.23.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "16.2.10",
+    "eslint-config-next": "^16.3.4",
+    "prisma": "^7.10.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

@@ -1,26 +1,173 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================
+   Design tokens — portés depuis le prototype CanCham Connect.
+   Rouge dominant, bleu marine en second plan, vert en touches.
+   ============================================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-success-soft: var(--success-soft);
+
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
+  --color-navy-soft: var(--navy-soft);
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-plex-sans), -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-plex-mono), "SFMono-Regular", Menlo, monospace;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f6f4;
+  --surface-3: #e8ebe6;
+  --border: #e1e4de;
+  --text: #1a1a1a;
+  --text-muted: #5f5f5f;
+  --text-faint: #8b8f87;
+  --accent: #c8102e;
+  --accent-strong: #9e0c24;
+  --accent-soft: #fbe4e7;
+  --success: #1b7e3e;
+  --success-strong: #0f5028;
+  --success-soft: #e1f0e6;
+  --bad: #5b4b8a;
+  --bad-soft: #ebe7f5;
+  --warn: #96650f;
+  --warn-soft: #f7edd9;
+  --navy: #1b3a6b;
+  --navy-2: #15305a;
+  --navy-soft: #e4eaf6;
+  --shadow: 0 1px 2px rgb(15 29 44 / 0.06), 0 8px 24px -12px rgb(15 29 44 / 0.18);
+  --sidebar-w: 250px;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #0a1119;
+    --surface: #111c27;
+    --surface-2: #16222e;
+    --surface-3: #1d2c3a;
+    --border: #2a3a48;
+    --text: #eef2ef;
+    --text-muted: #a6b2bb;
+    --text-faint: #71808a;
+    --accent: #e5495f;
+    --accent-strong: #f07688;
+    --accent-soft: #3a141c;
+    --success: #3fa766;
+    --success-strong: #5fc182;
+    --success-soft: #153524;
+    --bad: #9c8dd4;
+    --bad-soft: #291f42;
+    --warn: #d9a94a;
+    --warn-soft: #2e260f;
+    --navy: #16305a;
+    --navy-2: #0f2547;
+    --navy-soft: #1c2c46;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -12px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
   }
 }
 
+:root[data-theme="dark"] {
+  --bg: #0a1119;
+  --surface: #111c27;
+  --surface-2: #16222e;
+  --surface-3: #1d2c3a;
+  --border: #2a3a48;
+  --text: #eef2ef;
+  --text-muted: #a6b2bb;
+  --text-faint: #71808a;
+  --accent: #e5495f;
+  --accent-strong: #f07688;
+  --accent-soft: #3a141c;
+  --success: #3fa766;
+  --success-strong: #5fc182;
+  --success-soft: #153524;
+  --bad: #9c8dd4;
+  --bad-soft: #291f42;
+  --warn: #d9a94a;
+  --warn-soft: #2e260f;
+  --navy: #16305a;
+  --navy-2: #0f2547;
+  --navy-soft: #1c2c46;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -12px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Le certificat et les factures s'impriment seuls, comme dans le prototype. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
 }

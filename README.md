@@ -1,36 +1,192 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CanCham Connect
 
-## Getting Started
+Portail membre et back-office de la **Chambre de Commerce et de Coopération
+Canada–Madagascar**, porté du prototype HTML vers Next.js.
 
-First, run the development server:
+## Démarrer
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Le port 3000 est parfois occupé sur cette machine : `npx next dev -p 3007`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Les trois espaces
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Il n'y a **pas encore d'authentification**. L'espace est déterminé par l'URL, et
+un utilisateur de démonstration y est chargé automatiquement.
 
-## Learn More
+| URL | Espace | Utilisateur de démonstration |
+|---|---|---|
+| `/public` | Vitrine et adhésion | Hasina Rakotoarisoa — Gérante, Zafy Design (candidature en cours) |
+| `/membre` | Portail adhérent | Voninkazo Andriamampianina — Directrice Générale, Bio Sud Essences |
+| `/admin` | Back-office | Ando Ratovomanana — Direction exécutive |
 
-To learn more about Next.js, take a look at the following resources:
+La page `/` propose le choix entre les trois. Un sélecteur est également présent
+en haut de la sidebar.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Règle d'accès liée à la cotisation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+C'est le cœur du produit : **l'accès à l'application dépend du paiement de la
+cotisation**.
 
-## Deploy on Vercel
+| Statut | Accès | Signal |
+|---|---|---|
+| À jour | Complet | — |
+| En attente de paiement | Restreint au profil | Bandeau orange |
+| En retard, moins de 30 jours | **Complet** | Bandeau rouge, compte à rebours |
+| En retard, plus de 30 jours | Restreint au profil | Bandeau rouge, cadenas |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Contrairement au prototype HTML — où le contrôle vivait dans la fonction `go()`
+côté navigateur, contournable depuis la console — la règle est appliquée
+**côté serveur**, dans [`proxy.ts`](./proxy.ts), avant tout rendu.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Les règles elles-mêmes sont des fonctions pures dans
+[`lib/membership.ts`](./lib/membership.ts) : le retard est recalculé à la volée à
+partir de `retardDepuis`, jamais stocké. Aucun job nocturne n'est nécessaire.
+
+**Pour voir l'état verrouillé** : dans `lib/data/users.ts`, remplacez
+`memberId: "m1"` par `"m8"` (72 jours de retard) ou `"m4"` (en attente de
+paiement).
+
+## Structure
+
+```
+app/
+├── page.tsx              Choix de l'espace
+├── public/               Vitrine, formulaire d'adhésion, confirmation
+├── membre/               8 sections, protégées par proxy.ts
+└── admin/                8 sections
+components/
+├── ui.tsx                Primitives (Card, Pill, Btn, Stat, Banner, Table…)
+├── domain.tsx            Composants métier (EventCard, MemberCard, fil…)
+├── Shell.tsx             Sidebar + topbar, partagée membre/admin
+└── pages/                Vues communes aux deux espaces
+lib/
+├── types.ts              Modèle de domaine, calqué sur le futur schéma Prisma
+├── membership.ts         Règles d'adhésion
+├── format.ts             Dates, montants, libellés de statut
+└── data/                 Données d'exemple
+```
+
+Les vues `Actualités`, `Ressources`, `Offres CanCham` et `Messagerie` sont
+**partagées** entre membre et admin, comme dans le prototype : mêmes écrans,
+contrôles d'édition en plus côté admin.
+
+## Données d'exemple
+
+Entreprises, personnes et montants **fictifs**, chargés en base par `npm run db:seed`.
+
+- **10 membres** : 7 à jour, 1 en attente de paiement, 1 en retard (72 jours),
+  1 candidature à examiner. Dont un indépendant (personne physique).
+- **9 événements** répartis avant et après la date du jour
+- **8 actualités**, **8 ressources**, **7 factures**, **3 offres membres**,
+  **6 services CanCham**, **4 fils de discussion**
+
+Montants en Ariary.
+
+## Modèle de données
+
+Le prototype confondait l'entreprise et la personne. Ici `Member` (l'entreprise
+adhérente, porteuse de la cotisation) et `User` (la personne qui se connecte)
+sont **deux entités distinctes** — une entreprise pourra avoir plusieurs
+utilisateurs.
+
+Autre distinction préservée du prototype : `Offer` (promotions publiées **par**
+les membres) et `CanchamService` (services proposés **par** la chambre) sont deux
+notions différentes, avec deux pages différentes.
+
+## Base de données
+
+PostgreSQL 16, dans un **cluster local au projet** (`.pgdata/`, port **5434**) —
+même approche qu'ESA-app : aucun mot de passe à gérer, et aucune interférence
+avec le cluster système du 5432.
+
+```bash
+npm run db:start     # démarre le cluster (lancé automatiquement par `npm run dev`)
+npm run db:stop      # l'arrête
+npm run db:seed      # recharge les données d'exemple
+npm run db:studio    # explorateur Prisma
+npm run db:migrate   # nouvelle migration après modification du schéma
+npm run db:reset     # remet la base à zéro puis rejoue le seed
+```
+
+Le schéma est dans [`prisma/schema.prisma`](./prisma/schema.prisma), traduit
+depuis `lib/types.ts`. **16 tables**, dont :
+
+| Table | Rôle |
+|---|---|
+| `members` / `users` | L'entreprise adhérente et les personnes qui s'y rattachent |
+| `produits` | Produits mis en avant sur la fiche membre |
+| `events` / `registrations` / `attendees` | Événements, inscriptions de membres, présents à l'accueil |
+| `news` / `resources` / `comments` | Contenus et leurs commentaires |
+| `offers` / `cancham_services` | Promotions *des* membres / services *de* la chambre |
+| `invoices` | Cotisations et facturations d'événements |
+| `message_threads` / `messages` | Messagerie |
+| `audit_logs` | Trace des opérations sensibles — une écriture financière ne disparaît pas silencieusement |
+
+Deux choix de modélisation à connaître :
+
+- **`Member` et `User` sont distincts.** Une entreprise peut avoir plusieurs
+  utilisateurs ; le prototype les confondait.
+- **Le nombre d'inscrits n'est pas stocké.** Il se calcule depuis `attendees`.
+  De même, le retard de cotisation se déduit de `retardDepuis` — rien à
+  recalculer par un job nocturne, aucune désynchronisation possible.
+
+### Contenu après seed
+
+10 membres · 3 utilisateurs · 30 produits · 9 événements · 3 inscriptions ·
+748 participants · 8 actualités · 8 ressources · 3 commentaires · 3 offres ·
+6 services · 7 factures · 4 fils · 11 messages
+
+### Comment l'application y accède
+
+Toutes les pages lisent la base. Trois modules assurent le passage :
+
+| Module | Rôle |
+|---|---|
+| [`lib/db.ts`](./lib/db.ts) | Client Prisma partagé, mis en cache pour ne pas multiplier les pools en dev |
+| [`lib/queries.ts`](./lib/queries.ts) | Les requêtes. Chacune rend le modèle de vue de `lib/types.ts`, donc les composants ignorent Prisma |
+| [`lib/session.ts`](./lib/session.ts) | Résout l'utilisateur courant depuis son rôle. Seul point à réécrire quand l'authentification arrivera |
+
+Les données d'exemple vivent désormais dans [`prisma/fixtures/`](./prisma/fixtures/),
+où elles ne servent plus qu'au seed. `lib/data/` n'existe plus.
+
+## Actions
+
+Toutes les actions écrivent en base, par des Server Actions dans
+[`lib/actions/`](./lib/actions/). Chacune redirige avec un message de
+confirmation, affiché par [`components/Toast.tsx`](./components/Toast.tsx).
+
+| Espace | Ce qui est possible |
+|---|---|
+| Public | Déposer une candidature — elle apparaît aussitôt dans le back-office |
+| Membre | Modifier sa fiche, s'inscrire à un événement et annuler, commenter, écrire dans un fil, télécharger une ressource, imprimer son certificat |
+| Admin | Approuver ou refuser une candidature, encaisser un paiement, relancer, ajouter ou supprimer un membre, créer et modifier un événement, pointer les arrivées, publier actualités, offres, services et ressources |
+
+Deux garde-fous :
+
+- **Les opérations sensibles sont journalisées** dans `audit_logs` : paiement,
+  suppression de membre, refus de candidature. Une écriture financière ne
+  disparaît jamais sans trace.
+- **Les boutons d'envoi se désactivent pendant le traitement**, sans quoi un
+  double-clic sur « Enregistrer le paiement » créerait deux factures.
+
+Les formulaires postent vers les actions sans dépendre de JavaScript ; seules
+les modales en ont besoin pour s'ouvrir.
+
+## Volontairement absent
+
+- **Authentification** — écarté à la demande, pour cette étape
+- **Paiement en ligne** — V1 prévue en enregistrement manuel par l'admin
+- **Envoi d'e-mails** — les relances sont consignées, pas expédiées
+- **Fichiers** — aucun document n'est stocké : télécharger consigne la demande
+- **QR fonctionnel** — l'aperçu reste décoratif
+- **Envoi d'e-mails**, **upload d'images**, **QR fonctionnel** — l'aperçu de QR
+  est un placeholder, comme dans le prototype
+
+## Stack
+
+Next.js 16.3 · React 19 · TypeScript · Tailwind CSS 4 · lucide-react ·
+Prisma 7.10 · PostgreSQL 16
