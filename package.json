@@ -9,15 +9,11 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
-    "db:start": "/usr/lib/postgresql/16/bin/pg_ctl -D .pgdata -o '-p 5434 -c unix_socket_directories=/tmp' -l .pgdata/server.log start || true",
-    "db:stop": "/usr/lib/postgresql/16/bin/pg_ctl -D .pgdata stop || true",
-    "db:status": "/usr/lib/postgresql/16/bin/pg_ctl -D .pgdata status",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "db:studio": "prisma studio",
-    "predev": "npm run db:start"
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

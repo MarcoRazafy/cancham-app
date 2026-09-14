@@ -7,10 +7,13 @@ Canada–Madagascar**, porté du prototype HTML vers Next.js.
 
 ```bash
 npm install
+cp .env.example .env        # renseignez le mot de passe PostgreSQL
+npm run db:deploy
+npm run db:seed
 npm run dev
 ```
 
-> Le port 3000 est parfois occupé sur cette machine : `npx next dev -p 3007`.
+Voir **Base de données** ci-dessous pour la création du rôle et de la base.
 
 ## Les trois espaces
 
@@ -99,18 +102,32 @@ notions différentes, avec deux pages différentes.
 
 ## Base de données
 
-PostgreSQL 16, dans un **cluster local au projet** (`.pgdata/`, port **5434**) —
-même approche qu'ESA-app : aucun mot de passe à gérer, et aucune interférence
-avec le cluster système du 5432.
+PostgreSQL 16, dans le **cluster système** (service `postgresql`, port 5432).
+La base s'appelle `cancham_connect` et appartient au rôle `cancham`.
+
+### Mise en place, une fois par poste
 
 ```bash
-npm run db:start     # démarre le cluster (lancé automatiquement par `npm run dev`)
-npm run db:stop      # l'arrête
+sudo -u postgres psql -c "CREATE ROLE cancham LOGIN PASSWORD 'choisis-en-un';"
+sudo -u postgres createdb -O cancham cancham_connect
+
+cp .env.example .env          # puis renseignez le mot de passe
+npm run db:deploy             # applique les migrations
+npm run db:seed               # charge les données d'exemple
+```
+
+### Au quotidien
+
+```bash
 npm run db:seed      # recharge les données d'exemple
 npm run db:studio    # explorateur Prisma
 npm run db:migrate   # nouvelle migration après modification du schéma
+npm run db:deploy    # applique les migrations existantes (production)
 npm run db:reset     # remet la base à zéro puis rejoue le seed
 ```
+
+Le service système démarre avec la machine : il n'y a rien à lancer avant
+`npm run dev`.
 
 Le schéma est dans [`prisma/schema.prisma`](./prisma/schema.prisma), traduit
 depuis `lib/types.ts`. **16 tables**, dont :
