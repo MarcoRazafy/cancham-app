@@ -33,7 +33,7 @@ export function CarteEvenement({
   return (
     <Link
       href={`/public/evenements/${evenement.id}`}
-      className="group block no-underline rounded-xl overflow-hidden bg-white/[0.03] border border-white/10 transition-colors hover:border-white/25"
+      className="group snap-start shrink-0 w-[min(84vw,330px)] block no-underline rounded-xl overflow-hidden bg-[var(--marque-nuit)] border border-white/10 transition-colors hover:border-white/25"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[var(--marque-nuit-2)]">
         {visuel ? (
@@ -56,7 +56,7 @@ export function CarteEvenement({
           <span className="surtitre text-white/50">{categorie(evenement)}</span>
         </div>
 
-        <h3 className="titre text-[19px] font-bold m-0 mb-2.5 text-white">
+        <h3 className="titre text-[19px] m-0 mb-2.5 text-white">
           {evenement.titre}
         </h3>
 

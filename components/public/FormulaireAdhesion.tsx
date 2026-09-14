@@ -18,7 +18,7 @@ const ETIQUETTE = "block text-[12.5px] font-semibold text-white/70 mb-1.5";
 export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
   return (
     <div className="rounded-2xl border border-white/12 bg-white/[0.03] p-6 md:p-7">
-      <h3 className="titre text-[20px] font-bold m-0 mb-5">Demande d’adhésion</h3>
+      <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
 
       <form action={submitAdhesion} className="flex flex-col gap-4">
         {/* L'accueil ne collecte que l'essentiel ; le reste se complète ensuite. */}

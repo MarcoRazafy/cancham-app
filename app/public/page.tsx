@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, FileText, Users } from "lucide-react";
+import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
 import { FormulaireAdhesion } from "@/components/public/FormulaireAdhesion";
@@ -21,7 +22,7 @@ import {
 export default async function PublicHome() {
   const [stats, evenements, secteurs] = await Promise.all([
     getStatsPubliques(),
-    getProchainsEvenements(3),
+    getProchainsEvenements(8),
     getSecteurs(),
   ]);
 
@@ -117,7 +118,7 @@ export default async function PublicHome() {
                 Le réseau Canada–Madagascar
               </span>
 
-              <h1 className="text-[clamp(34px,5.2vw,58px)] font-extrabold leading-[1.06] m-0 mt-5">
+              <h1 className="text-[clamp(34px,5.2vw,58px)] leading-[1.08] m-0 mt-5">
                 <span className="apparition block" style={{ animationDelay: "0.16s" }}>
                   Deux pays.
                 </span>
@@ -186,7 +187,7 @@ export default async function PublicHome() {
                   i > 0 ? "md:border-l md:border-white/12" : ""
                 }`}
               >
-                <dt className="titre text-[clamp(26px,3.4vw,34px)] font-extrabold text-white">
+                <dt className="titre text-[clamp(26px,3.4vw,34px)] text-white">
                   <Compteur valeur={c.nombre} />
                   {c.apres}
                 </dt>
@@ -198,32 +199,40 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== Événements ==================== */}
-      <section
-        id="evenements"
-        className="scroll-mt-6 bg-[var(--marque-nuit)] border-t border-white/10"
-      >
-        <div className="max-w-[1120px] mx-auto px-5 py-16">
-          <div className="apparition-defilement">
-            <span className="surtitre text-white/45">Rencontrons-nous</span>
-          <h2 className="titre text-[clamp(28px,4vw,40px)] font-extrabold m-0 mt-2.5">
-            Les prochains rendez-vous
-          </h2>
-            <p className="text-[15px] text-white/65 m-0 mt-2.5">
-              Des rencontres pour apprendre, échanger et créer des liens.
-            </p>
-          </div>
-
-          {evenements.length ? (
-            <div className="apparition-defilement grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
-              {evenements.map((e, i) => (
-                <CarteEvenement key={e.id} evenement={e} index={i} />
-              ))}
+      <section id="evenements" className="scroll-mt-6">
+        <div className="max-w-[1120px] mx-auto px-5 pt-14 pb-8">
+          <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-10">
+            <div className="flex items-end justify-between gap-6 flex-wrap">
+              <div>
+                <span className="surtitre text-white/45">Rencontrons-nous</span>
+                <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
+                  Les prochains rendez-vous
+                </h2>
+                <p className="text-[15px] text-white/65 m-0 mt-2.5">
+                  Des rencontres pour apprendre, échanger et créer des liens.
+                </p>
+              </div>
+              {evenements.length ? (
+                <span className="text-[13px] text-white/45">
+                  {evenements.length} à venir
+                </span>
+              ) : null}
             </div>
-          ) : (
-            <p className="text-white/60 mt-8">
-              Aucun rendez-vous programmé pour le moment.
-            </p>
-          )}
+
+            {evenements.length ? (
+              <div className="mt-8">
+                <CarrouselEvenements>
+                  {evenements.map((e, i) => (
+                    <CarteEvenement key={e.id} evenement={e} index={i} />
+                  ))}
+                </CarrouselEvenements>
+              </div>
+            ) : (
+              <p className="text-white/60 mt-8 mb-0">
+                Aucun rendez-vous programmé pour le moment.
+              </p>
+            )}
+          </div>
         </div>
       </section>
 
@@ -234,7 +243,7 @@ export default async function PublicHome() {
             <div className="grid gap-10 lg:grid-cols-2 items-start">
               <div>
                 <span className="surtitre text-white/45">Rejoignez CanCham</span>
-                <h2 className="titre text-[clamp(26px,3.6vw,38px)] font-extrabold m-0 mt-2.5 max-w-[16ch]">
+                <h2 className="titre text-[clamp(26px,3.6vw,38px)] m-0 mt-2.5 max-w-[16ch]">
                   Votre prochain partenariat commence ici.
                 </h2>
                 <p className="text-[15px] text-white/70 m-0 mt-3.5 max-w-[44ch]">

@@ -61,7 +61,7 @@ export default async function EvenementPublic({
         <div className="grid gap-9 lg:grid-cols-[1fr_320px] items-start">
           <div>
             <span className="surtitre text-white/45">{e.format}</span>
-            <h1 className="titre text-[clamp(28px,4vw,42px)] font-extrabold m-0 mt-2.5">
+            <h1 className="titre text-[clamp(28px,4vw,42px)] m-0 mt-2.5">
               {e.titre}
             </h1>
 
@@ -84,7 +84,7 @@ export default async function EvenementPublic({
 
           <aside className="rounded-xl border border-white/12 bg-white/[0.03] p-6">
             <div className="surtitre text-white/45">Participation</div>
-            <div className="titre text-[30px] font-extrabold mt-1.5">
+            <div className="titre text-[30px] mt-1.5">
               {e.payant ? fmtMoney(e.prix) : "Gratuit"}
             </div>
             <p className="text-[13px] text-white/60 mt-1.5 mb-5">
@@ -115,7 +115,7 @@ export default async function EvenementPublic({
 
         {prochains.filter((p) => p.id !== e.id).length ? (
           <section className="mt-14 pt-10 border-t border-white/10">
-            <h2 className="titre text-[22px] font-bold m-0 mb-5">
+            <h2 className="titre text-[22px] m-0 mb-5">
               Les autres rendez-vous
             </h2>
             <div className="grid gap-3">

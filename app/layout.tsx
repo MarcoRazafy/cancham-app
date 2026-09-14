@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 import { Toast } from "@/components/Toast";
 import {
   Fraunces,
+  Hammersmith_One,
   IBM_Plex_Mono,
   IBM_Plex_Sans,
-  Montserrat,
-  Open_Sans,
+  Inter,
 } from "next/font/google";
 import "./globals.css";
 
@@ -32,21 +32,25 @@ const plexMono = IBM_Plex_Mono({
 });
 
 /**
- * Polices de la charte CanCham : Montserrat pour les titres, Open Sans pour les
- * paragraphes. Elles ne servent que dans l'espace public, qui suit la charte de
- * la chambre ; les espaces membre et back-office gardent leur propre pile.
+ * Polices de l'espace public, relevées sur le site de la chambre : Hammersmith
+ * One pour les titres, Inter pour le texte courant.
+ *
+ * Hammersmith One n'existe qu'en graisse 400. Les titres ne doivent donc jamais
+ * porter de font-weight supérieur, sous peine de gras synthétique — la règle est
+ * posée dans globals.css. La hiérarchie repose sur la taille, pas sur la graisse.
+ *
+ * Les espaces membre et back-office gardent leur propre pile.
  */
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const hammersmith = Hammersmith_One({
+  variable: "--font-hammersmith",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400"],
   display: "swap",
 });
 
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -62,7 +66,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} ${montserrat.variable} ${openSans.variable}`}
+        className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} ${hammersmith.variable} ${inter.variable}`}
       >
         {children}
         <Suspense>
