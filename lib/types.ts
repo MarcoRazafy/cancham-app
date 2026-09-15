@@ -104,6 +104,19 @@ export interface CanchamEvent {
   prix: number;
   desc: string;
   photo: string | null;
+  /** Plage horaire, en clair. */
+  heure?: string | null;
+  /** À qui l'événement s'adresse en priorité. */
+  pourQui?: string | null;
+  /** Déroulé de la séance, dans l'ordre. */
+  programme?: EtapeProgramme[];
+}
+
+/** Une étape du déroulé d'un événement. */
+export interface EtapeProgramme {
+  heure: string;
+  titre: string;
+  detail?: string | null;
 }
 
 export type AttendeeStatus = "confirmé" | "présent" | "absent";

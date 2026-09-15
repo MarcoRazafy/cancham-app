@@ -40,7 +40,9 @@ export default async function EvenementPublic({
   const autres = prochains
     .map((evenement, rang) => ({ evenement, rang }))
     .filter(({ evenement }) => evenement.id !== e.id);
-  const visuel = visuelEvenement(e.id, index);
+  const visuel = e.photo
+    ? { url: e.photo, alt: "" }
+    : visuelEvenement(e.id, index);
   const restantes = Math.max(0, e.cap - e.inscrits);
 
   return (
@@ -88,9 +90,13 @@ export default async function EvenementPublic({
               </span>
             </div>
 
-            <p className="text-[16px] leading-[1.75] text-white/80 mt-7 max-w-[62ch]">
-              {e.desc}
-            </p>
+            <div className="mt-7 max-w-[62ch] flex flex-col gap-4">
+              {e.desc.split("\n\n").map((para, i) => (
+                <p key={i} className="m-0 text-[16px] leading-[1.75] text-white/80">
+                  {para}
+                </p>
+              ))}
+            </div>
           </div>
 
           <aside className="rounded-xl border border-white/12 bg-white/[0.03] p-6">
