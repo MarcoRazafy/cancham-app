@@ -155,18 +155,22 @@ export function Coquille({
 
       {/* ==================== Contenu ==================== */}
       <div className="flex-1 min-w-0 flex flex-col lg:ml-[274px]">
-        <header className="sticky top-0 z-30 bg-bg/92 backdrop-blur-md border-b border-line flex items-center gap-4 px-4 md:px-7 py-3">
+        {/* Barre supérieure en bleu de la charte : son contenu passe donc en clair. */}
+        <header
+          className="sticky top-0 z-30 border-b border-white/10 flex items-center gap-4 px-4 md:px-7 py-3 text-white"
+          style={{ background: "var(--superieure)" }}
+        >
           <button
             onClick={() => setMenuOuvert((v) => !v)}
             aria-label="Ouvrir le menu"
-            className="lg:hidden border border-line bg-surface rounded-lg p-2 cursor-pointer"
+            className="lg:hidden border border-white/20 bg-white/10 text-white rounded-lg p-2 cursor-pointer"
           >
             <Menu size={18} />
           </button>
 
-          <div className="text-[13px] text-faint whitespace-nowrap hidden sm:block">
+          <div className="text-[13px] text-white/60 whitespace-nowrap hidden sm:block">
             {fil} <span className="mx-1.5 opacity-50">/</span>
-            <span className="text-ink font-medium">{titre}</span>
+            <span className="text-white font-semibold">{titre}</span>
           </div>
 
           <Suspense fallback={<div className="flex-1" />}>
@@ -177,19 +181,19 @@ export function Coquille({
             <Link
               href="/membre#notifications"
               aria-label={`Notifications (${notifications.length})`}
-              className="relative w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:text-ink hover:bg-surface-2 no-underline"
+              className="relative w-9 h-9 rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 no-underline"
             >
               <Bell size={17} />
               {notifications.length ? (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent border-2 border-bg" />
+                <span className="pastille absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent border-2 border-[#0f1d2c]" />
               ) : null}
             </Link>
 
-            <span className="hidden md:flex items-center gap-1 text-[13px] font-semibold text-muted px-2">
+            <span className="hidden md:flex items-center gap-1 text-[13px] font-semibold text-white/75 px-2">
               FR <ChevronDown size={14} />
             </span>
 
-            <Avatar initiales={user.initiales} taille={36} />
+            <Avatar initiales={user.initiales} taille={36} neutre />
           </div>
         </header>
 
@@ -243,7 +247,7 @@ function Recherche() {
       <div className="relative w-full max-w-[420px]">
         <Search
           size={16}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/45 pointer-events-none"
         />
         <input
           type="search"
@@ -251,7 +255,7 @@ function Recherche() {
           defaultValue={surRecherche ? (params.get("q") ?? "") : ""}
           placeholder="Rechercher dans le réseau…"
           aria-label="Rechercher dans le réseau"
-          className="w-full border border-line bg-surface text-ink placeholder:text-faint rounded-lg pl-10 pr-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
+          className="w-full border border-white/20 bg-white/10 text-white placeholder:text-white/45 rounded-lg pl-10 pr-3 py-2.5 text-[13.5px] outline-none focus:border-white/45 focus:bg-white/15"
         />
       </div>
     </form>

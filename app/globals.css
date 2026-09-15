@@ -321,17 +321,23 @@ h3 {
   --shadow: 0 1px 2px rgb(15 29 44 / 0.05), 0 12px 28px -18px rgb(15 29 44 / 0.22);
 
   /*
-   * Barre latérale en bleu de la charte, du plus clair en tête au plus profond
-   * en pied. Le rouge et le vert ne disparaissent pas pour autant : ils
-   * reviennent en accents — entrée active, pastilles, compteurs.
+   * Barre latérale : le dégradé linéaire de la charte, basculé à la verticale.
+   * Il part du rouge #ad0707 et arrive au vert #007140 — les deux couleurs de
+   * la chambre, reliées par une zone sombre qui laisse respirer le menu.
    */
   --laterale: linear-gradient(
     180deg,
-    #1b3f60 0%,
-    #16304a 26%,
-    #122740 52%,
-    #0f1d2c 100%
+    #a3122a 0%,
+    #8a1024 14%,
+    #5c1220 32%,
+    #2a1f26 50%,
+    #123f2d 70%,
+    #0a5c36 86%,
+    #007140 100%
   );
+
+  /* Barre supérieure : bleu de la charte. */
+  --superieure: linear-gradient(90deg, #14293e 0%, #0f1d2c 100%);
 
   /* Dégradé des boutons d'action : rouge clair vers rouge foncé. */
   --bouton-rouge: linear-gradient(120deg, #d81f3a 0%, #ad0707 58%, #880511 100%);
