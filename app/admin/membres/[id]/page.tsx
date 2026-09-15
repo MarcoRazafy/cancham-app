@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, User as UserIcon } from "lucide-react";
-import { LogoMark, NeedsAndInterests, PhotoPlaceholder } from "@/components/domain";
+import { LogoMark, NeedsAndInterests, Visuel } from "@/components/domain";
 import { BtnLink, Card, Pill, SectionTitle, StatusPill } from "@/components/ui";
 import {
   ApproveButton,
@@ -12,7 +12,11 @@ import {
 import { COTISATION_ANNUELLE } from "@/lib/membership";
 import { getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
-import { joursDeRetard, retardBloque, RETARD_BLOCAGE_JOURS } from "@/lib/membership";
+import {
+  joursDeRetard,
+  retardBloque,
+  RETARD_BLOCAGE_JOURS,
+} from "@/lib/membership";
 
 export default async function AdminMembreDetail({
   params,
@@ -33,10 +37,19 @@ export default async function AdminMembreDetail({
 
       <div className="grid gap-4 items-start lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden p-0">
-          <PhotoPlaceholder
+          <Visuel
+            src={m.cover}
+            alt=""
             seed={m.id}
-            className="h-[150px] w-full"
-            icon={m.type === "physique" ? <UserIcon size={26} /> : <Building2 size={26} />}
+            className="h-[190px] w-full"
+            sizes="(max-width: 1024px) 100vw, 900px"
+            icon={
+              m.type === "physique" ? (
+                <UserIcon size={26} />
+              ) : (
+                <Building2 size={26} />
+              )
+            }
           />
           <div className="p-[22px]">
             <div className="flex gap-4">
@@ -51,7 +64,9 @@ export default async function AdminMembreDetail({
                   {m.type === "physique" ? (
                     <Pill icon={<UserIcon size={10} />}>Personne physique</Pill>
                   ) : null}
-                  <Pill>Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}</Pill>
+                  <Pill>
+                    Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}
+                  </Pill>
                 </div>
               </div>
             </div>
@@ -134,7 +149,9 @@ export default async function AdminMembreDetail({
 function Field({ label, value }: { label: string; value?: string }) {
   return (
     <div>
-      <div className="text-[12.3px] font-semibold text-muted mb-1.5">{label}</div>
+      <div className="text-[12.3px] font-semibold text-muted mb-1.5">
+        {label}
+      </div>
       <div className="text-[13.6px]">{value ?? "—"}</div>
     </div>
   );

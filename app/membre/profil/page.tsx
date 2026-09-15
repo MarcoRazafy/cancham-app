@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { Building2, Clock, CreditCard, Lock, User as UserIcon } from "lucide-react";
-import { LogoMark, NeedsAndInterests, PhotoPlaceholder } from "@/components/domain";
+import {
+  AvatarRond,
+  LogoMark,
+  NeedsAndInterests,
+  Visuel,
+} from "@/components/domain";
 import { EditProfileButton } from "@/components/forms/MemberForms";
 import {
   Banner,
@@ -92,9 +97,12 @@ export default async function ProfilPage() {
       ) : null}
 
       <Card className="overflow-hidden mb-[22px] p-0">
-        <PhotoPlaceholder
+        <Visuel
+          src={m.cover}
+          alt=""
           seed={m.id}
-          className="h-[150px] w-full"
+          className="h-[190px] w-full"
+          sizes="(max-width: 1024px) 100vw, 900px"
           icon={m.type === "physique" ? <UserIcon size={26} /> : <Building2 size={26} />}
         />
         <div className="p-[22px]">
@@ -129,9 +137,12 @@ export default async function ProfilPage() {
           <div className="grid gap-4 md:grid-cols-3">
             {m.produits.map((p) => (
               <Card key={p.label} className="p-4 text-center">
-                <PhotoPlaceholder
+                <Visuel
+                  src={p.photo}
+                  alt={p.label}
                   seed={m.id + p.label}
                   className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
+                  sizes="(max-width: 768px) 100vw, 260px"
                   iconSize={18}
                 />
                 <div className="font-semibold text-[13px]">{p.label}</div>
@@ -148,12 +159,21 @@ export default async function ProfilPage() {
               <div className="text-[12.3px] font-semibold text-muted mb-1.5">
                 {m.type === "physique" ? "Contact" : "Représentant"}
               </div>
-              <div className="text-[13.6px] font-semibold">
-                {user.nom}
-                <br />
-                <span className="font-normal text-muted text-[12.5px]">
-                  {user.fonction}
-                </span>
+              <div className="flex items-center gap-2.5">
+                <AvatarRond
+                  src={user.photo}
+                  alt={user.nom}
+                  initiales={user.initiales}
+                  taille={40}
+                  className="bg-accent-soft text-accent-strong"
+                />
+                <div className="text-[13.6px] font-semibold min-w-0">
+                  {user.nom}
+                  <br />
+                  <span className="font-normal text-muted text-[12.5px]">
+                    {user.fonction}
+                  </span>
+                </div>
               </div>
             </div>
             <div>

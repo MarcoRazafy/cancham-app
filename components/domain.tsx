@@ -141,6 +141,26 @@ export function LogoMark({
       </div>
     );
   }
+  // Personne morale : le visuel de l'entreprise tient lieu de logo. Le
+  // monogramme ne sert plus que de repli, quand aucune image n'est renseignée.
+  if (member.photo) {
+    return (
+      <div
+        className="rounded-[var(--radius-s)] overflow-hidden bg-surface-2 border border-line shrink-0"
+        style={{ width: size, height: size }}
+      >
+        <Image
+          src={member.photo}
+          alt={member.nom}
+          width={size}
+          height={size}
+          sizes={`${size}px`}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="rounded-[var(--radius-s)] bg-accent-soft text-accent-strong flex items-center justify-center font-[family-name:var(--font-display)] font-bold shrink-0"
