@@ -120,14 +120,14 @@ export function Coquille({
                     onClick={() => setMenuOuvert(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] no-underline transition-colors ${
                       actif
-                        ? "bg-white/[0.13] text-white font-semibold"
-                        : "text-white/72 hover:bg-white/[0.07] hover:text-white"
+                        ? "bg-accent text-white font-semibold shadow-[0_2px_10px_-2px_rgba(173,7,7,0.6)]"
+                        : "text-white/70 hover:bg-white/[0.08] hover:text-white"
                     }`}
                   >
                     <Icone size={18} className="shrink-0 opacity-90" />
                     <span className="flex-1">{item.label}</span>
                     {badge ? (
-                      <span className="text-[11px] font-bold w-[22px] h-[22px] rounded-full bg-accent text-white flex items-center justify-center">
+                      <span className="pastille text-[11px] font-bold w-[22px] h-[22px] rounded-full bg-accent text-white flex items-center justify-center">
                         {badge}
                       </span>
                     ) : null}
@@ -140,7 +140,7 @@ export function Coquille({
 
         <Link
           href="/membre/profil"
-          className="mx-3.5 mb-5 mt-1 px-3 py-3 rounded-lg flex items-center gap-3 border-t border-white/10 pt-4 no-underline hover:bg-white/[0.06]"
+          className="mx-3.5 mb-5 mt-1 px-3 py-3 rounded-lg flex items-center gap-3 border-t-2 border-success pt-4 no-underline hover:bg-white/[0.06]"
         >
           <Avatar initiales={user.initiales} taille={40} neutre />
           <span className="min-w-0 flex-1">

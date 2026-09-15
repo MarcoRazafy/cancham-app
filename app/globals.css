@@ -43,6 +43,10 @@
 }
 
 :root {
+  /* Dégradé des boutons d'action, disponible dans toute l'application. */
+  --bouton-rouge: linear-gradient(120deg, #d81f3a 0%, #ad0707 58%, #880511 100%);
+  --bouton-rouge-survol: linear-gradient(120deg, #e83a52 0%, #c00f18 58%, #9c0715 100%);
+
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #f4f6f4;
@@ -317,19 +321,21 @@ h3 {
   --shadow: 0 1px 2px rgb(15 29 44 / 0.05), 0 12px 28px -18px rgb(15 29 44 / 0.22);
 
   /*
-   * La barre latérale garde le dégradé de la charte, rouge vers vert : c'est
-   * l'élément de marque de l'espace. Seule la zone de travail passe en clair.
+   * Barre latérale en bleu de la charte, du plus clair en tête au plus profond
+   * en pied. Le rouge et le vert ne disparaissent pas pour autant : ils
+   * reviennent en accents — entrée active, pastilles, compteurs.
    */
   --laterale: linear-gradient(
     180deg,
-    #a3122a 0%,
-    #8a1024 14%,
-    #5c1220 32%,
-    #2a1f26 50%,
-    #123f2d 70%,
-    #0a5c36 86%,
-    #007140 100%
+    #1b3f60 0%,
+    #16304a 26%,
+    #122740 52%,
+    #0f1d2c 100%
   );
+
+  /* Dégradé des boutons d'action : rouge clair vers rouge foncé. */
+  --bouton-rouge: linear-gradient(120deg, #d81f3a 0%, #ad0707 58%, #880511 100%);
+  --bouton-rouge-survol: linear-gradient(120deg, #e83a52 0%, #c00f18 58%, #9c0715 100%);
 
   background: var(--bg);
   color: var(--text);
@@ -337,13 +343,21 @@ h3 {
   color-scheme: light;
 }
 
+/*
+ * Titres en gras.
+ *
+ * Hammersmith One n'existe qu'en graisse 400 : l'appeler en gras produirait un
+ * faux gras fabriqué par le navigateur, épais et flou. Les espaces de travail
+ * passent donc sur Inter 700, qui a une vraie graisse grasse. L'espace public
+ * garde Hammersmith One : c'est là que la fonte porte la voix de la marque.
+ */
 .espace-membre h1,
 .espace-membre h2,
 .espace-membre h3,
 .espace-membre .titre {
-  font-family: var(--font-titre);
-  font-weight: 400;
-  letter-spacing: -0.005em;
+  font-family: var(--font-texte);
+  font-weight: 700;
+  letter-spacing: -0.018em;
   text-wrap: balance;
 }
 
@@ -369,4 +383,36 @@ h3 {
   .print-only {
     display: block !important;
   }
+}
+
+
+/* ============================================================
+   Boutons d'action — dégradé rouge de la charte.
+   ============================================================ */
+
+/*
+ * Le dégradé s'applique aux boutons primaires des trois espaces. Il est posé
+ * sur la classe utilitaire `bg-accent` déjà employée partout, pour ne pas avoir
+ * à reprendre chaque appel.
+ */
+.espace-membre .bg-accent,
+.marque .bg-marque-rouge,
+.bouton-degrade {
+  background-image: var(--bouton-rouge, linear-gradient(120deg, #d81f3a, #ad0707 58%, #880511));
+  border-color: transparent;
+}
+
+.espace-membre .bg-accent:hover,
+.marque .bg-marque-rouge:hover,
+.bouton-degrade:hover {
+  background-image: var(
+    --bouton-rouge-survol,
+    linear-gradient(120deg, #e83a52, #c00f18 58%, #9c0715)
+  );
+}
+
+/* Les pastilles et petits repères gardent un aplat : un dégradé y serait illisible. */
+.espace-membre .pastille.bg-accent,
+.espace-membre [class*="rounded-full"].bg-accent {
+  background-image: none;
 }
