@@ -190,6 +190,16 @@ async function main() {
         prix: e.prix,
         desc: e.desc,
         photo: e.photo,
+        heure: e.heure ?? null,
+        pourQui: e.pourQui ?? null,
+        programme: {
+          create: (e.programme ?? []).map((etape, i) => ({
+            heure: etape.heure,
+            titre: etape.titre,
+            detail: etape.detail ?? null,
+            ordre: i,
+          })),
+        },
       },
     });
     await prisma.attendee.createMany({

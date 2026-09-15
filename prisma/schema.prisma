@@ -201,12 +201,17 @@ model Event {
   prix    Int         @default(0)
   desc    String
   photo   String?
+  /// Plage horaire, en clair : « 17 h 30 – 20 h 00 ».
+  heure   String?
+  /// À qui l'événement s'adresse en priorité.
+  pourQui String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   inscriptions Registration[]
   participants Attendee[]
+  programme    EventAgenda[]
 
   @@index([date])
   @@map("events")
@@ -231,6 +236,22 @@ model Registration {
 }
 
 /// Personne présente à un événement, membre ou non.
+/// Une étape du déroulé d'un événement.
+model EventAgenda {
+  id     String  @id @default(cuid())
+  /// Heure de l'étape : « 18 h 00 ».
+  heure  String
+  titre  String
+  detail String?
+  ordre  Int
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, ordre])
+  @@map("event_agenda")
+}
+
 model Attendee {
   id         String         @id @default(cuid())
   nom        String

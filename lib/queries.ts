@@ -139,7 +139,10 @@ export async function getEvents(): Promise<CanchamEvent[]> {
 export async function getEvent(id: string): Promise<CanchamEvent | null> {
   const e = await prisma.event.findUnique({
     where: { id },
-    include: { _count: { select: { participants: true } } },
+    include: {
+      _count: { select: { participants: true } },
+      programme: { orderBy: { ordre: "asc" } },
+    },
   });
   if (!e) return null;
   return {
@@ -154,6 +157,13 @@ export async function getEvent(id: string): Promise<CanchamEvent | null> {
     prix: e.prix,
     desc: e.desc,
     photo: e.photo,
+    heure: e.heure,
+    pourQui: e.pourQui,
+    programme: e.programme.map((etape) => ({
+      heure: etape.heure,
+      titre: etape.titre,
+      detail: etape.detail,
+    })),
   };
 }
 
@@ -555,4 +565,26 @@ export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
     desc: e.desc,
     photo: e.photo,
   }));
+}
+
+/**
+ * Entreprises déjà inscrites à un événement.
+ *
+ * On renvoie les noms d'entreprise dédupliqués, pas les personnes : un membre
+ * qui consulte la fiche veut savoir qui sera dans la salle, pas qui exactement
+ * son homologue a envoyé. `total` compte les entreprises distinctes, pas les
+ * participants — deux nombres différents, et c'est voulu.
+ */
+export async function getEntreprisesInscrites(
+  eventId: string,
+  n = 12,
+): Promise<{ noms: string[]; total: number }> {
+  const rows = await prisma.attendee.findMany({
+    where: { eventId },
+    select: { entreprise: true },
+    distinct: ["entreprise"],
+    orderBy: { entreprise: "asc" },
+  });
+  const noms = rows.map((r) => r.entreprise);
+  return { noms: noms.slice(0, n), total: noms.length };
 }
