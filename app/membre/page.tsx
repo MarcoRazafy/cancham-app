@@ -3,14 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowRight,
-  CalendarDays,
+  Briefcase,
   CheckCircle2,
   ChevronRight,
   Clock,
+  FileText,
   Lock,
   Mail,
   MapPin,
-  Users,
 } from "lucide-react";
 import { AvatarRond, OfferCard } from "@/components/domain";
 import { CarrouselOffres } from "@/components/membre/CarrouselOffres";
@@ -30,7 +30,8 @@ import {
   getMembresAnnuaire,
   getOffers,
   getRegistrations,
-  getStatsPubliques,
+  getResources,
+  getServices,
   getUnreadTotal,
 } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
@@ -43,14 +44,15 @@ export default async function VueDEnsemble() {
   if (!membreOuNull) notFound();
   const me = membreOuNull;
 
-  const [events, annuaire, inscriptions, stats, nonLus, offres] =
+  const [events, annuaire, inscriptions, nonLus, offres, ressources, services] =
     await Promise.all([
       getEvents(),
       getMembresAnnuaire(),
       getRegistrations(me.id),
-      getStatsPubliques(),
       getUnreadTotal(),
       getOffers(),
+      getResources(),
+      getServices(),
     ]);
 
   const aVenir = events.filter((e) => !isPast(e.date));
@@ -61,6 +63,8 @@ export default async function VueDEnsemble() {
 
   // Trois entreprises à découvrir, la sienne exclue.
   const aDecouvrir = annuaire.filter((m) => m.id !== me.id).slice(0, 3);
+  const ressource = ressources[0];
+  const service = services.find((s) => s.type === "payant") ?? services[0];
 
   const enAttente = ADHESION_PENDING.includes(me.statut);
   const bloque = retardBloque(me);
@@ -97,30 +101,29 @@ export default async function VueDEnsemble() {
         jours={joursDeRetard(me)}
       />
 
-      {/* ==================== Compteurs ==================== */}
-      <div className="grid gap-4 mb-5 sm:grid-cols-2 lg:grid-cols-3">
-        <Compteur
-          icone={<Users size={26} />}
-          valeur={stats.membres}
-          libelle="Entreprises du réseau"
-          href="/membre/annuaire"
-          teinte="vert"
-        />
-        <Compteur
-          icone={<CalendarDays size={26} />}
-          valeur={aVenir.length}
-          libelle="Événements à venir"
-          href="/membre/evenements"
-          teinte="rouge"
-        />
-        <Compteur
-          icone={<Mail size={26} />}
-          valeur={nonLus}
-          libelle={`Message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}`}
-          href="/membre/messagerie"
-          teinte="bleu"
-        />
-      </div>
+      {/* ==================== Offres & promotions membres ==================== */}
+      <Card className="carte-filet filet-degrade p-6 mb-5">
+        <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
+          <div>
+            <h2 className="text-[19px] m-0">Offres &amp; promotions membres</h2>
+            <p className="text-[13.5px] text-muted m-0 mt-1">
+              Les avantages que les adhérents se réservent entre eux
+            </p>
+          </div>
+          <Link
+            href="/membre/actualites"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent no-underline hover:underline"
+          >
+            Toutes les offres <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        <CarrouselOffres>
+          {offres.map((o) => (
+            <OfferCard key={o.id} offer={o} />
+          ))}
+        </CarrouselOffres>
+      </Card>
 
       {/* ==================== Rendez-vous + annuaire ==================== */}
       <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
@@ -242,30 +245,41 @@ export default async function VueDEnsemble() {
         </Card>
       </div>
 
-      {/* ==================== Offres & promotions membres ==================== */}
-      <Card className="carte-filet filet-degrade p-6">
-        <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
-          <div>
-            <h2 className="text-[19px] m-0">Offres &amp; promotions membres</h2>
-            <p className="text-[13.5px] text-muted m-0 mt-1">
-              Les avantages que les adhérents se réservent entre eux
-            </p>
-          </div>
-          <Link
-            href="/membre/actualites"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent no-underline hover:underline"
-          >
-            Toutes les offres <ArrowRight size={14} />
-          </Link>
-        </div>
 
-        <CarrouselOffres>
-          {offres.map((o) => (
-            <OfferCard key={o.id} offer={o} />
-          ))}
-        </CarrouselOffres>
-      </Card>
-
+      {/* ==================== Raccourcis ==================== */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Raccourci
+          icone={<Mail size={24} />}
+          surtitre="Vos échanges"
+          titre={`${nonLus} nouveau${nonLus > 1 ? "x" : ""} message${nonLus > 1 ? "s" : ""}`}
+          detail="Poursuivez vos discussions avec le réseau."
+          lien="Ouvrir la messagerie"
+          href="/membre/messagerie"
+          teinte="bleu"
+        />
+        {ressource ? (
+          <Raccourci
+            icone={<FileText size={24} />}
+            surtitre="Ressource à découvrir"
+            titre={ressource.titre}
+            pastille={ressource.type === "gratuit" ? "Inclus" : fmtMoney(ressource.prix)}
+            lien="Consulter"
+            href="/membre/ressources"
+            teinte="rouge"
+          />
+        ) : null}
+        {service ? (
+          <Raccourci
+            icone={<Briefcase size={24} />}
+            surtitre="Services CanCham"
+            titre={service.titre}
+            detail={service.desc}
+            lien="Voir les services"
+            href="/membre/offres-cancham"
+            teinte="vert"
+          />
+        ) : null}
+      </div>
     </>
   );
 }
@@ -356,35 +370,6 @@ const TEINTES_COMPTEUR = {
   bleu: { tuile: "tuile-bleue", filet: "filet-bleu" },
 } as const;
 
-function Compteur({
-  icone,
-  valeur,
-  libelle,
-  href,
-  teinte,
-}: {
-  icone: React.ReactNode;
-  valeur: number;
-  libelle: string;
-  href: string;
-  /** Les trois couleurs de la chambre se répartissent sur la rangée. */
-  teinte: keyof typeof TEINTES_COMPTEUR;
-}) {
-  return (
-    <Link href={href} className="no-underline">
-      <Card
-        className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex items-center gap-4 transition-shadow hover:shadow-[0_10px_26px_-18px_rgba(15,29,44,0.4)]`}
-      >
-        <span className={`tuile ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
-        <span>
-          <span className="titre block text-[30px] leading-none text-ink">{valeur}</span>
-          <span className="block text-[13.5px] text-muted mt-1.5">{libelle}</span>
-        </span>
-      </Card>
-    </Link>
-  );
-}
-
 function PastilleDate({ date }: { date: string }) {
   const d = parseISO(date);
   const mois = d
@@ -396,5 +381,53 @@ function PastilleDate({ date }: { date: string }) {
       <span className="titre block text-[26px] leading-none">{d.getDate()}</span>
       <span className="block text-[10.5px] font-bold tracking-wider mt-1">{mois}</span>
     </span>
+  );
+}
+
+function Raccourci({
+  icone,
+  surtitre,
+  titre,
+  detail,
+  pastille,
+  lien,
+  href,
+  teinte = "rouge",
+}: {
+  icone: React.ReactNode;
+  surtitre: string;
+  titre: string;
+  detail?: string;
+  pastille?: string;
+  lien: string;
+  href: string;
+  teinte?: keyof typeof TEINTES_COMPTEUR;
+}) {
+  return (
+    <Card
+      className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex gap-4`}
+    >
+      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] text-muted">{surtitre}</div>
+        <div className="flex items-start gap-2.5 mt-0.5">
+          <span className="text-[15px] font-semibold text-ink">{titre}</span>
+          {pastille ? (
+            <span className="text-[11.5px] font-semibold px-2.5 py-1 rounded-md bg-success-soft text-success-strong shrink-0">
+              {pastille}
+            </span>
+          ) : null}
+        </div>
+        {detail ? (
+          <p className="text-[12.5px] text-muted mt-1.5 mb-0 line-clamp-2">{detail}</p>
+        ) : null}
+        <Link
+          href={href}
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent no-underline mt-3 hover:underline"
+        >
+          {lien} <ArrowRight size={14} />
+        </Link>
+      </div>
+    </Card>
   );
 }
