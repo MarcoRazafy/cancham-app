@@ -362,9 +362,9 @@ function BandeauAdhesion({
 }
 
 const TEINTES_COMPTEUR = {
-  rouge: "bg-accent-soft text-accent",
-  vert: "bg-success-soft text-success",
-  bleu: "bg-navy-soft text-navy",
+  rouge: "tuile-rouge",
+  vert: "tuile-verte",
+  bleu: "tuile-bleue",
 } as const;
 
 function Compteur({
@@ -383,12 +383,8 @@ function Compteur({
 }) {
   return (
     <Link href={href} className="no-underline">
-      <Card className="p-5 flex items-center gap-4 hover:border-accent/50 transition-colors">
-        <span
-          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${TEINTES_COMPTEUR[teinte]}`}
-        >
-          {icone}
-        </span>
+      <Card className="tuile-hote p-5 flex items-center gap-4 hover:border-accent/50 transition-colors">
+        <span className={`tuile ${TEINTES_COMPTEUR[teinte]}`}>{icone}</span>
         <span>
           <span className="titre block text-[30px] leading-none text-ink">{valeur}</span>
           <span className="block text-[13.5px] text-muted mt-1.5">{libelle}</span>
@@ -432,12 +428,8 @@ function Raccourci({
   teinte?: keyof typeof TEINTES_COMPTEUR;
 }) {
   return (
-    <Card className="p-5 flex gap-4">
-      <span
-        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${TEINTES_COMPTEUR[teinte]}`}
-      >
-        {icone}
-      </span>
+    <Card className="tuile-hote p-5 flex gap-4">
+      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte]}`}>{icone}</span>
       <div className="min-w-0 flex-1">
         <div className="text-[13px] text-muted">{surtitre}</div>
         <div className="flex items-start gap-2.5 mt-0.5">
