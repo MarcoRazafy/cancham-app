@@ -142,13 +142,13 @@ export default async function PublicHome() {
               <div className="apparition flex gap-3 flex-wrap mt-7" style={{ animationDelay: "0.56s" }}>
                 <Link
                   href="#adhesion"
-                  className="inline-flex items-center gap-2.5 font-[family-name:var(--font-titre)] font-bold text-[14.5px] px-6 py-3.5 rounded-lg bg-marque-rouge text-white no-underline transition-colors hover:bg-[#c00d0d]"
+                  className="btn-action"
                 >
                   Devenir membre <ArrowRight size={17} />
                 </Link>
                 <Link
                   href="#evenements"
-                  className="inline-flex items-center font-[family-name:var(--font-titre)] font-bold text-[14.5px] px-6 py-3.5 rounded-lg border border-white/35 text-white no-underline transition-colors hover:bg-white/10"
+                  className="btn-contour text-white hover:bg-white/10"
                 >
                   Voir les événements
                 </Link>

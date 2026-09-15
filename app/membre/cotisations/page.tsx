@@ -106,7 +106,7 @@ export default async function CotisationsPage() {
           </p>
           <Link
             href="/membre/messagerie?t=t2"
-            className="block text-center font-semibold text-[13.5px] px-4 py-2.5 rounded-lg border border-accent text-accent no-underline hover:bg-accent-soft"
+            className="btn-contour btn-contour-sm w-full text-accent hover:bg-accent-soft"
           >
             Contacter l’équipe
           </Link>
