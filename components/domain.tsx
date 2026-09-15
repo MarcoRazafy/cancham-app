@@ -468,10 +468,20 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
 
 export function OfferCard({ offer }: { offer: Offer }) {
   return (
-    <Card className="carte-filet filet-degrade p-4 h-full">
-      <Pill>{offer.membre}</Pill>
-      <div className="font-semibold text-[13.2px] mt-1.5 mb-1">{offer.titre}</div>
-      <div className="text-[12.4px] text-muted leading-relaxed">{offer.desc}</div>
+    <Card className="carte-filet filet-degrade p-0 h-full flex flex-col overflow-hidden">
+      <Visuel
+        src={offer.cover}
+        alt=""
+        seed={offer.id}
+        className="h-[88px] w-full"
+        sizes="(max-width: 640px) 100vw, 240px"
+        iconSize={18}
+      />
+      <div className="p-4 flex-1 flex flex-col">
+        <Pill className="self-start">{offer.membre}</Pill>
+        <div className="font-semibold text-[13.2px] mt-2 mb-1">{offer.titre}</div>
+        <div className="text-[12.4px] text-muted leading-relaxed">{offer.desc}</div>
+      </div>
     </Card>
   );
 }

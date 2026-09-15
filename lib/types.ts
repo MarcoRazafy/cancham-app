@@ -155,6 +155,8 @@ export interface Offer {
   membre: string;
   titre: string;
   desc: string;
+  /** Couverture de l'entreprise qui publie l'offre. */
+  cover?: string | null;
 }
 
 /** Service proposé PAR la chambre à ses membres. À ne pas confondre avec Offer. */
