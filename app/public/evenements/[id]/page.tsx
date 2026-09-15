@@ -106,7 +106,7 @@ export default async function EvenementPublic({
 
             <Link
               href="/membre/evenements"
-              className="w-full inline-flex items-center justify-center gap-2.5 font-[family-name:var(--font-titre)] font-bold text-[14px] px-5 py-3 rounded-lg bg-marque-rouge text-white no-underline hover:bg-[#c00d0d]"
+              className="btn-action w-full"
             >
               S’inscrire <ArrowRight size={16} />
             </Link>

@@ -21,7 +21,7 @@ export function BoutonEnvoi({
     <button
       type="submit"
       disabled={pending}
-      className="w-full inline-flex items-center justify-center gap-2.5 font-[family-name:var(--font-titre)] font-bold text-[14.5px] px-6 py-3.5 rounded-lg bg-marque-rouge text-white cursor-pointer border-0 transition-colors hover:bg-[#c00d0d] disabled:opacity-60 disabled:cursor-wait"
+      className="btn-action w-full"
     >
       {pending ? enCours : children}
       {pending ? null : <ArrowRight size={17} />}

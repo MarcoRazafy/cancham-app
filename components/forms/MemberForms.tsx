@@ -21,8 +21,7 @@ import {
 } from "@/lib/actions/members";
 import { fmtMoney } from "@/lib/format";
 
-const BTN_PRIMARY =
-  "inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-transparent bg-accent text-white hover:bg-accent-strong";
+const BTN_PRIMARY = "btn-action btn-action-sm";
 const BTN_LINE =
   "inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-line bg-transparent text-ink hover:bg-surface-2";
 const BTN_DANGER =

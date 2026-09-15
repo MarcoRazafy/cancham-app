@@ -122,7 +122,7 @@ export function StatusPill({
 type BtnVariant = "primary" | "line" | "ghost";
 
 const BTN_VARIANTS: Record<BtnVariant, string> = {
-  primary: "bg-accent text-white hover:bg-accent-strong border-transparent",
+  primary: "btn-action",
   line: "bg-transparent border-line text-ink hover:border-faint hover:bg-surface-2",
   ghost: "bg-transparent border-transparent text-muted hover:text-ink hover:bg-surface-2",
 };
@@ -137,10 +137,19 @@ export function Btn({
   children,
   ...rest
 }: ComponentProps<"button"> & { variant?: BtnVariant; sm?: boolean }) {
-  const size = sm ? "text-[12.4px] px-[11px] py-1.5" : "text-[13.4px] px-[15px] py-[9px]";
+  // Le bouton primaire porte son propre gabarit : taille, rayon et majuscules
+  // viennent de `.btn-action`, pas des utilitaires de taille.
+  const primaire = variant === "primary";
+  const size = primaire
+    ? sm
+      ? "btn-action-sm"
+      : ""
+    : sm
+      ? "text-[12.4px] px-[11px] py-1.5"
+      : "text-[13.4px] px-[15px] py-[9px]";
   return (
     <button
-      className={`${BTN_BASE} ${size} ${BTN_VARIANTS[variant]} ${className}`}
+      className={`${primaire ? "" : BTN_BASE} ${size} ${BTN_VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {children}
@@ -155,10 +164,17 @@ export function BtnLink({
   children,
   ...rest
 }: ComponentProps<typeof Link> & { variant?: BtnVariant; sm?: boolean }) {
-  const size = sm ? "text-[12.4px] px-[11px] py-1.5" : "text-[13.4px] px-[15px] py-[9px]";
+  const primaire = variant === "primary";
+  const size = primaire
+    ? sm
+      ? "btn-action-sm"
+      : ""
+    : sm
+      ? "text-[12.4px] px-[11px] py-1.5"
+      : "text-[13.4px] px-[15px] py-[9px]";
   return (
     <Link
-      className={`${BTN_BASE} ${size} ${BTN_VARIANTS[variant]} ${className}`}
+      className={`${primaire ? "" : BTN_BASE} ${size} ${BTN_VARIANTS[variant]} ${className}`}
       {...rest}
     >
       {children}

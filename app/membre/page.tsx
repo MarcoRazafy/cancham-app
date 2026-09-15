@@ -86,7 +86,7 @@ export default async function VueDEnsemble() {
 
         <Link
           href="/membre/annuaire"
-          className="inline-flex items-center gap-2.5 font-semibold text-[14px] px-5 py-3 rounded-lg bg-accent text-white no-underline hover:bg-accent-strong"
+          className="btn-action"
         >
           Explorer l’annuaire <ArrowRight size={16} />
         </Link>
@@ -175,7 +175,7 @@ export default async function VueDEnsemble() {
                 {dejaInscrit ? (
                   <Link
                     href={`/membre/evenements/${prochain.id}`}
-                    className="inline-flex items-center gap-2 font-semibold text-[13.5px] px-5 py-2.5 rounded-lg border border-line text-ink no-underline hover:bg-surface-2"
+                    className="btn-contour btn-contour-sm text-success hover:bg-success-soft"
                   >
                     <CheckCircle2 size={15} /> Inscrit
                   </Link>
@@ -237,7 +237,7 @@ export default async function VueDEnsemble() {
           </p>
           <Link
             href="/membre/annuaire"
-            className="block text-center font-semibold text-[13.5px] px-4 py-2.5 rounded-lg border border-accent text-accent no-underline hover:bg-accent-soft"
+            className="btn-contour btn-contour-sm w-full text-accent hover:bg-accent-soft"
           >
             Ouvrir l’annuaire
           </Link>
@@ -353,7 +353,7 @@ function BandeauAdhesion({
 
       <Link
         href="/membre/cotisations"
-        className="inline-flex items-center font-semibold text-[13.5px] px-5 py-2.5 rounded-lg border border-line text-ink no-underline hover:bg-surface-2"
+        className="btn-contour btn-contour-sm border-line text-muted hover:bg-surface-2"
       >
         Voir ma cotisation
       </Link>

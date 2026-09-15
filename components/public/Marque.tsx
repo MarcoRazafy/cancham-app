@@ -62,13 +62,13 @@ export function EnTetePublique() {
         <nav className="flex items-center gap-2.5 text-[13px]">
           <Link
             href="/public#evenements"
-            className="font-[family-name:var(--font-titre)] font-semibold px-4 py-2.5 rounded-lg text-white/85 hover:text-white no-underline"
+            className="text-[13px] font-semibold px-4 py-2.5 rounded-[5px] text-white/85 hover:text-white no-underline"
           >
             Événements
           </Link>
           <Link
             href="/membre"
-            className="font-[family-name:var(--font-titre)] font-semibold px-4 py-2.5 rounded-lg border border-white/25 text-white hover:bg-white/10 no-underline"
+            className="btn-contour btn-contour-sm text-white hover:bg-white/10"
           >
             Espace membre
           </Link>

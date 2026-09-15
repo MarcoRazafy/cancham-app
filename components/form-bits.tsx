@@ -45,18 +45,29 @@ export function SubmitButton({
   const { pending } = useFormStatus();
 
   const variants = {
-    primary: "bg-accent text-white hover:bg-accent-strong border-transparent",
+    primary: "btn-action",
     line: "bg-transparent border-line text-ink hover:border-faint hover:bg-surface-2",
     ghost: "bg-transparent border-transparent text-muted hover:text-ink hover:bg-surface-2",
     danger: "bg-bad text-white border-transparent hover:opacity-90",
   };
-  const size = sm ? "text-[12.4px] px-[11px] py-1.5" : "text-[13.4px] px-[15px] py-[9px]";
+  const primaire = variant === "primary";
+  const size = primaire
+    ? sm
+      ? "btn-action-sm"
+      : ""
+    : sm
+      ? "text-[12.4px] px-[11px] py-1.5"
+      : "text-[13.4px] px-[15px] py-[9px]";
+
+  const base = primaire
+    ? ""
+    : "inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border no-underline whitespace-nowrap transition-colors";
 
   return (
     <button
       type="submit"
       disabled={pending}
-      className={`inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border no-underline whitespace-nowrap transition-colors disabled:opacity-60 disabled:cursor-wait ${size} ${variants[variant]} ${className}`}
+      className={`${base} disabled:opacity-60 disabled:cursor-wait ${size} ${variants[variant]} ${className}`}
       {...rest}
     >
       {pending ? (pendingLabel ?? "Envoi…") : children}
