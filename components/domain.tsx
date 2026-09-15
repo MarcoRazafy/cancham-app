@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { Card, Pill, StatusPill } from "@/components/ui";
+import { filetDe } from "@/lib/filets";
 import { fmtDate, fmtDateShort, fmtMoney, initials, parseISO } from "@/lib/format";
 import type {
   CanchamEvent,
@@ -149,7 +150,9 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   ];
   return (
     <Link href={href} className="no-underline">
-      <Card className="overflow-hidden h-full flex flex-col hover:border-accent transition-colors p-0">
+      <Card
+        className={`carte-filet ${filetDe(member.id)} h-full flex flex-col hover:border-accent transition-colors p-0`}
+      >
         <Visuel
           src={member.cover}
           alt=""
@@ -242,7 +245,9 @@ export function EventCard({
   const mois = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
 
   const body = (
-    <Card className="overflow-hidden h-full flex flex-col hover:border-accent transition-colors p-0">
+    <Card
+      className={`carte-filet ${filetDe(event.id)} h-full flex flex-col hover:border-accent transition-colors p-0`}
+    >
       <div className="relative">
         <Visuel
           src={event.photo}
@@ -459,7 +464,9 @@ export function ServiceCard({
 }) {
   const gratuit = service.type === "gratuit";
   return (
-    <Card className="tuile-hote p-[22px] flex flex-col">
+    <Card
+      className={`tuile-hote carte-filet ${gratuit ? "filet-vert" : "filet-rouge"} p-[22px] flex flex-col`}
+    >
       {/* Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est facturé. */}
       <div className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}>
         <CreditCard size={19} />
@@ -493,7 +500,9 @@ export function ResourceCard({
 }) {
   const video = resource.fmt === "Vidéo";
   return (
-    <Card className="overflow-hidden h-full flex flex-col p-0 hover:border-accent transition-colors">
+    <Card
+      className={`carte-filet ${resource.type === "gratuit" ? "filet-vert" : "filet-rouge"} h-full flex flex-col p-0 hover:border-accent transition-colors`}
+    >
       <div className="relative">
         <PhotoPlaceholder
           seed={resource.id}

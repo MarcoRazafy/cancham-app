@@ -551,3 +551,58 @@ h3 {
     transform: none;
   }
 }
+
+/* ============================================================
+   Filet de survol.
+
+   Un trait qui balaie le haut de la carte au passage de la souris. Chaque
+   carte porte sa couleur, tirée des trois de la chambre plus le dégradé qui
+   les relie.
+   ============================================================ */
+
+.carte-filet {
+  position: relative;
+  /* Sans quoi le trait déborderait des angles arrondis. */
+  overflow: hidden;
+}
+
+.carte-filet::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 1;
+
+  height: 3px;
+  width: 0;
+  background: var(--filet, var(--bouton-rouge));
+
+  transition: width 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.carte-filet:hover::before,
+.carte-filet:focus-within::before {
+  width: 100%;
+}
+
+.filet-vert {
+  --filet: #007140;
+}
+
+.filet-rouge {
+  --filet: #ad0707;
+}
+
+.filet-bleu {
+  --filet: #14263a;
+}
+
+/* Le dégradé de la charte, pour les cartes qui portent l'accent principal. */
+.filet-degrade {
+  --filet: linear-gradient(90deg, #ad0707 0%, #007140 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte-filet::before {
+    transition: none;
+  }
+}

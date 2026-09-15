@@ -128,7 +128,7 @@ export default async function VueDEnsemble() {
 
       {/* ==================== Rendez-vous + annuaire ==================== */}
       <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
-        <Card className="p-0 overflow-hidden">
+        <Card className="carte-filet filet-degrade p-0">
           <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-4">
             <h2 className="text-[19px] m-0">Votre prochain rendez-vous</h2>
             <Link
@@ -195,7 +195,7 @@ export default async function VueDEnsemble() {
           )}
         </Card>
 
-        <Card className="p-6">
+        <Card className="carte-filet filet-vert p-6">
           <h2 className="text-[19px] m-0">Développez votre réseau</h2>
           <p className="text-[13.5px] text-muted m-0 mt-1 mb-4">
             Des entreprises à découvrir
@@ -361,10 +361,11 @@ function BandeauAdhesion({
   );
 }
 
+/** Chaque teinte accorde la tuile d'icône et le filet de survol de la carte. */
 const TEINTES_COMPTEUR = {
-  rouge: "tuile-rouge",
-  vert: "tuile-verte",
-  bleu: "tuile-bleue",
+  rouge: { tuile: "tuile-rouge", filet: "filet-rouge" },
+  vert: { tuile: "tuile-verte", filet: "filet-vert" },
+  bleu: { tuile: "tuile-bleue", filet: "filet-bleu" },
 } as const;
 
 function Compteur({
@@ -383,8 +384,10 @@ function Compteur({
 }) {
   return (
     <Link href={href} className="no-underline">
-      <Card className="tuile-hote p-5 flex items-center gap-4 hover:border-accent/50 transition-colors">
-        <span className={`tuile ${TEINTES_COMPTEUR[teinte]}`}>{icone}</span>
+      <Card
+        className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex items-center gap-4 hover:border-accent/50 transition-colors`}
+      >
+        <span className={`tuile ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
         <span>
           <span className="titre block text-[30px] leading-none text-ink">{valeur}</span>
           <span className="block text-[13.5px] text-muted mt-1.5">{libelle}</span>
@@ -428,8 +431,10 @@ function Raccourci({
   teinte?: keyof typeof TEINTES_COMPTEUR;
 }) {
   return (
-    <Card className="tuile-hote p-5 flex gap-4">
-      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte]}`}>{icone}</span>
+    <Card
+      className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex gap-4`}
+    >
+      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
       <div className="min-w-0 flex-1">
         <div className="text-[13px] text-muted">{surtitre}</div>
         <div className="flex items-start gap-2.5 mt-0.5">
