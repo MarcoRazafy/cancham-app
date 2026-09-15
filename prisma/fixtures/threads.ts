@@ -8,6 +8,7 @@ export const THREADS: MessageThread[] = [
     nom: "Fanomezantsoa Randria",
     sousTitre: "Highlands Artisanat · Responsable Export",
     init: "FR",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
     unread: 2,
     messages: [
       {
@@ -41,6 +42,7 @@ export const THREADS: MessageThread[] = [
     nom: "Équipe CanCham",
     sousTitre: "Support membres · Fenomamy",
     init: "CC",
+    avatar: "/photos/cancham-13.jpg",
     unread: 0,
     messages: [
       {
@@ -65,6 +67,7 @@ export const THREADS: MessageThread[] = [
     nom: "Comité MECC 9 — Tourisme & Éducation",
     sousTitre: "6 membres",
     init: "M9",
+    avatar: "/photos/cancham-18.jpg",
     unread: 1,
     messages: [
       {
@@ -104,6 +107,7 @@ export const THREADS: MessageThread[] = [
     nom: "Organisateurs 5 à 7 Réseautage",
     sousTitre: "4 membres",
     init: "57",
+    avatar: "/photos/cancham-24.jpg",
     unread: 0,
     messages: [
       {

@@ -31,6 +31,8 @@ export const MEMBERS: Member[] = [
       "Partenariats avec des marques de cosmétique naturelle ou de bien-être canadiennes.",
     cover:
       "https://images.unsplash.com/photo-1556760544-74068565f05c?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1556760544-74068565f05c?w=400&h=400&q=80&auto=format&fit=crop&crop=entropy",
     produits: [p("Ravintsara BIO"), p("Coffret découverte"), p("Girofle vapeur")],
   },
   {
@@ -46,6 +48,8 @@ export const MEMBERS: Member[] = [
     desc: "Coopérative de tisserands et sculpteurs sur bois précieux, gamme premium pour le marché canadien.",
     cover:
       "https://images.unsplash.com/photo-1590751518505-1fc2d227ef9b?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1590751518505-1fc2d227ef9b?w=400&h=400&q=80&auto=format&fit=crop&crop=entropy",
     produits: [p("Panier raphia XL"), p("Sculpture palissandre"), p("Textile lamba")],
   },
   {
@@ -65,6 +69,8 @@ export const MEMBERS: Member[] = [
       "Collaboration avec des tour-opérateurs spécialisés en écotourisme et voyage responsable.",
     cover:
       "https://images.unsplash.com/photo-1749585071939-4cd62be90967?w=1200&h=800&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1749585071939-4cd62be90967?w=400&h=400&h=800&q=80&auto=format&fit=crop&crop=entropy",
     produits: [p("Circuit Andasibe 5j"), p("Séjour Nosy Be"), p("Trek Isalo")],
   },
   {
@@ -80,6 +86,8 @@ export const MEMBERS: Member[] = [
     desc: "Transformation de fruits et épices, ligne de confitures et poivres pour la distribution spécialisée.",
     cover:
       "https://images.unsplash.com/photo-1682482198446-4cbf92f85a4b?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1682482198446-4cbf92f85a4b?w=400&h=400&q=80&auto=format&fit=crop&crop=entropy",
     produits: [
       p("Poivre sauvage Voatsiperifery"),
       p("Confiture litchi"),
@@ -103,6 +111,8 @@ export const MEMBERS: Member[] = [
       "Échanges avec d’autres membres du secteur technologie et centres de services partagés.",
     cover:
       "https://images.pexels.com/photos/7988116/pexels-photo-7988116.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop",
+    photo:
+      "https://images.pexels.com/photos/7988116/pexels-photo-7988116.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&h=800&fit=crop&crop=entropy",
     produits: [p("Annotation IA"), p("Centre d’appel FR"), p("Développement sur mesure")],
   },
   {
@@ -118,6 +128,8 @@ export const MEMBERS: Member[] = [
     desc: "Extraction et négoce de pierres fines et minéraux industriels, conformité ESG en cours de certification.",
     cover:
       "https://images.unsplash.com/photo-1627289601745-5813e24c9bc1?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1627289601745-5813e24c9bc1?w=400&h=400&q=80&auto=format&fit=crop&crop=entropy",
     produits: [p("Béryl brut"), p("Quartz industriel"), p("Grenat calibré")],
   },
   {
@@ -133,6 +145,8 @@ export const MEMBERS: Member[] = [
     desc: "Conseil en structuration financière et accompagnement des PME malgaches à l’export.",
     cover:
       "https://images.unsplash.com/photo-1758518730384-be3d205838e8?w=1200&h=800&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1758518730384-be3d205838e8?w=400&h=400&h=800&q=80&auto=format&fit=crop&crop=entropy",
     produits: [p("Montage export"), p("Ligne de crédit PME"), p("Audit financier")],
   },
   {
@@ -148,6 +162,8 @@ export const MEMBERS: Member[] = [
     desc: "Organisme de formation continue en gestion, commerce international et langues, partenaire d’entreprises membres.",
     cover:
       "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=400&q=80&auto=format&fit=crop&crop=entropy",
     produits: [
       p("Formation export"),
       p("Cours de français affaires"),
@@ -171,6 +187,8 @@ export const MEMBERS: Member[] = [
       "Mise en réseau avec des consultants et cabinets-conseils canadiens actifs en Afrique.",
     cover:
       "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
     produits: [
       p("Accompagnement export"),
       p("Montage de partenariat"),
@@ -199,6 +217,8 @@ export const MEMBERS: Member[] = [
       "Nous souhaitons rejoindre CanCham pour accéder au réseau d’acheteurs canadiens et bénéficier de l’accompagnement à l’export. Notre production est prête pour l’exportation mais nous manquons de contacts qualifiés sur le marché nord-américain.",
     cover:
       "https://images.unsplash.com/photo-1597960194599-22929afc25b1?w=1200&q=80&auto=format&fit=crop",
+    photo:
+      "https://images.unsplash.com/photo-1597960194599-22929afc25b1?w=400&h=400&q=80&auto=format&fit=crop&crop=entropy",
     produits: [p("Fauteuil raphia"), p("Table basse palissandre"), p("Luminaire fibres")],
   },
 ];

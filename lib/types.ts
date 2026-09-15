@@ -42,8 +42,10 @@ export interface User {
   fonction: string;
   email: string;
   tel?: string;
-  /** Initiales calculées d'avance pour l'avatar. */
+  /** Initiales calculées d'avance pour l'avatar, en repli de `photo`. */
   initiales: string;
+  /** Portrait de l'utilisateur, par URL. */
+  photo?: string | null;
 }
 
 /** Produit ou service mis en avant sur la fiche membre. */
@@ -82,6 +84,8 @@ export interface Member {
   paiementNote?: string;
   /** Photo de couverture de la fiche, par URL. */
   cover?: string | null;
+  /** Vignette ronde : portrait si personne physique, visuel sinon. */
+  photo?: string | null;
 }
 
 export type EventFormat = "Présentiel" | "Webinaire" | "Hybride";
@@ -215,6 +219,8 @@ export interface MessageThread {
   nom: string;
   sousTitre: string;
   init: string;
+  /** Visuel du fil, par URL. Les initiales servent de repli. */
+  avatar?: string | null;
   unread: number;
   messages: Message[];
 }

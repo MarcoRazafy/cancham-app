@@ -128,6 +128,8 @@ export function Shell({
 
         <div className="px-4 pt-3 pb-[18px] border-t border-white/10 flex items-center gap-2.5">
           <Avatar
+            src={user.photo}
+            alt={user.nom}
             initials={user.initiales}
             className={
               space === "admin"

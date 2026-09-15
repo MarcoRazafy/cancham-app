@@ -3,17 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowRight,
-  Briefcase,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
   Clock,
-  FileText,
   Lock,
   Mail,
   MapPin,
   Users,
 } from "lucide-react";
+import { AvatarRond, OfferCard } from "@/components/domain";
+import { CarrouselOffres } from "@/components/membre/CarrouselOffres";
 import { RegisterButton } from "@/components/forms/EventForms";
 import { Card } from "@/components/ui";
 import { fmtMoney, isPast, parseISO } from "@/lib/format";
@@ -28,9 +28,8 @@ import {
   getEvents,
   getMember,
   getMembresAnnuaire,
+  getOffers,
   getRegistrations,
-  getResources,
-  getServices,
   getStatsPubliques,
   getUnreadTotal,
 } from "@/lib/queries";
@@ -44,15 +43,14 @@ export default async function VueDEnsemble() {
   if (!membreOuNull) notFound();
   const me = membreOuNull;
 
-  const [events, annuaire, inscriptions, stats, nonLus, ressources, services] =
+  const [events, annuaire, inscriptions, stats, nonLus, offres] =
     await Promise.all([
       getEvents(),
       getMembresAnnuaire(),
       getRegistrations(me.id),
       getStatsPubliques(),
       getUnreadTotal(),
-      getResources(),
-      getServices(),
+      getOffers(),
     ]);
 
   const aVenir = events.filter((e) => !isPast(e.date));
@@ -63,8 +61,6 @@ export default async function VueDEnsemble() {
 
   // Trois entreprises à découvrir, la sienne exclue.
   const aDecouvrir = annuaire.filter((m) => m.id !== me.id).slice(0, 3);
-  const ressource = ressources[0];
-  const service = services.find((s) => s.type === "payant") ?? services[0];
 
   const enAttente = ADHESION_PENDING.includes(me.statut);
   const bloque = retardBloque(me);
@@ -210,12 +206,14 @@ export default async function VueDEnsemble() {
                   i < aDecouvrir.length - 1 ? "border-b border-line" : ""
                 }`}
               >
-                <span
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
+                <AvatarRond
+                  src={m.photo}
+                  alt={m.nom}
+                  initiales={initialesDe(m.nom)}
+                  taille={44}
+                  className="text-[13px]"
                   style={teinteDe(m.id)}
-                >
-                  {initialesDe(m.nom)}
-                </span>
+                />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[14.5px] font-semibold text-ink truncate">
                     {m.nom}
@@ -244,40 +242,30 @@ export default async function VueDEnsemble() {
         </Card>
       </div>
 
-      {/* ==================== Raccourcis ==================== */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Raccourci
-          icone={<Mail size={24} />}
-          surtitre="Vos échanges"
-          titre={`${nonLus} nouveau${nonLus > 1 ? "x" : ""} message${nonLus > 1 ? "s" : ""}`}
-          detail="Poursuivez vos discussions avec le réseau."
-          lien="Ouvrir la messagerie"
-          href="/membre/messagerie"
-          teinte="bleu"
-        />
-        {ressource ? (
-          <Raccourci
-            icone={<FileText size={24} />}
-            surtitre="Ressource à découvrir"
-            titre={ressource.titre}
-            pastille={ressource.type === "gratuit" ? "Inclus" : fmtMoney(ressource.prix)}
-            lien="Consulter"
-            href="/membre/ressources"
-            teinte="rouge"
-          />
-        ) : null}
-        {service ? (
-          <Raccourci
-            icone={<Briefcase size={24} />}
-            surtitre="Services CanCham"
-            titre={service.titre}
-            detail={service.desc}
-            lien="Voir les services"
-            href="/membre/offres-cancham"
-            teinte="vert"
-          />
-        ) : null}
-      </div>
+      {/* ==================== Offres & promotions membres ==================== */}
+      <Card className="carte-filet filet-degrade p-6">
+        <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
+          <div>
+            <h2 className="text-[19px] m-0">Offres &amp; promotions membres</h2>
+            <p className="text-[13.5px] text-muted m-0 mt-1">
+              Les avantages que les adhérents se réservent entre eux
+            </p>
+          </div>
+          <Link
+            href="/membre/actualites"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent no-underline hover:underline"
+          >
+            Toutes les offres <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        <CarrouselOffres>
+          {offres.map((o) => (
+            <OfferCard key={o.id} offer={o} />
+          ))}
+        </CarrouselOffres>
+      </Card>
+
     </>
   );
 }
@@ -408,53 +396,5 @@ function PastilleDate({ date }: { date: string }) {
       <span className="titre block text-[26px] leading-none">{d.getDate()}</span>
       <span className="block text-[10.5px] font-bold tracking-wider mt-1">{mois}</span>
     </span>
-  );
-}
-
-function Raccourci({
-  icone,
-  surtitre,
-  titre,
-  detail,
-  pastille,
-  lien,
-  href,
-  teinte = "rouge",
-}: {
-  icone: React.ReactNode;
-  surtitre: string;
-  titre: string;
-  detail?: string;
-  pastille?: string;
-  lien: string;
-  href: string;
-  teinte?: keyof typeof TEINTES_COMPTEUR;
-}) {
-  return (
-    <Card
-      className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex gap-4`}
-    >
-      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[13px] text-muted">{surtitre}</div>
-        <div className="flex items-start gap-2.5 mt-0.5">
-          <span className="text-[15px] font-semibold text-ink">{titre}</span>
-          {pastille ? (
-            <span className="text-[11.5px] font-semibold px-2.5 py-1 rounded-md bg-success-soft text-success-strong shrink-0">
-              {pastille}
-            </span>
-          ) : null}
-        </div>
-        {detail ? (
-          <p className="text-[12.5px] text-muted mt-1.5 mb-0 line-clamp-2">{detail}</p>
-        ) : null}
-        <Link
-          href={href}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent no-underline mt-3 hover:underline"
-        >
-          {lien} <ArrowRight size={14} />
-        </Link>
-      </div>
-    </Card>
   );
 }

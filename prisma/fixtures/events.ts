@@ -17,7 +17,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.pexels.com/photos/18999582/pexels-photo-18999582.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-25.jpg",
     desc: "Rendez-vous régulier de réseautage entre membres, dans une formule courte et conviviale en fin de journée.",
   },
   {
@@ -31,7 +31,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.unsplash.com/photo-1544531586-fde5298cdd40?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-10.jpg",
     desc: "Ouverture officielle de la 9ᵉ Mission Économique et Commerciale au Canada, volet Tourisme et Éducation.",
   },
   {
@@ -45,7 +45,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.unsplash.com/photo-1590496793907-4d66e2994b4d?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-16.jpg",
     desc: "Étape régionale de la caravane Canada Expo, à destination des entreprises de la côte Est.",
   },
   {
@@ -59,7 +59,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.pexels.com/photos/4226256/pexels-photo-4226256.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-13.jpg",
     desc: "Séance pratique sur les programmes de mobilité francophone vers le Canada, animée avec nos partenaires institutionnels.",
   },
   {
@@ -73,7 +73,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.pexels.com/photos/8761647/pexels-photo-8761647.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-02.jpg",
     desc: "Rendez-vous régulier de réseautage entre membres, dans une formule courte et conviviale en fin de journée.",
   },
   {
@@ -87,7 +87,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.pexels.com/photos/17309031/pexels-photo-17309031.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-05.jpg",
     desc: "Étape régionale de la caravane Canada Expo dans la région SAVA, axée vanille et épices.",
   },
   {
@@ -101,7 +101,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: true,
     prix: 150000,
     photo:
-      "https://images.pexels.com/photos/38446275/pexels-photo-38446275.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-23.jpg",
     desc: "Événement combiné célébrant les 10 ans de la chambre et restituant les résultats de la MECC 8.",
   },
   {
@@ -115,7 +115,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.pexels.com/photos/35138560/pexels-photo-35138560.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-07.jpg",
     desc: "Étape capitale de la caravane Canada Expo 2026.",
   },
   {
@@ -129,7 +129,7 @@ export const EVENTS: CanchamEvent[] = [
     payant: false,
     prix: 0,
     photo:
-      "https://images.unsplash.com/photo-1515169067868-5387ec356754?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-24.jpg",
     desc: "Rendez-vous régulier de réseautage entre membres.",
   },
 ];
