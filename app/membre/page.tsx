@@ -385,7 +385,7 @@ function Compteur({
   return (
     <Link href={href} className="no-underline">
       <Card
-        className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex items-center gap-4 hover:border-accent/50 transition-colors`}
+        className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex items-center gap-4 transition-shadow hover:shadow-[0_10px_26px_-18px_rgba(15,29,44,0.4)]`}
       >
         <span className={`tuile ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
         <span>
