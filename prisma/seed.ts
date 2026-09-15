@@ -146,6 +146,7 @@ async function main() {
         paiementNote: m.paiementNote ?? null,
         cover: m.cover ?? null,
         photo: m.photo ?? null,
+        logo: m.logo ?? null,
         produits: {
           create: m.produits.map((p, i) => ({
             label: p.label,

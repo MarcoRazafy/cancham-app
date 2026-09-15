@@ -16,7 +16,13 @@ import {
 } from "lucide-react";
 import { Card, Pill, StatusPill } from "@/components/ui";
 import { filetDe } from "@/lib/filets";
-import { fmtDate, fmtDateShort, fmtMoney, initials, parseISO } from "@/lib/format";
+import {
+  fmtDate,
+  fmtDateShort,
+  fmtMoney,
+  initials,
+  parseISO,
+} from "@/lib/format";
 import type {
   CanchamEvent,
   CanchamService,
@@ -85,6 +91,7 @@ export function AvatarRond({
   taille,
   className = "",
   style,
+  ajuste = "couverture",
 }: {
   src?: string | null;
   alt: string;
@@ -93,25 +100,43 @@ export function AvatarRond({
   /** Habillage du repli en initiales : fond, texte, bordure. */
   className?: string;
   style?: CSSProperties;
+  /**
+   * `couverture` remplit le rond en rognant — c'est ce qu'il faut d'un
+   * portrait ou d'une photo. `contenu` inscrit l'image entière dans le rond :
+   * un logo a ses propres marges, les rogner le mutile.
+   */
+  ajuste?: "couverture" | "contenu";
 }) {
   if (src) {
+    const contenu = ajuste === "contenu";
     return (
-      <Image
-        src={src}
-        alt={alt}
-        width={taille}
-        height={taille}
-        sizes={`${taille}px`}
-        className="rounded-full object-cover shrink-0 bg-line"
+      <span
+        className={`rounded-full overflow-hidden shrink-0 block ${
+          contenu ? "bg-white border border-line p-1.5" : "bg-line"
+        }`}
         style={{ width: taille, height: taille }}
-      />
+      >
+        <Image
+          src={src}
+          alt={alt}
+          width={taille}
+          height={taille}
+          sizes={`${taille}px`}
+          className={`w-full h-full ${contenu ? "object-contain" : "object-cover"}`}
+        />
+      </span>
     );
   }
 
   return (
     <span
       className={`rounded-full flex items-center justify-center font-bold shrink-0 ${className}`}
-      style={{ ...style, width: taille, height: taille, fontSize: taille * 0.36 }}
+      style={{
+        ...style,
+        width: taille,
+        height: taille,
+        fontSize: taille * 0.36,
+      }}
     >
       {initiales}
     </span>
@@ -128,7 +153,12 @@ export function LogoMark({
   if (member.type === "physique") {
     if (member.photo) {
       return (
-        <AvatarRond src={member.photo} alt={member.nom} initiales="" taille={size} />
+        <AvatarRond
+          src={member.photo}
+          alt={member.nom}
+          initiales=""
+          taille={size}
+        />
       );
     }
     return (
@@ -141,8 +171,28 @@ export function LogoMark({
       </div>
     );
   }
-  // Personne morale : le visuel de l'entreprise tient lieu de logo. Le
-  // monogramme ne sert plus que de repli, quand aucune image n'est renseignée.
+  // Le logo passe avant tout : c'est l'identité officielle de l'organisation.
+  // Le cadre s'allonge au lieu de le comprimer : presque tous les logos sont
+  // horizontaux, et dans un carré ils se réduisent à une bande illisible.
+  if (member.logo) {
+    return (
+      <div
+        className="rounded-[var(--radius-s)] bg-white border border-line flex items-center justify-center shrink-0 px-2 py-1.5"
+        style={{ width: size * 1.75, height: size }}
+      >
+        <Image
+          src={member.logo}
+          alt={member.nom}
+          width={Math.round(size * 1.75)}
+          height={size}
+          sizes={`${Math.round(size * 1.75)}px`}
+          className="w-full h-full object-contain"
+        />
+      </div>
+    );
+  }
+
+  // À défaut, le visuel d'activité. Le monogramme ne sert que de dernier repli.
   if (member.photo) {
     return (
       <div
@@ -235,7 +285,13 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           seed={member.id}
           className="h-[104px] w-full"
           sizes="(max-width: 768px) 100vw, 380px"
-          icon={member.type === "physique" ? <UserIcon size={20} /> : <Building2 size={20} />}
+          icon={
+            member.type === "physique" ? (
+              <UserIcon size={20} />
+            ) : (
+              <Building2 size={20} />
+            )
+          }
         />
         <div className="flex gap-3 px-4 pt-4 pb-3">
           <div className="shrink-0">
@@ -253,7 +309,9 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           ) : null}
           <StatusPill status={member.statut} />
         </div>
-        <p className="px-4 text-[12.8px] text-muted flex-1 m-0">{member.activite}</p>
+        <p className="px-4 text-[12.8px] text-muted flex-1 m-0">
+          {member.activite}
+        </p>
         <div
           className={`px-4 pt-3 pb-4 ${
             avecPhotos ? "flex gap-1.5" : "flex gap-1.5 flex-wrap"
@@ -294,7 +352,9 @@ export function NeedsAndInterests({ member }: { member: Member }) {
     <>
       <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
         <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
-        <h2 className="text-[17px] font-semibold m-0">Besoins &amp; intérêts</h2>
+        <h2 className="text-[17px] font-semibold m-0">
+          Besoins &amp; intérêts
+        </h2>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {member.besoins ? (
@@ -336,7 +396,9 @@ export function EventCard({
   footer?: ReactNode;
 }) {
   const d = parseISO(event.date);
-  const mois = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+  const mois = d
+    .toLocaleDateString("fr-FR", { month: "short" })
+    .replace(".", "");
 
   const body = (
     <Card
@@ -374,7 +436,9 @@ export function EventCard({
         <h3 className="m-0 mb-1.5 text-[15.5px]">{event.titre}</h3>
         <EventMeta event={event} />
         <div className="flex-1" />
-        {footer ? <div className="flex gap-2 mt-3 flex-wrap">{footer}</div> : null}
+        {footer ? (
+          <div className="flex gap-2 mt-3 flex-wrap">{footer}</div>
+        ) : null}
       </div>
     </Card>
   );
@@ -415,7 +479,9 @@ export function EventRow({
   registered?: boolean;
 }) {
   const d = parseISO(event.date);
-  const mois = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+  const mois = d
+    .toLocaleDateString("fr-FR", { month: "short" })
+    .replace(".", "");
   return (
     <Link href={href} className="no-underline">
       <div className="flex gap-4 p-4 border border-line rounded-[var(--radius-m)] bg-surface items-center hover:border-accent transition-colors">
@@ -431,7 +497,9 @@ export function EventRow({
           <div className="font-[family-name:var(--font-display)] text-[21px] font-bold leading-none">
             {d.getDate()}
           </div>
-          <div className="text-[10px] uppercase tracking-[0.06em] font-bold">{mois}</div>
+          <div className="text-[10px] uppercase tracking-[0.06em] font-bold">
+            {mois}
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="m-0 mb-1 text-[15px]">
@@ -451,7 +519,13 @@ export function EventRow({
 
 /* ==================== Actualités ==================== */
 
-export function MediaBanner({ media, lg = false }: { media: NewsMedia; lg?: boolean }) {
+export function MediaBanner({
+  media,
+  lg = false,
+}: {
+  media: NewsMedia;
+  lg?: boolean;
+}) {
   const bg =
     media.theme === "green"
       ? "linear-gradient(135deg, var(--accent-strong), var(--accent))"
@@ -519,15 +593,18 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
         {news.extrait}
       </div>
       {news.image ? (
-        <div className="relative w-full aspect-[16/8] rounded-[var(--radius-m)] overflow-hidden mt-2.5">
+        <Link
+          href={`${base}/${news.id}`}
+          className="relative w-full aspect-[16/8] rounded-[var(--radius-m)] overflow-hidden mt-2.5 block group"
+        >
           <Image
             src={news.image}
-            alt=""
+            alt={news.titre}
             fill
             sizes="(max-width: 768px) 100vw, 640px"
-            className="object-cover"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
-        </div>
+        </Link>
       ) : (
         <MediaBanner media={news.media} />
       )}
@@ -551,23 +628,39 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
 
 /* ==================== Offres & services ==================== */
 
-export function OfferCard({ offer }: { offer: Offer }) {
-  return (
-    <Card className="carte-filet filet-degrade p-0 h-full flex flex-col overflow-hidden">
-      <Visuel
-        src={offer.cover}
-        alt=""
-        seed={offer.id}
-        className="h-[88px] w-full"
-        sizes="(max-width: 640px) 100vw, 240px"
-        iconSize={18}
-      />
+export function OfferCard({ offer, href }: { offer: Offer; href?: string }) {
+  const corps = (
+    <Card className="carte-filet filet-degrade p-0 h-full flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
+      <div className="overflow-hidden">
+        <Visuel
+          src={offer.cover}
+          alt={offer.titre}
+          seed={offer.id}
+          className="h-[88px] w-full transition-transform duration-500 group-hover:scale-[1.04]"
+          sizes="(max-width: 640px) 100vw, 240px"
+          iconSize={18}
+        />
+      </div>
       <div className="p-4 flex-1 flex flex-col">
         <Pill className="self-start">{offer.membre}</Pill>
-        <div className="font-semibold text-[13.2px] mt-2 mb-1">{offer.titre}</div>
-        <div className="text-[12.4px] text-muted leading-relaxed">{offer.desc}</div>
+        <div className="font-semibold text-[13.2px] mt-2 mb-1">
+          {offer.titre}
+        </div>
+        <div className="text-[12.4px] text-muted leading-relaxed">
+          {offer.desc}
+        </div>
       </div>
     </Card>
+  );
+
+  // Sans destination — l'entreprise n'a pas de fiche consultable ici — la carte
+  // reste un bloc inerte plutôt qu'un lien qui ne mènerait nulle part.
+  if (!href) return corps;
+
+  return (
+    <Link href={href} className="no-underline block h-full group">
+      {corps}
+    </Link>
   );
 }
 
@@ -584,7 +677,9 @@ export function ServiceCard({
       className={`tuile-hote carte-filet ${gratuit ? "filet-vert" : "filet-rouge"} p-[22px] flex flex-col`}
     >
       {/* Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est facturé. */}
-      <div className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}>
+      <div
+        className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}
+      >
         <CreditCard size={24} />
       </div>
       <div className="font-bold text-[14.5px] mb-1.5">{service.titre}</div>
@@ -649,13 +744,16 @@ export function ResourceCard({
           </span>
           {resource.commentaires.length ? (
             <span className="inline-flex items-center gap-1">
-              <MessageSquare size={13} /> {resource.commentaires.length} commentaire
+              <MessageSquare size={13} /> {resource.commentaires.length}{" "}
+              commentaire
               {resource.commentaires.length > 1 ? "s" : ""}
             </span>
           ) : null}
         </div>
         <div className="flex-1" />
-        {footer ? <div className="flex gap-2 mt-3 flex-wrap">{footer}</div> : null}
+        {footer ? (
+          <div className="flex gap-2 mt-3 flex-wrap">{footer}</div>
+        ) : null}
       </div>
     </Card>
   );

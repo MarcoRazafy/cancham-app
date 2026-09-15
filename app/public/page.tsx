@@ -105,7 +105,11 @@ export default async function PublicHome() {
         </div>
 
         <div className="relative max-w-[1120px] mx-auto px-5 pt-8 pb-0">
-          <Link href="/public" aria-label="CanCham Connect" className="apparition inline-block">
+          <Link
+            href="/public"
+            aria-label="CanCham Connect"
+            className="apparition inline-block"
+          >
             <LogoOfficiel className="w-[240px] md:w-[300px] h-auto" priority />
           </Link>
 
@@ -119,14 +123,23 @@ export default async function PublicHome() {
               </span>
 
               <h1 className="text-[clamp(34px,5.2vw,58px)] leading-[1.08] m-0 mt-5">
-                <span className="apparition block" style={{ animationDelay: "0.16s" }}>
+                <span
+                  className="apparition block"
+                  style={{ animationDelay: "0.16s" }}
+                >
                   Deux pays.
                 </span>
-                <span className="apparition block" style={{ animationDelay: "0.26s" }}>
+                <span
+                  className="apparition block"
+                  style={{ animationDelay: "0.26s" }}
+                >
                   Un réseau.
                 </span>
                 {/* Insécable : « Des opportunités. » ne doit jamais se couper. */}
-                <span className="apparition block whitespace-nowrap" style={{ animationDelay: "0.36s" }}>
+                <span
+                  className="apparition block whitespace-nowrap"
+                  style={{ animationDelay: "0.36s" }}
+                >
                   Des <span className="text-[#3fc98a]">opportunités.</span>
                 </span>
               </h1>
@@ -135,15 +148,15 @@ export default async function PublicHome() {
                 className="apparition text-[16px] leading-relaxed text-white/80 max-w-[46ch] mt-5 mb-0"
                 style={{ animationDelay: "0.46s" }}
               >
-                Rencontrez des entreprises, développez vos partenariats et donnez une
-                nouvelle dimension à vos projets.
+                Rencontrez des entreprises, développez vos partenariats et
+                donnez une nouvelle dimension à vos projets.
               </p>
 
-              <div className="apparition flex gap-3 flex-wrap mt-7" style={{ animationDelay: "0.56s" }}>
-                <Link
-                  href="#adhesion"
-                  className="btn-action"
-                >
+              <div
+                className="apparition flex gap-3 flex-wrap mt-7"
+                style={{ animationDelay: "0.56s" }}
+              >
+                <Link href="#adhesion" className="btn-action">
                   Devenir membre <ArrowRight size={17} />
                 </Link>
                 <Link
@@ -157,16 +170,21 @@ export default async function PublicHome() {
 
             {VISUELS.hero.url ? (
               <figure
-                className="apparition relative m-0 rounded-xl overflow-hidden border border-white/15 aspect-[16/11]"
+                className="apparition relative m-0 rounded-xl overflow-hidden border border-white/15 aspect-[16/11] group"
                 style={{ animationDelay: "0.3s" }}
               >
+                <Link
+                  href="#evenements"
+                  className="absolute inset-0 z-10"
+                  aria-label="Voir les prochains rendez-vous"
+                />
                 <Image
                   src={VISUELS.hero.url}
                   alt={VISUELS.hero.alt}
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 540px"
-                  className="object-cover"
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent px-4 pt-10 pb-3.5 text-[13px] text-white/90">
                   Des échanges qui font grandir vos projets
@@ -242,12 +260,15 @@ export default async function PublicHome() {
           <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-10">
             <div className="grid gap-10 lg:grid-cols-2 items-start">
               <div>
-                <span className="surtitre text-white/45">Rejoignez CanCham</span>
+                <span className="surtitre text-white/45">
+                  Rejoignez CanCham
+                </span>
                 <h2 className="titre text-[clamp(26px,3.6vw,38px)] m-0 mt-2.5 max-w-[16ch]">
                   Votre prochain partenariat commence ici.
                 </h2>
                 <p className="text-[15px] text-white/70 m-0 mt-3.5 max-w-[44ch]">
-                  Présentez votre entreprise et faites le premier pas vers le réseau.
+                  Présentez votre entreprise et faites le premier pas vers le
+                  réseau.
                 </p>
 
                 <ul className="list-none p-0 mt-8 mb-0 flex flex-col gap-5">
@@ -258,15 +279,17 @@ export default async function PublicHome() {
                         <span className="shrink-0 w-11 h-11 rounded-full border border-marque-vert/50 text-marque-vert flex items-center justify-center">
                           <Icone size={19} />
                         </span>
-                        <span className="text-[15px] text-white/90">{a.texte}</span>
+                        <span className="text-[15px] text-white/90">
+                          {a.texte}
+                        </span>
                       </li>
                     );
                   })}
                 </ul>
 
                 <p className="text-[13px] text-white/50 mt-8 pt-6 border-t border-white/10 mb-0">
-                  Votre candidature sera examinée par l’équipe CanCham. Besoin d’un
-                  dossier complet ?{" "}
+                  Votre candidature sera examinée par l’équipe CanCham. Besoin
+                  d’un dossier complet ?{" "}
                   <Link
                     href="/public/adhesion"
                     className="text-white/80 underline underline-offset-2"

@@ -133,6 +133,9 @@ model Member {
   /// Vignette ronde du membre : portrait pour une personne physique, logo ou
   /// visuel d'activité pour une personne morale. `null` = monogramme.
   photo String?
+  /// Logo de l'organisation, par URL. Affiché en `contain` sur fond blanc : il
+  /// a des marges propres et de la transparence, un cadrage le mutilerait.
+  logo  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -42,6 +42,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1556760544-74068565f05c?w=1200&q=80&auto=format&fit=crop",
     photo:
       "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=450&q=80&auto=format&fit=crop",
+    logo: "/logos/m1-coeur-et-conscience.png",
     produits: [
       p(
         "Ravintsara BIO",
@@ -72,6 +73,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1590751518505-1fc2d227ef9b?w=1200&q=80&auto=format&fit=crop",
     photo:
       "https://images.pexels.com/photos/29193598/pexels-photo-29193598.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+    logo: "/logos/m2-humanite-et-inclusion.png",
     produits: [
       p(
         "Panier raphia XL",
@@ -106,6 +108,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1749585071939-4cd62be90967?w=1200&h=800&q=80&auto=format&fit=crop",
     photo:
       "https://images.pexels.com/photos/18852638/pexels-photo-18852638.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+    logo: "/logos/m3-aqoci.png",
     produits: [
       p(
         "Circuit Andasibe 5j",
@@ -137,6 +140,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1682482198446-4cbf92f85a4b?w=1200&q=80&auto=format&fit=crop",
     photo:
       "https://images.pexels.com/photos/31717561/pexels-photo-31717561.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+    logo: "/logos/m4-developpement-et-paix.png",
     produits: [
       p(
         "Poivre sauvage Voatsiperifery",
@@ -171,6 +175,7 @@ export const MEMBERS: Member[] = [
       "https://images.pexels.com/photos/7988116/pexels-photo-7988116.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop",
     photo:
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=450&q=80&auto=format&fit=crop",
+    logo: "/logos/m5-unicef.png",
     produits: [
       p(
         "Annotation IA",
@@ -201,6 +206,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1627289601745-5813e24c9bc1?w=1200&q=80&auto=format&fit=crop",
     photo:
       "https://images.pexels.com/photos/6806371/pexels-photo-6806371.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+    logo: "/logos/m6-bnp-paribas.png",
     produits: [
       p(
         "Béryl brut",
@@ -231,6 +237,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1758518730384-be3d205838e8?w=1200&h=800&q=80&auto=format&fit=crop",
     photo:
       "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=600&h=450&q=80&auto=format&fit=crop",
+    logo: "/logos/m7-desjardins.png",
     produits: [
       p(
         "Montage export",
@@ -262,6 +269,7 @@ export const MEMBERS: Member[] = [
       "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1200&q=80&auto=format&fit=crop",
     photo:
       "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=450&q=80&auto=format&fit=crop",
+    logo: "/logos/m8-save-the-children.png",
     produits: [
       p(
         "Formation export",

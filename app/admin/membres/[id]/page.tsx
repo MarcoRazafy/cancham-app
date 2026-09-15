@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, User as UserIcon } from "lucide-react";
 import { LogoMark, NeedsAndInterests, Visuel } from "@/components/domain";
+import { Agrandir } from "@/components/Agrandir";
 import { BtnLink, Card, Pill, SectionTitle, StatusPill } from "@/components/ui";
 import {
   ApproveButton,
@@ -37,20 +38,26 @@ export default async function AdminMembreDetail({
 
       <div className="grid gap-4 items-start lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden p-0">
-          <Visuel
+          <Agrandir
             src={m.cover}
-            alt=""
-            seed={m.id}
-            className="h-[190px] w-full"
-            sizes="(max-width: 1024px) 100vw, 900px"
-            icon={
-              m.type === "physique" ? (
-                <UserIcon size={26} />
-              ) : (
-                <Building2 size={26} />
-              )
-            }
-          />
+            alt={`Couverture de ${m.nom}`}
+            legende={m.nom}
+          >
+            <Visuel
+              src={m.cover}
+              alt=""
+              seed={m.id}
+              className="h-[190px] w-full"
+              sizes="(max-width: 1024px) 100vw, 900px"
+              icon={
+                m.type === "physique" ? (
+                  <UserIcon size={26} />
+                ) : (
+                  <Building2 size={26} />
+                )
+              }
+            />
+          </Agrandir>
           <div className="p-[22px]">
             <div className="flex gap-4">
               <LogoMark member={m} size={64} />

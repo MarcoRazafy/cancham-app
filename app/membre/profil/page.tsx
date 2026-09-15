@@ -1,11 +1,18 @@
 import { notFound } from "next/navigation";
-import { Building2, Clock, CreditCard, Lock, User as UserIcon } from "lucide-react";
+import {
+  Building2,
+  Clock,
+  CreditCard,
+  Lock,
+  User as UserIcon,
+} from "lucide-react";
 import {
   AvatarRond,
   LogoMark,
   NeedsAndInterests,
   Visuel,
 } from "@/components/domain";
+import { Agrandir } from "@/components/Agrandir";
 import { EditProfileButton } from "@/components/forms/MemberForms";
 import {
   Banner,
@@ -63,17 +70,21 @@ export default async function ProfilPage() {
           </div>
         }
       >
-        La fiche de votre organisation telle qu’elle apparaît dans l’annuaire, votre
-        statut d’adhésion et l’historique de facturation.
+        La fiche de votre organisation telle qu’elle apparaît dans l’annuaire,
+        votre statut d’adhésion et l’historique de facturation.
       </ViewHead>
 
       {pending ? (
         <div className="mb-5">
-          <Banner tone="warn" icon={<Clock size={18} />} title="Adhésion en attente de validation">
-            Votre profil est enregistré et vous pouvez le compléter dès maintenant.
-            L’accès aux autres sections sera activé dès le paiement de la cotisation —
-            en ligne, ou validé manuellement par notre équipe si vous avez réglé en
-            espèces ou par virement.
+          <Banner
+            tone="warn"
+            icon={<Clock size={18} />}
+            title="Adhésion en attente de validation"
+          >
+            Votre profil est enregistré et vous pouvez le compléter dès
+            maintenant. L’accès aux autres sections sera activé dès le paiement
+            de la cotisation — en ligne, ou validé manuellement par notre équipe
+            si vous avez réglé en espèces ou par virement.
           </Banner>
         </div>
       ) : blocked ? (
@@ -83,13 +94,17 @@ export default async function ProfilPage() {
             icon={<Lock size={18} />}
             title={`Accès restreint — ${joursDeRetard(m)} jours de retard de cotisation`}
           >
-            Passé {RETARD_BLOCAGE_JOURS} jours de retard, l’accès aux autres sections de
-            l’espace membre est automatiquement restreint.
+            Passé {RETARD_BLOCAGE_JOURS} jours de retard, l’accès aux autres
+            sections de l’espace membre est automatiquement restreint.
           </Banner>
         </div>
       ) : overdue ? (
         <div className="mb-5">
-          <Banner tone="bad" icon={<Clock size={18} />} title="Cotisation en retard">
+          <Banner
+            tone="bad"
+            icon={<Clock size={18} />}
+            title="Cotisation en retard"
+          >
             Régularisez avant {RETARD_BLOCAGE_JOURS} jours de retard (
             {joursDeRetard(m)}/{RETARD_BLOCAGE_JOURS} jours écoulés).
           </Banner>
@@ -97,14 +112,22 @@ export default async function ProfilPage() {
       ) : null}
 
       <Card className="overflow-hidden mb-[22px] p-0">
-        <Visuel
-          src={m.cover}
-          alt=""
-          seed={m.id}
-          className="h-[190px] w-full"
-          sizes="(max-width: 1024px) 100vw, 900px"
-          icon={m.type === "physique" ? <UserIcon size={26} /> : <Building2 size={26} />}
-        />
+        <Agrandir src={m.cover} alt={`Couverture de ${m.nom}`} legende={m.nom}>
+          <Visuel
+            src={m.cover}
+            alt=""
+            seed={m.id}
+            className="h-[190px] w-full"
+            sizes="(max-width: 1024px) 100vw, 900px"
+            icon={
+              m.type === "physique" ? (
+                <UserIcon size={26} />
+              ) : (
+                <Building2 size={26} />
+              )
+            }
+          />
+        </Agrandir>
         <div className="p-[22px]">
           <div className="flex gap-4">
             <LogoMark member={m} size={64} />
@@ -116,9 +139,13 @@ export default async function ProfilPage() {
               <div className="flex gap-1.5 flex-wrap pt-2.5">
                 <StatusPill status={m.statut} />
                 {m.type === "physique" ? (
-                  <Pill icon={<UserIcon size={10} />}>Indépendant · personne physique</Pill>
+                  <Pill icon={<UserIcon size={10} />}>
+                    Indépendant · personne physique
+                  </Pill>
                 ) : null}
-                <Pill>Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}</Pill>
+                <Pill>
+                  Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}
+                </Pill>
               </div>
             </div>
           </div>
@@ -132,19 +159,23 @@ export default async function ProfilPage() {
 
           <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
-            <h2 className="text-[17px] font-semibold m-0">Produits &amp; services</h2>
+            <h2 className="text-[17px] font-semibold m-0">
+              Produits &amp; services
+            </h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {m.produits.map((p) => (
               <Card key={p.label} className="p-4 text-center">
-                <Visuel
-                  src={p.photo}
-                  alt={p.label}
-                  seed={m.id + p.label}
-                  className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                  sizes="(max-width: 768px) 100vw, 260px"
-                  iconSize={18}
-                />
+                <Agrandir src={p.photo} alt={p.label} legende={p.label}>
+                  <Visuel
+                    src={p.photo}
+                    alt={p.label}
+                    seed={m.id + p.label}
+                    className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
+                    sizes="(max-width: 768px) 100vw, 260px"
+                    iconSize={18}
+                  />
+                </Agrandir>
                 <div className="font-semibold text-[13px]">{p.label}</div>
               </Card>
             ))}
@@ -177,11 +208,15 @@ export default async function ProfilPage() {
               </div>
             </div>
             <div>
-              <div className="text-[12.3px] font-semibold text-muted mb-1.5">Courriel</div>
+              <div className="text-[12.3px] font-semibold text-muted mb-1.5">
+                Courriel
+              </div>
               <div className="text-[13.6px]">{user.email}</div>
             </div>
             <div>
-              <div className="text-[12.3px] font-semibold text-muted mb-1.5">Téléphone</div>
+              <div className="text-[12.3px] font-semibold text-muted mb-1.5">
+                Téléphone
+              </div>
               <div className="text-[13.6px] font-[family-name:var(--font-mono)]">
                 {user.tel}
               </div>
@@ -192,7 +227,14 @@ export default async function ProfilPage() {
 
       <SectionTitle>Statut d’adhésion</SectionTitle>
       <div className="grid gap-4 mb-[22px] md:grid-cols-3">
-        <Stat k="Adhésion" v={<span className="text-[19px]"><StatusPill status={m.statut} /></span>} />
+        <Stat
+          k="Adhésion"
+          v={
+            <span className="text-[19px]">
+              <StatusPill status={m.statut} />
+            </span>
+          }
+        />
         <Stat
           k="Membre depuis"
           v={<span className="text-[19px]">{fmtDateShort(m.adhesion)}</span>}
@@ -222,7 +264,9 @@ export default async function ProfilPage() {
           {myInvoices.length ? (
             myInvoices.map((f) => (
               <tr key={f.id} className="hover:bg-surface-2">
-                <Td className="font-[family-name:var(--font-mono)]">{f.numero}</Td>
+                <Td className="font-[family-name:var(--font-mono)]">
+                  {f.numero}
+                </Td>
                 <Td className="text-muted">{fmtDateShort(f.date)}</Td>
                 <Td>{f.objet}</Td>
                 <Td className="font-[family-name:var(--font-mono)]">
