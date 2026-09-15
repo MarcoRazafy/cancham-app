@@ -148,6 +148,9 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
     "bg-surface-3 text-muted",
     "bg-accent-soft text-accent-strong",
   ];
+  // Le carré n'a de sens que pour montrer une photo de produit. Sans photo,
+  // il laissait un grand vide autour d'un libellé de deux mots.
+  const avecPhotos = member.produits.some((p) => p.photo);
   return (
     <Link href={href} className="no-underline">
       <Card
@@ -178,13 +181,31 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           <StatusPill status={member.statut} />
         </div>
         <p className="px-4 text-[12.8px] text-muted flex-1 m-0">{member.activite}</p>
-        <div className="flex gap-1.5 px-4 pt-3 pb-4">
+        <div
+          className={`px-4 pt-3 pb-4 ${
+            avecPhotos ? "flex gap-1.5" : "flex gap-1.5 flex-wrap"
+          }`}
+        >
           {member.produits.map((prod: Produit, i) => (
             <div
               key={prod.label}
-              className={`flex-1 aspect-square rounded-lg flex items-center justify-center text-[10px] font-semibold text-center px-1 ${swatches[i % 3]}`}
+              className={
+                avecPhotos
+                  ? `flex-1 aspect-square rounded-lg overflow-hidden flex items-center justify-center text-[10px] font-semibold text-center px-1 ${swatches[i % 3]}`
+                  : `rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${swatches[i % 3]}`
+              }
             >
-              {prod.label}
+              {prod.photo ? (
+                <Image
+                  src={prod.photo}
+                  alt={prod.label}
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                prod.label
+              )}
             </div>
           ))}
         </div>
