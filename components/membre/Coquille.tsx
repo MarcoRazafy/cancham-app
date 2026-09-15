@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
-import { Bell, ChevronDown, Menu, Search, Sun } from "lucide-react";
+import { Bell, ChevronDown, Menu, Search } from "lucide-react";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { TITLES, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
@@ -174,10 +174,6 @@ export function Coquille({
           </Suspense>
 
           <div className="flex items-center gap-2 shrink-0">
-            <BoutonIcone label="Thème clair">
-              <Sun size={17} />
-            </BoutonIcone>
-
             <Link
               href="/membre#notifications"
               aria-label={`Notifications (${notifications.length})`}
@@ -233,18 +229,6 @@ function Avatar({
     >
       {initiales}
     </span>
-  );
-}
-
-function BoutonIcone({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <button
-      title={label}
-      aria-label={label}
-      className="w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:text-ink hover:bg-surface-2 cursor-pointer"
-    >
-      {children}
-    </button>
   );
 }
 

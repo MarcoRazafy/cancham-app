@@ -69,59 +69,16 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0a1119;
-    --surface: #111c27;
-    --surface-2: #16222e;
-    --surface-3: #1d2c3a;
-    --border: #2a3a48;
-    --text: #eef2ef;
-    --text-muted: #a6b2bb;
-    --text-faint: #71808a;
-    --accent: #e5495f;
-    --accent-strong: #f07688;
-    --accent-soft: #3a141c;
-    --success: #3fa766;
-    --success-strong: #5fc182;
-    --success-soft: #153524;
-    --bad: #9c8dd4;
-    --bad-soft: #291f42;
-    --warn: #d9a94a;
-    --warn-soft: #2e260f;
-    --navy: #16305a;
-    --navy-2: #0f2547;
-    --navy-soft: #1c2c46;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -12px rgb(0 0 0 / 0.5);
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #0a1119;
-  --surface: #111c27;
-  --surface-2: #16222e;
-  --surface-3: #1d2c3a;
-  --border: #2a3a48;
-  --text: #eef2ef;
-  --text-muted: #a6b2bb;
-  --text-faint: #71808a;
-  --accent: #e5495f;
-  --accent-strong: #f07688;
-  --accent-soft: #3a141c;
-  --success: #3fa766;
-  --success-strong: #5fc182;
-  --success-soft: #153524;
-  --bad: #9c8dd4;
-  --bad-soft: #291f42;
-  --warn: #d9a94a;
-  --warn-soft: #2e260f;
-  --navy: #16305a;
-  --navy-2: #0f2547;
-  --navy-soft: #1c2c46;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 28px -12px rgb(0 0 0 / 0.5);
-  color-scheme: dark;
-}
+/*
+ * L'application se tient en clair, quel que soit le réglage du navigateur.
+ *
+ * Les blocs « prefers-color-scheme: dark » et « [data-theme] » ont été retirés :
+ * un outil de gestion consulté à plusieurs n'a pas à changer d'apparence selon
+ * la machine, et le sélecteur de thème a disparu de l'interface.
+ *
+ * L'espace public garde son fond sombre, défini plus bas dans `.marque` :
+ * c'est une vitrine, pas un outil, et sa charte l'impose.
+ */
 
 * {
   box-sizing: border-box;
@@ -200,6 +157,26 @@ h3 {
 /* Le public suit la charte quel que soit le thème du visiteur : c'est une
    vitrine, son apparence ne doit pas dépendre des réglages du navigateur. */
 .marque {
+  /*
+   * L'espace public redéfinit aussi les tokens applicatifs : les primitives
+   * de components/ui.tsx qui y sont employées doivent rester sombres, alors
+   * que le reste de l'application est passé en clair.
+   */
+  --bg: var(--marque-nuit);
+  --surface: #16283c;
+  --surface-2: #1d3450;
+  --surface-3: #24405f;
+  --border: #23384f;
+  --text: #ffffff;
+  --text-muted: rgb(255 255 255 / 0.72);
+  --text-faint: rgb(255 255 255 / 0.5);
+  --accent: #d81f3a;
+  --accent-strong: #ef3350;
+  --accent-soft: #2d0d15;
+  --success: #2fae6a;
+  --success-strong: #56d18c;
+  --success-soft: #0f2a1f;
+
   background: var(--marque-nuit);
   color: #ffffff;
   font-family: var(--font-texte);
@@ -309,43 +286,39 @@ h3 {
    ============================================================ */
 
 .espace-membre {
-  --bg: #0b131d;
-  --surface: #111d29;
-  --surface-2: #16242f;
-  --surface-3: #1d2f3d;
-  --border: #1f3140;
-  --text: #eef4f2;
-  --text-muted: #9fb2bf;
-  --text-faint: #6b8090;
+  --bg: #f5f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f4f7;
+  --surface-3: #e5eaf0;
+  --border: #dfe5ec;
+  --text: #16202b;
+  --text-muted: #5b6b7a;
+  --text-faint: #8797a6;
 
-  /* Rouge de la charte, éclairci pour rester lisible sur fond sombre. */
-  --accent: #d81f3a;
-  --accent-strong: #ef3350;
-  --accent-soft: #2d0d15;
+  /* Rouge de la charte, lisible tel quel sur fond clair. */
+  --accent: #ad0707;
+  --accent-strong: #8b0512;
+  --accent-soft: #fdeaed;
 
-  --success: #2fae6a;
-  --success-strong: #56d18c;
-  --success-soft: #0f2a1f;
+  --success: #007140;
+  --success-strong: #005c34;
+  --success-soft: #e3f3ea;
 
-  --bad: #e5495f;
-  --bad-soft: #2d1118;
+  --bad: #b0102c;
+  --bad-soft: #fdeaee;
 
-  --warn: #d9a94a;
-  --warn-soft: #2e2510;
+  --warn: #8a6410;
+  --warn-soft: #fdf3dd;
 
-  --navy: #16304a;
-  --navy-2: #0f2238;
-  --navy-soft: #16273a;
+  --navy: #0f1d2c;
+  --navy-2: #16283c;
+  --navy-soft: #e6ecf4;
 
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 16px 32px -20px rgb(0 0 0 / 0.7);
+  --shadow: 0 1px 2px rgb(15 29 44 / 0.05), 0 12px 28px -18px rgb(15 29 44 / 0.22);
 
   /*
-   * Barre latérale : le dégradé linéaire de la charte, basculé à la verticale.
-   * Il part du rouge #ad0707 et arrive au vert #007140 — les deux couleurs de
-   * la chambre, reliées par une zone sombre qui laisse respirer le menu.
-   *
-   * Les teintes intermédiaires sont assombries : à pleine saturation, le texte
-   * blanc des entrées de menu ne passerait pas.
+   * La barre latérale garde le dégradé de la charte, rouge vers vert : c'est
+   * l'élément de marque de l'espace. Seule la zone de travail passe en clair.
    */
   --laterale: linear-gradient(
     180deg,
@@ -361,7 +334,7 @@ h3 {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-texte);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .espace-membre h1,
