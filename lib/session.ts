@@ -41,6 +41,7 @@ export async function getCurrentUser(space: Space): Promise<User> {
     email: u.email,
     tel: u.tel ?? undefined,
     initiales: initiales(u.nom),
+    photo: u.photo,
   };
 }
 

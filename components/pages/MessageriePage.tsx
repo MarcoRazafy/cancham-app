@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AvatarRond } from "@/components/domain";
 import { ViewHead } from "@/components/ui";
 import { MessageComposer } from "@/components/forms/MessageComposer";
 import { getThreads } from "@/lib/queries";
@@ -38,17 +39,19 @@ export async function MessageriePage({
                   : "hover:bg-surface-2"
               }`}
             >
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[11.5px] shrink-0 ${
+              <AvatarRond
+                src={t.avatar}
+                alt={t.nom}
+                initiales={t.init}
+                taille={36}
+                className={`text-[11.5px] ${
                   t.id === active.id
                     ? "bg-white/15 text-white"
                     : t.type === "groupe"
                       ? "bg-navy-soft text-navy"
                       : "bg-accent-soft text-accent-strong"
                 }`}
-              >
-                {t.init}
-              </div>
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between gap-1.5 items-baseline">
                   <span className="font-semibold text-[13px] truncate">{t.nom}</span>
@@ -71,15 +74,17 @@ export async function MessageriePage({
 
         <div className="flex-1 min-w-0 flex flex-col">
           <div className="px-[18px] py-3.5 border-b border-line flex items-center gap-2.5 shrink-0">
-            <div
-              className={`w-[34px] h-[34px] rounded-full flex items-center justify-center font-bold text-[12.5px] ${
+            <AvatarRond
+              src={active.avatar}
+              alt={active.nom}
+              initiales={active.init}
+              taille={34}
+              className={`text-[12.5px] ${
                 active.type === "groupe"
                   ? "bg-navy-soft text-navy"
                   : "bg-accent-soft text-accent-strong"
               }`}
-            >
-              {active.init}
-            </div>
+            />
             <div>
               <div className="font-semibold text-[13.8px]">{active.nom}</div>
               <div className="text-[11.4px] text-faint">{active.sousTitre}</div>

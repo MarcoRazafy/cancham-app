@@ -145,6 +145,7 @@ async function main() {
         motivation: m.motivation ?? null,
         paiementNote: m.paiementNote ?? null,
         cover: m.cover ?? null,
+        photo: m.photo ?? null,
         produits: {
           create: m.produits.map((p, i) => ({
             label: p.label,
@@ -166,6 +167,7 @@ async function main() {
         fonction: u.fonction,
         email: u.email,
         tel: u.tel ?? null,
+        photo: u.photo ?? null,
         memberId: u.memberId,
         contactPrincipal: u.role === "membre" || u.role === "visiteur",
       },
@@ -301,6 +303,7 @@ async function main() {
         nom: t.nom,
         sousTitre: t.sousTitre,
         init: t.init,
+        avatar: t.avatar ?? null,
         unread: t.unread,
         messages: {
           create: t.messages.map((m, i) => ({

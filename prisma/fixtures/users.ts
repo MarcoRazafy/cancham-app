@@ -27,6 +27,8 @@ export const USERS: Record<Space, User> = {
     email: "hasina@zafydesign.mg",
     tel: "+261 34 77 889 90",
     initiales: "HR",
+    photo:
+      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
   },
 
   /** Espace membre — représentante d'une entreprise adhérente à jour (m1). */
@@ -40,6 +42,8 @@ export const USERS: Record<Space, User> = {
     email: "contact@biosudessences.mg",
     tel: "+261 34 12 345 67",
     initiales: "VA",
+    photo:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
   },
 
   /** Espace admin — équipe CanCham, rattachée à aucune entreprise. */
@@ -53,6 +57,8 @@ export const USERS: Record<Space, User> = {
     email: "ando.ratovomanana@cancham.mg",
     tel: "+261 32 00 112 23",
     initiales: "AR",
+    photo:
+      "https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
   },
 };
 

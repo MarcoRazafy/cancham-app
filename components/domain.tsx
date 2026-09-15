@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   Building2,
   CalendarDays,
@@ -70,6 +70,54 @@ export function PhotoPlaceholder({
   );
 }
 
+/**
+ * Vignette ronde : la photo si elle existe, les initiales sinon.
+ *
+ * Une seule implémentation pour l'annuaire, la messagerie et la barre du haut,
+ * de sorte que le repli soit identique partout le jour où une URL casse — et
+ * qu'il n'y ait qu'un endroit à toucher quand la chambre versera ses propres
+ * portraits.
+ */
+export function AvatarRond({
+  src,
+  alt,
+  initiales,
+  taille,
+  className = "",
+  style,
+}: {
+  src?: string | null;
+  alt: string;
+  initiales: string;
+  taille: number;
+  /** Habillage du repli en initiales : fond, texte, bordure. */
+  className?: string;
+  style?: CSSProperties;
+}) {
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={taille}
+        height={taille}
+        sizes={`${taille}px`}
+        className="rounded-full object-cover shrink-0 bg-line"
+        style={{ width: taille, height: taille }}
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`rounded-full flex items-center justify-center font-bold shrink-0 ${className}`}
+      style={{ ...style, width: taille, height: taille, fontSize: taille * 0.36 }}
+    >
+      {initiales}
+    </span>
+  );
+}
+
 export function LogoMark({
   member,
   size = 46,
@@ -78,6 +126,11 @@ export function LogoMark({
   size?: number;
 }) {
   if (member.type === "physique") {
+    if (member.photo) {
+      return (
+        <AvatarRond src={member.photo} alt={member.nom} initiales="" taille={size} />
+      );
+    }
     return (
       <div style={{ width: size, height: size }} className="shrink-0">
         <PhotoPlaceholder

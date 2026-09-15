@@ -54,6 +54,7 @@ type MembreRow = {
   motivation: string | null;
   paiementNote: string | null;
   cover: string | null;
+  photo: string | null;
   produits: { label: string; photo: string | null }[];
 };
 
@@ -77,6 +78,7 @@ function versMembre(m: MembreRow): Member {
     motivation: m.motivation ?? undefined,
     paiementNote: m.paiementNote ?? undefined,
     cover: m.cover,
+    photo: m.photo,
     produits: m.produits.map((p) => ({ label: p.label, photo: p.photo })),
   };
 }
@@ -280,7 +282,7 @@ export async function getOffers(): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
     // La vignette de l'offre reprend la couverture de l'entreprise : c'est elle
     // qui donne le contexte, avant même d'avoir lu le nom.
-    include: { member: { select: { nom: true, cover: true } } },
+    include: { member: { select: { nom: true, cover: true, photo: true } } },
     orderBy: { createdAt: "asc" },
   });
   return rows.map((o) => ({
@@ -347,6 +349,7 @@ export async function getThreads(currentUserId: string): Promise<MessageThread[]
     nom: t.nom,
     sousTitre: t.sousTitre,
     init: t.init,
+    avatar: t.avatar,
     unread: t.unread,
     messages: t.messages.map((m) => ({
       id: m.id,

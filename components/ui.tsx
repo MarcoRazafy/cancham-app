@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { Check, Clock, Plus, X } from "lucide-react";
@@ -268,13 +269,32 @@ export function Kicker({ children }: { children: ReactNode }) {
 
 export function Avatar({
   initials: init,
+  src,
+  alt = "",
   className = "",
   size = 34,
 }: {
   initials: string;
+  /** Portrait réel. Les initiales servent de repli quand il manque. */
+  src?: string | null;
+  alt?: string;
   className?: string;
   size?: number;
 }) {
+  if (src) {
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={size}
+        height={size}
+        sizes={`${size}px`}
+        className="rounded-full object-cover shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+
   return (
     <div
       className={`rounded-full flex items-center justify-center font-bold shrink-0 ${className}`}

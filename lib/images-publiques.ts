@@ -8,8 +8,11 @@
  * Next optimise et met ces images en cache côté serveur : le visiteur ne dépend
  * pas de la disponibilité de l'hébergeur à chaque chargement.
  *
- * Licences : Unsplash et Pexels autorisent l'usage commercial sans attribution
- * obligatoire, et le lien direct depuis leur CDN.
+ * Depuis la livraison des photos de la chambre, tout ce qui montre un événement
+ * CanCham pointe sur `public/photos/`. Ne restent en banque d'images que les
+ * deux moitiés symboliques de la bannière — Toronto et l'allée des baobabs —
+ * qu'aucune photo de la chambre ne remplace. Unsplash autorise l'usage
+ * commercial sans attribution et le lien direct depuis son CDN.
  */
 export interface VisuelPublic {
   url: string;
@@ -26,8 +29,8 @@ export const VISUELS: Record<"hero" | "toronto" | "madagascar", VisuelPublic> = 
    * « réseau d'affaires international ».
    */
   hero: {
-    url: "https://images.unsplash.com/photo-1515169067868-5387ec356754?w=1600&q=80&auto=format&fit=crop",
-    alt: "Professionnels en conversation lors d’une soirée de réseautage",
+    url: "/photos/cancham-16.jpg",
+    alt: "Salle comble lors d’une rencontre CanCham à Antananarivo",
   },
 
   /** Skyline de Toronto à l'heure bleue — moitié canadienne de la bannière. */
@@ -51,16 +54,16 @@ export const VISUELS: Record<"hero" | "toronto" | "madagascar", VisuelPublic> = 
  */
 export const VISUELS_EVENEMENTS: VisuelPublic[] = [
   {
-    url: "https://images.pexels.com/photos/8761647/pexels-photo-8761647.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    alt: "Participants échangeant autour d’une table lors d’une pause réseautage",
+    url: "/photos/cancham-07.jpg",
+    alt: "Participants réunis lors d’une rencontre de la chambre",
   },
   {
-    url: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?w=1600&q=80&auto=format&fit=crop",
-    alt: "Orateur s’adressant à une salle lors d’une conférence professionnelle",
+    url: "/photos/cancham-22.jpg",
+    alt: "Intervenant s’adressant à la salle lors d’une conférence CanCham",
   },
   {
-    url: "https://images.unsplash.com/photo-1590496793907-4d66e2994b4d?w=1600&q=80&auto=format&fit=crop",
-    alt: "Terminal à conteneurs et grues portuaires au crépuscule",
+    url: "/photos/cancham-03.jpg",
+    alt: "Table d’accueil et émargement à l’entrée d’un événement",
   },
 ];
 

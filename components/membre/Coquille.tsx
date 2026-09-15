@@ -142,7 +142,7 @@ export function Coquille({
           href="/membre/profil"
           className="mx-3.5 mb-5 mt-1 px-3 py-3 rounded-lg flex items-center gap-3 border-t-2 border-success pt-4 no-underline hover:bg-white/[0.06]"
         >
-          <Avatar initiales={user.initiales} taille={40} neutre />
+          <Avatar user={user} taille={40} neutre />
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold text-white truncate">
               {abreger(user.nom)}
@@ -193,7 +193,7 @@ export function Coquille({
               FR <ChevronDown size={14} />
             </span>
 
-            <Avatar initiales={user.initiales} taille={36} neutre />
+            <Avatar user={user} taille={36} neutre />
           </div>
         </header>
 
@@ -213,15 +213,35 @@ function abreger(nom: string): string {
 }
 
 function Avatar({
-  initiales,
+  user,
   taille,
   neutre = false,
 }: {
-  initiales: string;
+  user: User;
   taille: number;
   /** Sur le pied de la barre latérale, le fond est vert : le rouge y jure. */
   neutre?: boolean;
 }) {
+  if (user.photo) {
+    return (
+      <span
+        className={`rounded-full overflow-hidden shrink-0 block border ${
+          neutre ? "border-white/25" : "border-accent/40"
+        }`}
+        style={{ width: taille, height: taille }}
+      >
+        <Image
+          src={user.photo}
+          alt={user.nom}
+          width={taille}
+          height={taille}
+          sizes={`${taille}px`}
+          className="w-full h-full object-cover"
+        />
+      </span>
+    );
+  }
+
   return (
     <span
       className={`rounded-full flex items-center justify-center font-bold shrink-0 ${
@@ -231,7 +251,7 @@ function Avatar({
       }`}
       style={{ width: taille, height: taille, fontSize: taille * 0.36 }}
     >
-      {initiales}
+      {user.initiales}
     </span>
   );
 }

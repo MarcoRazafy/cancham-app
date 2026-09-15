@@ -130,6 +130,9 @@ model Member {
 
   /// Photo de couverture de la fiche, par URL. `null` = dégradé décoratif.
   cover String?
+  /// Vignette ronde du membre : portrait pour une personne physique, logo ou
+  /// visuel d'activité pour une personne morale. `null` = monogramme.
+  photo String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -151,6 +154,8 @@ model User {
   fonction String
   email    String   @unique
   tel      String?
+  /// Portrait de l'utilisateur, par URL. `null` = initiales.
+  photo    String?
 
   /// `null` pour l'équipe CanCham et les visiteurs.
   memberId String?
@@ -372,8 +377,11 @@ model MessageThread {
   type      ThreadType
   nom       String
   sousTitre String
-  /// Initiales affichées sur l'avatar du fil.
+  /// Initiales affichées sur l'avatar du fil, en repli de `avatar`.
   init      String
+  /// Visuel du fil : portrait pour un échange individuel, photo de l'événement
+  /// pour un groupe. `null` = initiales.
+  avatar    String?
   /// Messages non lus. Provisoire : un vrai accusé de lecture par utilisateur
   /// remplacera ce compteur global quand l'authentification sera en place.
   unread    Int        @default(0)

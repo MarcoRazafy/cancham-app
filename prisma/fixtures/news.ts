@@ -9,7 +9,7 @@ export const NEWS: NewsItem[] = [
     cat: "Programmation",
     media: { type: "image", theme: "navy" },
     image:
-      "https://images.unsplash.com/photo-1532968899863-5b52ef155913?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-18.jpg",
     extrait:
       "La prochaine Mission Économique et Commerciale au Canada s’articule autour de deux filières prioritaires, portées par une délégation de 10 à 12 entreprises. Le lancement officiel est fixé au 1er octobre, avec un ancrage fort autour du SITV Montréal.",
     corps:
@@ -31,7 +31,7 @@ export const NEWS: NewsItem[] = [
     cat: "Vie de la chambre",
     media: { type: "image", theme: "navy" },
     image:
-      "https://images.pexels.com/photos/18999582/pexels-photo-18999582.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "/photos/cancham-16.jpg",
     extrait:
       "Le premier 5 à 7 de la rentrée a rassemblé un nombre record de membres, avec plusieurs nouvelles entreprises venues découvrir la chambre. Retour en images sur une soirée particulièrement animée.",
     corps:
@@ -45,7 +45,7 @@ export const NEWS: NewsItem[] = [
     cat: "Programmation",
     media: { type: "image", theme: "green" },
     image:
-      "https://images.unsplash.com/photo-1558694440-03ade9215d7b?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-19.jpg",
     extrait:
       "Après Antananarivo, Canada Expo poursuit sa tournée régionale sur la côte Est. L’objectif : rapprocher les opportunités de coopération canadienne des entreprises situées en dehors de la capitale, avec une programmation adaptée aux réalités du port de Tamatave.",
     corps:
@@ -59,7 +59,7 @@ export const NEWS: NewsItem[] = [
     cat: "Événement passé",
     media: { type: "video", theme: "green", duration: "3:42" },
     image:
-      "https://images.unsplash.com/photo-1768396855390-0728fa9c21e1?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-23.jpg",
     extrait:
       "Plus de 200 personnes réunies au Radisson Blu pour célébrer une décennie de coopération Canada-Madagascar, dans un format de réseautage pensé pour créer de vraies rencontres d’affaires. Un moment fort de la vie de la chambre, immortalisé dans ce court récapitulatif vidéo.",
     corps:
@@ -81,7 +81,7 @@ export const NEWS: NewsItem[] = [
     cat: "Vie de la chambre",
     media: { type: "image", theme: "navy" },
     image:
-      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-12.jpg",
     extrait:
       "La chambre inaugure de nouveaux locaux à Antananarivo, avec un programme d’accueil renforcé pour les entreprises membres. Un espace pensé dès le départ pour favoriser les rencontres entre membres, partenaires et délégations de passage.",
     corps:
@@ -95,7 +95,7 @@ export const NEWS: NewsItem[] = [
     cat: "Programmation",
     media: { type: "video", theme: "navy", duration: "5:18" },
     image:
-      "https://images.unsplash.com/photo-1774599730788-a74cd9253b56?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-14.jpg",
     extrait:
       "Une première mission inverse a permis à des investisseurs canadiens de rencontrer l’écosystème malgache sur le terrain, du 20 au 31 juillet. Un programme entièrement sur mesure, construit autour des secteurs d’intérêt confirmés par chaque investisseur.",
     corps:
@@ -109,7 +109,7 @@ export const NEWS: NewsItem[] = [
     cat: "Formation",
     media: { type: "video", theme: "green", duration: "52:00" },
     image:
-      "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-13.jpg",
     extrait:
       "L’enregistrement complet de notre atelier en ligne sur les programmes de mobilité francophone est maintenant disponible dans l’espace Ressources. Une séance pratique, animée avec nos partenaires institutionnels, pour comprendre les différentes voies d’entrée au Canada.",
     corps:
@@ -123,7 +123,7 @@ export const NEWS: NewsItem[] = [
     cat: "Programmation",
     media: { type: "image", theme: "green" },
     image:
-      "https://images.unsplash.com/photo-1682482198446-4cbf92f85a4b?w=1200&q=80&auto=format&fit=crop",
+      "/photos/cancham-06.jpg",
     extrait:
       "Lancé lors de la MECC 8 et du salon SIAL 2024, l’accord de mise en œuvre entre TFO Canada et CanCham autour du projet WEF avance selon le calendrier prévu. Un point d’étape sur les prochaines actions destinées aux entreprises dirigées par des femmes.",
     corps:
