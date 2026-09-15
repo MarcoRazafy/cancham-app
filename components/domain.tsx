@@ -472,8 +472,20 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
   return (
     <article className="border border-line rounded-[var(--radius-m)] bg-surface p-4 mb-3">
       <div className="flex items-center gap-2.5 mb-2.5">
-        <div className="w-[34px] h-[34px] rounded-full bg-accent-soft text-accent-strong flex items-center justify-center font-[family-name:var(--font-display)] font-bold text-[12.5px]">
-          CC
+        {/*
+          Le sigle est large (1888 × 1159) : en `contain` et sans marge, il
+          occupe toute la largeur du rond et reste lisible jusqu'au mot
+          « CanCham ». Un `cover` lui couperait la feuille d'érable.
+        */}
+        <div className="w-11 h-11 rounded-full bg-white border border-line flex items-center justify-center shrink-0 overflow-hidden">
+          <Image
+            src="/marque/sigle.png"
+            alt="CanCham Madagascar"
+            width={44}
+            height={44}
+            sizes="44px"
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
           <div className="font-semibold text-[13.6px]">
