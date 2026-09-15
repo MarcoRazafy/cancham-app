@@ -459,13 +459,10 @@ export function ServiceCard({
 }) {
   const gratuit = service.type === "gratuit";
   return (
-    <Card className="p-[22px] flex flex-col">
-      <div
-        className={`w-10 h-10 rounded-[var(--radius-s)] flex items-center justify-center mb-3 ${
-          gratuit ? "bg-success-soft text-success-strong" : "bg-accent-soft text-accent-strong"
-        }`}
-      >
-        <CreditCard size={18} />
+    <Card className="tuile-hote p-[22px] flex flex-col">
+      {/* Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est facturé. */}
+      <div className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}>
+        <CreditCard size={19} />
       </div>
       <div className="font-bold text-[14.5px] mb-1.5">{service.titre}</div>
       <p className="text-[12.8px] text-muted leading-relaxed m-0 mb-3 flex-1">
