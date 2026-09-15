@@ -277,7 +277,7 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   return (
     <Link href={href} className="no-underline">
       <Card
-        className={`carte-filet ${filetDe(member.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
+        className={`carte-filet filet-bas ${filetDe(member.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
       >
         <Visuel
           src={member.cover}
@@ -402,7 +402,7 @@ export function EventCard({
 
   const body = (
     <Card
-      className={`carte-filet ${filetDe(event.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
+      className={`carte-filet filet-bas ${href ? "" : "filet-fixe"} ${filetDe(event.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
     >
       <div className="relative">
         <Visuel
@@ -630,7 +630,11 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
 
 export function OfferCard({ offer, href }: { offer: Offer; href?: string }) {
   const corps = (
-    <Card className="carte-filet filet-degrade p-0 h-full flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
+    <Card
+      className={`carte-filet filet-bas filet-degrade ${
+        href ? "" : "filet-fixe"
+      } p-0 h-full flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
+    >
       <div className="overflow-hidden">
         <Visuel
           src={offer.cover}
@@ -674,7 +678,7 @@ export function ServiceCard({
   const gratuit = service.type === "gratuit";
   return (
     <Card
-      className={`tuile-hote carte-filet ${gratuit ? "filet-vert" : "filet-rouge"} p-[22px] flex flex-col`}
+      className={`tuile-hote carte-filet filet-fixe ${gratuit ? "filet-vert" : "filet-rouge"} p-[22px] flex flex-col`}
     >
       {/* Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est facturé. */}
       <div
@@ -712,7 +716,9 @@ export function ResourceCard({
   const video = resource.fmt === "Vidéo";
   return (
     <Card
-      className={`carte-filet ${resource.type === "gratuit" ? "filet-vert" : "filet-rouge"} h-full flex flex-col p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
+      className={`carte-filet filet-fixe filet-bas ${
+        resource.type === "gratuit" ? "filet-vert" : "filet-rouge"
+      } h-full flex flex-col p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
     >
       <div className="relative">
         <PhotoPlaceholder

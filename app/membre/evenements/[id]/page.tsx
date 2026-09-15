@@ -113,7 +113,7 @@ export default async function EvenementDetailPage({
       <div className="grid gap-4 items-start lg:grid-cols-3">
         {/* ==================== Colonne principale ==================== */}
         <div className="flex flex-col gap-4 lg:col-span-2">
-          <Card className="carte-filet filet-degrade p-[22px]">
+          <Card className="carte-filet filet-fixe filet-degrade p-[22px]">
             <Kicker>À propos</Kicker>
             <div className="mt-2.5 flex flex-col gap-3.5 text-muted text-[14.3px] leading-[1.75]">
               {e.desc.split("\n\n").map((para, i) => (
@@ -125,7 +125,7 @@ export default async function EvenementDetailPage({
           </Card>
 
           {e.programme && e.programme.length > 0 ? (
-            <Card className="carte-filet filet-rouge p-[22px]">
+            <Card className="carte-filet filet-fixe filet-rouge p-[22px]">
               <Kicker>Au programme</Kicker>
               <h2 className="mt-1.5 mb-4 text-[19px]">
                 Le déroulé de la séance
@@ -159,7 +159,7 @@ export default async function EvenementDetailPage({
           ) : null}
 
           {e.pourQui ? (
-            <Card className="carte-filet filet-vert p-[22px]">
+            <Card className="carte-filet filet-fixe filet-vert p-[22px]">
               <Kicker>Public visé</Kicker>
               <h2 className="mt-1.5 mb-2 text-[19px]">
                 À qui s’adresse ce rendez-vous
@@ -171,7 +171,7 @@ export default async function EvenementDetailPage({
           ) : null}
 
           {entreprises.noms.length > 0 ? (
-            <Card className="carte-filet filet-bleu p-[22px]">
+            <Card className="carte-filet filet-fixe filet-bleu p-[22px]">
               <Kicker>Déjà inscrits</Kicker>
               <h2 className="mt-1.5 mb-1 text-[19px]">
                 {past ? "Qui était dans la salle" : "Qui sera dans la salle"}
@@ -302,7 +302,7 @@ export default async function EvenementDetailPage({
             </dl>
           </Card>
 
-          <Card className="tuile-hote carte-filet filet-vert p-[22px] flex gap-3.5">
+          <Card className="tuile-hote carte-filet filet-fixe filet-vert p-[22px] flex gap-3.5">
             <span className="tuile tuile-sm tuile-verte">
               <Headset size={20} />
             </span>
