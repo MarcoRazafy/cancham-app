@@ -278,7 +278,9 @@ export async function getResourceCounts() {
 
 export async function getOffers(): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
-    include: { member: { select: { nom: true } } },
+    // La vignette de l'offre reprend la couverture de l'entreprise : c'est elle
+    // qui donne le contexte, avant même d'avoir lu le nom.
+    include: { member: { select: { nom: true, cover: true } } },
     orderBy: { createdAt: "asc" },
   });
   return rows.map((o) => ({
@@ -287,6 +289,7 @@ export async function getOffers(): Promise<Offer[]> {
     membre: o.member.nom,
     titre: o.titre,
     desc: o.desc,
+    cover: o.member.cover,
   }));
 }
 
