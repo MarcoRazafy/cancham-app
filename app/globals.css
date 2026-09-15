@@ -588,6 +588,29 @@ h3 {
   width: 100%;
 }
 
+/*
+ * Carte statique — ni lien ni action.
+ *
+ * Le trait qui se déroule est une promesse : il annonce que la carte répond au
+ * clic. Sur une carte qui ne mène nulle part, il ment. On l'affiche donc en
+ * entier d'emblée, comme un simple filet décoratif.
+ */
+.filet-fixe::before {
+  width: 100%;
+  transition: none;
+}
+
+/*
+ * Carte coiffée d'une photo pleine largeur.
+ *
+ * En haut, le trait se poserait sur l'image et s'y perdrait — sur une photo
+ * sombre il disparaît, sur une photo rouge il se confond. Il passe donc au pied
+ * de la carte, où le fond est toujours uni.
+ */
+.filet-bas::before {
+  inset: auto auto 0 0;
+}
+
 .filet-vert {
   --filet: #007140;
 }
