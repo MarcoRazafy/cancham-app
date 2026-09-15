@@ -32,14 +32,19 @@ export async function MessageriePage({
               key={t.id}
               href={`${base}?t=${t.id}`}
               className={`flex gap-2.5 px-3.5 py-3 border-b border-line no-underline ${
-                t.id === active.id ? "bg-accent-soft" : "hover:bg-surface-2"
+                t.id === active.id
+                  ? // Un aplat bleu : la sélection doit se voir d'un coup d'œil.
+                    "bg-[#14263a] text-white"
+                  : "hover:bg-surface-2"
               }`}
             >
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[11.5px] shrink-0 ${
-                  t.type === "groupe"
-                    ? "bg-navy-soft text-navy"
-                    : "bg-accent-soft text-accent-strong"
+                  t.id === active.id
+                    ? "bg-white/15 text-white"
+                    : t.type === "groupe"
+                      ? "bg-navy-soft text-navy"
+                      : "bg-accent-soft text-accent-strong"
                 }`}
               >
                 {t.init}
@@ -53,7 +58,10 @@ export async function MessageriePage({
                     </span>
                   ) : null}
                 </div>
-                <div className="text-[11.6px] text-faint truncate">
+                <div className={`text-[11.6px] truncate ${
+                    t.id === active.id ? "text-white/60" : "text-faint"
+                  }`}
+                >
                   {t.messages[t.messages.length - 1].texte}
                 </div>
               </div>
