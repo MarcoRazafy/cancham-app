@@ -26,6 +26,27 @@ export const OFFERS: Offer[] = [
     titre: "Une place gratuite sur l’atelier « Export vers le Canada »",
     desc: "Offerte par entreprise membre inscrite avant le 1er octobre, dans la limite des places disponibles.",
   },
+  {
+    id: "o4",
+    membreId: "m2",
+    membre: "Highlands Artisanat",
+    titre: "-20% sur les commandes groupées de plus de 50 pièces",
+    desc: "Pour les cadeaux d’entreprise et les objets promotionnels. Devis sous 48 h, livraison depuis Antananarivo.",
+  },
+  {
+    id: "o5",
+    membreId: "m5",
+    membre: "MadaTech Solutions",
+    titre: "Audit numérique offert aux membres de la chambre",
+    desc: "Une demi-journée d’analyse de vos outils et de vos processus, sans engagement, avant toute proposition.",
+  },
+  {
+    id: "o6",
+    membreId: "m9",
+    membre: "Mialy Razanadrakoto",
+    titre: "Première séance de diagnostic export offerte",
+    desc: "Une heure pour cadrer votre projet d’accès au marché canadien et identifier les premières démarches.",
+  },
 ];
 
 /**
