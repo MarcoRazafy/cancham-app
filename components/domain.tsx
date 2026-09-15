@@ -500,7 +500,7 @@ export function ServiceCard({
     >
       {/* Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est facturé. */}
       <div className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}>
-        <CreditCard size={19} />
+        <CreditCard size={24} />
       </div>
       <div className="font-bold text-[14.5px] mb-1.5">{service.titre}</div>
       <p className="text-[12.8px] text-muted leading-relaxed m-0 mb-3 flex-1">

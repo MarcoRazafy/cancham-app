@@ -104,21 +104,21 @@ export default async function VueDEnsemble() {
       {/* ==================== Compteurs ==================== */}
       <div className="grid gap-4 mb-5 sm:grid-cols-2 lg:grid-cols-3">
         <Compteur
-          icone={<Users size={22} />}
+          icone={<Users size={26} />}
           valeur={stats.membres}
           libelle="Entreprises du réseau"
           href="/membre/annuaire"
           teinte="vert"
         />
         <Compteur
-          icone={<CalendarDays size={22} />}
+          icone={<CalendarDays size={26} />}
           valeur={aVenir.length}
           libelle="Événements à venir"
           href="/membre/evenements"
           teinte="rouge"
         />
         <Compteur
-          icone={<Mail size={22} />}
+          icone={<Mail size={26} />}
           valeur={nonLus}
           libelle={`Message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}`}
           href="/membre/messagerie"
@@ -247,7 +247,7 @@ export default async function VueDEnsemble() {
       {/* ==================== Raccourcis ==================== */}
       <div className="grid gap-4 md:grid-cols-3">
         <Raccourci
-          icone={<Mail size={21} />}
+          icone={<Mail size={24} />}
           surtitre="Vos échanges"
           titre={`${nonLus} nouveau${nonLus > 1 ? "x" : ""} message${nonLus > 1 ? "s" : ""}`}
           detail="Poursuivez vos discussions avec le réseau."
@@ -257,7 +257,7 @@ export default async function VueDEnsemble() {
         />
         {ressource ? (
           <Raccourci
-            icone={<FileText size={21} />}
+            icone={<FileText size={24} />}
             surtitre="Ressource à découvrir"
             titre={ressource.titre}
             pastille={ressource.type === "gratuit" ? "Inclus" : fmtMoney(ressource.prix)}
@@ -268,7 +268,7 @@ export default async function VueDEnsemble() {
         ) : null}
         {service ? (
           <Raccourci
-            icone={<Briefcase size={21} />}
+            icone={<Briefcase size={24} />}
             surtitre="Services CanCham"
             titre={service.titre}
             detail={service.desc}

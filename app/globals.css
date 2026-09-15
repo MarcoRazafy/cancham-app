@@ -498,9 +498,13 @@ h3 {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 15px;
+  width: 52px;
+  height: 52px;
+  /*
+   * Rayon volontairement contenu — environ un cinquième du côté. Au-delà, la
+   * tuile perd son caractère de carré et l'icône paraît flotter au centre.
+   */
+  border-radius: 11px;
   color: #ffffff;
   transition:
     background-color 0.25s ease,
@@ -510,9 +514,9 @@ h3 {
 }
 
 .tuile-sm {
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
 }
 
 .tuile-bleue {
