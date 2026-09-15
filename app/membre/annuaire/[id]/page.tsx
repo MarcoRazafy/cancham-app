@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, User as UserIcon } from "lucide-react";
 import { LogoMark, NeedsAndInterests, Visuel } from "@/components/domain";
+import { Agrandir } from "@/components/Agrandir";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
 import { getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
@@ -23,20 +24,22 @@ export default async function FicheMembrePage({
       </div>
 
       <Card className="overflow-hidden p-0">
-        <Visuel
-          src={m.cover}
-          alt=""
-          seed={m.id}
-          className="h-[190px] w-full"
-          sizes="(max-width: 1024px) 100vw, 900px"
-          icon={
-            m.type === "physique" ? (
-              <UserIcon size={26} />
-            ) : (
-              <Building2 size={26} />
-            )
-          }
-        />
+        <Agrandir src={m.cover} alt={`Couverture de ${m.nom}`} legende={m.nom}>
+          <Visuel
+            src={m.cover}
+            alt=""
+            seed={m.id}
+            className="h-[190px] w-full"
+            sizes="(max-width: 1024px) 100vw, 900px"
+            icon={
+              m.type === "physique" ? (
+                <UserIcon size={26} />
+              ) : (
+                <Building2 size={26} />
+              )
+            }
+          />
+        </Agrandir>
         <div className="p-[22px]">
           <div className="flex gap-4 flex-wrap justify-between">
             <div className="flex gap-4">
@@ -77,14 +80,16 @@ export default async function FicheMembrePage({
           <div className="grid gap-4 md:grid-cols-3">
             {m.produits.map((p) => (
               <Card key={p.label} className="p-4 text-center">
-                <Visuel
-                  src={p.photo}
-                  alt={p.label}
-                  seed={m.id + p.label}
-                  className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                  sizes="(max-width: 768px) 100vw, 260px"
-                  iconSize={18}
-                />
+                <Agrandir src={p.photo} alt={p.label} legende={p.label}>
+                  <Visuel
+                    src={p.photo}
+                    alt={p.label}
+                    seed={m.id + p.label}
+                    className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
+                    sizes="(max-width: 768px) 100vw, 260px"
+                    iconSize={18}
+                  />
+                </Agrandir>
                 <div className="font-semibold text-[13px]">{p.label}</div>
               </Card>
             ))}

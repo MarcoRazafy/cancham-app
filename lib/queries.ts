@@ -55,6 +55,7 @@ type MembreRow = {
   paiementNote: string | null;
   cover: string | null;
   photo: string | null;
+  logo: string | null;
   produits: { label: string; photo: string | null }[];
 };
 
@@ -79,6 +80,7 @@ function versMembre(m: MembreRow): Member {
     paiementNote: m.paiementNote ?? undefined,
     cover: m.cover,
     photo: m.photo,
+    logo: m.logo,
     produits: m.produits.map((p) => ({ label: p.label, photo: p.photo })),
   };
 }

@@ -12,6 +12,7 @@ import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { EnTetePublique } from "@/components/public/Marque";
 import { visuelEvenement } from "@/lib/images-publiques";
+import { Agrandir } from "@/components/Agrandir";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
 
@@ -27,10 +28,16 @@ export default async function EvenementPublic({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [e, prochains] = await Promise.all([getEvent(id), getProchainsEvenements(8)]);
+  const [e, prochains] = await Promise.all([
+    getEvent(id),
+    getProchainsEvenements(8),
+  ]);
   if (!e) notFound();
 
-  const index = Math.max(0, prochains.findIndex((p) => p.id === e.id));
+  const index = Math.max(
+    0,
+    prochains.findIndex((p) => p.id === e.id),
+  );
 
   /**
    * Les autres rendez-vous, chacun accompagné de son rang d'origine : le visuel
@@ -58,17 +65,24 @@ export default async function EvenementPublic({
         </Link>
 
         {visuel ? (
-          <div className="relative aspect-[21/8] rounded-xl overflow-hidden border border-white/12 mb-8">
-            <Image
-              src={visuel.url}
-              alt={visuel.alt}
-              fill
-              priority
-              sizes="(max-width: 1120px) 100vw, 1080px"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-[var(--marque-nuit)]/85 to-transparent" />
-          </div>
+          <Agrandir
+            src={visuel.url}
+            alt={e.titre}
+            legende={e.titre}
+            className="mb-8"
+          >
+            <div className="relative aspect-[21/8] rounded-xl overflow-hidden border border-white/12">
+              <Image
+                src={visuel.url}
+                alt={visuel.alt}
+                fill
+                priority
+                sizes="(max-width: 1120px) 100vw, 1080px"
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-[var(--marque-nuit)]/85 to-transparent" />
+            </div>
+          </Agrandir>
         ) : null}
 
         <div className="grid gap-9 lg:grid-cols-[1fr_320px] items-start">
@@ -92,7 +106,10 @@ export default async function EvenementPublic({
 
             <div className="mt-7 max-w-[62ch] flex flex-col gap-4">
               {e.desc.split("\n\n").map((para, i) => (
-                <p key={i} className="m-0 text-[16px] leading-[1.75] text-white/80">
+                <p
+                  key={i}
+                  className="m-0 text-[16px] leading-[1.75] text-white/80"
+                >
                   {para}
                 </p>
               ))}
@@ -110,10 +127,7 @@ export default async function EvenementPublic({
                 : "Événement complet"}
             </p>
 
-            <Link
-              href="/membre/evenements"
-              className="btn-action w-full"
-            >
+            <Link href="/membre/evenements" className="btn-action w-full">
               S’inscrire <ArrowRight size={16} />
             </Link>
 
@@ -135,7 +149,9 @@ export default async function EvenementPublic({
             <div className="rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-8">
               <div className="flex items-end justify-between gap-6 flex-wrap mb-7">
                 <div>
-                  <span className="surtitre text-white/45">Ne manquez rien</span>
+                  <span className="surtitre text-white/45">
+                    Ne manquez rien
+                  </span>
                   <h2 className="titre text-[clamp(22px,3vw,30px)] m-0 mt-2">
                     Les autres rendez-vous
                   </h2>
@@ -157,7 +173,6 @@ export default async function EvenementPublic({
             </div>
           </section>
         ) : null}
-
       </main>
     </>
   );

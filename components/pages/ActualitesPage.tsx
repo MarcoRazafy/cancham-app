@@ -18,12 +18,9 @@ export async function ActualitesPage({ space }: { space: Space }) {
 
   return (
     <>
-      <ViewHead
-        title="Actualités"
-        action={admin ? <NewNewsButton /> : null}
-      >
-        Le fil d’actualité de la chambre : programmation, retours d’événements et vie
-        institutionnelle, dans l’ordre chronologique.
+      <ViewHead title="Actualités" action={admin ? <NewNewsButton /> : null}>
+        Le fil d’actualité de la chambre : programmation, retours d’événements
+        et vie institutionnelle, dans l’ordre chronologique.
       </ViewHead>
 
       {/*
@@ -31,7 +28,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
           seule colonne allongeait la page bien au-delà du fil d'actualité
           qu'elle est censée accompagner.
         */}
-        <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
+      <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
         <div className="flex-1 min-w-0 max-w-[620px]">
           {feed.map((n) => (
             <NewsFeedItem key={n.id} news={n} base={base} />
@@ -52,7 +49,11 @@ export async function ActualitesPage({ space }: { space: Space }) {
           {offers.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
               {offers.map((o) => (
-                <OfferCard key={o.id} offer={o} />
+                <OfferCard
+                  key={o.id}
+                  offer={o}
+                  href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
+                />
               ))}
             </div>
           ) : (

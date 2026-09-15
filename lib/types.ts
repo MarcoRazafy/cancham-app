@@ -86,6 +86,8 @@ export interface Member {
   cover?: string | null;
   /** Vignette ronde : portrait si personne physique, visuel sinon. */
   photo?: string | null;
+  /** Logo de l'organisation. Prime sur `photo` partout où l'on identifie le membre. */
+  logo?: string | null;
 }
 
 export type EventFormat = "Présentiel" | "Webinaire" | "Hybride";

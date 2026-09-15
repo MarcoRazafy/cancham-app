@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { EventCard, Visuel } from "@/components/domain";
+import { Agrandir } from "@/components/Agrandir";
 import { Banner, BtnLink, Card, Kicker, Stat } from "@/components/ui";
 import {
   CancelRegistrationButton,
@@ -48,7 +49,9 @@ export default async function EvenementDetailPage({
   const remplissage = Math.min(100, Math.round((e.inscrits / e.cap) * 100));
 
   // Les trois prochains rendez-vous, celui-ci mis à part.
-  const autres = tous.filter((a) => a.id !== e.id && !isPast(a.date)).slice(0, 3);
+  const autres = tous
+    .filter((a) => a.id !== e.id && !isPast(a.date))
+    .slice(0, 3);
 
   return (
     <>
@@ -60,14 +63,21 @@ export default async function EvenementDetailPage({
 
       {/* ==================== Bandeau ==================== */}
       <div className="relative rounded-[var(--radius-l)] overflow-hidden mb-4">
-        <Visuel
+        <Agrandir
           src={e.photo}
           alt={e.titre}
-          seed={e.id}
-          className="h-[300px] w-full"
-          sizes="(max-width: 1024px) 100vw, 1000px"
-          icon={<CalendarDays size={34} />}
-        />
+          legende={e.titre}
+          className="block"
+        >
+          <Visuel
+            src={e.photo}
+            alt={e.titre}
+            seed={e.id}
+            className="h-[300px] w-full"
+            sizes="(max-width: 1024px) 100vw, 1000px"
+            icon={<CalendarDays size={34} />}
+          />
+        </Agrandir>
         {/* Le dégradé garantit la lisibilité du titre quelle que soit la photo. */}
         <div className="absolute inset-0 bg-linear-to-t from-[#0f1d2c]/90 via-[#0f1d2c]/35 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col gap-2">
@@ -117,7 +127,9 @@ export default async function EvenementDetailPage({
           {e.programme && e.programme.length > 0 ? (
             <Card className="carte-filet filet-rouge p-[22px]">
               <Kicker>Au programme</Kicker>
-              <h2 className="mt-1.5 mb-4 text-[19px]">Le déroulé de la séance</h2>
+              <h2 className="mt-1.5 mb-4 text-[19px]">
+                Le déroulé de la séance
+              </h2>
               <ol className="list-none m-0 p-0 flex flex-col">
                 {e.programme.map((etape, i) => (
                   <li key={i} className="flex gap-4">
@@ -319,7 +331,9 @@ export default async function EvenementDetailPage({
           <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
             <div>
               <Kicker>Et ensuite</Kicker>
-              <h2 className="mt-1 mb-0 text-[20px]">Autres rendez-vous à venir</h2>
+              <h2 className="mt-1 mb-0 text-[20px]">
+                Autres rendez-vous à venir
+              </h2>
             </div>
             <Link
               href="/membre/evenements"
@@ -394,7 +408,10 @@ function QrPlaceholder({ code }: { code: string }) {
       aria-label={`Aperçu du code ${code}`}
     >
       {cells.map((on, i) => (
-        <div key={i} style={{ width: 6, height: 6, background: on ? "#0F1D2C" : "#fff" }} />
+        <div
+          key={i}
+          style={{ width: 6, height: 6, background: on ? "#0F1D2C" : "#fff" }}
+        />
       ))}
     </div>
   );

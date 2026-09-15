@@ -75,7 +75,9 @@ export default async function VueDEnsemble() {
       {/* ==================== En-tête ==================== */}
       <div className="flex items-start justify-between gap-6 flex-wrap mb-6">
         <div>
-          <span className="surtitre text-faint">Votre réseau Canada–Madagascar</span>
+          <span className="surtitre text-faint">
+            Votre réseau Canada–Madagascar
+          </span>
           <h1 className="text-[clamp(28px,3.4vw,38px)] m-0 mt-2">
             Bonjour {user.nom.split(" ")[0]},
           </h1>
@@ -84,10 +86,7 @@ export default async function VueDEnsemble() {
           </p>
         </div>
 
-        <Link
-          href="/membre/annuaire"
-          className="btn-action"
-        >
+        <Link href="/membre/annuaire" className="btn-action">
           Explorer l’annuaire <ArrowRight size={16} />
         </Link>
       </div>
@@ -120,7 +119,11 @@ export default async function VueDEnsemble() {
 
         <CarrouselOffres>
           {offres.map((o) => (
-            <OfferCard key={o.id} offer={o} />
+            <OfferCard
+              key={o.id}
+              offer={o}
+              href={`/membre/annuaire/${o.membreId}`}
+            />
           ))}
         </CarrouselOffres>
       </Card>
@@ -140,17 +143,20 @@ export default async function VueDEnsemble() {
 
           {prochain ? (
             <>
-              <div className="relative mx-6 rounded-xl overflow-hidden aspect-[16/7] bg-surface-2">
+              <Link
+                href={`/membre/evenements/${prochain.id}`}
+                className="relative mx-6 rounded-xl overflow-hidden aspect-[16/7] bg-surface-2 block group"
+              >
                 {prochain.photo ? (
                   <Image
                     src={prochain.photo}
                     alt={prochain.titre}
                     fill
                     sizes="(max-width: 1024px) 100vw, 700px"
-                    className="object-cover"
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 ) : null}
-              </div>
+              </Link>
 
               <div className="flex items-center gap-5 flex-wrap px-6 py-5">
                 <PastilleDate date={prochain.date} />
@@ -245,7 +251,6 @@ export default async function VueDEnsemble() {
         </Card>
       </div>
 
-
       {/* ==================== Raccourcis ==================== */}
       <div className="grid gap-4 md:grid-cols-3">
         <Raccourci
@@ -262,7 +267,9 @@ export default async function VueDEnsemble() {
             icone={<FileText size={24} />}
             surtitre="Ressource à découvrir"
             titre={ressource.titre}
-            pastille={ressource.type === "gratuit" ? "Inclus" : fmtMoney(ressource.prix)}
+            pastille={
+              ressource.type === "gratuit" ? "Inclus" : fmtMoney(ressource.prix)
+            }
             lien="Consulter"
             href="/membre/ressources"
             teinte="rouge"
@@ -326,7 +333,8 @@ function BandeauAdhesion({
         : {
             icone: <CheckCircle2 size={22} />,
             titre: "Votre adhésion est à jour",
-            texte: "Vous bénéficiez de tous les services de votre espace membre.",
+            texte:
+              "Vous bénéficiez de tous les services de votre espace membre.",
             pastille: "Membre actif",
           };
 
@@ -338,10 +346,14 @@ function BandeauAdhesion({
           : "bg-success-soft border-l-success border border-success/25"
       }`}
     >
-      <span className={alerte ? "text-bad" : "text-success-strong"}>{contenu.icone}</span>
+      <span className={alerte ? "text-bad" : "text-success-strong"}>
+        {contenu.icone}
+      </span>
 
       <div className="min-w-0 flex-1">
-        <div className="text-[15.5px] font-semibold text-ink">{contenu.titre}</div>
+        <div className="text-[15.5px] font-semibold text-ink">
+          {contenu.titre}
+        </div>
         <div className="text-[13.5px] text-muted mt-0.5">{contenu.texte}</div>
       </div>
 
@@ -378,8 +390,12 @@ function PastilleDate({ date }: { date: string }) {
     .toUpperCase();
   return (
     <span className="pastille w-[74px] shrink-0 rounded-xl bg-accent text-white text-center py-2.5">
-      <span className="titre block text-[26px] leading-none">{d.getDate()}</span>
-      <span className="block text-[10.5px] font-bold tracking-wider mt-1">{mois}</span>
+      <span className="titre block text-[26px] leading-none">
+        {d.getDate()}
+      </span>
+      <span className="block text-[10.5px] font-bold tracking-wider mt-1">
+        {mois}
+      </span>
     </span>
   );
 }
@@ -407,7 +423,9 @@ function Raccourci({
     <Card
       className={`tuile-hote carte-filet ${TEINTES_COMPTEUR[teinte].filet} p-5 flex gap-4`}
     >
-      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte].tuile}`}>{icone}</span>
+      <span className={`tuile tuile-sm ${TEINTES_COMPTEUR[teinte].tuile}`}>
+        {icone}
+      </span>
       <div className="min-w-0 flex-1">
         <div className="text-[13px] text-muted">{surtitre}</div>
         <div className="flex items-start gap-2.5 mt-0.5">
@@ -419,7 +437,9 @@ function Raccourci({
           ) : null}
         </div>
         {detail ? (
-          <p className="text-[12.5px] text-muted mt-1.5 mb-0 line-clamp-2">{detail}</p>
+          <p className="text-[12.5px] text-muted mt-1.5 mb-0 line-clamp-2">
+            {detail}
+          </p>
         ) : null}
         <Link
           href={href}

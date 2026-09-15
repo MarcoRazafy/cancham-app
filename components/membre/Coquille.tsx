@@ -67,7 +67,11 @@ export function Coquille({
             fond foncé. Il porte déjà le nom complet de la chambre : aucun texte
             ne l'accompagne.
           */}
-          <Link href="/membre" className="no-underline block" aria-label="CanCham Connect">
+          <Link
+            href="/membre"
+            className="no-underline block"
+            aria-label="CanCham Connect"
+          >
             <Image
               src="/marque/logo-blanc.png"
               alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar"
@@ -87,7 +91,9 @@ export function Coquille({
               className={i > 0 ? "mt-5 pt-5 border-t border-white/10" : ""}
             >
               {groupe.label ? (
-                <div className="surtitre text-white/40 mx-3 mb-2.5">{groupe.label}</div>
+                <div className="surtitre text-white/40 mx-3 mb-2.5">
+                  {groupe.label}
+                </div>
               ) : null}
 
               {groupe.items.map((item) => {
@@ -147,7 +153,9 @@ export function Coquille({
             <span className="block text-[13.5px] font-semibold text-white truncate">
               {abreger(user.nom)}
             </span>
-            <span className="block text-[11.5px] text-white/50 truncate">{membre.nom}</span>
+            <span className="block text-[11.5px] text-white/50 truncate">
+              {membre.nom}
+            </span>
           </span>
           <ChevronDown size={16} className="text-white/45 shrink-0" />
         </Link>
@@ -193,7 +201,13 @@ export function Coquille({
               FR <ChevronDown size={14} />
             </span>
 
-            <Avatar user={user} taille={36} neutre />
+            <Link
+              href="/membre/profil"
+              className="no-underline block"
+              aria-label="Mon profil"
+            >
+              <Avatar user={user} taille={36} neutre />
+            </Link>
           </div>
         </header>
 
@@ -263,7 +277,10 @@ function Recherche() {
   const surRecherche = pathname === "/membre/recherche";
 
   return (
-    <form action="/membre/recherche" className="flex-1 flex justify-center px-2">
+    <form
+      action="/membre/recherche"
+      className="flex-1 flex justify-center px-2"
+    >
       <div className="relative w-full max-w-[420px]">
         <Search
           size={16}
