@@ -26,14 +26,19 @@ export async function ActualitesPage({ space }: { space: Space }) {
         institutionnelle, dans l’ordre chronologique.
       </ViewHead>
 
-      <div className="flex gap-6 items-start flex-col lg:flex-row max-w-[980px]">
-        <div className="flex-1 min-w-0 max-w-[640px]">
+      {/*
+          Le rail est assez large pour deux colonnes : à six offres, une
+          seule colonne allongeait la page bien au-delà du fil d'actualité
+          qu'elle est censée accompagner.
+        */}
+        <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
+        <div className="flex-1 min-w-0 max-w-[620px]">
           {feed.map((n) => (
             <NewsFeedItem key={n.id} news={n} base={base} />
           ))}
         </div>
 
-        <aside className="w-full lg:w-[280px] lg:shrink-0 lg:sticky lg:top-[84px]">
+        <aside className="w-full xl:w-[500px] xl:shrink-0 xl:sticky xl:top-[84px]">
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
@@ -45,7 +50,11 @@ export async function ActualitesPage({ space }: { space: Space }) {
             ) : null}
           </div>
           {offers.length ? (
-            offers.map((o) => <OfferCard key={o.id} offer={o} />)
+            <div className="grid gap-3 sm:grid-cols-2">
+              {offers.map((o) => (
+                <OfferCard key={o.id} offer={o} />
+              ))}
+            </div>
           ) : (
             <EmptyState>Aucune offre en vedette pour le moment.</EmptyState>
           )}
