@@ -447,7 +447,7 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
 
 export function OfferCard({ offer }: { offer: Offer }) {
   return (
-    <Card className="p-4 mb-2.5">
+    <Card className="carte-filet filet-degrade p-4 h-full">
       <Pill>{offer.membre}</Pill>
       <div className="font-semibold text-[13.2px] mt-1.5 mb-1">{offer.titre}</div>
       <div className="text-[12.4px] text-muted leading-relaxed">{offer.desc}</div>
