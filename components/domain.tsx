@@ -151,7 +151,7 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   return (
     <Link href={href} className="no-underline">
       <Card
-        className={`carte-filet ${filetDe(member.id)} h-full flex flex-col hover:border-accent transition-colors p-0`}
+        className={`carte-filet ${filetDe(member.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
       >
         <Visuel
           src={member.cover}
@@ -246,7 +246,7 @@ export function EventCard({
 
   const body = (
     <Card
-      className={`carte-filet ${filetDe(event.id)} h-full flex flex-col hover:border-accent transition-colors p-0`}
+      className={`carte-filet ${filetDe(event.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
     >
       <div className="relative">
         <Visuel
@@ -501,7 +501,7 @@ export function ResourceCard({
   const video = resource.fmt === "Vidéo";
   return (
     <Card
-      className={`carte-filet ${resource.type === "gratuit" ? "filet-vert" : "filet-rouge"} h-full flex flex-col p-0 hover:border-accent transition-colors`}
+      className={`carte-filet ${resource.type === "gratuit" ? "filet-vert" : "filet-rouge"} h-full flex flex-col p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
     >
       <div className="relative">
         <PhotoPlaceholder
