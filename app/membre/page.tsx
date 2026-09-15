@@ -108,18 +108,21 @@ export default async function VueDEnsemble() {
           valeur={stats.membres}
           libelle="Entreprises du réseau"
           href="/membre/annuaire"
+          teinte="vert"
         />
         <Compteur
           icone={<CalendarDays size={22} />}
           valeur={aVenir.length}
           libelle="Événements à venir"
           href="/membre/evenements"
+          teinte="rouge"
         />
         <Compteur
           icone={<Mail size={22} />}
           valeur={nonLus}
           libelle={`Message${nonLus > 1 ? "s" : ""} non lu${nonLus > 1 ? "s" : ""}`}
           href="/membre/messagerie"
+          teinte="bleu"
         />
       </div>
 
@@ -250,6 +253,7 @@ export default async function VueDEnsemble() {
           detail="Poursuivez vos discussions avec le réseau."
           lien="Ouvrir la messagerie"
           href="/membre/messagerie"
+          teinte="bleu"
         />
         {ressource ? (
           <Raccourci
@@ -259,6 +263,7 @@ export default async function VueDEnsemble() {
             pastille={ressource.type === "gratuit" ? "Inclus" : fmtMoney(ressource.prix)}
             lien="Consulter"
             href="/membre/ressources"
+            teinte="rouge"
           />
         ) : null}
         {service ? (
@@ -269,6 +274,7 @@ export default async function VueDEnsemble() {
             detail={service.desc}
             lien="Voir les services"
             href="/membre/offres-cancham"
+            teinte="vert"
           />
         ) : null}
       </div>
@@ -355,21 +361,32 @@ function BandeauAdhesion({
   );
 }
 
+const TEINTES_COMPTEUR = {
+  rouge: "bg-accent-soft text-accent",
+  vert: "bg-success-soft text-success",
+  bleu: "bg-navy-soft text-navy",
+} as const;
+
 function Compteur({
   icone,
   valeur,
   libelle,
   href,
+  teinte,
 }: {
   icone: React.ReactNode;
   valeur: number;
   libelle: string;
   href: string;
+  /** Les trois couleurs de la chambre se répartissent sur la rangée. */
+  teinte: keyof typeof TEINTES_COMPTEUR;
 }) {
   return (
     <Link href={href} className="no-underline">
       <Card className="p-5 flex items-center gap-4 hover:border-accent/50 transition-colors">
-        <span className="w-12 h-12 rounded-xl bg-accent-soft text-accent flex items-center justify-center shrink-0">
+        <span
+          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${TEINTES_COMPTEUR[teinte]}`}
+        >
           {icone}
         </span>
         <span>
@@ -388,7 +405,7 @@ function PastilleDate({ date }: { date: string }) {
     .replace(".", "")
     .toUpperCase();
   return (
-    <span className="w-[74px] shrink-0 rounded-xl bg-accent text-white text-center py-2.5">
+    <span className="pastille w-[74px] shrink-0 rounded-xl bg-accent text-white text-center py-2.5">
       <span className="titre block text-[26px] leading-none">{d.getDate()}</span>
       <span className="block text-[10.5px] font-bold tracking-wider mt-1">{mois}</span>
     </span>
@@ -403,6 +420,7 @@ function Raccourci({
   pastille,
   lien,
   href,
+  teinte = "rouge",
 }: {
   icone: React.ReactNode;
   surtitre: string;
@@ -411,10 +429,13 @@ function Raccourci({
   pastille?: string;
   lien: string;
   href: string;
+  teinte?: keyof typeof TEINTES_COMPTEUR;
 }) {
   return (
     <Card className="p-5 flex gap-4">
-      <span className="w-11 h-11 rounded-xl bg-surface-2 text-accent flex items-center justify-center shrink-0">
+      <span
+        className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${TEINTES_COMPTEUR[teinte]}`}
+      >
         {icone}
       </span>
       <div className="min-w-0 flex-1">
