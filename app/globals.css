@@ -634,6 +634,76 @@ h3 {
 }
 
 /* ============================================================
+   BARRES DE DÉFILEMENT
+
+   Les barres par défaut du système — grises, épaisses, avec leurs flèches
+   haut et bas — juraient partout : sur le dégradé du menu latéral surtout,
+   où elles posaient une bande claire au milieu du rouge et du vert.
+
+   Un pouce fin et arrondi, sans flèches, sur un rail transparent. Il reste
+   discret au repos et se fonce au survol, pour qui cherche à le saisir.
+
+   Deux mécanismes, un par famille de navigateurs. Chrome et Safari lisent
+   les pseudo-éléments `::-webkit-scrollbar`, qui permettent l'arrondi et
+   la suppression des flèches. Firefox ne connaît que `scrollbar-width` et
+   `scrollbar-color` — mais Chrome les comprend aussi, et dès qu'ils sont
+   posés il ignore les pseudo-éléments. D'où le `@supports` : les propriétés
+   standard ne s'appliquent qu'aux navigateurs qui n'ont rien d'autre.
+   ============================================================ */
+
+:root {
+  --pouce: rgb(15 29 44 / 0.22);
+  --pouce-survol: rgb(15 29 44 / 0.42);
+}
+
+/* Sur fond sombre — menu latéral, espace public — le pouce passe au blanc. */
+.defilement-sombre,
+.marque {
+  --pouce: rgb(255 255 255 / 0.26);
+  --pouce-survol: rgb(255 255 255 / 0.46);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--pouce) transparent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/*
+ * La bordure transparente, rognée par `background-clip`, laisse un pouce
+ * visible de 6 px dans une zone de saisie de 10 px : fin à l'œil, facile à
+ * attraper à la souris.
+ */
+::-webkit-scrollbar-thumb {
+  background-color: var(--pouce);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--pouce-survol);
+}
+
+/* Les flèches haut et bas : c'étaient elles, surtout, qui faisaient daté. */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ============================================================
    ENTRÉES DU MENU LATÉRAL
 
    Même vocabulaire que la grille tarifaire du site : une ligne à coins

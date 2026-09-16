@@ -69,7 +69,7 @@ export function Shell({
 
         <SpaceSwitcher current={space} />
 
-        <nav className="flex-1 overflow-y-auto px-3 pt-3.5 pb-3">
+        <nav className="defilement-sombre flex-1 overflow-y-auto px-3 pt-3.5 pb-3">
           {nav.map((group) => (
             <div key={group.label}>
               <div className="text-[10.5px] uppercase tracking-[0.12em] text-[#6f8477] mx-2.5 mt-4 mb-1.5 font-semibold">

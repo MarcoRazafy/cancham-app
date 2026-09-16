@@ -84,7 +84,7 @@ export function Coquille({
           </Link>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3.5 pb-4">
+        <nav className="defilement-sombre flex-1 overflow-y-auto px-3.5 pb-4">
           {nav.map((groupe, i) => (
             <div
               key={groupe.label || `groupe-${i}`}
