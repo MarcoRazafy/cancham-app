@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, User as UserIcon } from "lucide-react";
-import { LogoMark, NeedsAndInterests, Visuel } from "@/components/domain";
+import {
+  ListeContacts,
+  LogoMark,
+  NeedsAndInterests,
+  Visuel,
+} from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
 import { BtnLink, Card, Pill, SectionTitle, StatusPill } from "@/components/ui";
 import {
@@ -11,7 +16,7 @@ import {
   ReminderButton,
 } from "@/components/forms/MemberForms";
 import { COTISATION_ANNUELLE } from "@/lib/membership";
-import { getMember } from "@/lib/queries";
+import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 import {
   joursDeRetard,
@@ -27,6 +32,7 @@ export default async function AdminMembreDetail({
   const { id } = await params;
   const m = await getMember(id);
   if (!m) notFound();
+  const contacts = await getContacts(m.id);
 
   return (
     <>
@@ -108,6 +114,12 @@ export default async function AdminMembreDetail({
             ) : null}
 
             <NeedsAndInterests member={m} />
+
+            <ListeContacts
+              contacts={contacts}
+              titre={m.type === "physique" ? "Contact" : "Contacts"}
+              intro="Les personnes déclarées par l’entreprise. Le référent est celui à joindre en premier."
+            />
           </div>
         </Card>
 

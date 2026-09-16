@@ -7,7 +7,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import {
-  AvatarRond,
+  ListeContacts,
   LogoMark,
   NeedsAndInterests,
   Visuel,
@@ -33,7 +33,6 @@ import {
 } from "@/components/ui";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
-import { initialesDe } from "@/lib/avatars";
 import { fmtDate, fmtDateShort, fmtMoney } from "@/lib/format";
 import {
   ADHESION_PENDING,
@@ -189,63 +188,19 @@ export default async function ProfilPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-2.5 mt-[22px] mb-1 flex-wrap">
-            <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
-            <h2 className="text-[17px] font-semibold m-0">
-              {m.type === "physique" ? "Contact" : "Contacts"}
-            </h2>
-            <span className="flex-1" />
-            <AddContactButton memberId={m.id} />
-          </div>
-          <p className="text-[12.8px] text-muted mt-0 mb-3.5">
-            Les personnes que la chambre peut joindre chez vous. Le contact
-            principal est celui qu’elle appelle en premier.
-          </p>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            {contacts.map((c) => (
-              <div
-                key={c.id}
-                className="carte-filet filet-fixe filet-bleu border border-line rounded-[var(--radius-m)] p-4 flex gap-3 items-start"
-              >
-                <AvatarRond
-                  src={c.photo}
-                  alt={c.nom}
-                  initiales={initialesDe(c.nom)}
-                  taille={42}
-                  className="bg-accent-soft text-accent-strong"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[13.8px] font-semibold text-ink">
-                      {c.nom}
-                    </span>
-                    {c.principal ? <Pill>Contact principal</Pill> : null}
-                  </div>
-                  <div className="text-[12.5px] text-muted">{c.fonction}</div>
-                  <a
-                    href={`mailto:${c.email}`}
-                    className="block text-[12.8px] text-accent no-underline hover:underline mt-1.5 truncate"
-                  >
-                    {c.email}
-                  </a>
-                  {c.tel ? (
-                    <a
-                      href={`tel:${c.tel.replace(/\s/g, "")}`}
-                      className="block text-[12.8px] text-ink no-underline hover:underline font-[family-name:var(--font-mono)]"
-                    >
-                      {c.tel}
-                    </a>
-                  ) : null}
-                </div>
-                {/* Le dernier contact n'est pas retirable : l'action le refuse
-                    aussi côté serveur, le bouton disparu n'est qu'un confort. */}
-                {contacts.length > 1 ? (
-                  <RemoveContactButton contactId={c.id} nom={c.nom} />
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <ListeContacts
+            contacts={contacts}
+            titre={m.type === "physique" ? "Contact" : "Contacts"}
+            intro="Les personnes que la chambre peut joindre chez vous. Le contact principal est celui qu’elle appelle en premier."
+            action={<AddContactButton memberId={m.id} />}
+            actionContact={(c) =>
+              // Le dernier contact n'est pas retirable : l'action le refuse aussi
+              // côté serveur, le bouton absent n'est qu'un confort.
+              contacts.length > 1 ? (
+                <RemoveContactButton contactId={c.id} nom={c.nom} />
+              ) : null
+            }
+          />
         </div>
       </Card>
 

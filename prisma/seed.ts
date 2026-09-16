@@ -176,7 +176,17 @@ async function main() {
   }
   for (const c of CONTACTS) {
     await prisma.user.create({
-      data: { ...c, role: "membre", contactPrincipal: false },
+      data: {
+        id: c.id,
+        memberId: c.memberId,
+        nom: c.nom,
+        fonction: c.fonction,
+        email: c.email,
+        tel: c.tel,
+        photo: c.photo,
+        role: "membre",
+        contactPrincipal: c.principal,
+      },
     });
   }
 
