@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { Card, Pill, StatusPill } from "@/components/ui";
+import { Reactions } from "@/components/forms/Reactions";
 import { filetDe } from "@/lib/filets";
 import { initialesDe } from "@/lib/avatars";
 import {
@@ -27,14 +28,15 @@ import {
 } from "@/lib/format";
 import type {
   CanchamEvent,
-  Contact,
   CanchamService,
+  Contact,
   Member,
   NewsItem,
   NewsMedia,
   Offer,
   Produit,
   Resource,
+  Space,
 } from "@/lib/types";
 
 /* ==================== Visuels de remplacement ==================== */
@@ -565,7 +567,15 @@ export function MediaBanner({
   );
 }
 
-export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
+export function NewsFeedItem({
+  news,
+  base,
+  space,
+}: {
+  news: NewsItem;
+  base: string;
+  space: Space;
+}) {
   return (
     <article className="border border-line rounded-[var(--radius-m)] bg-surface p-4 mb-3">
       <div className="flex items-center gap-2.5 mb-2.5">
@@ -611,19 +621,21 @@ export function NewsFeedItem({ news, base }: { news: NewsItem; base: string }) {
       ) : (
         <MediaBanner media={news.media} />
       )}
-      <div className="flex gap-4 mt-3 text-xs text-muted">
+      <div className="flex items-center justify-between gap-3 flex-wrap mt-3 pt-3 border-t border-line">
+        <Reactions
+          newsId={news.id}
+          space={space}
+          jaimes={news.jaimes}
+          jaimeParMoi={news.jaimeParMoi}
+          commentaires={news.commentaires.length}
+          lienCommentaires={`${base}/${news.id}#commentaires`}
+        />
         <Link
           href={`${base}/${news.id}`}
-          className="font-semibold text-accent no-underline hover:underline"
+          className="text-[12.8px] font-semibold text-accent no-underline hover:underline"
         >
           Lire l’article complet
         </Link>
-        {news.commentaires.length ? (
-          <span>
-            {news.commentaires.length} commentaire
-            {news.commentaires.length > 1 ? "s" : ""}
-          </span>
-        ) : null}
       </div>
     </article>
   );

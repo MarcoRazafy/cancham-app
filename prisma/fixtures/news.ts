@@ -1,7 +1,11 @@
 import type { NewsItem } from "../../lib/types";
 
 /** Fil d'actualité de la chambre. Contenus d'exemple. */
-export const NEWS: NewsItem[] = [
+/**
+ * Les « j'aime » sont des lignes rattachées à des utilisateurs, posées au
+ * chargement : la fixture ne décrit que la publication elle-même.
+ */
+export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
   {
     id: "n1",
     titre: "Lancement de la 9ᵉ édition de la MECC : cap sur le tourisme et l’éducation",
@@ -131,7 +135,3 @@ export const NEWS: NewsItem[] = [
     commentaires: [],
   },
 ];
-
-export function findNews(id: string): NewsItem | undefined {
-  return NEWS.find((n) => n.id === id);
-}
