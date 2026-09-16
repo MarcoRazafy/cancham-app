@@ -363,6 +363,7 @@ async function main() {
         init: t.init,
         avatar: t.avatar ?? null,
         memberId: t.memberId ?? null,
+        contactId: t.contactId ?? null,
         unread: t.unread,
         messages: {
           create: t.messages.map((m, i) => ({

@@ -186,6 +186,7 @@ model User {
   contactPrincipal Boolean @default(false)
 
   jaimes NewsLike[]
+  fils   MessageThread[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -476,6 +477,10 @@ model MessageThread {
   /// Entreprise en face, pour un échange individuel. Sert à retrouver le fil
   /// existant plutôt qu'à en ouvrir un second depuis la fiche d'annuaire.
   memberId  String?
+  /// Personne en face, pour un échange individuel : c'est elle que montre le
+  /// panneau d'information — nom, fonction, téléphone, courriel.
+  contactId String?
+  contact   User?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
 
@@ -497,8 +502,39 @@ model Message {
   /// Auteur du message, quand il s'agit d'un utilisateur connu.
   userId String?
 
+  piecesJointes PieceJointe[]
+
   @@index([threadId])
   @@map("messages")
+}
+
+enum TypePieceJointe {
+  image
+  video
+  pdf
+}
+
+/// Fichier joint à un message : image, vidéo ou PDF.
+///
+/// Rangé dans le stockage privé et servi par une route contrôlée, comme les
+/// ressources : une conversation n'a pas à être lisible par qui devine une URL.
+model PieceJointe {
+  id      String          @id @default(cuid())
+  /// Nom d'origine, affiché tel que l'expéditeur l'a envoyé.
+  nom     String
+  type    TypePieceJointe
+  /// Nom du fichier dans le stockage privé.
+  fichier String
+  /// Poids en octets, pour l'afficher sans relire le fichier.
+  taille  Int
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
+  @@map("pieces_jointes")
 }
 
 // ============================ Journal ============================

@@ -14,6 +14,7 @@ export const THREADS: {
   init: string;
   avatar?: string | null;
   memberId?: string | null;
+  contactId?: string | null;
   unread: number;
   messages: { id: string; de: string; moi: boolean; texte: string; heure: string }[];
 }[] = [
@@ -23,6 +24,7 @@ export const THREADS: {
     nom: "Fanomezantsoa Randria",
     sousTitre: "Highlands Artisanat · Responsable Export",
     memberId: "m2",
+    contactId: "u-m2-export",
     init: "FR",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
     unread: 2,

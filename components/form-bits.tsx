@@ -40,6 +40,7 @@ export function SubmitButton({
   variant = "primary",
   sm = false,
   className = "",
+  disabled = false,
   ...rest
 }: ComponentProps<"button"> & {
   pendingLabel?: string;
@@ -71,9 +72,12 @@ export function SubmitButton({
   return (
     <button
       type="submit"
-      disabled={pending}
-      className={`${base} disabled:opacity-60 disabled:cursor-wait ${size} ${variants[variant]} ${className}`}
       {...rest}
+      // Désactivé pendant l'envoi *et* quand l'appelant le demande : étalées
+      // après, les props de l'appelant écraseraient la protection contre le
+      // double envoi.
+      disabled={pending || disabled}
+      className={`${base} disabled:opacity-60 disabled:cursor-wait ${size} ${variants[variant]} ${className}`}
     >
       {pending ? (pendingLabel ?? "Envoi…") : children}
     </button>

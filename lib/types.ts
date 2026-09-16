@@ -245,6 +245,8 @@ export interface Message {
   heure: string;
   /** Horodatage ISO. La vue en tire l'heure exacte et le regroupement par jour. */
   envoyeLe: string;
+  /** Images, vidéos et PDF joints. Un message peut n'avoir que des pièces. */
+  pieces: PieceJointe[];
 }
 
 export interface MessageThread {
@@ -257,8 +259,27 @@ export interface MessageThread {
   avatar?: string | null;
   /** Entreprise en face, pour un échange individuel. */
   memberId?: string | null;
+  /** Entreprise en face, avec son nom : le panneau d'information y renvoie. */
+  membre?: { id: string; nom: string; siteweb: string | null } | null;
+  /** Personne en face, pour le panneau d'information. */
+  contact?: {
+    nom: string;
+    fonction: string;
+    email: string;
+    tel: string | null;
+    photo: string | null;
+  } | null;
   unread: number;
   messages: Message[];
+}
+
+/** Fichier joint à un message. */
+export interface PieceJointe {
+  id: string;
+  nom: string;
+  type: "image" | "video" | "pdf";
+  /** Poids en octets. */
+  taille: number;
 }
 
 /** Inscription d'un membre à un événement. */

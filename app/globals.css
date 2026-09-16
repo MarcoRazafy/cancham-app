@@ -830,3 +830,28 @@ h3 {
     display: none !important;
   }
 }
+
+/*
+ * Message retrouvé par la recherche : il s'éclaire un instant, le temps que
+ * l'œil le repère au milieu de la conversation.
+ */
+.message-repere {
+  animation: message-repere 1.8s ease-out;
+}
+
+@keyframes message-repere {
+  0%,
+  35% {
+    box-shadow: 0 0 0 3px var(--accent), 0 0 0 7px var(--accent-soft);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-repere {
+    animation: none;
+    outline: 3px solid var(--accent);
+  }
+}
