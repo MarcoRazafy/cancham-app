@@ -194,9 +194,23 @@ model User {
   @@map("users")
 }
 
+/// Nature d'une offre du catalogue d'un membre.
+enum ProduitType {
+  produit
+  service
+}
+
 model Produit {
   id    String  @id @default(cuid())
+  /// Titre de l'offre.
   label  String
+  type   ProduitType @default(service)
+  /// Ce que l'offre comprend, pour qui, à quelles conditions.
+  description String?
+  /// Prix indicatif, en clair : « 25 000 Ar le flacon », « Sur devis ».
+  /// Un champ libre plutôt qu'un montant : la plupart des services se chiffrent
+  /// au cas par cas, et un nombre obligatoire pousserait à inventer.
+  prix   String?
   /// Galerie du produit, dans l'ordre d'affichage. La première photo sert de
   /// vignette partout où une seule image tient ; vide = dégradé décoratif.
   photos String[] @default([])

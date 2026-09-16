@@ -94,7 +94,6 @@ export async function submitAdhesion(formData: FormData) {
       pays: texte(formData, "pays") || null,
       siteweb: texte(formData, "siteweb") || null,
       motivation: texte(formData, "motivation") || "À compléter.",
-      produits: { create: [{ label: "Fiche à compléter", ordre: 0 }] },
     },
   });
 
@@ -273,7 +272,6 @@ export async function createMember(formData: FormData) {
       adhesion: new Date(),
       activite: texte(formData, "desc").slice(0, 120) || "Activité à préciser.",
       desc: texte(formData, "desc") || "Description à compléter.",
-      produits: { create: [{ label: "Fiche à compléter", ordre: 0 }] },
     },
   });
 
@@ -307,27 +305,26 @@ export async function createMember(formData: FormData) {
 }
 
 /** Mise à jour de la fiche par le membre lui-même. */
+/**
+ * Fiche de présentation : textes, couverture et logo.
+ *
+ * Les produits et services n'y figurent plus. Ils se gèrent un par un depuis
+ * leur section — l'ancien formulaire les supprimait et les recréait tous à
+ * chaque enregistrement, ce qui aurait effacé descriptions et prix qu'il ne
+ * connaissait pas.
+ */
 export async function updateMemberProfile(formData: FormData) {
   const id = texte(formData, "memberId");
-  const produits = [0, 1, 2]
-    .map((i) => ({ label: texte(formData, `produit${i}`), rang: i }))
-    .filter((p) => p.label);
 
-  // Les visuels d'origine servent de repli : un champ fichier laissé vide
-  // signifie « garde l'image actuelle », jamais « efface-la ».
+  // Un champ fichier laissé vide signifie « garde l'image actuelle ».
   const actuel = await prisma.member.findUnique({
     where: { id },
-    select: {
-      cover: true,
-      logo: true,
-      produits: { orderBy: { ordre: "asc" } },
-    },
+    select: { cover: true, logo: true },
   });
   if (!actuel) redirectWithFlash("/membre/profil", "Fiche introuvable.");
 
   let couverture: string | null = null;
   let logo: string | null = null;
-  const galeries: string[][] = [];
   try {
     couverture = await enregistrerImage(formData.get("cover"), {
       prefixe: `couverture-${id}`,
@@ -338,62 +335,137 @@ export async function updateMemberProfile(formData: FormData) {
       largeur: 600,
       transparence: true,
     });
-    for (const p of produits) {
-      // On garde ce qui n'a pas été coché pour retrait, puis on ajoute les
-      // nouveaux fichiers à la suite : la vignette ne change que si le membre
-      // retire la première photo.
-      const retirees = new Set(formData.getAll(`retirer${p.rang}`).map(String));
-      const conservees = (actuel.produits[p.rang]?.photos ?? []).filter(
-        (url) => !retirees.has(url),
-      );
-      const ajoutees: string[] = [];
-      for (const fichier of formData.getAll(`photos${p.rang}`)) {
-        if (conservees.length + ajoutees.length >= PHOTOS_PAR_PRODUIT) break;
-        const url = await enregistrerImage(fichier, {
-          prefixe: `produit-${id}-${p.rang}`,
-          largeur: 900,
-        });
-        if (url) ajoutees.push(url);
-      }
-      galeries[p.rang] = [...conservees, ...ajoutees];
-    }
   } catch (e) {
-    if (e instanceof ImageRefusee) {
-      redirectWithFlash("/membre/profil", e.message);
-    }
+    if (e instanceof ImageRefusee) redirectWithFlash("/membre/profil", e.message);
     throw e;
   }
 
-  await prisma.$transaction([
-    prisma.member.update({
-      where: { id },
-      data: {
-        activite: texte(formData, "activite") || undefined,
-        desc: texte(formData, "desc") || undefined,
-        besoins: texte(formData, "besoins") || null,
-        interets: texte(formData, "interets") || null,
-        cover: couverture ?? actuel.cover,
-        logo: logo ?? actuel.logo,
-      },
-    }),
-    prisma.produit.deleteMany({ where: { memberId: id } }),
-    prisma.produit.createMany({
-      data: (produits.length
-        ? produits
-        : [{ label: "Fiche à compléter", rang: 0 }]
-      ).map((p, ordre) => ({
-        memberId: id,
-        label: p.label,
-        // Le rang d'origine suit le produit : renommer le deuxième produit ne
-        // doit pas lui faire hériter de la galerie du premier.
-        photos: galeries[p.rang] ?? [],
-        ordre,
-      })),
-    }),
-  ]);
+  await prisma.member.update({
+    where: { id },
+    data: {
+      activite: texte(formData, "activite") || undefined,
+      desc: texte(formData, "desc") || undefined,
+      besoins: texte(formData, "besoins") || null,
+      interets: texte(formData, "interets") || null,
+      cover: couverture ?? actuel.cover,
+      logo: logo ?? actuel.logo,
+    },
+  });
 
   revalideTout();
   redirectWithFlash("/membre/profil", "Fiche mise à jour");
+}
+
+/* ============================ Produits & services ============================ */
+
+/** Photos envoyées, redimensionnées, dans la limite de la place restante. */
+async function recevoirPhotos(
+  formData: FormData,
+  memberId: string,
+  place: number,
+): Promise<string[]> {
+  const urls: string[] = [];
+  for (const fichier of formData.getAll("photos")) {
+    if (urls.length >= place) break;
+    const url = await enregistrerImage(fichier, {
+      prefixe: `produit-${memberId}`,
+      largeur: 900,
+    });
+    if (url) urls.push(url);
+  }
+  return urls;
+}
+
+function champsService(formData: FormData) {
+  return {
+    label: texte(formData, "label"),
+    type: (texte(formData, "type") === "produit" ? "produit" : "service") as
+      | "produit"
+      | "service",
+    description: texte(formData, "description") || null,
+    prix: texte(formData, "prix") || null,
+  };
+}
+
+export async function ajouterService(formData: FormData) {
+  const memberId = texte(formData, "memberId");
+  const champs = champsService(formData);
+  if (!champs.label) redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
+
+  let photos: string[] = [];
+  try {
+    photos = await recevoirPhotos(formData, memberId, PHOTOS_PAR_PRODUIT);
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash("/membre/profil", e.message);
+    throw e;
+  }
+
+  // Le nouveau venu se range en fin de catalogue.
+  const dernier = await prisma.produit.aggregate({
+    where: { memberId },
+    _max: { ordre: true },
+  });
+
+  await prisma.produit.create({
+    data: {
+      ...champs,
+      photos,
+      memberId,
+      ordre: (dernier._max.ordre ?? -1) + 1,
+    },
+  });
+
+  revalideTout();
+  redirectWithFlash("/membre/profil", `« ${champs.label} » ajouté au catalogue.`);
+}
+
+export async function modifierService(formData: FormData) {
+  const id = texte(formData, "produitId");
+  const champs = champsService(formData);
+  if (!champs.label) redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
+
+  const actuel = await prisma.produit.findUnique({ where: { id } });
+  if (!actuel) redirectWithFlash("/membre/profil", "Offre introuvable.");
+
+  // On garde ce qui n'a pas été marqué pour retrait, puis on ajoute les
+  // nouvelles photos à la suite : la vignette ne change que si la première
+  // photo est retirée.
+  const retirees = new Set(formData.getAll("retirer").map(String));
+  const conservees = actuel.photos.filter((url) => !retirees.has(url));
+
+  let ajoutees: string[] = [];
+  try {
+    ajoutees = await recevoirPhotos(
+      formData,
+      actuel.memberId,
+      PHOTOS_PAR_PRODUIT - conservees.length,
+    );
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash("/membre/profil", e.message);
+    throw e;
+  }
+
+  await prisma.produit.update({
+    where: { id },
+    data: { ...champs, photos: [...conservees, ...ajoutees] },
+  });
+
+  revalideTout();
+  redirectWithFlash("/membre/profil", `« ${champs.label} » mis à jour.`);
+}
+
+export async function supprimerService(formData: FormData) {
+  const id = texte(formData, "produitId");
+  const actuel = await prisma.produit.findUnique({
+    where: { id },
+    select: { label: true },
+  });
+  if (!actuel) redirectWithFlash("/membre/profil", "Offre introuvable.");
+
+  await prisma.produit.delete({ where: { id } });
+
+  revalideTout();
+  redirectWithFlash("/membre/profil", `« ${actuel.label} » retiré du catalogue.`);
 }
 
 export async function deleteMember(formData: FormData) {

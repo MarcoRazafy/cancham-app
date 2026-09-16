@@ -152,6 +152,9 @@ async function main() {
         produits: {
           create: m.produits.map((p, i) => ({
             label: p.label,
+            type: p.type ?? "service",
+            description: p.description ?? null,
+            prix: p.prix ?? null,
             photos: p.photos,
             ordre: i,
           })),

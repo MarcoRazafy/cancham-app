@@ -14,8 +14,12 @@ import {
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
 import { CarrouselSection } from "@/components/CarrouselSection";
+import { CarteService } from "@/components/CarteService";
 import {
   AddContactButton,
+  AjouterServiceButton,
+  ModifierServiceButton,
+  SupprimerServiceButton,
   EditContactButton,
   EditProfileButton,
   RemoveContactButton,
@@ -71,8 +75,6 @@ export default async function ProfilPage() {
               desc={m.desc}
               besoins={m.besoins}
               interets={m.interets}
-              produits={m.produits.map((p) => p.label)}
-              photos={m.produits.map((p) => p.photos)}
               cover={m.cover}
               logo={m.logo}
             />
@@ -188,48 +190,43 @@ export default async function ProfilPage() {
             </>
           ) : null}
 
-          <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
+          <div className="flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
             <h2 className="text-[17px] font-semibold m-0">
               Produits &amp; services
             </h2>
+            <span className="flex-1" />
+            <AjouterServiceButton memberId={m.id} />
           </div>
           {/*
-            Toute la section défile, pas chaque produit : une carte par photo,
-            trois par page. Un produit sans photo garde une carte, avec son
-            dégradé, pour ne pas disparaître du catalogue.
+            Une carte par offre, trois par page ; un clic ouvre sa fiche de
+            détail, avec toutes ses photos et sa description.
           */}
-          <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
-            {m.produits.flatMap((p) =>
-              (p.photos.length ? p.photos : [null]).map((src, i) => (
-                <Card
-                  key={`${p.label}-${i}`}
-                  className="p-4 text-center w-full"
-                >
-                  {src ? (
-                    <Agrandir src={src} alt={p.label} legende={p.label}>
-                      <Visuel
-                        src={src}
-                        alt={p.label}
-                        seed={m.id + p.label}
-                        className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                        sizes="(max-width: 768px) 100vw, 320px"
+          {m.produits.length ? (
+            <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
+              {m.produits.map((p, i) => (
+                <CarteService
+                  key={p.id ?? i}
+                  produit={p}
+                  seed={m.id + p.label}
+                  actions={
+                    <>
+                      <ModifierServiceButton produit={p} />
+                      <SupprimerServiceButton
+                        produitId={p.id!}
+                        label={p.label}
                       />
-                    </Agrandir>
-                  ) : (
-                    <Visuel
-                      src={null}
-                      alt={p.label}
-                      seed={m.id + p.label}
-                      className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                      iconSize={18}
-                    />
-                  )}
-                  <div className="font-semibold text-[13px]">{p.label}</div>
-                </Card>
-              )),
-            )}
-          </CarrouselSection>
+                    </>
+                  }
+                />
+              ))}
+            </CarrouselSection>
+          ) : (
+            <p className="m-0 text-[13.4px] text-muted border border-dashed border-line rounded-[var(--radius-m)] px-4 py-6 text-center">
+              Aucune offre pour le moment. Ajoutez votre premier produit ou
+              service : il apparaîtra sur votre fiche et dans l’annuaire.
+            </p>
+          )}
 
           <ListeContacts
             contacts={contacts}
