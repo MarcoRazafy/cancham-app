@@ -8,6 +8,7 @@ import {
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
 import { CarrouselSection } from "@/components/CarrouselSection";
+import { CarteService } from "@/components/CarteService";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
@@ -80,48 +81,31 @@ export default async function FicheMembrePage({
 
           <NeedsAndInterests member={m} />
 
-          <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
+          <div className="flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
             <h2 className="text-[17px] font-semibold m-0">
               Produits &amp; services
             </h2>
           </div>
           {/*
-            Toute la section défile, pas chaque produit : une carte par photo,
-            trois par page. Un produit sans photo garde une carte, avec son
-            dégradé, pour ne pas disparaître du catalogue.
+            Une carte par offre, trois par page ; un clic ouvre sa fiche de
+            détail, avec toutes ses photos et sa description.
           */}
-          <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
-            {m.produits.flatMap((p) =>
-              (p.photos.length ? p.photos : [null]).map((src, i) => (
-                <Card
-                  key={`${p.label}-${i}`}
-                  className="p-4 text-center w-full"
-                >
-                  {src ? (
-                    <Agrandir src={src} alt={p.label} legende={p.label}>
-                      <Visuel
-                        src={src}
-                        alt={p.label}
-                        seed={m.id + p.label}
-                        className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                        sizes="(max-width: 768px) 100vw, 320px"
-                      />
-                    </Agrandir>
-                  ) : (
-                    <Visuel
-                      src={null}
-                      alt={p.label}
-                      seed={m.id + p.label}
-                      className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                      iconSize={18}
-                    />
-                  )}
-                  <div className="font-semibold text-[13px]">{p.label}</div>
-                </Card>
-              )),
-            )}
-          </CarrouselSection>
+          {m.produits.length ? (
+            <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
+              {m.produits.map((p, i) => (
+                <CarteService
+                  key={p.id ?? i}
+                  produit={p}
+                  seed={m.id + p.label}
+                />
+              ))}
+            </CarrouselSection>
+          ) : (
+            <p className="m-0 text-[13.4px] text-muted border border-dashed border-line rounded-[var(--radius-m)] px-4 py-6 text-center">
+              Cette entreprise n’a pas encore présenté ses produits et services.
+            </p>
+          )}
 
           <ListeContacts
             contacts={contacts}

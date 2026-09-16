@@ -6,7 +6,215 @@ import type { Member, Produit } from "../../lib/types";
  * Les photos sont facultatives : sans elles, la vignette retombe sur le
  * dégradé décoratif de `PhotoPlaceholder`. La première sert de vignette.
  */
-const p = (label: string, ...photos: string[]): Produit => ({ label, photos });
+/**
+ * Fiche de détail de chaque offre : nature, prix indicatif et description.
+ *
+ * Les prix sont des ordres de grandeur plausibles pour des données de
+ * démonstration, pas des tarifs réels.
+ */
+const DETAILS: Record<
+  string,
+  Pick<Produit, "type" | "prix" | "description">
+> = {
+  "Ravintsara BIO": {
+    type: "produit",
+    prix: "18 000 Ar le flacon de 10 ml · tarif export sur devis",
+    description:
+      "Huile essentielle de ravintsara (Cinnamomum camphora, feuilles), distillée à la vapeur d’eau à Toliara à partir de feuilles récoltées en cueillette raisonnée.\n\nCertifiée biologique, livrée avec son bulletin d’analyse chromatographique. Conditionnement en flacons de 10 ml pour la revente, ou en bidons de 1 à 25 kg pour les formulateurs.",
+  },
+  "Coffret découverte": {
+    type: "produit",
+    prix: "65 000 Ar le coffret",
+    description:
+      "Cinq huiles essentielles emblématiques de Madagascar — ravintsara, niaouli, girofle, géranium et saro — en flacons de 5 ml, présentées dans un coffret en raphia tressé.\n\nConçu comme cadeau d’entreprise : personnalisation du coffret possible à partir de 50 unités, délai de trois semaines.",
+  },
+  "Girofle vapeur": {
+    type: "produit",
+    prix: "Sur devis, par lot de 25 kg",
+    description:
+      "Huile essentielle de clou de girofle distillée à la vapeur, riche en eugénol, destinée à l’industrie cosmétique, dentaire et aromatique.\n\nVendue en vrac par lots de 25 kg, avec fiche technique et certificat d’origine. Expédition depuis Toamasina.",
+  },
+  "Huile essentielle de niaouli": {
+    type: "produit",
+    prix: "15 000 Ar le flacon de 10 ml",
+    description:
+      "Niaouli (Melaleuca quinquenervia) distillé à partir de feuilles fraîches, aux notes camphrées et fraîches.\n\nDisponible en flacons de 10 ml ou en vrac. Même traçabilité et même certification biologique que l’ensemble de la gamme.",
+  },
+  "Savons artisanaux aux huiles essentielles": {
+    type: "produit",
+    prix: "8 000 Ar le savon · 42 000 Ar le lot de six",
+    description:
+      "Savons saponifiés à froid, parfumés uniquement aux huiles essentielles de la maison — ravintsara, girofle et géranium.\n\nFabriqués par petites séries à Toliara, emballés sans plastique. Idéal pour les boutiques bio et les hôtels.",
+  },
+  "Panier raphia XL": {
+    type: "produit",
+    prix: "45 000 Ar pièce · remise dès 20 pièces",
+    description:
+      "Grand panier tressé à la main en raphia naturel, 50 cm de diamètre, par les artisanes de la coopérative sur les Hautes Terres.\n\nFinitions teintes aux pigments végétaux sur demande. Commandes groupées pour boutiques et décorateurs, délai de quatre semaines.",
+  },
+  "Sculpture palissandre": {
+    type: "produit",
+    prix: "Sur devis, selon la pièce",
+    description:
+      "Pièces uniques sculptées en palissandre issu de bois de récupération certifié, par des sculpteurs d’Ambositra.\n\nChaque sculpture est livrée avec un certificat d’origine du bois, indispensable à l’exportation vers le Canada.",
+  },
+  "Textile lamba": {
+    type: "produit",
+    prix: "70 000 Ar le lamba de deux mètres",
+    description:
+      "Lamba tissé à la main sur métier traditionnel, en coton et soie sauvage, aux motifs géométriques des Hautes Terres.\n\nUtilisé en étole, en nappe ou en tenture murale. Coloris et dimensions personnalisables pour les commandes de plus de dix pièces.",
+  },
+  "Circuit Andasibe 5j": {
+    type: "service",
+    prix: "1 450 000 Ar par personne, base deux",
+    description:
+      "Cinq jours dans le parc national d’Andasibe-Mantadia : visites diurnes et nocturnes guidées, rencontre avec l’indri, randonnée en forêt primaire.\n\nHébergement en lodge, pension complète, transport depuis Antananarivo et guide francophone certifié inclus.",
+  },
+  "Séjour Nosy Be": {
+    type: "service",
+    prix: "À partir de 2 900 000 Ar par personne, 7 nuits",
+    description:
+      "Une semaine à Nosy Be : excursions en bateau vers Nosy Komba et Nosy Tanikely, plongée avec masque et tuba, journée détente.\n\nVols intérieurs, transferts et hôtel en bord de mer compris. Formules pour groupes et séminaires d’entreprise sur demande.",
+  },
+  "Trek Isalo": {
+    type: "service",
+    prix: "980 000 Ar par personne, trois jours",
+    description:
+      "Randonnée de trois jours dans les canyons du massif de l’Isalo, avec baignade dans les piscines naturelles et nuit en bivouac.\n\nGuide local, portage, repas et matériel de camping fournis. Niveau de difficulté modéré.",
+  },
+  "Poivre sauvage Voatsiperifery": {
+    type: "produit",
+    prix: "Sur devis, par lot de 5 kg",
+    description:
+      "Poivre sauvage cueilli à la main sur les lianes des forêts du Sud-Est, séché au soleil et trié grain par grain.\n\nArômes boisés et agrumes, très recherché par la gastronomie nord-américaine. Vendu en vrac ou en pots de 50 g étiquetés pour la revente.",
+  },
+  "Confiture litchi": {
+    type: "produit",
+    prix: "12 000 Ar le pot de 350 g",
+    description:
+      "Confiture de litchis de la côte Est, cuite en petites quantités avec 55 % de fruits et du sucre de canne local.\n\nConditionnée en pots de verre, conservation de dix-huit mois. Étiquetage bilingue français-anglais disponible pour l’export.",
+  },
+  "Vanille gousses": {
+    type: "produit",
+    prix: "Cours du jour, sur devis",
+    description:
+      "Gousses de vanille Bourbon de la SAVA, catégorie noire gourmet, 16 à 18 cm, taux d’humidité contrôlé.\n\nVendues au kilo, conditionnées sous vide. Chaque lot est tracé jusqu’au planteur, conformément aux exigences des acheteurs canadiens.",
+  },
+  "Annotation IA": {
+    type: "service",
+    prix: "Sur devis, selon le volume",
+    description:
+      "Annotation et étiquetage de données pour l’entraînement de modèles d’intelligence artificielle : images, textes et audio, en français et en anglais.\n\nÉquipe formée et encadrée, double contrôle qualité, respect de la confidentialité des jeux de données.",
+  },
+  "Centre d’appel FR": {
+    type: "service",
+    prix: "Sur devis, à l’heure-agent",
+    description:
+      "Relation client externalisée en français : réception d’appels, support par courriel et clavardage, prise de rendez-vous.\n\nPlages horaires alignées sur les fuseaux canadiens, agents formés à votre produit, rapports d’activité hebdomadaires.",
+  },
+  "Développement sur mesure": {
+    type: "service",
+    prix: "Sur devis",
+    description:
+      "Conception et développement d’applications web et mobiles : sites vitrines, outils métiers, plateformes de réservation.\n\nMéthode agile, démonstrations toutes les deux semaines, maintenance et hébergement proposés après la mise en ligne.",
+  },
+  "Béryl brut": {
+    type: "produit",
+    prix: "Sur devis, au carat ou au lot",
+    description:
+      "Béryls bruts extraits de gisements artisanaux encadrés du centre du pays, triés par couleur et par pureté.\n\nChaque lot est accompagné de sa traçabilité et des documents d’exportation réglementaires.",
+  },
+  "Quartz industriel": {
+    type: "produit",
+    prix: "Sur devis, à la tonne",
+    description:
+      "Quartz de haute pureté destiné aux usages industriels — verrerie, électronique, fonderie.\n\nAnalyses de composition fournies. Enlèvement au port de Toamasina ou livraison selon incoterm convenu.",
+  },
+  "Grenat calibré": {
+    type: "produit",
+    prix: "Sur devis, selon le calibre",
+    description:
+      "Grenats taillés et calibrés en série, prêts pour la joaillerie, du 3 au 8 mm.\n\nTaille réalisée à Antananarivo, lots homogènes en couleur. Échantillons disponibles sur demande.",
+  },
+  "Montage export": {
+    type: "service",
+    prix: "Honoraires sur devis",
+    description:
+      "Structuration financière d’une première opération d’exportation : besoins de trésorerie, garanties, choix des moyens de paiement internationaux.\n\nPour PME malgaches qui visent le marché canadien. Accompagnement jusqu’au premier encaissement.",
+  },
+  "Ligne de crédit PME": {
+    type: "service",
+    prix: "Taux et plafond selon étude du dossier",
+    description:
+      "Financement de fonds de roulement pour les PME exportatrices : préfinancement de commandes, stocks saisonniers.\n\nÉtude du dossier sous quinze jours, remboursement adapté au cycle de l’activité.",
+  },
+  "Audit financier": {
+    type: "service",
+    prix: "À partir de 1 800 000 Ar",
+    description:
+      "Revue des comptes et du contrôle interne, préparation aux due diligences d’investisseurs ou de partenaires étrangers.\n\nRapport détaillé avec recommandations priorisées, restitution en présentiel.",
+  },
+  "Formation export": {
+    type: "service",
+    prix: "350 000 Ar par participant, deux jours",
+    description:
+      "Deux jours pour préparer une démarche d’exportation vers le Canada : réglementation, normes, logistique, négociation.\n\nSessions mensuelles à Antananarivo, douze participants au plus, support et attestation remis.",
+  },
+  "Cours de français affaires": {
+    type: "service",
+    prix: "180 000 Ar le module de vingt heures",
+    description:
+      "Français professionnel pour les échanges avec des partenaires québécois : courriels, réunions, présentations, négociation.\n\nGroupes de six personnes, en présentiel ou à distance, niveau évalué à l’entrée.",
+  },
+  "Atelier gestion de projet": {
+    type: "service",
+    prix: "250 000 Ar par participant, une journée",
+    description:
+      "Une journée pratique pour planifier et piloter un projet : découpage, calendrier, budget, suivi des risques.\n\nExercices sur les projets réels des participants, outils gratuits présentés et remis.",
+  },
+  "Accompagnement export": {
+    type: "service",
+    prix: "Forfait diagnostic : 600 000 Ar",
+    description:
+      "Diagnostic de la capacité d’une entreprise à exporter vers le Canada, puis plan d’action chiffré sur douze mois.\n\nMise en relation avec les acteurs utiles au Québec et suivi des premières démarches.",
+  },
+  "Montage de partenariat": {
+    type: "service",
+    prix: "Sur devis",
+    description:
+      "Recherche, sélection et approche de partenaires canadiens — distributeurs, agents, investisseurs — puis accompagnement jusqu’à la signature.\n\nPréparation des rencontres, rédaction des documents de présentation et suivi de la négociation.",
+  },
+  "Coaching porteur de projet": {
+    type: "service",
+    prix: "120 000 Ar la séance de deux heures",
+    description:
+      "Séances individuelles pour structurer un projet d’entreprise : modèle d’affaires, positionnement, premières ventes.\n\nEn présentiel à Antananarivo ou en visioconférence, cycle recommandé de six séances.",
+  },
+  "Fauteuil raphia": {
+    type: "produit",
+    prix: "320 000 Ar pièce",
+    description:
+      "Fauteuil en rotin tressé de raphia, assise large et dossier enveloppant, fabriqué à la main dans notre atelier.\n\nCoussin en coton inclus. Fabrication à la commande, délai de cinq semaines.",
+  },
+  "Table basse palissandre": {
+    type: "produit",
+    prix: "Sur devis, fabrication à la commande",
+    description:
+      "Table basse en palissandre massif issu de bois de récupération certifié, finition huilée.\n\nDimensions sur mesure. Livrée avec certificat d’origine du bois pour l’exportation.",
+  },
+  "Luminaire fibres": {
+    type: "produit",
+    prix: "95 000 Ar pièce",
+    description:
+      "Suspension tressée en fibres naturelles de raphia et de sisal, diffusant une lumière douce et chaleureuse.\n\nTrois diamètres disponibles. Compatible avec les normes électriques canadiennes sur demande.",
+  },
+};
+
+const p = (label: string, ...photos: string[]): Produit => ({
+  label,
+  photos,
+  ...DETAILS[label],
+});
 
 /**
  * Données d'exemple. Entreprises et personnes fictives, destinées à illustrer
@@ -61,6 +269,16 @@ export const MEMBERS: Member[] = [
         "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&h=450&q=80&auto=format&fit=crop",
         "https://images.pexels.com/photos/6087276/pexels-photo-6087276.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
         "https://images.pexels.com/photos/8804297/pexels-photo-8804297.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+      ),
+      p(
+        "Huile essentielle de niaouli",
+        "https://images.pexels.com/photos/5682924/pexels-photo-5682924.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6693878/pexels-photo-6693878.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+      ),
+      p(
+        "Savons artisanaux aux huiles essentielles",
+        "https://images.pexels.com/photos/7055158/pexels-photo-7055158.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6930879/pexels-photo-6930879.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },

@@ -51,7 +51,15 @@ export interface User {
 
 /** Produit ou service mis en avant sur la fiche membre. */
 export interface Produit {
+  /** Absent dans le jeu de démonstration, qui n'a pas encore d'identifiants. */
+  id?: string;
+  /** Titre de l'offre. */
   label: string;
+  type?: "produit" | "service";
+  /** Ce que l'offre comprend, pour qui, à quelles conditions. */
+  description?: string | null;
+  /** Prix indicatif, en clair : « 25 000 Ar le flacon », « Sur devis ». */
+  prix?: string | null;
   /**
    * Galerie du produit, dans l'ordre d'affichage. La première sert de vignette
    * partout où une seule image tient. Vide = dégradé décoratif généré.

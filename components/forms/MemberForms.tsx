@@ -22,6 +22,9 @@ import {
 } from "@/components/form-bits";
 import {
   addContact,
+  ajouterService,
+  modifierService,
+  supprimerService,
   approveCandidature,
   createMember,
   removeContact,
@@ -39,7 +42,7 @@ import {
   PHOTOS_PAR_PRODUIT,
   type FormuleId,
 } from "@/lib/membership";
-import type { Contact } from "@/lib/types";
+import type { Contact, Produit } from "@/lib/types";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
 const BTN_LINE =
@@ -366,8 +369,6 @@ export function EditProfileButton({
   desc,
   besoins,
   interets,
-  produits,
-  photos = [],
   cover = null,
   logo = null,
 }: {
@@ -376,10 +377,7 @@ export function EditProfileButton({
   desc: string;
   besoins?: string;
   interets?: string;
-  produits: string[];
   /** Visuels actuels, affichés en aperçu à côté du sélecteur de fichier. */
-  /** Galerie actuelle de chaque produit, dans l'ordre des produits. */
-  photos?: string[][];
   cover?: string | null;
   logo?: string | null;
 }) {
@@ -451,23 +449,6 @@ export function EditProfileButton({
                 ratio="aspect-[16/6]"
                 contain
               />
-            </div>
-
-            <div className="grid gap-3.5 md:grid-cols-3">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex flex-col gap-3.5">
-                  <Field label={`Produit / service ${i + 1}`}>
-                    <input
-                      type="text"
-                      name={`produit${i}`}
-                      defaultValue={produits[i] ?? ""}
-                      placeholder="Nom du produit"
-                      className={INPUT}
-                    />
-                  </Field>
-                  <ChampGalerie rang={i} actuelles={photos[i] ?? []} />
-                </div>
-              ))}
             </div>
           </ModalBody>
           <ModalFooter>
@@ -801,13 +782,7 @@ export function EditContactButton({
  * l'enregistrement : un clic de trop se rattrape d'un second clic. Les
  * nouvelles images s'ajoutent à la suite, dans la limite du plafond.
  */
-function ChampGalerie({
-  rang,
-  actuelles,
-}: {
-  rang: number;
-  actuelles: string[];
-}) {
+function ChampGalerie({ actuelles }: { actuelles: string[] }) {
   const [retirees, setRetirees] = useState<Set<string>>(new Set());
   const [ajoutees, setAjoutees] = useState(0);
 
@@ -862,11 +837,7 @@ function ChampGalerie({
                       <span className="absolute inset-0 flex items-center justify-center text-bad">
                         <X size={22} strokeWidth={3} />
                       </span>
-                      <input
-                        type="hidden"
-                        name={`retirer${rang}`}
-                        value={url}
-                      />
+                      <input type="hidden" name="retirer" value={url} />
                     </>
                   ) : null}
                   {n === 0 && !retiree ? (
@@ -894,7 +865,7 @@ function ChampGalerie({
               : "Ajouter des photos"}
             <input
               type="file"
-              name={`photos${rang}`}
+              name="photos"
               accept="image/*"
               multiple
               className="sr-only"
@@ -914,5 +885,169 @@ function ChampGalerie({
         ) : null}
       </div>
     </Field>
+  );
+}
+
+/* ============================ Produits & services ============================ */
+
+/**
+ * Champs d'une offre du catalogue, communs à l'ajout et à la modification.
+ *
+ * Pas de formulaire d'offre dans « Modifier ma fiche » : chaque offre se gère
+ * ici, une par une, avec tout ce que sa fiche de détail affiche.
+ */
+function ChampsService({ produit }: { produit?: Produit }) {
+  return (
+    <>
+      <div className="grid gap-3.5 md:grid-cols-[1fr_180px]">
+        <Field label="Titre">
+          <input
+            type="text"
+            name="label"
+            required
+            defaultValue={produit?.label}
+            placeholder="Ex. Huile essentielle de ravintsara"
+            className={INPUT}
+          />
+        </Field>
+        <Field label="Nature">
+          <select
+            name="type"
+            defaultValue={produit?.type ?? "service"}
+            className={INPUT}
+          >
+            <option value="service">Service</option>
+            <option value="produit">Produit</option>
+          </select>
+        </Field>
+      </div>
+      <Field
+        label="Prix indicatif"
+        hint="Facultatif. En clair : « 25 000 Ar le flacon », « À partir de 300 $ », « Sur devis »."
+      >
+        <input
+          type="text"
+          name="prix"
+          defaultValue={produit?.prix ?? ""}
+          className={INPUT}
+        />
+      </Field>
+      <Field
+        label="Description"
+        hint="Ce que l’offre comprend, pour qui, à quelles conditions, délais."
+      >
+        <textarea
+          name="description"
+          rows={5}
+          defaultValue={produit?.description ?? ""}
+          className={INPUT}
+        />
+      </Field>
+      <ChampGalerie actuelles={produit?.photos ?? []} />
+    </>
+  );
+}
+
+export function AjouterServiceButton({ memberId }: { memberId: string }) {
+  return (
+    <Modal
+      wide
+      title="Ajouter une offre"
+      trigger={(ouvrir) => (
+        <button
+          onClick={ouvrir}
+          className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
+        >
+          <Plus size={14} /> Ajouter un service
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={ajouterService}>
+          <input type="hidden" name="memberId" value={memberId} />
+          <ModalBody>
+            <ChampsService />
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Ajout…">
+              <Check size={14} /> Ajouter
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+export function ModifierServiceButton({ produit }: { produit: Produit }) {
+  return (
+    <Modal
+      wide
+      title="Modifier l’offre"
+      trigger={(ouvrir) => (
+        <button
+          onClick={ouvrir}
+          className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
+        >
+          <Pencil size={13} /> Modifier
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={modifierService}>
+          <input type="hidden" name="produitId" value={produit.id} />
+          <ModalBody>
+            <ChampsService produit={produit} />
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Enregistrement…">
+              <Check size={14} /> Enregistrer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+export function SupprimerServiceButton({
+  produitId,
+  label,
+}: {
+  produitId: string;
+  label: string;
+}) {
+  return (
+    <Modal
+      title="Retirer cette offre"
+      trigger={(ouvrir) => (
+        <button
+          onClick={ouvrir}
+          className="inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-bad-soft bg-transparent text-bad hover:bg-surface-2 text-[12.4px] px-[11px] py-1.5"
+        >
+          <Trash2 size={13} /> Retirer
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={supprimerService}>
+          <input type="hidden" name="produitId" value={produitId} />
+          <ModalBody>
+            <p className="m-0 text-[13.6px] leading-relaxed">
+              Retirer <b>{label}</b> de votre catalogue ? Elle disparaîtra de
+              votre fiche et de l’annuaire.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Retrait…" variant="danger">
+              <Trash2 size={14} /> Retirer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
   );
 }

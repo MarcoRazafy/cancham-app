@@ -60,7 +60,14 @@ type MembreRow = {
   cover: string | null;
   photo: string | null;
   logo: string | null;
-  produits: { label: string; photos: string[] }[];
+  produits: {
+    id: string;
+    label: string;
+    type: "produit" | "service";
+    description: string | null;
+    prix: string | null;
+    photos: string[];
+  }[];
 };
 
 function versMembre(m: MembreRow): Member {
@@ -86,7 +93,14 @@ function versMembre(m: MembreRow): Member {
     cover: m.cover,
     photo: m.photo,
     logo: m.logo,
-    produits: m.produits.map((p) => ({ label: p.label, photos: p.photos })),
+    produits: m.produits.map((p) => ({
+      id: p.id,
+      label: p.label,
+      type: p.type,
+      description: p.description,
+      prix: p.prix,
+      photos: p.photos,
+    })),
   };
 }
 
