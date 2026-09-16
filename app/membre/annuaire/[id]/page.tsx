@@ -7,7 +7,7 @@ import {
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
-import { CarrouselPhotos } from "@/components/CarrouselPhotos";
+import { CarrouselSection } from "@/components/CarrouselSection";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
@@ -86,29 +86,42 @@ export default async function FicheMembrePage({
               Produits &amp; services
             </h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {m.produits.map((p) => (
-              <Card key={p.label} className="p-4 text-center">
-                {p.photos.length ? (
-                  <CarrouselPhotos
-                    photos={p.photos}
-                    alt={p.label}
-                    className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                  />
-                ) : (
-                  // Sans photo, pas de carrousel à monter : le dégradé se rend ici.
-                  <Visuel
-                    src={null}
-                    alt={p.label}
-                    seed={m.id + p.label}
-                    className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                    iconSize={18}
-                  />
-                )}
-                <div className="font-semibold text-[13px]">{p.label}</div>
-              </Card>
-            ))}
-          </div>
+          {/*
+            Toute la section défile, pas chaque produit : une carte par photo,
+            trois par page. Un produit sans photo garde une carte, avec son
+            dégradé, pour ne pas disparaître du catalogue.
+          */}
+          <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
+            {m.produits.flatMap((p) =>
+              (p.photos.length ? p.photos : [null]).map((src, i) => (
+                <Card
+                  key={`${p.label}-${i}`}
+                  className="p-4 text-center w-full"
+                >
+                  {src ? (
+                    <Agrandir src={src} alt={p.label} legende={p.label}>
+                      <Visuel
+                        src={src}
+                        alt={p.label}
+                        seed={m.id + p.label}
+                        className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
+                        sizes="(max-width: 768px) 100vw, 320px"
+                      />
+                    </Agrandir>
+                  ) : (
+                    <Visuel
+                      src={null}
+                      alt={p.label}
+                      seed={m.id + p.label}
+                      className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
+                      iconSize={18}
+                    />
+                  )}
+                  <div className="font-semibold text-[13px]">{p.label}</div>
+                </Card>
+              )),
+            )}
+          </CarrouselSection>
 
           <ListeContacts
             contacts={contacts}
