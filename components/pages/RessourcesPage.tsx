@@ -25,8 +25,7 @@ export async function RessourcesPage({
   type?: string;
 }) {
   const admin = space === "admin";
-  const actif: Filtre =
-    type === "gratuit" || type === "payant" ? type : "tout";
+  const actif: Filtre = type === "gratuit" || type === "payant" ? type : "tout";
 
   const [list, counts] = await Promise.all([
     getResources(actif === "tout" ? undefined : actif),

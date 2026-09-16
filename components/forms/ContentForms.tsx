@@ -1,6 +1,13 @@
 "use client";
 
-import { Check, Download, Plus, Send, ShoppingCart, Trash2 } from "lucide-react";
+import {
+  Check,
+  Download,
+  Plus,
+  Send,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -34,7 +41,10 @@ export function NewNewsButton() {
       wide
       title="Nouvelle actualité"
       trigger={(ouvrir) => (
-        <button onClick={ouvrir} className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}>
+        <button
+          onClick={ouvrir}
+          className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
+        >
           <Plus size={15} /> Nouvelle actualité
         </button>
       )}
@@ -53,7 +63,11 @@ export function NewNewsButton() {
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Catégorie">
-                <select name="cat" className={INPUT} defaultValue="Vie de la chambre">
+                <select
+                  name="cat"
+                  className={INPUT}
+                  defaultValue="Vie de la chambre"
+                >
                   <option>Programmation</option>
                   <option>Événement passé</option>
                   <option>Vie de la chambre</option>
@@ -68,10 +82,20 @@ export function NewNewsButton() {
               </Field>
             </div>
             <Field label="Résumé" hint="Affiché dans le fil d’actualité.">
-              <textarea name="extrait" rows={3} placeholder="Résumé court…" className={INPUT} />
+              <textarea
+                name="extrait"
+                rows={3}
+                placeholder="Résumé court…"
+                className={INPUT}
+              />
             </Field>
             <Field label="Texte complet">
-              <textarea name="corps" rows={6} placeholder="Texte intégral de l’article…" className={INPUT} />
+              <textarea
+                name="corps"
+                rows={6}
+                placeholder="Texte intégral de l’article…"
+                className={INPUT}
+              />
             </Field>
           </ModalBody>
           <ModalFooter>
@@ -126,12 +150,19 @@ export function NewOfferButton({
               />
             </Field>
             <Field label="Description courte">
-              <textarea name="desc" rows={3} placeholder="Détail de l’offre…" className={INPUT} />
+              <textarea
+                name="desc"
+                rows={3}
+                placeholder="Détail de l’offre…"
+                className={INPUT}
+              />
             </Field>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
-            <SubmitButton pendingLabel="Publication…">Publier l’offre</SubmitButton>
+            <SubmitButton pendingLabel="Publication…">
+              Publier l’offre
+            </SubmitButton>
           </ModalFooter>
         </form>
       )}
@@ -157,7 +188,9 @@ export function CommentForm({
       <input type="hidden" name="space" value={space} />
       <input type="hidden" name="retour" value={retour} />
       {newsId ? <input type="hidden" name="newsId" value={newsId} /> : null}
-      {resourceId ? <input type="hidden" name="resourceId" value={resourceId} /> : null}
+      {resourceId ? (
+        <input type="hidden" name="resourceId" value={resourceId} />
+      ) : null}
       <textarea
         name="texte"
         rows={3}
@@ -179,7 +212,10 @@ export function NewResourceButton() {
     <Modal
       title="Ajouter une ressource"
       trigger={(ouvrir) => (
-        <button onClick={ouvrir} className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}>
+        <button
+          onClick={ouvrir}
+          className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
+        >
           <Plus size={15} /> Ajouter une ressource
         </button>
       )}
@@ -188,7 +224,13 @@ export function NewResourceButton() {
         <form action={createResource}>
           <ModalBody>
             <Field label="Titre">
-              <input type="text" name="titre" required placeholder="Ex. Guide export 2027" className={INPUT} />
+              <input
+                type="text"
+                name="titre"
+                required
+                placeholder="Ex. Guide export 2027"
+                className={INPUT}
+              />
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Catégorie">
@@ -208,16 +250,35 @@ export function NewResourceButton() {
               </Field>
             </div>
             <div className="grid gap-3.5 md:grid-cols-2">
-              <Field label="Taille ou durée" hint="Ex. 1,2 Mo — ou 48 min pour une vidéo.">
-                <input type="text" name="taille" placeholder="Ex. 1,2 Mo" className={INPUT} />
+              <Field
+                label="Taille ou durée"
+                hint="Ex. 1,2 Mo — ou 48 min pour une vidéo."
+              >
+                <input
+                  type="text"
+                  name="taille"
+                  placeholder="Ex. 1,2 Mo"
+                  className={INPUT}
+                />
               </Field>
-              <Field label="Tarif (Ariary)" hint="Laissez à 0 pour une ressource gratuite.">
-                <input type="number" name="prix" defaultValue={0} min={0} className={INPUT} />
+              <Field
+                label="Tarif (Ariary)"
+                hint="Laissez à 0 pour une ressource gratuite."
+              >
+                <input
+                  type="number"
+                  name="prix"
+                  defaultValue={0}
+                  min={0}
+                  className={INPUT}
+                />
               </Field>
             </div>
             <Field label="Accès">
               <select name="type" className={INPUT} defaultValue="gratuit">
-                <option value="gratuit">Gratuit — inclus dans l’adhésion</option>
+                <option value="gratuit">
+                  Gratuit — inclus dans l’adhésion
+                </option>
                 <option value="payant">Payant — facturé en supplément</option>
               </select>
             </Field>
@@ -289,11 +350,17 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
       title={edition ? "Modifier le service" : "Ajouter un service"}
       trigger={(ouvrir) =>
         edition ? (
-          <button onClick={ouvrir} className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}>
+          <button
+            onClick={ouvrir}
+            className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
+          >
             Modifier
           </button>
         ) : (
-          <button onClick={ouvrir} className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}>
+          <button
+            onClick={ouvrir}
+            className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
+          >
             <Plus size={15} /> Ajouter un service
           </button>
         )
@@ -301,7 +368,9 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
     >
       {(fermer) => (
         <form action={saveService}>
-          {service ? <input type="hidden" name="serviceId" value={service.id} /> : null}
+          {service ? (
+            <input type="hidden" name="serviceId" value={service.id} />
+          ) : null}
           <ModalBody>
             <Field label="Titre">
               <input
@@ -314,16 +383,28 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
               />
             </Field>
             <Field label="Description">
-              <textarea name="desc" rows={3} defaultValue={service?.desc} className={INPUT} />
+              <textarea
+                name="desc"
+                rows={3}
+                defaultValue={service?.desc}
+                className={INPUT}
+              />
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Type">
-                <select name="type" className={INPUT} defaultValue={service?.type ?? "gratuit"}>
+                <select
+                  name="type"
+                  className={INPUT}
+                  defaultValue={service?.type ?? "gratuit"}
+                >
                   <option value="gratuit">Gratuit</option>
                   <option value="payant">Payant</option>
                 </select>
               </Field>
-              <Field label="Tarif (Ariary)" hint="Ignoré si le service est gratuit.">
+              <Field
+                label="Tarif (Ariary)"
+                hint="Ignoré si le service est gratuit."
+              >
                 <input
                   type="number"
                   name="prix"
@@ -337,7 +418,8 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
           <ModalFooter>
             <CancelButton onClick={fermer} />
             <SubmitButton pendingLabel="Enregistrement…">
-              <Check size={14} /> {edition ? "Enregistrer" : "Publier le service"}
+              <Check size={14} />{" "}
+              {edition ? "Enregistrer" : "Publier le service"}
             </SubmitButton>
           </ModalFooter>
         </form>

@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { Card, SectionTitle, Stat, StatusPill, TableWrap, Td, Th, ViewHead } from "@/components/ui";
+import {
+  Card,
+  Saillant,
+  SectionTitle,
+  Stat,
+  StatusPill,
+  TableWrap,
+  Td,
+  Th,
+  ViewHead,
+} from "@/components/ui";
 import { getEvents, getMemberStats, getMembresATraiter } from "@/lib/queries";
 import { fmtDate, isPast } from "@/lib/format";
 
@@ -16,13 +26,17 @@ export default async function TableauDeBord() {
 
   return (
     <>
-      <ViewHead title="Tableau de bord">
+      <ViewHead title={<>Tableau de {<Saillant>bord</Saillant>}</>}>
         Vue d’ensemble de la vie associative : membres, événements, paiements et
         communauté.
       </ViewHead>
 
       <div className="grid gap-4 mb-[22px] sm:grid-cols-2 lg:grid-cols-4">
-        <Stat k="Membres actifs" v={stats.aJour} d={`sur ${stats.total} au total`} />
+        <Stat
+          k="Membres actifs"
+          v={stats.aJour}
+          d={`sur ${stats.total} au total`}
+        />
         <Link href="/admin/membres?tab=candidature" className="no-underline">
           <Stat
             k="Nouvelles demandes"
@@ -43,7 +57,9 @@ export default async function TableauDeBord() {
           k="Prochain événement"
           v={
             <span className="text-[20px]">
-              {next ? fmtDate(next.date, { day: "2-digit", month: "short" }) : "—"}
+              {next
+                ? fmtDate(next.date, { day: "2-digit", month: "short" })
+                : "—"}
             </span>
           }
           d={next ? next.titre : "Aucun événement à venir"}
@@ -102,7 +118,9 @@ export default async function TableauDeBord() {
                 <div className="h-1.5 rounded-sm bg-surface-3 overflow-hidden">
                   <div
                     className="h-full bg-accent"
-                    style={{ width: `${Math.round((e.inscrits / e.cap) * 100)}%` }}
+                    style={{
+                      width: `${Math.round((e.inscrits / e.cap) * 100)}%`,
+                    }}
                   />
                 </div>
               </Card>

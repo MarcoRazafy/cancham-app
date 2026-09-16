@@ -45,7 +45,10 @@ export function RegisterButton({
     <Modal
       title="Inscription à l’événement"
       trigger={(ouvrir) => (
-        <button onClick={ouvrir} className={`${BTN_PRIMARY} justify-center text-[13.4px] px-[18px] py-[10px]`}>
+        <button
+          onClick={ouvrir}
+          className={`${BTN_PRIMARY} justify-center text-[13.4px] px-[18px] py-[10px]`}
+        >
           {libelle}
         </button>
       )}
@@ -63,19 +66,36 @@ export function RegisterButton({
               </div>
             </div>
             <Field label="Personne présente">
-              <input type="text" name="nom" defaultValue={nom} required className={INPUT} />
+              <input
+                type="text"
+                name="nom"
+                defaultValue={nom}
+                required
+                className={INPUT}
+              />
             </Field>
             <Field label="Courriel de confirmation">
-              <input type="email" name="email" defaultValue={email} className={INPUT} />
+              <input
+                type="email"
+                name="email"
+                defaultValue={email}
+                className={INPUT}
+              />
             </Field>
             <Field label="Téléphone">
-              <input type="tel" name="tel" defaultValue={tel ?? ""} className={INPUT} />
+              <input
+                type="tel"
+                name="tel"
+                defaultValue={tel ?? ""}
+                className={INPUT}
+              />
             </Field>
             {event.payant ? (
               <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
                 <b>Événement payant · {fmtMoney(event.prix)}</b>
                 <br />
-                Une facture sera générée à l’inscription, réglable auprès de l’équipe.
+                Une facture sera générée à l’inscription, réglable auprès de
+                l’équipe.
               </p>
             ) : null}
           </ModalBody>
@@ -95,7 +115,12 @@ export function CancelRegistrationButton({ eventId }: { eventId: string }) {
   return (
     <form action={cancelRegistration}>
       <input type="hidden" name="eventId" value={eventId} />
-      <SubmitButton sm variant="ghost" pendingLabel="Annulation…" className="text-bad w-full justify-center">
+      <SubmitButton
+        sm
+        variant="ghost"
+        pendingLabel="Annulation…"
+        className="text-bad w-full justify-center"
+      >
         <X size={13} /> Annuler mon inscription
       </SubmitButton>
     </form>
@@ -112,11 +137,17 @@ export function EventFormButton({ event }: { event?: CanchamEvent }) {
       title={edition ? "Modifier l’événement" : "Créer un événement"}
       trigger={(ouvrir) =>
         edition ? (
-          <button onClick={ouvrir} className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}>
+          <button
+            onClick={ouvrir}
+            className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
+          >
             Modifier
           </button>
         ) : (
-          <button onClick={ouvrir} className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}>
+          <button
+            onClick={ouvrir}
+            className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
+          >
             <Plus size={15} /> Créer un événement
           </button>
         )
@@ -124,7 +155,9 @@ export function EventFormButton({ event }: { event?: CanchamEvent }) {
     >
       {(fermer) => (
         <form action={saveEvent}>
-          {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
+          {event ? (
+            <input type="hidden" name="eventId" value={event.id} />
+          ) : null}
           <ModalBody>
             <Field label="Titre">
               <input
@@ -138,10 +171,19 @@ export function EventFormButton({ event }: { event?: CanchamEvent }) {
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Date">
-                <input type="date" name="date" defaultValue={event?.date ?? "2026-12-01"} className={INPUT} />
+                <input
+                  type="date"
+                  name="date"
+                  defaultValue={event?.date ?? "2026-12-01"}
+                  className={INPUT}
+                />
               </Field>
               <Field label="Format">
-                <select name="format" className={INPUT} defaultValue={event?.format ?? "Présentiel"}>
+                <select
+                  name="format"
+                  className={INPUT}
+                  defaultValue={event?.format ?? "Présentiel"}
+                >
                   <option>Présentiel</option>
                   <option>Webinaire</option>
                   <option>Hybride</option>
@@ -150,21 +192,46 @@ export function EventFormButton({ event }: { event?: CanchamEvent }) {
             </div>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Lieu">
-                <input type="text" name="lieu" defaultValue={event?.lieu} placeholder="Antananarivo" className={INPUT} />
+                <input
+                  type="text"
+                  name="lieu"
+                  defaultValue={event?.lieu}
+                  placeholder="Antananarivo"
+                  className={INPUT}
+                />
               </Field>
               <Field label="Capacité">
-                <input type="number" name="cap" min={1} defaultValue={event?.cap ?? 80} className={INPUT} />
+                <input
+                  type="number"
+                  name="cap"
+                  min={1}
+                  defaultValue={event?.cap ?? 80}
+                  className={INPUT}
+                />
               </Field>
             </div>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Type">
-                <select name="type" className={INPUT} defaultValue={event?.payant ? "payant" : "gratuit"}>
+                <select
+                  name="type"
+                  className={INPUT}
+                  defaultValue={event?.payant ? "payant" : "gratuit"}
+                >
                   <option value="gratuit">Gratuit</option>
                   <option value="payant">Payant</option>
                 </select>
               </Field>
-              <Field label="Tarif (Ariary)" hint="Ignoré si l’événement est gratuit.">
-                <input type="number" name="prix" min={0} defaultValue={event?.prix || 50000} className={INPUT} />
+              <Field
+                label="Tarif (Ariary)"
+                hint="Ignoré si l’événement est gratuit."
+              >
+                <input
+                  type="number"
+                  name="prix"
+                  min={0}
+                  defaultValue={event?.prix || 50000}
+                  className={INPUT}
+                />
               </Field>
             </div>
             <Field label="Description">
@@ -180,7 +247,8 @@ export function EventFormButton({ event }: { event?: CanchamEvent }) {
           <ModalFooter>
             <CancelButton onClick={fermer} />
             <SubmitButton pendingLabel="Enregistrement…">
-              <Check size={14} /> {edition ? "Enregistrer" : "Publier l’événement"}
+              <Check size={14} />{" "}
+              {edition ? "Enregistrer" : "Publier l’événement"}
             </SubmitButton>
           </ModalFooter>
         </form>
@@ -189,7 +257,13 @@ export function EventFormButton({ event }: { event?: CanchamEvent }) {
   );
 }
 
-export function DeleteEventButton({ eventId, titre }: { eventId: string; titre: string }) {
+export function DeleteEventButton({
+  eventId,
+  titre,
+}: {
+  eventId: string;
+  titre: string;
+}) {
   return (
     <Modal
       title="Supprimer l’événement"
@@ -207,8 +281,9 @@ export function DeleteEventButton({ eventId, titre }: { eventId: string; titre: 
           <input type="hidden" name="eventId" value={eventId} />
           <ModalBody>
             <p className="text-[13.6px] text-muted m-0">
-              « <b className="text-ink">{titre}</b> » sera supprimé avec ses inscriptions et
-              sa liste de présence. L’opération est consignée au journal.
+              « <b className="text-ink">{titre}</b> » sera supprimé avec ses
+              inscriptions et sa liste de présence. L’opération est consignée au
+              journal.
             </p>
           </ModalBody>
           <ModalFooter>
@@ -234,7 +309,11 @@ export function AttendanceButton({
   statut: string;
 }) {
   const label =
-    statut === "présent" ? "Marquer absent" : statut === "absent" ? "Marquer présent" : "Enregistrer l’arrivée";
+    statut === "présent"
+      ? "Marquer absent"
+      : statut === "absent"
+        ? "Marquer présent"
+        : "Enregistrer l’arrivée";
   return (
     <form action={toggleAttendance}>
       <input type="hidden" name="attendeeId" value={attendeeId} />
@@ -257,7 +336,10 @@ export function AddAttendeeButton({
     <Modal
       title="Inscrire quelqu’un"
       trigger={(ouvrir) => (
-        <button onClick={ouvrir} className={`${BTN_PRIMARY} text-[12.4px] px-[11px] py-1.5`}>
+        <button
+          onClick={ouvrir}
+          className={`${BTN_PRIMARY} text-[12.4px] px-[11px] py-1.5`}
+        >
           <UserPlus size={14} /> Inscrire quelqu’un
         </button>
       )}
@@ -267,7 +349,13 @@ export function AddAttendeeButton({
           <input type="hidden" name="eventId" value={eventId} />
           <ModalBody>
             <Field label="Nom">
-              <input type="text" name="nom" required placeholder="Nom complet" className={INPUT} />
+              <input
+                type="text"
+                name="nom"
+                required
+                placeholder="Nom complet"
+                className={INPUT}
+              />
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Entreprise">
@@ -285,17 +373,28 @@ export function AddAttendeeButton({
                 </datalist>
               </Field>
               <Field label="Courriel">
-                <input type="email" name="email" placeholder="contact@exemple.mg" className={INPUT} />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="contact@exemple.mg"
+                  className={INPUT}
+                />
               </Field>
             </div>
             <p className="text-[12px] text-faint m-0">
-              Pour une personne qui se présente sans inscription préalable, utilisez
-              « Arrivée directe » : elle est enregistrée comme présente immédiatement.
+              Pour une personne qui se présente sans inscription préalable,
+              utilisez « Arrivée directe » : elle est enregistrée comme présente
+              immédiatement.
             </p>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
-            <SubmitButton name="direct" value="1" variant="line" pendingLabel="…">
+            <SubmitButton
+              name="direct"
+              value="1"
+              variant="line"
+              pendingLabel="…"
+            >
               <LogIn size={14} /> Arrivée directe
             </SubmitButton>
             <SubmitButton pendingLabel="Inscription…">

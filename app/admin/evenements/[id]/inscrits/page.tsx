@@ -1,7 +1,19 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { BtnLink, Pill, Stat, TableWrap, Td, Th, ViewHead } from "@/components/ui";
-import { AddAttendeeButton, AttendanceButton } from "@/components/forms/EventForms";
+import {
+  BtnLink,
+  Pill,
+  Saillant,
+  Stat,
+  TableWrap,
+  Td,
+  Th,
+  ViewHead,
+} from "@/components/ui";
+import {
+  AddAttendeeButton,
+  AttendanceButton,
+} from "@/components/forms/EventForms";
 import { prisma } from "@/lib/db";
 import { getEvent, getMembers } from "@/lib/queries";
 import { fmtDate, fmtMoney, isPast, statusLabel } from "@/lib/format";
@@ -21,13 +33,19 @@ export default async function InscritsPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ onglet?: string }>;
 }) {
-  const [{ id }, { onglet = "inscrits" }] = await Promise.all([params, searchParams]);
+  const [{ id }, { onglet = "inscrits" }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
 
   const e = await getEvent(id);
   if (!e) notFound();
 
   const [participants, membres] = await Promise.all([
-    prisma.attendee.findMany({ where: { eventId: id }, orderBy: { nom: "asc" } }),
+    prisma.attendee.findMany({
+      where: { eventId: id },
+      orderBy: { nom: "asc" },
+    }),
     getMembers(),
   ]);
 
@@ -45,7 +63,7 @@ export default async function InscritsPage({
       </div>
 
       <ViewHead
-        title="Personnes inscrites"
+        title={<>Personnes {<Saillant ton="vert">inscrites</Saillant>}</>}
         action={
           <AddAttendeeButton
             eventId={id}
@@ -63,17 +81,34 @@ export default async function InscritsPage({
       </ViewHead>
 
       <div className="grid gap-4 mb-[18px] md:grid-cols-3">
-        <Stat k="Inscrits" v={<span className="text-[22px]">{participants.length}/{e.cap}</span>} />
-        <Stat k="Présents" v={<span className="text-[22px]">{presents.length}</span>} />
+        <Stat
+          k="Inscrits"
+          v={
+            <span className="text-[22px]">
+              {participants.length}/{e.cap}
+            </span>
+          }
+        />
+        <Stat
+          k="Présents"
+          v={<span className="text-[22px]">{presents.length}</span>}
+        />
         <Stat
           k={passe ? "Absents" : "Places restantes"}
-          v={<span className="text-[22px]">{passe ? absents.length : e.cap - participants.length}</span>}
+          v={
+            <span className="text-[22px]">
+              {passe ? absents.length : e.cap - participants.length}
+            </span>
+          }
         />
       </div>
 
       <div className="flex gap-1 border-b border-line mb-[18px]">
         {[
-          { key: "inscrits", label: `Liste des inscrits (${participants.length})` },
+          {
+            key: "inscrits",
+            label: `Liste des inscrits (${participants.length})`,
+          },
           { key: "presents", label: `Liste des présents (${presents.length})` },
         ].map((t) => (
           <BtnLink
@@ -82,7 +117,9 @@ export default async function InscritsPage({
             variant="ghost"
             sm
             className={`rounded-none border-b-2 ${
-              onglet === t.key ? "text-accent border-accent" : "border-transparent"
+              onglet === t.key
+                ? "text-accent border-accent"
+                : "border-transparent"
             }`}
           >
             {t.label}
@@ -110,7 +147,11 @@ export default async function InscritsPage({
                 <Td>
                   <Pill
                     tone={
-                      a.statut === "present" ? "ok" : a.statut === "absent" ? "bad" : "warn"
+                      a.statut === "present"
+                        ? "ok"
+                        : a.statut === "absent"
+                          ? "bad"
+                          : "warn"
                     }
                   >
                     {statusLabel(STATUT[a.statut])}

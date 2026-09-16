@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, CreditCard, Download, Lock } from "lucide-react";
-import { Card, StatusPill, TableWrap, Td, Th, ViewHead } from "@/components/ui";
+import {
+  Card,
+  Saillant,
+  StatusPill,
+  TableWrap,
+  Td,
+  Th,
+  ViewHead,
+} from "@/components/ui";
 import { fmtDate, fmtDateShort, fmtMoney } from "@/lib/format";
 import {
   ADHESION_PENDING,
@@ -39,7 +47,7 @@ export default async function CotisationsPage() {
 
   return (
     <>
-      <ViewHead title="Cotisations & factures">
+      <ViewHead title={<>Cotisations &amp; {<Saillant>factures</Saillant>}</>}>
         Votre statut d’adhésion et l’historique de vos règlements.
       </ViewHead>
 
@@ -81,21 +89,19 @@ export default async function CotisationsPage() {
 
           <div className="grid gap-4 mt-6 pt-5 border-t border-line sm:grid-cols-3">
             <Donnee libelle="Membre depuis" valeur={fmtDate(m.adhesion)} />
+            <Donnee libelle="Total réglé" valeur={fmtMoney(totalPaye)} mono />
             <Donnee
-              libelle="Total réglé"
-              valeur={fmtMoney(totalPaye)}
-              mono
-            />
-            <Donnee
-              libelle={m.paiementNote ? "Dernier règlement" : "Prochain renouvellement"}
+              libelle={
+                m.paiementNote ? "Dernier règlement" : "Prochain renouvellement"
+              }
               valeur={m.paiementNote ? "Enregistré" : "10 janvier 2027"}
             />
           </div>
 
           <p className="text-[12.5px] text-faint mt-5 mb-0 flex items-center gap-2">
             <CreditCard size={14} />
-            Le paiement en ligne n’est pas branché : l’équipe CanCham enregistre les
-            règlements reçus en espèces ou par virement.
+            Le paiement en ligne n’est pas branché : l’équipe CanCham enregistre
+            les règlements reçus en espèces ou par virement.
           </p>
         </Card>
 
@@ -130,7 +136,9 @@ export default async function CotisationsPage() {
           {factures.length ? (
             factures.map((f) => (
               <tr key={f.id} className="hover:bg-surface-2">
-                <Td className="font-[family-name:var(--font-mono)]">{f.numero}</Td>
+                <Td className="font-[family-name:var(--font-mono)]">
+                  {f.numero}
+                </Td>
                 <Td className="text-muted">{fmtDateShort(f.date)}</Td>
                 <Td>{f.objet}</Td>
                 <Td className="font-[family-name:var(--font-mono)]">

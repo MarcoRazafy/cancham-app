@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { MemberCard } from "@/components/domain";
-import { EmptyState, ViewHead } from "@/components/ui";
+import { EmptyState, Saillant, ViewHead } from "@/components/ui";
 import { getMembresAnnuaire } from "@/lib/queries";
 
 /**
@@ -33,9 +33,9 @@ export default async function AnnuairePage({
 
   return (
     <>
-      <ViewHead title="Annuaire des membres">
-        {visibles.length} entreprises membres, classées par ordre alphabétique. Logo,
-        contact et produits phares pour faciliter la mise en relation.
+      <ViewHead title={<>Annuaire des {<Saillant>membres</Saillant>}</>}>
+        {visibles.length} entreprises membres, classées par ordre alphabétique.
+        Logo, contact et produits phares pour faciliter la mise en relation.
       </ViewHead>
 
       <form className="flex gap-3 flex-wrap mb-[18px]">
@@ -75,7 +75,11 @@ export default async function AnnuairePage({
       {list.length ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {list.map((m) => (
-            <MemberCard key={m.id} member={m} href={`/membre/annuaire/${m.id}`} />
+            <MemberCard
+              key={m.id}
+              member={m}
+              href={`/membre/annuaire/${m.id}`}
+            />
           ))}
         </div>
       ) : (

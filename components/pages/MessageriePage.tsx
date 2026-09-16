@@ -54,14 +54,17 @@ export async function MessageriePage({
               />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between gap-1.5 items-baseline">
-                  <span className="font-semibold text-[13px] truncate">{t.nom}</span>
+                  <span className="font-semibold text-[13px] truncate">
+                    {t.nom}
+                  </span>
                   {t.unread ? (
                     <span className="text-[10.5px] font-bold px-[7px] py-px rounded-full bg-accent text-white shrink-0">
                       {t.unread}
                     </span>
                   ) : null}
                 </div>
-                <div className={`text-[11.6px] truncate ${
+                <div
+                  className={`text-[11.6px] truncate ${
                     t.id === active.id ? "text-white/60" : "text-faint"
                   }`}
                 >
@@ -102,7 +105,9 @@ export async function MessageriePage({
                 }`}
               >
                 {!m.moi && active.type === "groupe" ? (
-                  <div className="text-[10.6px] font-bold opacity-75 mb-0.5">{m.de}</div>
+                  <div className="text-[10.6px] font-bold opacity-75 mb-0.5">
+                    {m.de}
+                  </div>
                 ) : null}
                 {m.texte}
               </div>

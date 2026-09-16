@@ -27,20 +27,25 @@ export default async function EvenementsPage({
     tab === "a_venir"
       ? events.filter((e) => !isPast(e.date))
       : tab === "passes"
-        ? events.filter((e) => isPast(e.date)).sort((a, b) => b.date.localeCompare(a.date))
+        ? events
+            .filter((e) => isPast(e.date))
+            .sort((a, b) => b.date.localeCompare(a.date))
         : events.filter((e) => mesIds.includes(e.id));
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "a_venir", label: "À venir" },
     { key: "passes", label: "Passés" },
-    { key: "mes", label: `Mes événements${mesIds.length ? ` (${mesIds.length})` : ""}` },
+    {
+      key: "mes",
+      label: `Mes événements${mesIds.length ? ` (${mesIds.length})` : ""}`,
+    },
   ];
 
   return (
     <>
       <ViewHead title="Événements">
-        Inscrivez-vous en quelques clics : confirmation par courriel, rappel automatique
-        et code d’accès QR pour l’accueil.
+        Inscrivez-vous en quelques clics : confirmation par courriel, rappel
+        automatique et code d’accès QR pour l’accueil.
       </ViewHead>
 
       <div className="flex gap-1 border-b border-line mb-[18px]">

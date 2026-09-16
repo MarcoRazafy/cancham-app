@@ -1,5 +1,5 @@
 import { ServiceCard } from "@/components/domain";
-import { EmptyState, SectionTitle, ViewHead } from "@/components/ui";
+import { EmptyState, Saillant, SectionTitle, ViewHead } from "@/components/ui";
 import {
   DeleteServiceButton,
   ServiceFormButton,
@@ -20,11 +20,12 @@ export async function OffresCanchamPage({ space }: { space: Space }) {
   return (
     <>
       <ViewHead
-        title="Offres CanCham"
+        title={<>Offres {<Saillant ton="vert">CanCham</Saillant>}</>}
         action={admin ? <ServiceFormButton /> : null}
       >
-        L’ensemble des services proposés par la chambre à ses membres, gratuits ou
-        payants, en complément des promotions publiées par les membres eux-mêmes.
+        L’ensemble des services proposés par la chambre à ses membres, gratuits
+        ou payants, en complément des promotions publiées par les membres
+        eux-mêmes.
       </ViewHead>
 
       <SectionTitle>Services gratuits</SectionTitle>

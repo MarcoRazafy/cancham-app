@@ -43,8 +43,8 @@ export async function RecherchePage({ space, q }: { space: Space; q: string }) {
       {terme.length < 2 ? (
         <EmptyState>
           <Search size={20} className="mx-auto mb-2 text-faint" />
-          La recherche porte sur le nom, le secteur et la ville des membres, ainsi que
-          sur les titres et les descriptions des contenus.
+          La recherche porte sur le nom, le secteur et la ville des membres,
+          ainsi que sur les titres et les descriptions des contenus.
         </EmptyState>
       ) : resultats.length ? (
         <div className="flex flex-col gap-6">
