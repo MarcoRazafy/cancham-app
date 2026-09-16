@@ -167,6 +167,8 @@ model User {
   /// Contact principal de l'entreprise — un seul par membre.
   contactPrincipal Boolean @default(false)
 
+  jaimes NewsLike[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -292,9 +294,30 @@ model News {
   updatedAt DateTime @updatedAt
 
   commentaires Comment[]
+  jaimes       NewsLike[]
 
   @@index([date])
   @@map("news")
+}
+
+/// Un « j'aime » posé par un utilisateur sur une publication.
+///
+/// Une ligne par personne, et la contrainte d'unicité en garantit une seule :
+/// un compteur incrémenté aurait laissé cliquer dix fois de suite, et n'aurait
+/// pas su dire si la personne qui regarde a déjà aimé.
+model NewsLike {
+  id String @id @default(cuid())
+
+  newsId String
+  news   News   @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([newsId, userId])
+  @@index([newsId])
+  @@map("news_likes")
 }
 
 model Resource {

@@ -110,6 +110,7 @@ async function main() {
   await prisma.auditLog.deleteMany();
   await prisma.message.deleteMany();
   await prisma.messageThread.deleteMany();
+  await prisma.newsLike.deleteMany();
   await prisma.comment.deleteMany();
   await prisma.invoice.deleteMany();
   await prisma.offer.deleteMany();
@@ -258,6 +259,30 @@ async function main() {
       },
     });
   }
+
+  // « J'aime » : chaque publication en reçoit d'un sous-ensemble différent des
+  // utilisateurs, tiré d'un pas fixe pour rester identique d'un chargement à
+  // l'autre. Le membre de démonstration en a aimé une sur deux — assez pour
+  // voir les deux états du bouton sans avoir à cliquer.
+  const personnes = await prisma.user.findMany({
+    where: { role: { not: "admin" } },
+    orderBy: { id: "asc" },
+    select: { id: true },
+  });
+  let jaimes = 0;
+  for (const [rang, n] of NEWS.entries()) {
+    const nombre = 3 + ((rang * 7 + 5) % (personnes.length - 2));
+    const choisis = personnes
+      .filter((_, i) => (i * 5 + rang * 3) % personnes.length < nombre)
+      .filter((u) => u.id !== USERS.membre.id);
+    if (rang % 2 === 0) choisis.push({ id: USERS.membre.id });
+    await prisma.newsLike.createMany({
+      data: choisis.map((u) => ({ newsId: n.id, userId: u.id })),
+      skipDuplicates: true,
+    });
+    jaimes += choisis.length;
+  }
+  console.log(`  ${jaimes} « j'aime » répartis sur ${NEWS.length} publications`);
 
   console.log("Ressources…");
   for (const r of RESOURCES) {

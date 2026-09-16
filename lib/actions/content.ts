@@ -47,6 +47,39 @@ export async function deleteNews(formData: FormData) {
 /* ============================ Commentaires ============================ */
 
 /** Commentaire sur une actualité ou une ressource. */
+/**
+ * Aime ou n'aime plus une publication.
+ *
+ * Pas de redirection : l'action rafraîchit la page en place. Rediriger
+ * renverrait le lecteur en haut du fil à chaque clic, précisément quand il est
+ * en train de le parcourir.
+ *
+ * La contrainte d'unicité fait foi. Deux clics trop rapides peuvent tenter
+ * deux insertions ; la seconde échoue sur l'index, et on l'ignore plutôt que de
+ * laisser remonter une erreur pour un état déjà atteint.
+ */
+export async function basculerJaime(formData: FormData) {
+  const newsId = texte(formData, "newsId");
+  const space = (texte(formData, "space") || "membre") as Space;
+  const user = await getCurrentUser(space);
+
+  const existant = await prisma.newsLike.findUnique({
+    where: { newsId_userId: { newsId, userId: user.id } },
+  });
+
+  if (existant) {
+    await prisma.newsLike.deleteMany({ where: { id: existant.id } });
+  } else {
+    try {
+      await prisma.newsLike.create({ data: { newsId, userId: user.id } });
+    } catch (e) {
+      if ((e as { code?: string }).code !== "P2002") throw e;
+    }
+  }
+
+  revalideTout();
+}
+
 export async function postComment(formData: FormData) {
   const texteCommentaire = texte(formData, "texte");
   const space = (texte(formData, "space") || "membre") as Space;

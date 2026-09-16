@@ -3,6 +3,7 @@ import { EmptyState, ViewHead } from "@/components/ui";
 import { NewNewsButton, NewOfferButton } from "@/components/forms/ContentForms";
 import { getMembers } from "@/lib/queries";
 import { getNews, getOffers } from "@/lib/queries";
+import { getCurrentUser } from "@/lib/session";
 import type { Space } from "@/lib/types";
 
 /** Fil d'actualité, identique pour le membre et pour l'admin, aux contrôles près. */
@@ -10,8 +11,9 @@ export async function ActualitesPage({ space }: { space: Space }) {
   const admin = space === "admin";
   const base = `/${space}/actualites`;
   // La requête rend déjà le fil du plus récent au plus ancien.
+  const user = await getCurrentUser(space);
   const [feed, offers, membres] = await Promise.all([
-    getNews(),
+    getNews(user.id),
     getOffers(),
     admin ? getMembers() : Promise.resolve([]),
   ]);
@@ -31,7 +33,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
       <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
         <div className="flex-1 min-w-0 max-w-[620px]">
           {feed.map((n) => (
-            <NewsFeedItem key={n.id} news={n} base={base} />
+            <NewsFeedItem key={n.id} news={n} base={base} space={space} />
           ))}
         </div>
 

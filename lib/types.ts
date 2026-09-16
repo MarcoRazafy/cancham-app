@@ -165,6 +165,10 @@ export interface NewsItem {
   /** Illustration de l'article, par URL. */
   image?: string | null;
   commentaires: Comment[];
+  /** Nombre de « j'aime ». */
+  jaimes: number;
+  /** L'utilisateur courant a-t-il déjà aimé ? Faux quand on ne sait pas qui regarde. */
+  jaimeParMoi: boolean;
 }
 
 /** Promotion publiée PAR un membre, à destination des autres membres. */

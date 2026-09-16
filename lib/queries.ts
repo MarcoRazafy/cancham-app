@@ -222,34 +222,27 @@ const versCommentaires = (cs: CommentRow[]): Comment[] =>
     date: toISODate(c.date),
   }));
 
-export async function getNews(): Promise<NewsItem[]> {
-  const rows = await prisma.news.findMany({
-    include: { commentaires: { orderBy: { date: "asc" } } },
-    orderBy: { date: "desc" },
-  });
-  return rows.map((n) => ({
-    id: n.id,
-    titre: n.titre,
-    date: toISODate(n.date),
-    cat: NEWS_CAT_LABEL[n.cat],
-    media: {
-      type: n.mediaType,
-      theme: n.mediaTheme,
-      duration: n.mediaDuration ?? undefined,
-    },
-    extrait: n.extrait,
-    corps: n.corps,
-    image: n.image,
-    commentaires: versCommentaires(n.commentaires),
-  }));
+/**
+ * Ce qu'on charge avec une publication.
+ *
+ * Les « j'aime » ne remontent pas en entier : seul le compte est utile, plus
+ * la ligne de l'utilisateur courant s'il en a posé une — une liste filtrée
+ * sur lui, vide ou d'un élément, qui dit « déjà aimé » sans rien trier en
+ * mémoire.
+ */
+function newsInclude(userId?: string) {
+  return {
+    commentaires: { orderBy: { date: "asc" as const } },
+    _count: { select: { jaimes: true } },
+    jaimes: { where: { userId: userId ?? "" }, select: { id: true } },
+  };
 }
 
-export async function getNewsItem(id: string): Promise<NewsItem | null> {
-  const n = await prisma.news.findUnique({
-    where: { id },
-    include: { commentaires: { orderBy: { date: "asc" } } },
-  });
-  if (!n) return null;
+type NewsRow = Awaited<
+  ReturnType<typeof prisma.news.findMany<{ include: ReturnType<typeof newsInclude> }>>
+>[number];
+
+function versNews(n: NewsRow): NewsItem {
   return {
     id: n.id,
     titre: n.titre,
@@ -264,7 +257,29 @@ export async function getNewsItem(id: string): Promise<NewsItem | null> {
     corps: n.corps,
     image: n.image,
     commentaires: versCommentaires(n.commentaires),
+    jaimes: n._count.jaimes,
+    jaimeParMoi: n.jaimes.length > 0,
   };
+}
+
+/** Fil d'actualité, du plus récent au plus ancien. */
+export async function getNews(userId?: string): Promise<NewsItem[]> {
+  const rows = await prisma.news.findMany({
+    include: newsInclude(userId),
+    orderBy: { date: "desc" },
+  });
+  return rows.map(versNews);
+}
+
+export async function getNewsItem(
+  id: string,
+  userId?: string,
+): Promise<NewsItem | null> {
+  const n = await prisma.news.findUnique({
+    where: { id },
+    include: newsInclude(userId),
+  });
+  return n ? versNews(n) : null;
 }
 
 export async function getResources(
