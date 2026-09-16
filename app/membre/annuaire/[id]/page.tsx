@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, User as UserIcon } from "lucide-react";
-import { LogoMark, NeedsAndInterests, Visuel } from "@/components/domain";
+import {
+  ListeContacts,
+  LogoMark,
+  NeedsAndInterests,
+  Visuel,
+} from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
-import { getMember } from "@/lib/queries";
+import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 
 export default async function FicheMembrePage({
@@ -14,6 +19,7 @@ export default async function FicheMembrePage({
   const { id } = await params;
   const m = await getMember(id);
   if (!m || m.statut === "candidature") notFound();
+  const contacts = await getContacts(m.id);
 
   return (
     <>
@@ -94,6 +100,12 @@ export default async function FicheMembrePage({
               </Card>
             ))}
           </div>
+
+          <ListeContacts
+            contacts={contacts}
+            titre={m.type === "physique" ? "Contact" : "Contacts"}
+            intro="Écrivez directement à la bonne personne plutôt qu’à une adresse générique."
+          />
         </div>
       </Card>
     </>

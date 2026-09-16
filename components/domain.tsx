@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Card, Pill, StatusPill } from "@/components/ui";
 import { filetDe } from "@/lib/filets";
+import { initialesDe } from "@/lib/avatars";
 import {
   fmtDate,
   fmtDateShort,
@@ -25,6 +26,7 @@ import {
 } from "@/lib/format";
 import type {
   CanchamEvent,
+  Contact,
   CanchamService,
   Member,
   NewsItem,
@@ -762,5 +764,94 @@ export function ResourceCard({
         ) : null}
       </div>
     </Card>
+  );
+}
+
+/* ==================== Contacts ==================== */
+
+/**
+ * Les personnes à joindre chez un membre.
+ *
+ * Partagée par « Mon entreprise », la fiche d'annuaire et le back-office. Les
+ * deux dernières la lisent sans rien pouvoir changer : on ne gère pas les
+ * contacts d'une autre entreprise. Les commandes arrivent donc de l'appelant
+ * plutôt que d'être câblées ici, ce qui garde ce fichier libre de tout client.
+ */
+export function ListeContacts({
+  contacts,
+  titre = "Contacts",
+  intro,
+  action,
+  actionContact,
+}: {
+  contacts: Contact[];
+  titre?: string;
+  intro?: string;
+  /** Commande d'en-tête, par exemple « Ajouter un contact ». */
+  action?: ReactNode;
+  /** Commande par ligne, par exemple le retrait. */
+  actionContact?: (contact: Contact) => ReactNode;
+}) {
+  if (!contacts.length) return null;
+
+  return (
+    <>
+      <div className="flex items-center gap-2.5 mt-[22px] mb-1 flex-wrap">
+        <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
+        <h2 className="text-[17px] font-semibold m-0">{titre}</h2>
+        {action ? (
+          <>
+            <span className="flex-1" />
+            {action}
+          </>
+        ) : null}
+      </div>
+      {intro ? (
+        <p className="text-[12.8px] text-muted mt-0 mb-3.5">{intro}</p>
+      ) : (
+        <div className="mb-3.5" />
+      )}
+
+      <div className="grid gap-3 md:grid-cols-2">
+        {contacts.map((c) => (
+          <div
+            key={c.id}
+            className="carte-filet filet-fixe filet-bleu border border-line rounded-[var(--radius-m)] p-4 flex gap-3 items-start"
+          >
+            <AvatarRond
+              src={c.photo}
+              alt={c.nom}
+              initiales={initialesDe(c.nom)}
+              taille={42}
+              className="bg-accent-soft text-accent-strong"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[13.8px] font-semibold text-ink">
+                  {c.nom}
+                </span>
+                {c.principal ? <Pill>Contact principal</Pill> : null}
+              </div>
+              <div className="text-[12.5px] text-muted">{c.fonction}</div>
+              <a
+                href={`mailto:${c.email}`}
+                className="block text-[12.8px] text-accent no-underline hover:underline mt-1.5 truncate"
+              >
+                {c.email}
+              </a>
+              {c.tel ? (
+                <a
+                  href={`tel:${c.tel.replace(/\s/g, "")}`}
+                  className="block text-[12.8px] text-ink no-underline hover:underline font-[family-name:var(--font-mono)]"
+                >
+                  {c.tel}
+                </a>
+              ) : null}
+            </div>
+            {actionContact?.(c)}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
