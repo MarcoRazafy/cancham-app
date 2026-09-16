@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, Check, CreditCard, Plus, Trash2, X } from "lucide-react";
+import { Bell, Check, CreditCard, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -346,6 +347,9 @@ export function EditProfileButton({
   besoins,
   interets,
   produits,
+  photos = [],
+  cover = null,
+  logo = null,
 }: {
   memberId: string;
   activite: string;
@@ -353,6 +357,10 @@ export function EditProfileButton({
   besoins?: string;
   interets?: string;
   produits: string[];
+  /** Visuels actuels, affichés en aperçu à côté du sélecteur de fichier. */
+  photos?: (string | null)[];
+  cover?: string | null;
+  logo?: string | null;
 }) {
   return (
     <Modal
@@ -406,17 +414,43 @@ export function EditProfileButton({
                 className={INPUT}
               />
             </Field>
+            <div className="grid gap-3.5 md:grid-cols-2">
+              <ChampImage
+                name="cover"
+                label="Photo de couverture"
+                hint="Le bandeau en tête de votre fiche. Format paysage."
+                apercu={cover}
+                ratio="aspect-[16/6]"
+              />
+              <ChampImage
+                name="logo"
+                label="Logo"
+                hint="Sur fond transparent de préférence (PNG)."
+                apercu={logo}
+                ratio="aspect-[16/6]"
+                contain
+              />
+            </div>
+
             <div className="grid gap-3.5 md:grid-cols-3">
               {[0, 1, 2].map((i) => (
-                <Field key={i} label={`Produit / service ${i + 1}`}>
-                  <input
-                    type="text"
-                    name={`produit${i}`}
-                    defaultValue={produits[i] ?? ""}
-                    placeholder="Nom du produit"
-                    className={INPUT}
+                <div key={i} className="flex flex-col gap-3.5">
+                  <Field label={`Produit / service ${i + 1}`}>
+                    <input
+                      type="text"
+                      name={`produit${i}`}
+                      defaultValue={produits[i] ?? ""}
+                      placeholder="Nom du produit"
+                      className={INPUT}
+                    />
+                  </Field>
+                  <ChampImage
+                    name={`photo${i}`}
+                    label="Photo"
+                    apercu={photos[i] ?? null}
+                    ratio="aspect-[4/3]"
                   />
-                </Field>
+                </div>
               ))}
             </div>
           </ModalBody>
@@ -553,5 +587,69 @@ export function RemoveContactButton({
         </form>
       )}
     </Modal>
+  );
+}
+
+/**
+ * Sélecteur d'image avec l'aperçu de ce qui est déjà en place.
+ *
+ * Sans l'aperçu, on ne sait pas si le champ vide veut dire « il n'y a pas
+ * d'image » ou « il y en a une, je n'y touche pas ». Le nom du fichier choisi
+ * remplace l'aperçu dès la sélection, pour confirmer que le clic a pris.
+ */
+function ChampImage({
+  name,
+  label,
+  hint,
+  apercu,
+  ratio,
+  contain = false,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  apercu: string | null;
+  ratio: string;
+  contain?: boolean;
+}) {
+  const [choisi, setChoisi] = useState<string | null>(null);
+
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex flex-col gap-2">
+        <div
+          className={`${ratio} w-full rounded-[var(--radius-s)] border border-line bg-surface-2 overflow-hidden flex items-center justify-center`}
+        >
+          {apercu ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={apercu}
+              alt=""
+              className={`w-full h-full ${contain ? "object-contain p-2" : "object-cover"}`}
+            />
+          ) : (
+            <span className="text-[11.5px] text-faint">Aucune image</span>
+          )}
+        </div>
+
+        <label className={`${BTN_LINE} text-[12.2px] px-[11px] py-1.5 justify-center`}>
+          <ImagePlus size={14} />
+          {choisi ? "Changer" : apercu ? "Remplacer" : "Choisir une image"}
+          <input
+            type="file"
+            name={name}
+            accept="image/*"
+            className="sr-only"
+            onChange={(e) => setChoisi(e.target.files?.[0]?.name ?? null)}
+          />
+        </label>
+
+        {choisi ? (
+          <span className="text-[11.5px] text-success-strong truncate">
+            {choisi}
+          </span>
+        ) : null}
+      </div>
+    </Field>
   );
 }

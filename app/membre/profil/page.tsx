@@ -68,6 +68,9 @@ export default async function ProfilPage() {
               besoins={m.besoins}
               interets={m.interets}
               produits={m.produits.map((p) => p.label)}
+              photos={m.produits.map((p) => p.photo)}
+              cover={m.cover}
+              logo={m.logo}
             />
             {!pending ? (
               <BtnLink href="/membre/profil/certificat" variant="primary">
