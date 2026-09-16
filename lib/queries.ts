@@ -10,7 +10,7 @@ import {
   toISODate,
 } from "@/lib/enums";
 import type {
-    CanchamEvent,
+  CanchamEvent,
   Contact,
   CanchamService,
   Comment,
@@ -170,7 +170,9 @@ export async function getEvent(id: string): Promise<CanchamEvent | null> {
   };
 }
 
-export async function getRegistrations(memberId: string): Promise<Registration[]> {
+export async function getRegistrations(
+  memberId: string,
+): Promise<Registration[]> {
   const rows = await prisma.registration.findMany({
     where: { memberId },
     orderBy: { createdAt: "asc" },
@@ -192,7 +194,12 @@ export async function getRegistration(
     where: { eventId_memberId: { eventId, memberId } },
   });
   return r
-    ? { eventId: r.eventId, memberId: r.memberId, code: r.code, date: toISODate(r.createdAt) }
+    ? {
+        eventId: r.eventId,
+        memberId: r.memberId,
+        code: r.code,
+        date: toISODate(r.createdAt),
+      }
     : null;
 }
 
@@ -260,7 +267,9 @@ export async function getNewsItem(id: string): Promise<NewsItem | null> {
   };
 }
 
-export async function getResources(type?: "gratuit" | "payant"): Promise<Resource[]> {
+export async function getResources(
+  type?: "gratuit" | "payant",
+): Promise<Resource[]> {
   const rows = await prisma.resource.findMany({
     where: type ? { type } : undefined,
     include: { commentaires: { orderBy: { date: "asc" } } },
@@ -298,18 +307,40 @@ export async function getOffers(): Promise<Offer[]> {
     include: { member: { select: { nom: true, cover: true, photo: true } } },
     orderBy: { createdAt: "asc" },
   });
-  return rows.map((o) => ({
+  return rows.map(versOffre);
+}
+
+/** Les offres les plus récentes, pour le tableau de bord. */
+export async function getDernieresOffres(n = 3): Promise<Offer[]> {
+  const rows = await prisma.offer.findMany({
+    include: { member: { select: { nom: true, cover: true, photo: true } } },
+    orderBy: { createdAt: "desc" },
+    take: n,
+  });
+  return rows.map(versOffre);
+}
+
+function versOffre(o: {
+  id: string;
+  memberId: string;
+  titre: string;
+  desc: string;
+  member: { nom: string; cover: string | null };
+}): Offer {
+  return {
     id: o.id,
     membreId: o.memberId,
     membre: o.member.nom,
     titre: o.titre,
     desc: o.desc,
     cover: o.member.cover,
-  }));
+  };
 }
 
 export async function getServices(): Promise<CanchamService[]> {
-  const rows = await prisma.canchamService.findMany({ orderBy: { ordre: "asc" } });
+  const rows = await prisma.canchamService.findMany({
+    orderBy: { ordre: "asc" },
+  });
   return rows.map((s) => ({
     id: s.id,
     titre: s.titre,
@@ -351,7 +382,9 @@ export async function getEncaisse(): Promise<number> {
 
 /* ============================ Messagerie ============================ */
 
-export async function getThreads(currentUserId: string): Promise<MessageThread[]> {
+export async function getThreads(
+  currentUserId: string,
+): Promise<MessageThread[]> {
   const rows = await prisma.messageThread.findMany({
     include: { messages: { orderBy: { sentAt: "asc" } } },
     orderBy: { createdAt: "asc" },
@@ -377,7 +410,9 @@ export async function getThreads(currentUserId: string): Promise<MessageThread[]
 }
 
 export async function getUnreadTotal(): Promise<number> {
-  const { _sum } = await prisma.messageThread.aggregate({ _sum: { unread: true } });
+  const { _sum } = await prisma.messageThread.aggregate({
+    _sum: { unread: true },
+  });
   return _sum.unread ?? 0;
 }
 
@@ -438,7 +473,9 @@ export async function rechercher(
   const [membres, evenements, actualites, ressources] = await Promise.all([
     prisma.member.findMany({
       where: {
-        ...(space === "admin" ? {} : { statut: { not: "candidature" as const } }),
+        ...(space === "admin"
+          ? {}
+          : { statut: { not: "candidature" as const } }),
         OR: [
           { nom: like },
           { secteur: like },
@@ -478,14 +515,18 @@ export async function rechercher(
       titre: m.nom,
       detail: `${m.secteur} · ${m.ville}`,
       // Le back-office ouvre la fiche de gestion, le membre la fiche d'annuaire.
-      href: space === "admin" ? `/admin/membres/${m.id}` : `/membre/annuaire/${m.id}`,
+      href:
+        space === "admin"
+          ? `/admin/membres/${m.id}`
+          : `/membre/annuaire/${m.id}`,
     })),
     ...evenements.map((e) => ({
       type: "evenement" as const,
       id: e.id,
       titre: e.titre,
       detail: `${e.lieu} · ${toISODate(e.date)}`,
-      href: space === "admin" ? `/admin/evenements` : `/membre/evenements/${e.id}`,
+      href:
+        space === "admin" ? `/admin/evenements` : `/membre/evenements/${e.id}`,
     })),
     ...actualites.map((n) => ({
       type: "actualite" as const,
