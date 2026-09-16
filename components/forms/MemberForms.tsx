@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Check, CreditCard, ImagePlus, Plus, Trash2, X } from "lucide-react";
+import {
+  Bell,
+  Check,
+  CreditCard,
+  ImagePlus,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
 import {
@@ -16,6 +25,7 @@ import {
   approveCandidature,
   createMember,
   removeContact,
+  updateContact,
   deleteMember,
   registerPayment,
   rejectCandidature,
@@ -23,6 +33,7 @@ import {
   updateMemberProfile,
 } from "@/lib/actions/members";
 import { fmtMoney } from "@/lib/format";
+import type { Contact } from "@/lib/types";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
 const BTN_LINE =
@@ -518,6 +529,16 @@ export function AddContactButton({
                 />
               </Field>
             </div>
+            <div className="max-w-[180px]">
+              <ChampImage
+                name="photo"
+                label="Portrait"
+                hint="Facultatif. À défaut, les initiales font l’avatar."
+                apercu={null}
+                ratio="aspect-square"
+                rond
+              />
+            </div>
             <label className="flex items-start gap-2.5 mt-1 cursor-pointer">
               <input
                 type="checkbox"
@@ -604,6 +625,7 @@ function ChampImage({
   apercu,
   ratio,
   contain = false,
+  rond = false,
 }: {
   name: string;
   label: string;
@@ -611,6 +633,8 @@ function ChampImage({
   apercu: string | null;
   ratio: string;
   contain?: boolean;
+  /** Un portrait se juge dans le cadre où il sera vu : rond. */
+  rond?: boolean;
 }) {
   const [choisi, setChoisi] = useState<string | null>(null);
 
@@ -618,7 +642,9 @@ function ChampImage({
     <Field label={label} hint={hint}>
       <div className="flex flex-col gap-2">
         <div
-          className={`${ratio} w-full rounded-[var(--radius-s)] border border-line bg-surface-2 overflow-hidden flex items-center justify-center`}
+          className={`${ratio} w-full border border-line bg-surface-2 overflow-hidden flex items-center justify-center ${
+            rond ? "rounded-full" : "rounded-[var(--radius-s)]"
+          }`}
         >
           {apercu ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -632,7 +658,9 @@ function ChampImage({
           )}
         </div>
 
-        <label className={`${BTN_LINE} text-[12.2px] px-[11px] py-1.5 justify-center`}>
+        <label
+          className={`${BTN_LINE} text-[12.2px] px-[11px] py-1.5 justify-center`}
+        >
           <ImagePlus size={14} />
           {choisi ? "Changer" : apercu ? "Remplacer" : "Choisir une image"}
           <input
@@ -651,5 +679,111 @@ function ChampImage({
         ) : null}
       </div>
     </Field>
+  );
+}
+
+/** Modification d'un contact existant, portrait compris. */
+export function EditContactButton({
+  contact,
+  seul,
+  retour = "/membre/profil",
+}: {
+  contact: Contact;
+  /** Unique contact de l'entreprise : il ne peut pas cesser d'être référent. */
+  seul: boolean;
+  retour?: string;
+}) {
+  return (
+    <Modal
+      title="Modifier le contact"
+      trigger={(ouvrir) => (
+        <button
+          onClick={ouvrir}
+          aria-label={`Modifier ${contact.nom}`}
+          className="w-7 h-7 rounded-md border border-line bg-transparent text-faint flex items-center justify-center cursor-pointer transition-colors hover:border-accent hover:text-accent shrink-0"
+        >
+          <Pencil size={13} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={updateContact}>
+          <input type="hidden" name="contactId" value={contact.id} />
+          <input type="hidden" name="retour" value={retour} />
+          <ModalBody>
+            <div className="flex gap-4 items-start">
+              <div className="w-[120px] shrink-0">
+                <ChampImage
+                  name="photo"
+                  label="Portrait"
+                  apercu={contact.photo}
+                  ratio="aspect-square"
+                  rond
+                />
+              </div>
+              <div className="flex-1 flex flex-col gap-3.5 min-w-0">
+                <Field label="Nom et prénom">
+                  <input
+                    type="text"
+                    name="nom"
+                    defaultValue={contact.nom}
+                    required
+                    className={INPUT}
+                  />
+                </Field>
+                <Field label="Fonction">
+                  <input
+                    type="text"
+                    name="fonction"
+                    defaultValue={contact.fonction}
+                    className={INPUT}
+                  />
+                </Field>
+              </div>
+            </div>
+            <div className="grid gap-3.5 md:grid-cols-2">
+              <Field label="Courriel">
+                <input
+                  type="email"
+                  name="email"
+                  defaultValue={contact.email}
+                  required
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Téléphone">
+                <input
+                  type="tel"
+                  name="tel"
+                  defaultValue={contact.tel ?? ""}
+                  className={INPUT}
+                />
+              </Field>
+            </div>
+            <label className="flex items-start gap-2.5 mt-1 cursor-pointer">
+              <input
+                type="checkbox"
+                name="principal"
+                defaultChecked={contact.principal}
+                disabled={seul}
+                className="mt-0.5 accent-[var(--accent)]"
+              />
+              <span className="text-[12.8px] text-muted">
+                <b className="text-ink font-semibold">Contact principal.</b>{" "}
+                {seul
+                  ? "Seul contact de l’entreprise, cette personne le reste tant qu’une autre n’a pas été ajoutée."
+                  : "L’ancien référent perd ce rôle, sans quitter la liste."}
+              </span>
+            </label>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Enregistrement…">
+              <Check size={14} /> Enregistrer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
   );
 }

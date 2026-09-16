@@ -15,6 +15,7 @@ import {
 import { Agrandir } from "@/components/Agrandir";
 import {
   AddContactButton,
+  EditContactButton,
   EditProfileButton,
   RemoveContactButton,
 } from "@/components/forms/MemberForms";
@@ -196,13 +197,16 @@ export default async function ProfilPage() {
             titre={m.type === "physique" ? "Contact" : "Contacts"}
             intro="Les personnes que la chambre peut joindre chez vous. Le contact principal est celui qu’elle appelle en premier."
             action={<AddContactButton memberId={m.id} />}
-            actionContact={(c) =>
-              // Le dernier contact n'est pas retirable : l'action le refuse aussi
-              // côté serveur, le bouton absent n'est qu'un confort.
-              contacts.length > 1 ? (
-                <RemoveContactButton contactId={c.id} nom={c.nom} />
-              ) : null
-            }
+            actionContact={(c) => (
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <EditContactButton contact={c} seul={contacts.length === 1} />
+                {/* Le dernier contact n'est pas retirable : l'action le refuse
+                    aussi côté serveur, le bouton absent n'est qu'un confort. */}
+                {contacts.length > 1 ? (
+                  <RemoveContactButton contactId={c.id} nom={c.nom} />
+                ) : null}
+              </div>
+            )}
           />
         </div>
       </Card>

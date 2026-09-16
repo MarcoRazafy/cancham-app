@@ -375,6 +375,17 @@ export async function addContact(formData: FormData) {
 
   const principal = formData.get("principal") === "on";
 
+  let photo: string | null = null;
+  try {
+    photo = await enregistrerImage(formData.get("photo"), {
+      prefixe: `contact-${memberId}`,
+      largeur: 400,
+    });
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    throw e;
+  }
+
   await prisma.$transaction(async (tx) => {
     // Un seul référent par entreprise : le nouveau détrône l'ancien.
     if (principal) {
@@ -391,6 +402,7 @@ export async function addContact(formData: FormData) {
         fonction: texte(formData, "fonction") || "Contact",
         email,
         tel: texte(formData, "tel") || null,
+        photo,
         contactPrincipal: principal,
       },
     });
@@ -439,4 +451,71 @@ export async function removeContact(formData: FormData) {
   );
   revalideTout();
   redirectWithFlash(retour, `${contact.nom} a été retiré des contacts.`);
+}
+
+/**
+ * Modification d'un contact, portrait compris.
+ *
+ * L'unicité du courriel se vérifie en excluant la personne elle-même, sans quoi
+ * réenregistrer une fiche sans toucher à l'adresse serait refusé.
+ */
+export async function updateContact(formData: FormData) {
+  const id = texte(formData, "contactId");
+  const email = texte(formData, "email").toLowerCase();
+  const nom = texte(formData, "nom");
+  const retour = texte(formData, "retour") || "/membre/profil";
+
+  const actuel = await prisma.user.findUnique({ where: { id } });
+  if (!actuel) redirectWithFlash(retour, "Contact introuvable.");
+  if (!nom || !email) {
+    redirectWithFlash(retour, "Nom et courriel sont obligatoires.");
+  }
+
+  const occupe = await prisma.user.findFirst({
+    where: { email, id: { not: id } },
+  });
+  if (occupe) {
+    redirectWithFlash(retour, `Le courriel ${email} est déjà rattaché à un contact.`);
+  }
+
+  let photo: string | null = null;
+  try {
+    photo = await enregistrerImage(formData.get("photo"), {
+      prefixe: `contact-${actuel.memberId ?? id}`,
+      largeur: 400,
+    });
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    throw e;
+  }
+
+  const principal = formData.get("principal") === "on";
+
+  await prisma.$transaction(async (tx) => {
+    // Un seul référent par entreprise : la règle est métier, aucun index ne la
+    // tient. On dégrade les autres dans la même transaction.
+    if (principal && actuel.memberId) {
+      await tx.user.updateMany({
+        where: { memberId: actuel.memberId, id: { not: id } },
+        data: { contactPrincipal: false },
+      });
+    }
+    await tx.user.update({
+      where: { id },
+      data: {
+        nom,
+        fonction: texte(formData, "fonction") || "Contact",
+        email,
+        tel: texte(formData, "tel") || null,
+        // Champ fichier vide : on garde le portrait en place.
+        photo: photo ?? actuel.photo,
+        // Le dernier référent ne peut pas se destituer lui-même : l'entreprise
+        // se retrouverait sans personne à appeler en premier.
+        contactPrincipal: principal || actuel.contactPrincipal,
+      },
+    });
+  });
+
+  revalideTout();
+  redirectWithFlash(retour, `${nom} a été mis à jour.`);
 }
