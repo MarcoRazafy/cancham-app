@@ -79,7 +79,7 @@ export default async function VueDEnsemble() {
             Votre réseau Canada–Madagascar
           </span>
           <h1 className="text-[clamp(28px,3.4vw,38px)] m-0 mt-2">
-            Bonjour {user.nom.split(" ")[0]},
+            Bonjour <Saillant>{user.nom.split(" ")[0]}</Saillant>,
           </h1>
           <p className="text-[15px] text-muted m-0 mt-1.5">
             Des rencontres et des opportunités pour faire grandir vos projets.
