@@ -13,7 +13,6 @@ import {
   MapPin,
 } from "lucide-react";
 import { AvatarRond, OfferCard } from "@/components/domain";
-import { CarrouselOffres } from "@/components/membre/CarrouselOffres";
 import { RegisterButton } from "@/components/forms/EventForms";
 import { Card, Saillant } from "@/components/ui";
 import { fmtMoney, isPast, parseISO } from "@/lib/format";
@@ -28,7 +27,7 @@ import {
   getEvents,
   getMember,
   getMembresAnnuaire,
-  getOffers,
+  getDernieresOffres,
   getRegistrations,
   getResources,
   getServices,
@@ -50,7 +49,7 @@ export default async function VueDEnsemble() {
       getMembresAnnuaire(),
       getRegistrations(me.id),
       getUnreadTotal(),
-      getOffers(),
+      getDernieresOffres(3),
       getResources(),
       getServices(),
     ]);
@@ -118,7 +117,7 @@ export default async function VueDEnsemble() {
           </Link>
         </div>
 
-        <CarrouselOffres>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {offres.map((o) => (
             <OfferCard
               key={o.id}
@@ -126,7 +125,7 @@ export default async function VueDEnsemble() {
               href={`/membre/annuaire/${o.membreId}`}
             />
           ))}
-        </CarrouselOffres>
+        </div>
       </Card>
 
       {/* ==================== Rendez-vous + annuaire ==================== */}
