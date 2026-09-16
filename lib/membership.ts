@@ -16,8 +16,94 @@ import type { Member, MemberStatus } from "@/lib/types";
 /** Au-delà de ce nombre de jours de retard, l'accès est coupé automatiquement. */
 export const RETARD_BLOCAGE_JOURS = 30;
 
-/** Cotisation annuelle, en Ariary. À confirmer auprès de la chambre. */
-export const COTISATION_ANNUELLE = 450_000;
+/**
+ * Formules d'adhésion, recopiées de la fiche d'inscription de la chambre.
+ *
+ * Elles remplacent une cotisation unique de 450 000 Ar, marquée « à confirmer »,
+ * qui ne correspondait à aucune d'elles. Le montant dépend du pays et du profil ;
+ * deux formules se règlent en dollars canadiens, ce qui interdit de continuer à
+ * tout compter en Ariary.
+ */
+export type FormuleId =
+  | "mg_consultant"
+  | "mg_entreprise"
+  | "ca_diaspora"
+  | "ca_entreprise"
+  | "sur_mesure";
+
+export type Devise = "MGA" | "CAD";
+
+export interface Formule {
+  /** Premier terme du libellé : le pays, ou « Sur mesure ». */
+  pays: string;
+  /** Profil de l'adhérent. */
+  profil: string;
+  /** Cotisation annuelle, en unités entières de la devise. */
+  montant: number;
+  devise: Devise;
+}
+
+export const FORMULES: Record<FormuleId, Formule> = {
+  mg_consultant: {
+    pays: "Madagascar",
+    profil: "Consultant, groupement et ONG",
+    montant: 250_000,
+    devise: "MGA",
+  },
+  mg_entreprise: {
+    pays: "Madagascar",
+    profil: "Entreprise",
+    montant: 500_000,
+    devise: "MGA",
+  },
+  ca_diaspora: {
+    pays: "Canada",
+    profil: "Diaspora & travailleur autonome",
+    montant: 100,
+    devise: "CAD",
+  },
+  ca_entreprise: {
+    pays: "Canada",
+    profil: "Entreprise canadienne",
+    montant: 300,
+    devise: "CAD",
+  },
+  sur_mesure: {
+    pays: "Sur mesure",
+    profil: "Partenaire & sponsor",
+    montant: 1_000,
+    devise: "CAD",
+  },
+};
+
+/**
+ * Ordre d'affichage : celui de la fiche d'inscription.
+ *
+ * Dérivé des clés de `FORMULES` plutôt que recopié : une formule ajoutée à la
+ * grille apparaît d'office dans les formulaires, sans liste parallèle à tenir.
+ */
+export const ORDRE_FORMULES = Object.keys(FORMULES) as FormuleId[];
+
+/** « Madagascar — Entreprise ». */
+export function libelleFormule(id: FormuleId): string {
+  const f = FORMULES[id];
+  return `${f.pays} — ${f.profil}`;
+}
+
+/**
+ * Montant dans sa devise, écrit comme sur la fiche de la chambre :
+ * « 250 000 Ar », « 100 $ ».
+ */
+export function fmtMontant(montant: number, devise: Devise): string {
+  const nombre = montant.toLocaleString("fr-FR");
+  return devise === "CAD" ? `${nombre} $` : `${nombre} Ar`;
+}
+
+/** Cotisation annuelle d'une formule, mise en forme. */
+export function fmtCotisation(id: FormuleId): string {
+  const f = FORMULES[id];
+  return fmtMontant(f.montant, f.devise);
+}
 
 /** Statuts pour lesquels l'adhésion n'est pas encore effective. */
 export const ADHESION_PENDING: MemberStatus[] = ["candidature", "en_attente"];
@@ -31,7 +117,9 @@ export function joursDeRetard(m: Member | null | undefined): number {
 
 /** Vrai si le retard dépasse le seuil de blocage automatique. */
 export function retardBloque(m: Member | null | undefined): boolean {
-  return !!m && m.statut === "en_retard" && joursDeRetard(m) > RETARD_BLOCAGE_JOURS;
+  return (
+    !!m && m.statut === "en_retard" && joursDeRetard(m) > RETARD_BLOCAGE_JOURS
+  );
 }
 
 /**

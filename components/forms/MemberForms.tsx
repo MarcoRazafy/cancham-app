@@ -32,7 +32,12 @@ import {
   sendReminder,
   updateMemberProfile,
 } from "@/lib/actions/members";
-import { fmtMoney } from "@/lib/format";
+import {
+  FORMULES,
+  fmtMontant,
+  libelleFormule,
+  type FormuleId,
+} from "@/lib/membership";
 import type { Contact } from "@/lib/types";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
@@ -163,14 +168,16 @@ export function RegisterPaymentButton({
   memberId,
   premier,
   nom,
-  montantParDefaut,
+  formule,
 }: {
   memberId: string;
   premier: boolean;
   nom: string;
-  montantParDefaut: number;
+  /** La formule du membre fixe le montant attendu et sa devise. */
+  formule: FormuleId;
 }) {
   const aujourdhui = new Date().toISOString().slice(0, 10);
+  const { montant, devise } = FORMULES[formule];
   return (
     <Modal
       title="Enregistrer le paiement"
@@ -202,15 +209,16 @@ export function RegisterPaymentButton({
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field
-                label="Montant (Ariary)"
-                hint={`Cotisation annuelle : ${fmtMoney(montantParDefaut)}`}
+                label={`Montant (${devise === "CAD" ? "dollars canadiens" : "Ariary"})`}
+                hint={`${libelleFormule(formule)} : ${fmtMontant(montant, devise)} par an`}
               >
                 <input
                   type="number"
                   name="montant"
-                  defaultValue={montantParDefaut}
+                  defaultValue={montant}
                   className={INPUT}
                 />
+                <input type="hidden" name="devise" value={devise} />
               </Field>
               <Field label="Date du paiement">
                 <input

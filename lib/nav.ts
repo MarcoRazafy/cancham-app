@@ -22,21 +22,37 @@ export const NAV_MEMBRE: NavGroup[] = [
       { href: "/membre/actualites", label: "Actualités", icon: "news" },
       { href: "/membre/messagerie", label: "Messagerie", icon: "chat" },
       { href: "/membre/ressources", label: "Ressources", icon: "folder" },
-      { href: "/membre/offres-cancham", label: "Services CanCham", icon: "briefcase" },
+      {
+        href: "/membre/offres-cancham",
+        label: "Services CanCham",
+        icon: "briefcase",
+      },
     ],
   },
   {
     label: "",
     items: [
       { href: "/membre/profil", label: "Mon entreprise", icon: "building" },
-      { href: "/membre/cotisations", label: "Cotisations & factures", icon: "card" },
+      {
+        href: "/membre/cotisations",
+        label: "Cotisations & factures",
+        icon: "card",
+      },
     ],
   },
   {
     label: "",
     items: [
-      { href: "/membre/ressources?type=gratuit", label: "Besoin d’aide ?", icon: "help" },
-      { href: "/membre/messagerie?t=t2", label: "Contacter l’équipe", icon: "support" },
+      {
+        href: "/membre/ressources?type=gratuit",
+        label: "Besoin d’aide ?",
+        icon: "help",
+      },
+      {
+        href: "/membre/messagerie?t=t2",
+        label: "Contacter l’équipe",
+        icon: "support",
+      },
     ],
   },
 ];

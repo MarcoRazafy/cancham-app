@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
+import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
 import { submitAdhesion } from "@/lib/actions/members";
 
 const CHAMP =
@@ -10,10 +11,9 @@ const ETIQUETTE = "block text-[12.5px] font-semibold text-white/70 mb-1.5";
 /**
  * Formulaire d'adhésion de la page d'accueil.
  *
- * Il poste vers la même action serveur que le formulaire détaillé de
- * `/public/adhesion` : une candidature déposée ici apparaît immédiatement dans
- * le back-office. Les champs absents prennent les valeurs par défaut de
- * l'action, la fiche étant complétée après validation.
+ * Il reprend champ pour champ la fiche d'inscription de la chambre et poste
+ * vers la même action serveur que le formulaire détaillé de `/public/adhesion` :
+ * une candidature déposée ici apparaît immédiatement dans le back-office.
  */
 export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
   return (
@@ -21,88 +21,162 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
       <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
 
       <form action={submitAdhesion} className="flex flex-col gap-4">
-        {/* L'accueil ne collecte que l'essentiel ; le reste se complète ensuite. */}
-        <input type="hidden" name="type" value="morale" />
-        <input type="hidden" name="pays" value="Madagascar" />
+        {/*
+          Mêmes champs, dans le même ordre, que la fiche d'inscription de la
+          chambre : un candidat qui a déjà rempli l'une retrouve l'autre.
+        */}
+
+        <div>
+          <label htmlFor="ad-formule" className={ETIQUETTE}>
+            Formule d’adhésion
+          </label>
+          <ChoixFormule id="ad-formule" className={CHAMP} />
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="ad-nom" className={ETIQUETTE}>
-              Nom de l’entreprise
+            <label htmlFor="ad-nomrep" className={ETIQUETTE}>
+              Nom
             </label>
             <input
-              id="ad-nom"
-              name="nom"
+              id="ad-nomrep"
+              name="nomRep"
               type="text"
               required
-              placeholder="Votre entreprise"
+              autoComplete="family-name"
+              placeholder="Votre nom"
               className={CHAMP}
             />
           </div>
           <div>
-            <label htmlFor="ad-secteur" className={ETIQUETTE}>
-              Secteur d’activité
+            <label htmlFor="ad-prenomrep" className={ETIQUETTE}>
+              Prénom
             </label>
-            <select
-              id="ad-secteur"
-              name="secteur"
+            <input
+              id="ad-prenomrep"
+              name="prenomRep"
+              type="text"
+              required
+              autoComplete="given-name"
+              placeholder="Prénom"
               className={CHAMP}
-              defaultValue=""
-              style={{ colorScheme: "light" }}
-            >
-              <option value="" disabled>
-                Sélectionner
-              </option>
-              {secteurs.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-              <option value="Autre secteur">Autre secteur</option>
-            </select>
+            />
           </div>
-        </div>
-
-        <div>
-          <label htmlFor="ad-rep" className={ETIQUETTE}>
-            Nom et prénom du contact
-          </label>
-          <input
-            id="ad-rep"
-            name="rep"
-            type="text"
-            required
-            placeholder="Votre nom complet"
-            className={CHAMP}
-          />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="ad-email" className={ETIQUETTE}>
-              Adresse e-mail
+              Courriel
             </label>
             <input
               id="ad-email"
               name="email"
               type="email"
               required
+              autoComplete="email"
               placeholder="contact@entreprise.mg"
               className={CHAMP}
             />
           </div>
           <div>
             <label htmlFor="ad-tel" className={ETIQUETTE}>
-              Téléphone
+              Numéro de téléphone
             </label>
             <input
               id="ad-tel"
               name="tel"
               type="tel"
-              placeholder="+261 …"
+              autoComplete="tel"
+              placeholder="+261 34 00 000 00"
               className={CHAMP}
             />
           </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="ad-ville" className={ETIQUETTE}>
+              Ville
+            </label>
+            <input
+              id="ad-ville"
+              name="ville"
+              type="text"
+              required
+              autoComplete="address-level2"
+              placeholder="Antananarivo"
+              className={CHAMP}
+            />
+          </div>
+          <div>
+            <label htmlFor="ad-pays" className={ETIQUETTE}>
+              Pays
+            </label>
+            <select
+              id="ad-pays"
+              name="pays"
+              defaultValue="Madagascar"
+              className={CHAMP}
+              style={{ colorScheme: "light" }}
+            >
+              {PAYS.map((pays) => (
+                <option key={pays} value={pays}>
+                  {pays}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="ad-nom" className={ETIQUETTE}>
+            Nom de l’entreprise représentée
+          </label>
+          <input
+            id="ad-nom"
+            name="nom"
+            type="text"
+            required
+            placeholder="Mettre N/A si pas d’entreprise"
+            className={CHAMP}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="ad-secteur" className={ETIQUETTE}>
+            Secteur d’activité{" "}
+            <span className="font-normal text-white/45">(facultatif)</span>
+          </label>
+          <select
+            id="ad-secteur"
+            name="secteur"
+            className={CHAMP}
+            defaultValue=""
+            style={{ colorScheme: "light" }}
+          >
+            <option value="">Sélectionner</option>
+            {secteurs.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+            <option value="Autre secteur">Autre secteur</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="ad-motivation" className={ETIQUETTE}>
+            Vos motivations à nous rejoindre
+          </label>
+          <textarea
+            id="ad-motivation"
+            name="motivation"
+            rows={3}
+            required
+            placeholder="Ce que vous attendez du réseau CanCham…"
+            className={CHAMP}
+          />
         </div>
 
         <label

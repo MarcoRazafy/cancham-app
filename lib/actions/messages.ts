@@ -73,7 +73,8 @@ export async function ouvrirConversation(formData: FormData) {
     where: { id: memberId },
     select: { nom: true },
   });
-  if (!membre) redirectWithFlash(`/${space}/annuaire`, "Entreprise introuvable.");
+  if (!membre)
+    redirectWithFlash(`/${space}/annuaire`, "Entreprise introuvable.");
 
   const referent = await prisma.user.findFirst({
     where: { memberId },
@@ -86,9 +87,7 @@ export async function ouvrirConversation(formData: FormData) {
       type: "individuel",
       memberId,
       nom,
-      sousTitre: referent
-        ? `${membre.nom} · ${referent.fonction}`
-        : membre.nom,
+      sousTitre: referent ? `${membre.nom} · ${referent.fonction}` : membre.nom,
       init: initiales(nom),
       avatar: referent?.photo ?? null,
       unread: 0,

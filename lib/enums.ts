@@ -25,7 +25,7 @@ export const EVENT_FORMAT_LABEL: Record<DbEventFormat, EventFormat> = {
 };
 
 export const EVENT_FORMAT_DB: Record<EventFormat, DbEventFormat> = {
-  "Présentiel": "presentiel",
+  Présentiel: "presentiel",
   Webinaire: "webinaire",
   Hybride: "hybride",
 };
@@ -37,16 +37,17 @@ export const NEWS_CAT_LABEL: Record<DbNewsCategory, NewsCategory> = {
   formation: "Formation",
 };
 
-export const RESOURCE_CAT_LABEL: Record<DbResourceCategory, ResourceCategory> = {
-  guide: "Guide",
-  modele: "Modèle",
-  formation: "Formation",
-  rapport: "Rapport",
-};
+export const RESOURCE_CAT_LABEL: Record<DbResourceCategory, ResourceCategory> =
+  {
+    guide: "Guide",
+    modele: "Modèle",
+    formation: "Formation",
+    rapport: "Rapport",
+  };
 
 export const RESOURCE_CAT_DB: Record<ResourceCategory, DbResourceCategory> = {
   Guide: "guide",
-  "Modèle": "modele",
+  Modèle: "modele",
   Formation: "formation",
   Rapport: "rapport",
 };
@@ -73,10 +74,15 @@ export function heureRelative(d: Date, maintenant = new Date()): string {
   const ecart = Math.round((jour(maintenant) - jour(d)) / 86_400_000);
 
   if (ecart <= 0)
-    return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   if (ecart === 1) return "Hier";
   if (ecart < 7)
-    return d.toLocaleDateString("fr-FR", { weekday: "long" }).replace(/^./, (c) => c.toUpperCase());
+    return d
+      .toLocaleDateString("fr-FR", { weekday: "long" })
+      .replace(/^./, (c) => c.toUpperCase());
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
@@ -108,7 +114,9 @@ export function jourLisible(iso: string, maintenant = new Date()): string {
       weekday: "long",
       day: "numeric",
       month: "long",
-      ...(d.getFullYear() === maintenant.getFullYear() ? {} : { year: "numeric" }),
+      ...(d.getFullYear() === maintenant.getFullYear()
+        ? {}
+        : { year: "numeric" }),
     })
     .replace(/^./, (c) => c.toUpperCase());
 }

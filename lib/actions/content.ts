@@ -10,7 +10,10 @@ import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
 
-const NEWS_CAT_DB: Record<NewsCategory, "programmation" | "evenement_passe" | "vie_de_la_chambre" | "formation"> = {
+const NEWS_CAT_DB: Record<
+  NewsCategory,
+  "programmation" | "evenement_passe" | "vie_de_la_chambre" | "formation"
+> = {
   Programmation: "programmation",
   "Événement passé": "evenement_passe",
   "Vie de la chambre": "vie_de_la_chambre",
@@ -20,17 +23,21 @@ const NEWS_CAT_DB: Record<NewsCategory, "programmation" | "evenement_passe" | "v
 /* ============================ Actualités ============================ */
 
 export async function createNews(formData: FormData) {
-  const mediaType = texte(formData, "mediaType") === "video" ? "video" : "image";
+  const mediaType =
+    texte(formData, "mediaType") === "video" ? "video" : "image";
   const n = await prisma.news.create({
     data: {
       titre: texte(formData, "titre") || "Nouvelle actualité",
       date: new Date(),
-      cat: NEWS_CAT_DB[(texte(formData, "cat") || "Vie de la chambre") as NewsCategory],
+      cat: NEWS_CAT_DB[
+        (texte(formData, "cat") || "Vie de la chambre") as NewsCategory
+      ],
       extrait: texte(formData, "extrait") || "Résumé à compléter.",
       corps: texte(formData, "corps") || "Texte à compléter.",
       mediaType,
       mediaTheme: Math.random() > 0.5 ? "navy" : "green",
-      mediaDuration: mediaType === "video" ? texte(formData, "duree") || "2:00" : null,
+      mediaDuration:
+        mediaType === "video" ? texte(formData, "duree") || "2:00" : null,
     },
   });
   revalideTout();
@@ -91,10 +98,12 @@ export async function postComment(formData: FormData) {
 
   const user = await getCurrentUser(space);
   const entreprise = user.memberId
-    ? ((await prisma.member.findUnique({
-        where: { id: user.memberId },
-        select: { nom: true },
-      }))?.nom ?? "—")
+    ? ((
+        await prisma.member.findUnique({
+          where: { id: user.memberId },
+          select: { nom: true },
+        })
+      )?.nom ?? "—")
     : "Équipe CanCham";
 
   const newsId = texte(formData, "newsId") || null;
@@ -122,7 +131,9 @@ export async function createResource(formData: FormData) {
   const r = await prisma.resource.create({
     data: {
       titre: texte(formData, "titre") || "Nouvelle ressource",
-      cat: RESOURCE_CAT_DB[(texte(formData, "cat") || "Guide") as ResourceCategory],
+      cat: RESOURCE_CAT_DB[
+        (texte(formData, "cat") || "Guide") as ResourceCategory
+      ],
       fmt:
         texte(formData, "fmt") === "Vidéo"
           ? "video"
@@ -136,12 +147,18 @@ export async function createResource(formData: FormData) {
     },
   });
   revalideTout();
-  redirectWithFlash("/admin/ressources", `« ${r.titre} » ajoutée à la bibliothèque`);
+  redirectWithFlash(
+    "/admin/ressources",
+    `« ${r.titre} » ajoutée à la bibliothèque`,
+  );
 }
 
 export async function deleteResource(formData: FormData) {
   const id = texte(formData, "resourceId");
-  const r = await prisma.resource.findUnique({ where: { id }, select: { titre: true } });
+  const r = await prisma.resource.findUnique({
+    where: { id },
+    select: { titre: true },
+  });
   await prisma.resource.delete({ where: { id } });
   revalideTout();
   redirectWithFlash("/admin/ressources", `« ${r?.titre} » retirée`);
@@ -162,7 +179,8 @@ export async function downloadResource(formData: FormData) {
   const user = await getCurrentUser(space);
   await prisma.auditLog.create({
     data: {
-      action: r.type === "payant" ? "ressource_achetee" : "ressource_telechargee",
+      action:
+        r.type === "payant" ? "ressource_achetee" : "ressource_telechargee",
       entite: "Resource",
       entiteId: id,
       acteur: user.nom,
@@ -184,10 +202,15 @@ export async function downloadResource(formData: FormData) {
 export async function createOffer(formData: FormData) {
   const titre = texte(formData, "titre");
   const memberId = texte(formData, "memberId");
-  if (!titre) redirectWithFlash("/admin/actualites", "Le titre de l’offre est requis.");
+  if (!titre)
+    redirectWithFlash("/admin/actualites", "Le titre de l’offre est requis.");
 
   await prisma.offer.create({
-    data: { titre, desc: texte(formData, "desc") || "Détails à venir.", memberId },
+    data: {
+      titre,
+      desc: texte(formData, "desc") || "Détails à venir.",
+      memberId,
+    },
   });
   revalideTout();
   redirectWithFlash("/admin/actualites", "Offre publiée dans les actualités");
@@ -213,7 +236,9 @@ export async function saveService(formData: FormData) {
     await prisma.canchamService.update({ where: { id }, data });
   } else {
     const n = await prisma.canchamService.count();
-    await prisma.canchamService.create({ data: { ...data, icon: "award", ordre: n } });
+    await prisma.canchamService.create({
+      data: { ...data, icon: "award", ordre: n },
+    });
   }
 
   revalideTout();
@@ -224,7 +249,9 @@ export async function saveService(formData: FormData) {
 }
 
 export async function deleteService(formData: FormData) {
-  await prisma.canchamService.delete({ where: { id: texte(formData, "serviceId") } });
+  await prisma.canchamService.delete({
+    where: { id: texte(formData, "serviceId") },
+  });
   revalideTout();
   redirectWithFlash("/admin/offres-cancham", "Service retiré");
 }

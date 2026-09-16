@@ -25,7 +25,11 @@ export function isPast(iso: string): boolean {
 
 export function fmtDate(
   iso: string,
-  opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" },
+  opts: Intl.DateTimeFormatOptions = {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  },
 ): string {
   return parseISO(iso).toLocaleDateString("fr-FR", opts);
 }

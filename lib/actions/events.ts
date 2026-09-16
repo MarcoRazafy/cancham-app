@@ -36,7 +36,10 @@ export async function registerForEvent(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const user = await getCurrentUser("membre");
   if (!user.memberId) {
-    redirectWithFlash(`/membre/evenements/${eventId}`, "Aucun membre rattaché à ce compte.");
+    redirectWithFlash(
+      `/membre/evenements/${eventId}`,
+      "Aucun membre rattaché à ce compte.",
+    );
   }
 
   const [event, membre] = await Promise.all([
@@ -44,7 +47,10 @@ export async function registerForEvent(formData: FormData) {
       where: { id: eventId },
       include: { _count: { select: { participants: true } } },
     }),
-    prisma.member.findUnique({ where: { id: user.memberId }, select: { nom: true } }),
+    prisma.member.findUnique({
+      where: { id: user.memberId },
+      select: { nom: true },
+    }),
   ]);
 
   if (!event || !membre) {
@@ -62,7 +68,10 @@ export async function registerForEvent(formData: FormData) {
   }
 
   if (event._count.participants >= event.cap) {
-    redirectWithFlash(`/membre/evenements/${eventId}`, "Cet événement est complet.");
+    redirectWithFlash(
+      `/membre/evenements/${eventId}`,
+      "Cet événement est complet.",
+    );
   }
 
   const code = codeAcces(eventId);
@@ -107,7 +116,8 @@ export async function registerForEvent(formData: FormData) {
 export async function cancelRegistration(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const user = await getCurrentUser("membre");
-  if (!user.memberId) redirectWithFlash("/membre/evenements", "Aucun membre rattaché.");
+  if (!user.memberId)
+    redirectWithFlash("/membre/evenements", "Aucun membre rattaché.");
 
   const membre = await prisma.member.findUnique({
     where: { id: user.memberId },
@@ -135,7 +145,10 @@ export async function saveEvent(formData: FormData) {
     titre: texte(formData, "titre") || "Nouvel événement",
     date: new Date(`${texte(formData, "date") || "2026-12-01"}T00:00:00`),
     lieu: texte(formData, "lieu") || "Antananarivo",
-    format: EVENT_FORMAT_DB[(texte(formData, "format") || "Présentiel") as EventFormat],
+    format:
+      EVENT_FORMAT_DB[
+        (texte(formData, "format") || "Présentiel") as EventFormat
+      ],
     cap: Number(formData.get("cap")) || 50,
     payant,
     prix: payant ? Number(formData.get("prix")) || 0 : 0,
@@ -149,13 +162,18 @@ export async function saveEvent(formData: FormData) {
   revalideTout();
   redirectWithFlash(
     "/admin/evenements",
-    id ? `« ${e.titre} » mis à jour` : `« ${e.titre} » créé et publié aux membres`,
+    id
+      ? `« ${e.titre} » mis à jour`
+      : `« ${e.titre} » créé et publié aux membres`,
   );
 }
 
 export async function deleteEvent(formData: FormData) {
   const id = texte(formData, "eventId");
-  const e = await prisma.event.findUnique({ where: { id }, select: { titre: true } });
+  const e = await prisma.event.findUnique({
+    where: { id },
+    select: { titre: true },
+  });
   await prisma.auditLog.create({
     data: {
       action: "evenement_supprime",
@@ -175,7 +193,11 @@ export async function toggleAttendance(formData: FormData) {
   const attendeeId = texte(formData, "attendeeId");
   const eventId = texte(formData, "eventId");
   const a = await prisma.attendee.findUnique({ where: { id: attendeeId } });
-  if (!a) redirectWithFlash(`/admin/evenements/${eventId}/inscrits`, "Participant introuvable.");
+  if (!a)
+    redirectWithFlash(
+      `/admin/evenements/${eventId}/inscrits`,
+      "Participant introuvable.",
+    );
 
   const statut = a.statut === "present" ? "absent" : "present";
   await prisma.attendee.update({ where: { id: attendeeId }, data: { statut } });
@@ -211,6 +233,8 @@ export async function addAttendee(formData: FormData) {
   revalideTout();
   redirectWithFlash(
     `/admin/evenements/${eventId}/inscrits`,
-    direct ? `${nom} enregistré comme présent (arrivée directe)` : `${nom} inscrit à l’événement`,
+    direct
+      ? `${nom} enregistré comme présent (arrivée directe)`
+      : `${nom} inscrit à l’événement`,
   );
 }

@@ -35,7 +35,8 @@ import {
 } from "@/components/ui";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
-import { fmtDate, fmtDateShort, fmtMoney } from "@/lib/format";
+import { fmtDate, fmtDateShort } from "@/lib/format";
+import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
 import {
   ADHESION_PENDING,
   isOverdueWarning,
@@ -147,6 +148,7 @@ export default async function ProfilPage() {
               <h1 className="m-0 mb-1 text-[22px]">{m.nom}</h1>
               <div className="text-muted text-[13.6px]">
                 {m.secteur} · {m.ville}
+                {m.pays ? ` · ${m.pays}` : ""}
               </div>
               <div className="flex gap-1.5 flex-wrap pt-2.5">
                 <StatusPill status={m.statut} />
@@ -168,6 +170,22 @@ export default async function ProfilPage() {
           </p>
 
           <NeedsAndInterests member={m} />
+
+          {m.motivation ? (
+            <>
+              <div className="flex items-center gap-2.5 mt-[22px] mb-2">
+                <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
+                <h2 className="text-[17px] font-semibold m-0">
+                  Vos <Saillant>motivations</Saillant>
+                </h2>
+              </div>
+              {/* Réponse donnée à l'inscription, telle quelle : c'est une
+                  déclaration d'intention, pas une fiche à retoucher. */}
+              <p className="m-0 text-[14px] text-muted leading-relaxed max-w-[70ch]">
+                {m.motivation}
+              </p>
+            </>
+          ) : null}
 
           <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
@@ -213,7 +231,21 @@ export default async function ProfilPage() {
       </Card>
 
       <SectionTitle>Statut d’adhésion</SectionTitle>
-      <div className="grid gap-4 mb-[22px] md:grid-cols-3">
+      <div className="grid gap-4 mb-[22px] md:grid-cols-2 xl:grid-cols-4">
+        <Stat
+          k="Formule"
+          v={
+            <span className="flex flex-col gap-0.5">
+              <span className="text-[14px] font-semibold leading-snug">
+                {libelleFormule(m.formule)}
+              </span>
+              <span className="text-[13px] text-accent-strong font-semibold">
+                {fmtCotisation(m.formule)}{" "}
+                <span className="text-muted font-normal">/ par an</span>
+              </span>
+            </span>
+          }
+        />
         <Stat
           k="Adhésion"
           v={
@@ -257,7 +289,7 @@ export default async function ProfilPage() {
                 <Td className="text-muted">{fmtDateShort(f.date)}</Td>
                 <Td>{f.objet}</Td>
                 <Td className="font-[family-name:var(--font-mono)]">
-                  {fmtMoney(f.montant)}
+                  {fmtMontant(f.montant, f.devise)}
                 </Td>
                 <Td>
                   <StatusPill status={f.statut} />

@@ -1,6 +1,7 @@
 import { EnTetePublique } from "@/components/public/Marque";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { submitAdhesion } from "@/lib/actions/members";
+import { ChoixFormule } from "@/components/public/ChoixFormule";
 
 export default function AdhesionPage() {
   return (
@@ -19,6 +20,10 @@ export default function AdhesionPage() {
         </p>
 
         <form action={submitAdhesion} className="flex flex-col gap-3.5">
+          <Field label="Formule d’adhésion">
+            <ChoixFormule id="adh-formule" className={INPUT} />
+          </Field>
+
           <Field label="Type de membre">
             <select name="type" className={INPUT}>
               <option value="morale">Entreprise (personne morale)</option>
@@ -85,11 +90,26 @@ export default function AdhesionPage() {
             <Field label="Nom du représentant">
               <input
                 type="text"
-                name="rep"
-                placeholder="Nom complet"
+                name="nomRep"
+                required
+                autoComplete="family-name"
+                placeholder="Nom"
                 className={INPUT}
               />
             </Field>
+            <Field label="Prénom">
+              <input
+                type="text"
+                name="prenomRep"
+                required
+                autoComplete="given-name"
+                placeholder="Prénom"
+                className={INPUT}
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-3.5 md:grid-cols-2">
             <Field label="Fonction">
               <input
                 type="text"
