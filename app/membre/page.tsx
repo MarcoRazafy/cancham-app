@@ -93,7 +93,6 @@ export default async function VueDEnsemble() {
 
       {/* ==================== Bandeau d'adhésion ==================== */}
       <BandeauAdhesion
-        statut={me.statut}
         enAttente={enAttente}
         bloque={bloque}
         enRetard={enRetard}
@@ -293,19 +292,28 @@ export default async function VueDEnsemble() {
 
 /* ============================ Blocs ============================ */
 
+/**
+ * Bandeau d'adhésion — alertes seulement.
+ *
+ * Quand la cotisation est à jour, il n'y a rien à annoncer : le bandeau vert
+ * occupait la meilleure place de l'écran pour dire qu'il ne se passe rien. Le
+ * statut reste lisible sur « Mon entreprise » et « Cotisations & factures ».
+ *
+ * Les trois autres états restent : ils portent le modèle économique de la
+ * chambre, un membre doit savoir que son accès se restreint et pourquoi.
+ */
 function BandeauAdhesion({
   enAttente,
   bloque,
   enRetard,
   jours,
 }: {
-  statut: string;
   enAttente: boolean;
   bloque: boolean;
   enRetard: boolean;
   jours: number;
 }) {
-  const alerte = enAttente || bloque || enRetard;
+  if (!enAttente && !bloque && !enRetard) return null;
 
   const contenu = enAttente
     ? {
@@ -331,24 +339,15 @@ function BandeauAdhesion({
             pastille: "À régulariser",
           }
         : {
-            icone: <CheckCircle2 size={22} />,
-            titre: "Votre adhésion est à jour",
-            texte:
-              "Vous bénéficiez de tous les services de votre espace membre.",
-            pastille: "Membre actif",
+            icone: <Clock size={22} />,
+            titre: "Cotisation en retard",
+            texte: "Régularisez votre cotisation pour conserver votre accès.",
+            pastille: "À régulariser",
           };
 
   return (
-    <div
-      className={`flex items-center gap-4 flex-wrap rounded-xl border-l-4 px-5 py-4 mb-5 ${
-        alerte
-          ? "bg-bad-soft border-l-bad border border-bad/25"
-          : "bg-success-soft border-l-success border border-success/25"
-      }`}
-    >
-      <span className={alerte ? "text-bad" : "text-success-strong"}>
-        {contenu.icone}
-      </span>
+    <div className="flex items-center gap-4 flex-wrap rounded-xl border-l-4 px-5 py-4 mb-5 bg-bad-soft border-l-bad border border-bad/25">
+      <span className="text-bad">{contenu.icone}</span>
 
       <div className="min-w-0 flex-1">
         <div className="text-[15.5px] font-semibold text-ink">
@@ -357,11 +356,7 @@ function BandeauAdhesion({
         <div className="text-[13.5px] text-muted mt-0.5">{contenu.texte}</div>
       </div>
 
-      <span
-        className={`text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full ${
-          alerte ? "bg-bad/20 text-bad" : "bg-success/20 text-success-strong"
-        }`}
-      >
+      <span className="text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full bg-bad/20 text-bad">
         {contenu.pastille}
       </span>
 
