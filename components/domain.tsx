@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageSquare,
   Play,
+  Tag,
   User as UserIcon,
   Users,
 } from "lucide-react";
@@ -682,11 +683,17 @@ export function ServiceCard({
     <Card
       className={`tuile-hote carte-filet filet-fixe ${gratuit ? "filet-vert" : "filet-rouge"} p-[22px] flex flex-col`}
     >
-      {/* Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est facturé. */}
+      {/*
+        Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est
+        facturé. L'icône dit la même chose que la couleur : une étiquette pour
+        ce qui est offert, une carte bancaire pour ce qui se règle. Les deux
+        types portaient jusqu'ici la même carte bancaire, ce qui laissait la
+        couleur seule distinguer un service inclus d'un service payant.
+      */}
       <div
         className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}
       >
-        <CreditCard size={24} />
+        {gratuit ? <Tag size={24} /> : <CreditCard size={24} />}
       </div>
       <div className="font-bold text-[14.5px] mb-1.5">{service.titre}</div>
       <p className="text-[12.8px] text-muted leading-relaxed m-0 mb-3 flex-1">
