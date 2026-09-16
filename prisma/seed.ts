@@ -152,7 +152,7 @@ async function main() {
         produits: {
           create: m.produits.map((p, i) => ({
             label: p.label,
-            photo: p.photo,
+            photos: p.photos,
             ordre: i,
           })),
         },

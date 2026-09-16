@@ -1,16 +1,12 @@
 import type { Member, Produit } from "../../lib/types";
 
-/** Raccourci : un produit sans photo, rendu par un dégradé décoratif. */
 /**
- * Un produit du catalogue d'un membre.
+ * Un produit du catalogue d'un membre, avec sa galerie.
  *
- * La photo est facultative : sans elle, la vignette retombe sur le dégradé
- * décoratif de `PhotoPlaceholder`.
+ * Les photos sont facultatives : sans elles, la vignette retombe sur le
+ * dégradé décoratif de `PhotoPlaceholder`. La première sert de vignette.
  */
-const p = (label: string, photo: string | null = null): Produit => ({
-  label,
-  photo,
-});
+const p = (label: string, ...photos: string[]): Produit => ({ label, photos });
 
 /**
  * Données d'exemple. Entreprises et personnes fictives, destinées à illustrer
@@ -51,14 +47,20 @@ export const MEMBERS: Member[] = [
       p(
         "Ravintsara BIO",
         "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/7795817/pexels-photo-7795817.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6915310/pexels-photo-6915310.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Coffret découverte",
         "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/6621470/pexels-photo-6621470.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/10155373/pexels-photo-10155373.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Girofle vapeur",
         "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/6087276/pexels-photo-6087276.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/8804297/pexels-photo-8804297.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -85,15 +87,21 @@ export const MEMBERS: Member[] = [
     produits: [
       p(
         "Panier raphia XL",
+        "https://images.pexels.com/photos/6125620/pexels-photo-6125620.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/36319631/pexels-photo-36319631.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
         "https://images.pexels.com/photos/29193598/pexels-photo-29193598.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
       ),
       p(
         "Sculpture palissandre",
         "https://images.pexels.com/photos/18758710/pexels-photo-18758710.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/36590087/pexels-photo-36590087.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/37795822/pexels-photo-37795822.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Textile lamba",
         "https://images.pexels.com/photos/6634465/pexels-photo-6634465.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/6634460/pexels-photo-6634460.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6634692/pexels-photo-6634692.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -125,14 +133,20 @@ export const MEMBERS: Member[] = [
       p(
         "Circuit Andasibe 5j",
         "https://images.pexels.com/photos/18852638/pexels-photo-18852638.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/31849008/pexels-photo-31849008.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/21935230/pexels-photo-21935230.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Séjour Nosy Be",
         "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/188014/pexels-photo-188014.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/18558249/pexels-photo-18558249.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Trek Isalo",
         "https://images.unsplash.com/photo-1533240332313-0db49b459ad6?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/29499913/pexels-photo-29499913.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/34776974/pexels-photo-34776974.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -161,14 +175,20 @@ export const MEMBERS: Member[] = [
       p(
         "Poivre sauvage Voatsiperifery",
         "https://images.pexels.com/photos/31717561/pexels-photo-31717561.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/8559086/pexels-photo-8559086.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/33948998/pexels-photo-33948998.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Confiture litchi",
         "https://images.pexels.com/photos/9160297/pexels-photo-9160297.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/7586251/pexels-photo-7586251.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6588431/pexels-photo-6588431.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Vanille gousses",
         "https://images.pexels.com/photos/14381802/pexels-photo-14381802.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/4963318/pexels-photo-4963318.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/14381803/pexels-photo-14381803.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -200,14 +220,20 @@ export const MEMBERS: Member[] = [
       p(
         "Annotation IA",
         "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/7947999/pexels-photo-7947999.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/5831661/pexels-photo-5831661.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Centre d’appel FR",
         "https://images.unsplash.com/photo-1560264280-88b68371db39?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/7709231/pexels-photo-7709231.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/8681899/pexels-photo-8681899.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Développement sur mesure",
         "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/9553905/pexels-photo-9553905.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/3861959/pexels-photo-3861959.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -235,14 +261,20 @@ export const MEMBERS: Member[] = [
       p(
         "Béryl brut",
         "https://images.pexels.com/photos/6806371/pexels-photo-6806371.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/37999720/pexels-photo-37999720.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/34514255/pexels-photo-34514255.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Quartz industriel",
         "https://images.pexels.com/photos/4028957/pexels-photo-4028957.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/3725709/pexels-photo-3725709.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/10545696/pexels-photo-10545696.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Grenat calibré",
         "https://images.pexels.com/photos/8581107/pexels-photo-8581107.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/37964714/pexels-photo-37964714.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/34514246/pexels-photo-34514246.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -270,14 +302,20 @@ export const MEMBERS: Member[] = [
       p(
         "Montage export",
         "https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/14020705/pexels-photo-14020705.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/31244440/pexels-photo-31244440.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Ligne de crédit PME",
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/8962458/pexels-photo-8962458.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/5912590/pexels-photo-5912590.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Audit financier",
         "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/6779567/pexels-photo-6779567.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/7821689/pexels-photo-7821689.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -306,14 +344,20 @@ export const MEMBERS: Member[] = [
       p(
         "Formation export",
         "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/8761327/pexels-photo-8761327.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/8761323/pexels-photo-8761323.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Cours de français affaires",
         "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/5427870/pexels-photo-5427870.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6503100/pexels-photo-6503100.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Atelier gestion de projet",
         "https://images.unsplash.com/photo-1531538606174-0f90ff5dce83?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/5990265/pexels-photo-5990265.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6592364/pexels-photo-6592364.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -344,14 +388,20 @@ export const MEMBERS: Member[] = [
       p(
         "Accompagnement export",
         "https://images.unsplash.com/photo-1600880292089-90a7e086ee0c?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/5816300/pexels-photo-5816300.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/36765718/pexels-photo-36765718.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Montage de partenariat",
         "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/8112186/pexels-photo-8112186.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/12903031/pexels-photo-12903031.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Coaching porteur de projet",
         "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=450&q=80&auto=format&fit=crop",
+        "https://images.pexels.com/photos/9034992/pexels-photo-9034992.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/38748858/pexels-photo-38748858.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
     ],
   },
@@ -383,14 +433,20 @@ export const MEMBERS: Member[] = [
     produits: [
       p(
         "Fauteuil raphia",
+        "https://images.pexels.com/photos/5825409/pexels-photo-5825409.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/7737412/pexels-photo-7737412.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
         "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=450&q=80&auto=format&fit=crop",
       ),
       p(
         "Table basse palissandre",
         "https://images.pexels.com/photos/19370207/pexels-photo-19370207.jpeg?auto=compress&cs=tinysrgb&w=600&h=450&fit=crop",
+        "https://images.pexels.com/photos/12277130/pexels-photo-12277130.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/14063637/pexels-photo-14063637.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
       ),
       p(
         "Luminaire fibres",
+        "https://images.pexels.com/photos/3554241/pexels-photo-3554241.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
+        "https://images.pexels.com/photos/6752283/pexels-photo-6752283.jpeg?auto=compress&cs=tinysrgb&w=900&h=675&fit=crop",
         "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600&h=450&q=80&auto=format&fit=crop",
       ),
     ],

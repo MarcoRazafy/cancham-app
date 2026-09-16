@@ -7,6 +7,7 @@ import {
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { CarrouselPhotos } from "@/components/CarrouselPhotos";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
@@ -88,16 +89,22 @@ export default async function FicheMembrePage({
           <div className="grid gap-4 md:grid-cols-3">
             {m.produits.map((p) => (
               <Card key={p.label} className="p-4 text-center">
-                <Agrandir src={p.photo} alt={p.label} legende={p.label}>
+                {p.photos.length ? (
+                  <CarrouselPhotos
+                    photos={p.photos}
+                    alt={p.label}
+                    className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
+                  />
+                ) : (
+                  // Sans photo, pas de carrousel à monter : le dégradé se rend ici.
                   <Visuel
-                    src={p.photo}
+                    src={null}
                     alt={p.label}
                     seed={m.id + p.label}
                     className="aspect-[4/3] mb-2 rounded-[var(--radius-m)] w-full"
-                    sizes="(max-width: 768px) 100vw, 260px"
                     iconSize={18}
                   />
-                </Agrandir>
+                )}
                 <div className="font-semibold text-[13px]">{p.label}</div>
               </Card>
             ))}
