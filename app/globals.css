@@ -634,6 +634,52 @@ h3 {
 }
 
 /* ============================================================
+   ENTRÉES DU MENU LATÉRAL
+
+   Même vocabulaire que la grille tarifaire du site : une ligne à coins
+   arrondis, et un filet vertical qui se déplie sur son bord gauche au
+   passage de la souris. Le filet naît du centre et s'étire vers les deux
+   bords, ce qui accroche l'œil sans déplacer le texte.
+
+   L'entrée courante le garde déployé en permanence : c'est le même signe,
+   et il dit « vous êtes ici » plutôt que « vous pourriez aller ici ».
+   ============================================================ */
+
+.entree-menu {
+  position: relative;
+}
+
+.entree-menu::before {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 0;
+  transform: translateY(-50%);
+
+  width: 3px;
+  height: 0;
+  border-radius: 3px;
+  background: currentColor;
+
+  transition: height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.entree-menu:hover::before,
+.entree-menu:focus-visible::before {
+  height: 62%;
+}
+
+/* Déployé sur toute la hauteur : l'entrée courante est un état, pas un survol. */
+.entree-menu-actif::before {
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entree-menu::before {
+    transition: none;
+  }
+}
+
+/* ============================================================
    MOTS SAILLANTS DANS LES TITRES
 
    La chambre écrit ses titres en posant un ou deux mots dans une couleur

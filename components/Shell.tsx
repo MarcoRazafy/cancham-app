@@ -103,9 +103,9 @@ export function Shell({
                     key={item.href}
                     href={item.href}
                     onClick={() => setNavOpen(false)}
-                    className={`flex items-center gap-2.5 px-2.5 py-[9px] rounded-[var(--radius-s)] text-[13.6px] font-medium no-underline ${
+                    className={`entree-menu flex items-center gap-2.5 pl-3.5 pr-2.5 py-[9px] rounded-[var(--radius-s)] text-[13.6px] font-medium no-underline transition-colors ${
                       active
-                        ? "bg-accent text-white"
+                        ? "entree-menu-actif bg-accent text-white"
                         : "text-[#c7d4c9] hover:bg-white/[0.07] hover:text-white"
                     }`}
                   >

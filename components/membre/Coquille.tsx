@@ -111,7 +111,7 @@ export function Coquille({
                     <span
                       key={item.href}
                       title="Accès disponible après validation de votre adhésion"
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] opacity-35 cursor-not-allowed"
+                      className="flex items-center gap-3 pl-4 pr-3 py-2.5 rounded-lg text-[14px] opacity-35 cursor-not-allowed"
                     >
                       <Cadenas size={18} className="shrink-0" />
                       <span>{item.label}</span>
@@ -124,9 +124,9 @@ export function Coquille({
                     key={item.href}
                     href={item.href}
                     onClick={() => setMenuOuvert(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] no-underline transition-colors ${
+                    className={`entree-menu flex items-center gap-3 pl-4 pr-3 py-2.5 rounded-lg text-[14px] no-underline transition-colors ${
                       actif
-                        ? "bg-accent text-white font-semibold shadow-[0_2px_10px_-2px_rgba(173,7,7,0.6)]"
+                        ? "entree-menu-actif bg-accent text-white font-semibold shadow-[0_2px_10px_-2px_rgba(173,7,7,0.6)]"
                         : "text-white/70 hover:bg-white/[0.08] hover:text-white"
                     }`}
                   >
