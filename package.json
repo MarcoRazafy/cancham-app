@@ -13,7 +13,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "ressources:demo": "tsx --env-file=.env scripts/ressources-demo.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

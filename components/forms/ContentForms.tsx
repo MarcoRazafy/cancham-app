@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import {
+  BookOpen,
   Check,
-  Download,
+  PlayCircle,
   Plus,
   Send,
   ShoppingCart,
@@ -295,6 +297,14 @@ export function NewResourceButton() {
   );
 }
 
+/**
+ * Accès à une ressource depuis sa carte.
+ *
+ * Une ressource incluse s'ouvre dans le lecteur de la plateforme : il n'y a
+ * plus de téléchargement, le contenu se consulte ici. Une ressource payante
+ * garde « Acheter », qui consigne la demande — le paiement en ligne n'est pas
+ * branché.
+ */
 export function DownloadResourceButton({
   resourceId,
   space,
@@ -306,6 +316,18 @@ export function DownloadResourceButton({
   payant: boolean;
   video: boolean;
 }) {
+  if (!payant) {
+    return (
+      <Link
+        href={`/membre/ressources/${resourceId}`}
+        className="w-full inline-flex items-center justify-center gap-[7px] rounded-[var(--radius-s)] font-semibold border border-line bg-transparent text-ink no-underline hover:border-faint hover:bg-surface-2 text-[12.4px] px-[11px] py-1.5"
+      >
+        {video ? <PlayCircle size={13} /> : <BookOpen size={13} />}
+        {video ? "Regarder" : "Lire"}
+      </Link>
+    );
+  }
+
   return (
     <form action={downloadResource} className="w-full">
       <input type="hidden" name="resourceId" value={resourceId} />
@@ -316,15 +338,7 @@ export function DownloadResourceButton({
         pendingLabel="…"
         className="w-full justify-center"
       >
-        {payant ? (
-          <>
-            <ShoppingCart size={13} /> Acheter
-          </>
-        ) : (
-          <>
-            <Download size={13} /> {video ? "Regarder" : "Télécharger"}
-          </>
-        )}
+        <ShoppingCart size={13} /> Acheter
       </SubmitButton>
     </form>
   );

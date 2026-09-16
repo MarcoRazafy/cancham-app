@@ -100,9 +100,15 @@ export function Coquille({
                 const Icone = NAV_ICONS[item.icon] ?? NAV_ICONS.home;
                 const Cadenas = NAV_ICONS.lock;
                 const cible = item.href.split("?")[0];
+                // Un lien porteur d'une requête est un raccourci vers la page
+                // d'une autre entrée — « Besoin d'aide ? » mène aux ressources
+                // gratuites. Il ne se marque jamais actif : sans cela, les deux
+                // entrées s'allumaient ensemble sur toute page de ressources.
+                const raccourci = item.href.includes("?");
                 const actif =
-                  pathname === cible ||
-                  (cible !== "/membre" && pathname.startsWith(`${cible}/`));
+                  !raccourci &&
+                  (pathname === cible ||
+                    (cible !== "/membre" && pathname.startsWith(`${cible}/`)));
                 const verrouille = lockedHrefs.includes(item.href);
                 const badge = badges[item.href];
 
