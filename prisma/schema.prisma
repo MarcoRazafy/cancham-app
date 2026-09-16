@@ -196,9 +196,10 @@ model User {
 
 model Produit {
   id    String  @id @default(cuid())
-  label String
-  /// Chemin de l'image. `null` = dégradé décoratif généré.
-  photo String?
+  label  String
+  /// Galerie du produit, dans l'ordre d'affichage. La première photo sert de
+  /// vignette partout où une seule image tient ; vide = dégradé décoratif.
+  photos String[] @default([])
   /// Ordre d'affichage sur la fiche membre.
   ordre Int     @default(0)
 

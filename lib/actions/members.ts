@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
+import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import type { MemberStatus, MemberType } from "@/lib/types";
 
 /**
@@ -65,9 +66,9 @@ export async function submitAdhesion(formData: FormData) {
   const nom = sansEntreprise ? (type === "physique" ? rep : "") : nomSaisi;
 
   const formuleSaisie = texte(formData, "formule");
-  const formule = (formuleSaisie in FORMULES
-    ? formuleSaisie
-    : "mg_entreprise") as keyof typeof FORMULES;
+  const formule = (
+    formuleSaisie in FORMULES ? formuleSaisie : "mg_entreprise"
+  ) as keyof typeof FORMULES;
 
   if (!nom) {
     redirectWithFlash(
@@ -326,7 +327,7 @@ export async function updateMemberProfile(formData: FormData) {
 
   let couverture: string | null = null;
   let logo: string | null = null;
-  const photos: (string | null)[] = [];
+  const galeries: string[][] = [];
   try {
     couverture = await enregistrerImage(formData.get("cover"), {
       prefixe: `couverture-${id}`,
@@ -338,10 +339,23 @@ export async function updateMemberProfile(formData: FormData) {
       transparence: true,
     });
     for (const p of produits) {
-      photos[p.rang] = await enregistrerImage(formData.get(`photo${p.rang}`), {
-        prefixe: `produit-${id}-${p.rang}`,
-        largeur: 900,
-      });
+      // On garde ce qui n'a pas été coché pour retrait, puis on ajoute les
+      // nouveaux fichiers à la suite : la vignette ne change que si le membre
+      // retire la première photo.
+      const retirees = new Set(formData.getAll(`retirer${p.rang}`).map(String));
+      const conservees = (actuel.produits[p.rang]?.photos ?? []).filter(
+        (url) => !retirees.has(url),
+      );
+      const ajoutees: string[] = [];
+      for (const fichier of formData.getAll(`photos${p.rang}`)) {
+        if (conservees.length + ajoutees.length >= PHOTOS_PAR_PRODUIT) break;
+        const url = await enregistrerImage(fichier, {
+          prefixe: `produit-${id}-${p.rang}`,
+          largeur: 900,
+        });
+        if (url) ajoutees.push(url);
+      }
+      galeries[p.rang] = [...conservees, ...ajoutees];
     }
   } catch (e) {
     if (e instanceof ImageRefusee) {
@@ -349,8 +363,6 @@ export async function updateMemberProfile(formData: FormData) {
     }
     throw e;
   }
-
-  const anciennePhoto = (rang: number) => actuel.produits[rang]?.photo ?? null;
 
   await prisma.$transaction([
     prisma.member.update({
@@ -373,8 +385,8 @@ export async function updateMemberProfile(formData: FormData) {
         memberId: id,
         label: p.label,
         // Le rang d'origine suit le produit : renommer le deuxième produit ne
-        // doit pas lui faire hériter de la photo du premier.
-        photo: photos[p.rang] ?? anciennePhoto(p.rang),
+        // doit pas lui faire hériter de la galerie du premier.
+        photos: galeries[p.rang] ?? [],
         ordre,
       })),
     }),

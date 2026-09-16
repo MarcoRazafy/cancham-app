@@ -278,7 +278,7 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   ];
   // Le carré n'a de sens que pour montrer une photo de produit. Sans photo,
   // il laissait un grand vide autour d'un libellé de deux mots.
-  const avecPhotos = member.produits.some((p) => p.photo);
+  const avecPhotos = member.produits.some((p) => p.photos.length > 0);
   return (
     <Link href={href} className="no-underline">
       <Card
@@ -331,9 +331,9 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
                   : `rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${swatches[i % 3]}`
               }
             >
-              {prod.photo ? (
+              {prod.photos[0] ? (
                 <Image
-                  src={prod.photo}
+                  src={prod.photos[0]}
                   alt={prod.label}
                   width={200}
                   height={200}

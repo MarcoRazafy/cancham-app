@@ -60,7 +60,7 @@ type MembreRow = {
   cover: string | null;
   photo: string | null;
   logo: string | null;
-  produits: { label: string; photo: string | null }[];
+  produits: { label: string; photos: string[] }[];
 };
 
 function versMembre(m: MembreRow): Member {
@@ -86,7 +86,7 @@ function versMembre(m: MembreRow): Member {
     cover: m.cover,
     photo: m.photo,
     logo: m.logo,
-    produits: m.produits.map((p) => ({ label: p.label, photo: p.photo })),
+    produits: m.produits.map((p) => ({ label: p.label, photos: p.photos })),
   };
 }
 

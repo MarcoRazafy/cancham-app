@@ -13,6 +13,14 @@ import type { Member, MemberStatus } from "@/lib/types";
  * aucune désynchronisation possible entre le statut affiché et la réalité.
  */
 
+/**
+ * Photos par produit, au plus.
+ *
+ * Assez pour montrer un produit sous plusieurs angles ; au-delà, la galerie
+ * s'étire et chaque fiche pèse plus lourd à charger depuis Madagascar.
+ */
+export const PHOTOS_PAR_PRODUIT = 5;
+
 /** Au-delà de ce nombre de jours de retard, l'accès est coupé automatiquement. */
 export const RETARD_BLOCAGE_JOURS = 30;
 

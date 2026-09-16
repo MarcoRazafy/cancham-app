@@ -36,6 +36,7 @@ import {
   FORMULES,
   fmtMontant,
   libelleFormule,
+  PHOTOS_PAR_PRODUIT,
   type FormuleId,
 } from "@/lib/membership";
 import type { Contact } from "@/lib/types";
@@ -377,7 +378,8 @@ export function EditProfileButton({
   interets?: string;
   produits: string[];
   /** Visuels actuels, affichés en aperçu à côté du sélecteur de fichier. */
-  photos?: (string | null)[];
+  /** Galerie actuelle de chaque produit, dans l'ordre des produits. */
+  photos?: string[][];
   cover?: string | null;
   logo?: string | null;
 }) {
@@ -463,12 +465,7 @@ export function EditProfileButton({
                       className={INPUT}
                     />
                   </Field>
-                  <ChampImage
-                    name={`photo${i}`}
-                    label="Photo"
-                    apercu={photos[i] ?? null}
-                    ratio="aspect-[4/3]"
-                  />
+                  <ChampGalerie rang={i} actuelles={photos[i] ?? []} />
                 </div>
               ))}
             </div>
@@ -793,5 +790,129 @@ export function EditContactButton({
         </form>
       )}
     </Modal>
+  );
+}
+
+/**
+ * Galerie d'un produit dans le formulaire : garder, retirer, ajouter.
+ *
+ * Les photos en place s'affichent en vignettes. Un clic en marque une pour
+ * retrait — elle pâlit et se barre, mais rien n'est supprimé avant
+ * l'enregistrement : un clic de trop se rattrape d'un second clic. Les
+ * nouvelles images s'ajoutent à la suite, dans la limite du plafond.
+ */
+function ChampGalerie({
+  rang,
+  actuelles,
+}: {
+  rang: number;
+  actuelles: string[];
+}) {
+  const [retirees, setRetirees] = useState<Set<string>>(new Set());
+  const [ajoutees, setAjoutees] = useState(0);
+
+  const restantes = actuelles.length - retirees.size;
+  const place = Math.max(0, PHOTOS_PAR_PRODUIT - restantes);
+
+  const basculer = (url: string) =>
+    setRetirees((avant) => {
+      const apres = new Set(avant);
+      if (apres.has(url)) apres.delete(url);
+      else apres.add(url);
+      return apres;
+    });
+
+  return (
+    <Field
+      label={`Photos (${restantes}/${PHOTOS_PAR_PRODUIT})`}
+      hint={
+        actuelles.length
+          ? "Cliquez sur une photo pour la retirer. La première sert de vignette."
+          : undefined
+      }
+    >
+      <div className="flex flex-col gap-2">
+        {actuelles.length ? (
+          <div className="grid grid-cols-3 gap-1.5">
+            {actuelles.map((url, n) => {
+              const retiree = retirees.has(url);
+              return (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => basculer(url)}
+                  aria-pressed={retiree}
+                  aria-label={
+                    retiree
+                      ? `Garder la photo ${n + 1}`
+                      : `Retirer la photo ${n + 1}`
+                  }
+                  className="relative aspect-square rounded-md overflow-hidden border border-line cursor-pointer p-0 bg-surface-2"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt=""
+                    className={`w-full h-full object-cover transition-opacity ${
+                      retiree ? "opacity-25 grayscale" : ""
+                    }`}
+                  />
+                  {retiree ? (
+                    <>
+                      <span className="absolute inset-0 flex items-center justify-center text-bad">
+                        <X size={22} strokeWidth={3} />
+                      </span>
+                      <input
+                        type="hidden"
+                        name={`retirer${rang}`}
+                        value={url}
+                      />
+                    </>
+                  ) : null}
+                  {n === 0 && !retiree ? (
+                    <span className="absolute bottom-0.5 left-0.5 text-[9px] font-bold uppercase tracking-wide bg-[#0f1d2c]/70 text-white rounded px-1">
+                      Vignette
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="aspect-[4/3] rounded-[var(--radius-s)] border border-dashed border-line bg-surface-2 flex items-center justify-center text-[11.5px] text-faint">
+            Aucune photo
+          </div>
+        )}
+
+        {place > 0 ? (
+          <label
+            className={`${BTN_LINE} text-[12.2px] px-[11px] py-1.5 justify-center`}
+          >
+            <ImagePlus size={14} />
+            {ajoutees
+              ? `${ajoutees} photo${ajoutees > 1 ? "s" : ""} choisie${ajoutees > 1 ? "s" : ""}`
+              : "Ajouter des photos"}
+            <input
+              type="file"
+              name={`photos${rang}`}
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={(e) => setAjoutees(e.target.files?.length ?? 0)}
+            />
+          </label>
+        ) : (
+          <span className="text-[11.5px] text-faint text-center">
+            Galerie complète. Retirez une photo pour en ajouter.
+          </span>
+        )}
+
+        {ajoutees > place ? (
+          <span className="text-[11.5px] text-warn">
+            Seules les {place} premières seront gardées.
+          </span>
+        ) : null}
+      </div>
+    </Field>
   );
 }

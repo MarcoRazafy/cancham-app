@@ -52,8 +52,11 @@ export interface User {
 /** Produit ou service mis en avant sur la fiche membre. */
 export interface Produit {
   label: string;
-  /** Chemin vers une image. `null` = dégradé décoratif généré. */
-  photo: string | null;
+  /**
+   * Galerie du produit, dans l'ordre d'affichage. La première sert de vignette
+   * partout où une seule image tient. Vide = dégradé décoratif généré.
+   */
+  photos: string[];
 }
 
 export interface Member {
