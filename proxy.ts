@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { PAGES_TOUJOURS_OUVERTES } from "@/lib/membership";
 import { prisma } from "@/lib/db";
 import { isAccessLocked } from "@/lib/membership";
 
@@ -20,14 +21,15 @@ import { isAccessLocked } from "@/lib/membership";
  * Pages de l'espace membre restant accessibles quand l'adhésion n'est pas
  * effective : c'est là que le membre consulte sa situation et régularise.
  */
-const TOUJOURS_OUVERT = ["/membre/profil", "/membre/cotisations"];
+const TOUJOURS_OUVERT = PAGES_TOUJOURS_OUVERTES;
 const REPLI = "/membre/profil";
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/membre")) return NextResponse.next();
-  if (TOUJOURS_OUVERT.some((p) => pathname.startsWith(p))) return NextResponse.next();
+  if (TOUJOURS_OUVERT.some((p) => pathname.startsWith(p)))
+    return NextResponse.next();
 
   const user = await prisma.user.findFirst({
     where: { role: "membre" },

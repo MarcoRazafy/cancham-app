@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { MOTIFS_CONTACT } from "@/lib/coordonnees";
 import { prisma } from "@/lib/db";
 import { redirectWithFlash } from "@/lib/flash";
 import { getCurrentUser } from "@/lib/session";
@@ -106,4 +107,66 @@ function initiales(nom: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+/**
+ * Formulaire de contact de l'équipe.
+ *
+ * La demande n'atterrit pas dans une boîte à part : elle est postée dans le
+ * fil « Équipe CanCham » de la messagerie. L'équipe la voit là où elle répond
+ * déjà aux membres, et le membre retrouve la réponse dans la même
+ * conversation — sans nouvel outil à surveiller de part et d'autre.
+ */
+export async function envoyerDemandeContact(formData: FormData) {
+  const motif = texte(formData, "motif");
+  const sujet = texte(formData, "sujet");
+  const contenu = texte(formData, "message");
+  const rappel = texte(formData, "rappel");
+
+  if (!sujet || !contenu) {
+    redirectWithFlash(
+      "/membre/contact",
+      "Merci d’indiquer un sujet et un message.",
+    );
+  }
+
+  const user = await getCurrentUser("membre");
+
+  const fil =
+    (await prisma.messageThread.findFirst({
+      where: { nom: "Équipe CanCham", memberId: null },
+      orderBy: { createdAt: "asc" },
+    })) ??
+    (await prisma.messageThread.create({
+      data: {
+        type: "individuel",
+        nom: "Équipe CanCham",
+        sousTitre: "Support membres",
+        init: "CC",
+        avatar: "/photos/cancham-13.jpg",
+      },
+    }));
+
+  const motifRetenu = (MOTIFS_CONTACT as readonly string[]).includes(motif)
+    ? motif
+    : "Autre demande";
+
+  await prisma.message.create({
+    data: {
+      threadId: fil.id,
+      auteur: user.nom,
+      userId: user.id,
+      sentAt: new Date(),
+      texte: [
+        `${motifRetenu} — ${sujet}`,
+        contenu,
+        rappel ? `Rappel souhaité au ${rappel}.` : null,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    },
+  });
+
+  revalidatePath("/", "layout");
+  redirect(`/membre/contact?envoye=${fil.id}`);
 }

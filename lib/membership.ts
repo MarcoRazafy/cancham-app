@@ -113,6 +113,20 @@ export function fmtCotisation(id: FormuleId): string {
   return fmtMontant(f.montant, f.devise);
 }
 
+/**
+ * Pages accessibles même quand l'accès est restreint.
+ *
+ * Un membre bloqué doit pouvoir régulariser sa situation et joindre l'équipe :
+ * sa fiche, ses cotisations, et la page de contact — c'est précisément lui qui
+ * en a le plus besoin. Une seule liste, lue par `proxy.ts` pour le verrou et
+ * par le menu pour les cadenas : deux copies finiraient par diverger.
+ */
+export const PAGES_TOUJOURS_OUVERTES = [
+  "/membre/profil",
+  "/membre/cotisations",
+  "/membre/contact",
+];
+
 /** Statuts pour lesquels l'adhésion n'est pas encore effective. */
 export const ADHESION_PENDING: MemberStatus[] = ["candidature", "en_attente"];
 

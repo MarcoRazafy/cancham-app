@@ -49,7 +49,7 @@ export const NAV_MEMBRE: NavGroup[] = [
         icon: "help",
       },
       {
-        href: "/membre/messagerie?t=t2",
+        href: "/membre/contact",
         label: "Contacter l’équipe",
         icon: "support",
       },
@@ -97,6 +97,7 @@ export const TITLES: Record<string, [string, string]> = {
   "/membre/actualites": ["Espace membre", "Actualités"],
   "/membre/messagerie": ["Espace membre", "Messagerie"],
   "/membre/ressources": ["Espace membre", "Ressources"],
+  "/membre/contact": ["Espace membre", "Contacter l’équipe"],
   "/admin": ["Back-office", "Tableau de bord"],
   "/admin/recherche": ["Back-office", "Recherche"],
   "/admin/membres": ["Back-office", "Gestion des membres"],

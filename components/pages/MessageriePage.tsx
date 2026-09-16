@@ -130,7 +130,7 @@ export async function MessageriePage({
                   ) : null}
 
                   <div
-                    className={`max-w-[72%] px-3 py-2 text-[13.3px] leading-relaxed ${
+                    className={`max-w-[72%] px-3 py-2 text-[13.3px] leading-relaxed whitespace-pre-line ${
                       m.moi
                         ? "self-end bg-accent text-white rounded-[14px] rounded-br-[4px]"
                         : "self-start bg-surface-2 rounded-[14px] rounded-bl-[4px]"

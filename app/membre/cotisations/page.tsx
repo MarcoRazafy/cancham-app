@@ -121,7 +121,7 @@ export default async function CotisationsPage() {
             L’équipe vous répond directement depuis la messagerie.
           </p>
           <Link
-            href="/membre/messagerie?t=t2"
+            href="/membre/contact"
             className="btn-contour btn-contour-sm w-full text-accent hover:bg-accent-soft"
           >
             Contacter l’équipe
