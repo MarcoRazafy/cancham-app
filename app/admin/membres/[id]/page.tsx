@@ -15,7 +15,6 @@ import {
   RejectButton,
   ReminderButton,
 } from "@/components/forms/MemberForms";
-import { COTISATION_ANNUELLE } from "@/lib/membership";
 import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 import {
@@ -149,7 +148,7 @@ export default async function AdminMembreDetail({
                 memberId={m.id}
                 premier={!m.paiementNote}
                 nom={m.nom}
-                montantParDefaut={COTISATION_ANNUELLE}
+                formule={m.formule}
               />
             )}
             <ReminderButton memberId={m.id} />

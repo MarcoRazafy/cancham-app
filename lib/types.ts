@@ -1,3 +1,4 @@
+import type { Devise, FormuleId } from "@/lib/membership";
 /**
  * Modèle de domaine CanCham Connect.
  *
@@ -62,6 +63,8 @@ export interface Member {
   secteur: string;
   ville: string;
   statut: MemberStatus;
+  /** Formule choisie à l'inscription. Elle fixe la cotisation. */
+  formule: FormuleId;
   /** Date d'adhésion, ISO court (YYYY-MM-DD). */
   adhesion: string;
   /** Date de bascule en retard. Sert à calculer les jours de retard à la volée. */
@@ -135,10 +138,7 @@ export interface Attendee {
 }
 
 export type NewsCategory =
-  | "Programmation"
-  | "Événement passé"
-  | "Vie de la chambre"
-  | "Formation";
+  "Programmation" | "Événement passé" | "Vie de la chambre" | "Formation";
 
 export interface NewsMedia {
   type: "image" | "video";
@@ -216,8 +216,9 @@ export interface Invoice {
   numero: string;
   date: string;
   objet: string;
-  /** En Ariary. */
+  /** Montant en unités entières de `devise`. */
   montant: number;
+  devise: Devise;
   statut: InvoiceStatus;
   membreId: string;
   membre: string;

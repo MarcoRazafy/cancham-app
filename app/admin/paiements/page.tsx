@@ -8,7 +8,7 @@ import {
   ViewHead,
 } from "@/components/ui";
 import { getEncaisse, getInvoices, getMemberStats } from "@/lib/queries";
-import { fmtMoney } from "@/lib/format";
+import { fmtMontant } from "@/lib/membership";
 
 export default async function AdminPaiements() {
   const [factures, encaisse, stats] = await Promise.all([
@@ -26,7 +26,18 @@ export default async function AdminPaiements() {
       <div className="grid gap-4 mb-5 md:grid-cols-3">
         <Stat
           k="Encaissé"
-          v={<span className="text-[21px]">{fmtMoney(encaisse)}</span>}
+          v={
+            <span className="text-[21px] flex flex-col leading-tight">
+              <span>{fmtMontant(encaisse.MGA, "MGA")}</span>
+              {/* Le total en dollars n'apparaît que s'il existe : une ligne
+                  « 0 $ » sur une chambre sans membre canadien serait du bruit. */}
+              {encaisse.CAD ? (
+                <span className="text-[15px] text-muted">
+                  + {fmtMontant(encaisse.CAD, "CAD")}
+                </span>
+              ) : null}
+            </span>
+          }
         />
         <Stat k="Factures émises" v={factures.length} />
         <Stat k="Membres en retard" v={stats.enRetard} vClassName="text-bad" />
@@ -51,7 +62,7 @@ export default async function AdminPaiements() {
               <Td>{f.membre}</Td>
               <Td>{f.objet}</Td>
               <Td className="font-[family-name:var(--font-mono)]">
-                {fmtMoney(f.montant)}
+                {fmtMontant(f.montant, f.devise)}
               </Td>
               <Td>
                 <StatusPill status={f.statut} />

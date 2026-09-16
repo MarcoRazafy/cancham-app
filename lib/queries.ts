@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { FormuleId } from "@/lib/membership";
+
 import { prisma } from "@/lib/db";
 import {
   EVENT_FORMAT_LABEL,
@@ -43,6 +45,7 @@ type MembreRow = {
   secteur: string;
   ville: string;
   statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+  formule: FormuleId;
   adhesion: Date;
   retardDepuis: Date | null;
   activite: string;
@@ -68,6 +71,7 @@ function versMembre(m: MembreRow): Member {
     secteur: m.secteur,
     ville: m.ville,
     statut: m.statut,
+    formule: m.formule,
     adhesion: toISODate(m.adhesion),
     retardDepuis: m.retardDepuis ? toISODate(m.retardDepuis) : null,
     activite: m.activite,
@@ -239,7 +243,9 @@ function newsInclude(userId?: string) {
 }
 
 type NewsRow = Awaited<
-  ReturnType<typeof prisma.news.findMany<{ include: ReturnType<typeof newsInclude> }>>
+  ReturnType<
+    typeof prisma.news.findMany<{ include: ReturnType<typeof newsInclude> }>
+  >
 >[number];
 
 function versNews(n: NewsRow): NewsItem {
@@ -380,6 +386,7 @@ export async function getInvoices(memberId?: string): Promise<Invoice[]> {
     date: toISODate(f.date),
     objet: f.objet,
     montant: f.montant,
+    devise: f.devise,
     statut: f.statut,
     membreId: f.memberId,
     membre: f.member.nom,
@@ -387,12 +394,22 @@ export async function getInvoices(memberId?: string): Promise<Invoice[]> {
 }
 
 /** Total encaissé, calculé par la base plutôt qu'en mémoire. */
-export async function getEncaisse(): Promise<number> {
-  const { _sum } = await prisma.invoice.aggregate({
+/**
+ * Montants encaissés, un total par devise.
+ *
+ * Une somme unique additionnerait des Ariary et des dollars canadiens : le
+ * chiffre n'aurait ni unité ni sens, et une cotisation à 1 000 $ y pèserait
+ * autant qu'une à 1 000 Ar.
+ */
+export async function getEncaisse(): Promise<Record<"MGA" | "CAD", number>> {
+  const rows = await prisma.invoice.groupBy({
+    by: ["devise"],
     where: { statut: "payee" },
     _sum: { montant: true },
   });
-  return _sum.montant ?? 0;
+  const total = (d: "MGA" | "CAD") =>
+    rows.find((r) => r.devise === d)?._sum.montant ?? 0;
+  return { MGA: total("MGA"), CAD: total("CAD") };
 }
 
 /* ============================ Messagerie ============================ */

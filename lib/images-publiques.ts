@@ -19,32 +19,33 @@ export interface VisuelPublic {
   alt: string;
 }
 
-export const VISUELS: Record<"hero" | "toronto" | "madagascar", VisuelPublic> = {
-  /**
-   * Réception de fin de journée, lumière chaude, verres à pied.
-   *
-   * C'est le registre « 5 à 7 » de la chambre. Un premier candidat montrait une
-   * pause-café en plein jour : correct sur le fond, mais il jurait avec les
-   * autres visuels, tous en lumière basse, et lisait « séminaire » plutôt que
-   * « réseau d'affaires international ».
-   */
-  hero: {
-    url: "/photos/cancham-16.jpg",
-    alt: "Salle comble lors d’une rencontre CanCham à Antananarivo",
-  },
+export const VISUELS: Record<"hero" | "toronto" | "madagascar", VisuelPublic> =
+  {
+    /**
+     * Réception de fin de journée, lumière chaude, verres à pied.
+     *
+     * C'est le registre « 5 à 7 » de la chambre. Un premier candidat montrait une
+     * pause-café en plein jour : correct sur le fond, mais il jurait avec les
+     * autres visuels, tous en lumière basse, et lisait « séminaire » plutôt que
+     * « réseau d'affaires international ».
+     */
+    hero: {
+      url: "/photos/cancham-16.jpg",
+      alt: "Salle comble lors d’une rencontre CanCham à Antananarivo",
+    },
 
-  /** Skyline de Toronto à l'heure bleue — moitié canadienne de la bannière. */
-  toronto: {
-    url: "https://images.unsplash.com/photo-1543962226-818f4301073f?w=1600&q=80&auto=format&fit=crop",
-    alt: "",
-  },
+    /** Skyline de Toronto à l'heure bleue — moitié canadienne de la bannière. */
+    toronto: {
+      url: "https://images.unsplash.com/photo-1543962226-818f4301073f?w=1600&q=80&auto=format&fit=crop",
+      alt: "",
+    },
 
-  /** Allée des baobabs à contre-jour — moitié malgache de la bannière. */
-  madagascar: {
-    url: "https://images.unsplash.com/photo-1597426061335-e50c8697630b?w=1600&q=80&auto=format&fit=crop",
-    alt: "",
-  },
-};
+    /** Allée des baobabs à contre-jour — moitié malgache de la bannière. */
+    madagascar: {
+      url: "https://images.unsplash.com/photo-1597426061335-e50c8697630b?w=1600&q=80&auto=format&fit=crop",
+      alt: "",
+    },
+  };
 
 /**
  * Visuels des cartes d'événement.
@@ -68,7 +69,10 @@ export const VISUELS_EVENEMENTS: VisuelPublic[] = [
 ];
 
 /** Visuel d'un événement, choisi de façon stable à partir de son rang. */
-export function visuelEvenement(_id: string, index: number): VisuelPublic | null {
+export function visuelEvenement(
+  _id: string,
+  index: number,
+): VisuelPublic | null {
   if (!VISUELS_EVENEMENTS.length) return null;
   return VISUELS_EVENEMENTS[index % VISUELS_EVENEMENTS.length];
 }

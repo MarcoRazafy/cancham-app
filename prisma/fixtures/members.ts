@@ -30,6 +30,10 @@ export const MEMBERS: Member[] = [
     secteur: "Huiles essentielles & produits naturels",
     ville: "Toliara",
     statut: "a_jour",
+    formule: "mg_entreprise",
+    pays: "Madagascar",
+    motivation:
+      "Trouver un distributeur bio au Québec et nous appuyer sur le réseau de la chambre pour sécuriser nos premières exportations vers le Canada.",
     adhesion: "2021-03-14",
     retardDepuis: null,
     activite: "Distillation et export d’huiles essentielles biologiques.",
@@ -65,6 +69,10 @@ export const MEMBERS: Member[] = [
     secteur: "Artisanat & savoir-faire malgache",
     ville: "Antananarivo",
     statut: "a_jour",
+    formule: "mg_consultant",
+    pays: "Madagascar",
+    motivation:
+      "Faire connaître le savoir-faire de nos artisans auprès d’acheteurs canadiens et participer aux salons où la chambre représente Madagascar.",
     adhesion: "2019-09-02",
     retardDepuis: null,
     activite: "Coopérative de tisserands et sculpteurs sur bois précieux.",
@@ -96,6 +104,10 @@ export const MEMBERS: Member[] = [
     secteur: "Tourisme & voyagisme",
     ville: "Antananarivo",
     statut: "a_jour",
+    formule: "mg_entreprise",
+    pays: "Madagascar",
+    motivation:
+      "Développer une clientèle canadienne francophone et nouer des partenariats avec des agences de voyages au Québec.",
     adhesion: "2022-06-20",
     retardDepuis: null,
     activite: "Agence réceptive spécialisée circuits nature et écotourisme.",
@@ -131,6 +143,10 @@ export const MEMBERS: Member[] = [
     secteur: "Agroalimentaire & export",
     ville: "Antsirabe",
     statut: "en_attente",
+    formule: "mg_entreprise",
+    pays: "Madagascar",
+    motivation:
+      "Obtenir un accompagnement sur les normes d’importation canadiennes pour nos épices et nos confitures.",
     adhesion: "2020-01-11",
     retardDepuis: null,
     activite:
@@ -163,6 +179,10 @@ export const MEMBERS: Member[] = [
     secteur: "Technologie & BPO",
     ville: "Antananarivo",
     statut: "a_jour",
+    formule: "mg_entreprise",
+    pays: "Madagascar",
+    motivation:
+      "Rencontrer des entreprises canadiennes à la recherche d’un prestataire francophone fiable pour externaliser leurs services numériques.",
     adhesion: "2023-02-08",
     retardDepuis: null,
     activite: "Centre de services numériques francophone.",
@@ -198,6 +218,10 @@ export const MEMBERS: Member[] = [
     secteur: "Ressources & mines",
     ville: "Antananarivo",
     statut: "a_jour",
+    formule: "sur_mesure",
+    pays: "Madagascar",
+    motivation:
+      "Soutenir la coopération économique entre les deux pays en tant que partenaire de la chambre, et rencontrer des acheteurs responsables.",
     adhesion: "2018-11-30",
     retardDepuis: null,
     activite: "Extraction et négoce de pierres fines et minéraux industriels.",
@@ -229,6 +253,10 @@ export const MEMBERS: Member[] = [
     secteur: "Services financiers",
     ville: "Antananarivo",
     statut: "a_jour",
+    formule: "mg_entreprise",
+    pays: "Madagascar",
+    motivation:
+      "Accompagner les PME membres dans leur financement à l’export et identifier des partenaires financiers canadiens.",
     adhesion: "2021-07-19",
     retardDepuis: null,
     activite: "Conseil en structuration financière et accompagnement export.",
@@ -260,6 +288,10 @@ export const MEMBERS: Member[] = [
     secteur: "Éducation & formation professionnelle",
     ville: "Antananarivo",
     statut: "en_retard",
+    formule: "mg_entreprise",
+    pays: "Madagascar",
+    motivation:
+      "Proposer nos formations aux entreprises du réseau et bâtir des partenariats avec des établissements canadiens.",
     adhesion: "2020-05-05",
     retardDepuis: "2026-07-01",
     activite:
@@ -292,6 +324,10 @@ export const MEMBERS: Member[] = [
     secteur: "Conseil en développement international",
     ville: "Antananarivo",
     statut: "a_jour",
+    formule: "mg_consultant",
+    pays: "Madagascar",
+    motivation:
+      "Élargir mon réseau de clients parmi les PME malgaches qui visent le marché canadien, et collaborer avec des consultants du Québec.",
     adhesion: "2024-03-01",
     retardDepuis: null,
     activite: "Consultante indépendante en accompagnement à l’export.",
@@ -326,6 +362,7 @@ export const MEMBERS: Member[] = [
     secteur: "Design & aménagement intérieur",
     ville: "Antananarivo",
     statut: "candidature",
+    formule: "mg_entreprise",
     adhesion: "2026-09-05",
     retardDepuis: null,
     activite: "Studio de design mobilier en matériaux locaux.",

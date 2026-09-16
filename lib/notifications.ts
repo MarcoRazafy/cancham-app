@@ -97,7 +97,10 @@ async function notificationsAdmin(): Promise<Notification[]> {
     liste.push({
       id: "prochain",
       titre: `Prochain événement : ${prochain.titre}`,
-      temps: fmtDate(toISODate(prochain.date), { day: "numeric", month: "short" }),
+      temps: fmtDate(toISODate(prochain.date), {
+        day: "numeric",
+        month: "short",
+      }),
       href: "/admin/evenements",
       ton: "info",
     });
@@ -105,7 +108,9 @@ async function notificationsAdmin(): Promise<Notification[]> {
   return liste;
 }
 
-async function notificationsMembre(memberId: string | null): Promise<Notification[]> {
+async function notificationsMembre(
+  memberId: string | null,
+): Promise<Notification[]> {
   if (!memberId) return [];
 
   const [membre, nonLus, inscription, offre, actualite] = await Promise.all([
@@ -192,7 +197,10 @@ async function notificationsMembre(memberId: string | null): Promise<Notificatio
     liste.push({
       id: "actualite",
       titre: `Actualité : ${actualite.titre}`,
-      temps: fmtDate(toISODate(actualite.date), { day: "numeric", month: "short" }),
+      temps: fmtDate(toISODate(actualite.date), {
+        day: "numeric",
+        month: "short",
+      }),
       href: `/membre/actualites/${actualite.id}`,
       ton: "info",
     });

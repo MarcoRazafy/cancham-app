@@ -98,6 +98,22 @@ enum ThreadType {
 
 // ============================ Membres & utilisateurs ============================
 
+/// Formule d'adhésion, telle que la propose la fiche d'inscription de la chambre.
+/// Le tarif de chacune vit dans `lib/membership.ts` : la base ne garde que le choix.
+enum Formule {
+  mg_consultant @map("madagascar_consultant")
+  mg_entreprise @map("madagascar_entreprise")
+  ca_diaspora   @map("canada_diaspora")
+  ca_entreprise @map("canada_entreprise")
+  sur_mesure    @map("sur_mesure")
+}
+
+/// Devise d'une facture. Les formules canadiennes se règlent en dollars.
+enum Devise {
+  MGA
+  CAD
+}
+
 model Member {
   id           String       @id @default(cuid())
   type         MemberType   @default(morale)
@@ -105,6 +121,8 @@ model Member {
   secteur      String
   ville        String
   statut       MemberStatus @default(candidature)
+  /// Formule choisie à l'inscription. Elle fixe le montant de la cotisation.
+  formule      Formule      @default(mg_entreprise)
   /// Date d'adhésion.
   adhesion     DateTime     @db.Date
   /// Date de bascule en retard. Le nombre de jours s'en déduit.
@@ -403,8 +421,9 @@ model Invoice {
   numero  String        @unique
   date    DateTime      @db.Date
   objet   String
-  /// En Ariary.
+  /// Montant dans la devise de la facture, en unités entières.
   montant Int
+  devise  Devise        @default(MGA)
   statut  InvoiceStatus @default(envoyee)
 
   memberId String

@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
-import { fmtMoney } from "@/lib/format";
-import { COTISATION_ANNUELLE } from "@/lib/membership";
+import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import type { MemberStatus, MemberType } from "@/lib/types";
 
@@ -48,10 +47,27 @@ function revalideTout() {
 
 /** Dépôt d'une demande depuis l'espace public. */
 export async function submitAdhesion(formData: FormData) {
-  const type = (texte(formData, "type") || "morale") as MemberType;
-  const rep = texte(formData, "rep") || "À préciser";
+  // Nom et prénom sont saisis à part, comme sur la fiche de la chambre. Les
+  // anciens formulaires envoient encore un « rep » d'un seul tenant.
+  const prenomRep = texte(formData, "prenomRep");
+  const nomRep = texte(formData, "nomRep");
+  const rep =
+    [prenomRep, nomRep].filter(Boolean).join(" ") ||
+    texte(formData, "rep") ||
+    "À préciser";
+
+  // « Mettre N/A si pas d'entreprise » : la fiche de la chambre distingue ainsi
+  // l'indépendant de l'entreprise. Une case vide dit la même chose.
   const nomSaisi = texte(formData, "nom");
-  const nom = nomSaisi || (type === "physique" ? rep : "");
+  const sansEntreprise = !nomSaisi || /^n\s*\/?\s*a$/i.test(nomSaisi);
+  const type = (texte(formData, "type") ||
+    (sansEntreprise ? "physique" : "morale")) as MemberType;
+  const nom = sansEntreprise ? (type === "physique" ? rep : "") : nomSaisi;
+
+  const formuleSaisie = texte(formData, "formule");
+  const formule = (formuleSaisie in FORMULES
+    ? formuleSaisie
+    : "mg_entreprise") as keyof typeof FORMULES;
 
   if (!nom) {
     redirectWithFlash(
@@ -69,6 +85,7 @@ export async function submitAdhesion(formData: FormData) {
       secteur: texte(formData, "secteur") || "Secteur à préciser",
       ville: texte(formData, "ville") || "Antananarivo",
       statut: "candidature",
+      formule,
       adhesion: new Date(),
       activite: texte(formData, "desc").slice(0, 120) || "Activité à préciser.",
       desc: texte(formData, "desc") || "Description à compléter.",
@@ -98,7 +115,13 @@ export async function submitAdhesion(formData: FormData) {
     });
   }
 
-  await journal("candidature_deposee", "Member", membre.id, rep, `Demande de ${nom}.`);
+  await journal(
+    "candidature_deposee",
+    "Member",
+    membre.id,
+    rep,
+    `Demande de ${nom}.`,
+  );
   revalideTout();
   redirect(`/public/adhesion/confirmation?nom=${encodeURIComponent(nom)}`);
 }
@@ -120,7 +143,10 @@ export async function approveCandidature(formData: FormData) {
 
 export async function rejectCandidature(formData: FormData) {
   const id = texte(formData, "memberId");
-  const m = await prisma.member.findUnique({ where: { id }, select: { nom: true } });
+  const m = await prisma.member.findUnique({
+    where: { id },
+    select: { nom: true },
+  });
   await journal(
     "candidature_refusee",
     "Member",
@@ -130,7 +156,10 @@ export async function rejectCandidature(formData: FormData) {
   );
   await prisma.member.delete({ where: { id } });
   revalideTout();
-  redirectWithFlash("/admin/membres", `Demande de ${m?.nom ?? "ce candidat"} refusée`);
+  redirectWithFlash(
+    "/admin/membres",
+    `Demande de ${m?.nom ?? "ce candidat"} refusée`,
+  );
 }
 
 /* ============================ Cotisations ============================ */
@@ -139,16 +168,21 @@ export async function rejectCandidature(formData: FormData) {
 export async function registerPayment(formData: FormData) {
   const id = texte(formData, "memberId");
   const mode = texte(formData, "mode") || "Espèces";
-  const montant = Number(formData.get("montant")) || COTISATION_ANNUELLE;
   const dateSaisie = texte(formData, "date");
   const date = dateSaisie ? new Date(`${dateSaisie}T00:00:00`) : new Date();
   const note = texte(formData, "note");
 
   const avant = await prisma.member.findUnique({
     where: { id },
-    select: { nom: true, paiementNote: true },
+    select: { nom: true, paiementNote: true, formule: true },
   });
   if (!avant) redirectWithFlash("/admin/membres", "Membre introuvable.");
+
+  // Montant saisi, sinon celui de la formule. La devise suit toujours la
+  // formule : un montant canadien enregistré en Ariary vaudrait mille fois moins.
+  const tarif = FORMULES[avant.formule];
+  const montant = Number(formData.get("montant")) || tarif.montant;
+  const devise: Devise = tarif.devise;
 
   const premier = !avant.paiementNote;
   const numero = await numeroFacture(date);
@@ -160,15 +194,18 @@ export async function registerPayment(formData: FormData) {
         statut: "a_jour",
         retardDepuis: null,
         ...(premier ? { adhesion: date } : {}),
-        paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMoney(montant)} · le ${date.toLocaleDateString("fr-FR")}${note ? ` · ${note}` : ""}`,
+        paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMontant(montant, devise)} · le ${date.toLocaleDateString("fr-FR")}${note ? ` · ${note}` : ""}`,
       },
     }),
     prisma.invoice.create({
       data: {
         numero,
         date,
-        objet: premier ? "Cotisation annuelle — adhésion" : "Cotisation annuelle",
+        objet: premier
+          ? "Cotisation annuelle — adhésion"
+          : "Cotisation annuelle",
         montant,
+        devise,
         statut: "payee",
         memberId: id,
       },
@@ -179,7 +216,7 @@ export async function registerPayment(formData: FormData) {
         entite: "Invoice",
         entiteId: numero,
         acteur: "Équipe CanCham",
-        detail: `${fmtMoney(montant)} par ${mode} pour ${avant.nom}.`,
+        detail: `${fmtMontant(montant, devise)} par ${mode} pour ${avant.nom}.`,
       },
     }),
   ]);
@@ -254,9 +291,18 @@ export async function createMember(formData: FormData) {
     });
   }
 
-  await journal("membre_cree", "Member", m.id, "Équipe CanCham", `Ajout manuel de ${nom}.`);
+  await journal(
+    "membre_cree",
+    "Member",
+    m.id,
+    "Équipe CanCham",
+    `Ajout manuel de ${nom}.`,
+  );
   revalideTout();
-  redirectWithFlash(`/admin/membres/${m.id}`, `${nom} a été ajouté à l’annuaire`);
+  redirectWithFlash(
+    `/admin/membres/${m.id}`,
+    `${nom} a été ajouté à l’annuaire`,
+  );
 }
 
 /** Mise à jour de la fiche par le membre lui-même. */
@@ -270,7 +316,11 @@ export async function updateMemberProfile(formData: FormData) {
   // signifie « garde l'image actuelle », jamais « efface-la ».
   const actuel = await prisma.member.findUnique({
     where: { id },
-    select: { cover: true, logo: true, produits: { orderBy: { ordre: "asc" } } },
+    select: {
+      cover: true,
+      logo: true,
+      produits: { orderBy: { ordre: "asc" } },
+    },
   });
   if (!actuel) redirectWithFlash("/membre/profil", "Fiche introuvable.");
 
@@ -336,7 +386,10 @@ export async function updateMemberProfile(formData: FormData) {
 
 export async function deleteMember(formData: FormData) {
   const id = texte(formData, "memberId");
-  const m = await prisma.member.findUnique({ where: { id }, select: { nom: true } });
+  const m = await prisma.member.findUnique({
+    where: { id },
+    select: { nom: true },
+  });
   await journal(
     "membre_supprime",
     "Member",
@@ -346,7 +399,10 @@ export async function deleteMember(formData: FormData) {
   );
   await prisma.member.delete({ where: { id } });
   revalideTout();
-  redirectWithFlash("/admin/membres", `${m?.nom ?? "Le membre"} a été retiré de l’annuaire`);
+  redirectWithFlash(
+    "/admin/membres",
+    `${m?.nom ?? "Le membre"} a été retiré de l’annuaire`,
+  );
 }
 
 /* ============================ Contacts ============================ */
@@ -370,7 +426,10 @@ export async function addContact(formData: FormData) {
 
   const occupe = await prisma.user.findUnique({ where: { email } });
   if (occupe) {
-    redirectWithFlash(retour, `Le courriel ${email} est déjà rattaché à un contact.`);
+    redirectWithFlash(
+      retour,
+      `Le courriel ${email} est déjà rattaché à un contact.`,
+    );
   }
 
   const principal = formData.get("principal") === "on";
@@ -408,7 +467,13 @@ export async function addContact(formData: FormData) {
     });
   });
 
-  await journal("contact_ajoute", "Member", memberId, nom, `Ajout du contact ${nom} (${email}).`);
+  await journal(
+    "contact_ajoute",
+    "Member",
+    memberId,
+    nom,
+    `Ajout du contact ${nom} (${email}).`,
+  );
   revalideTout();
   redirectWithFlash(retour, `${nom} a été ajouté aux contacts.`);
 }
@@ -421,9 +486,14 @@ export async function removeContact(formData: FormData) {
   const contact = await prisma.user.findUnique({ where: { id } });
   if (!contact?.memberId) redirectWithFlash(retour, "Contact introuvable.");
 
-  const reste = await prisma.user.count({ where: { memberId: contact.memberId } });
+  const reste = await prisma.user.count({
+    where: { memberId: contact.memberId },
+  });
   if (reste <= 1) {
-    redirectWithFlash(retour, "Une entreprise doit garder au moins un contact.");
+    redirectWithFlash(
+      retour,
+      "Une entreprise doit garder au moins un contact.",
+    );
   }
 
   await prisma.user.delete({ where: { id } });
@@ -475,7 +545,10 @@ export async function updateContact(formData: FormData) {
     where: { email, id: { not: id } },
   });
   if (occupe) {
-    redirectWithFlash(retour, `Le courriel ${email} est déjà rattaché à un contact.`);
+    redirectWithFlash(
+      retour,
+      `Le courriel ${email} est déjà rattaché à un contact.`,
+    );
   }
 
   let photo: string | null = null;

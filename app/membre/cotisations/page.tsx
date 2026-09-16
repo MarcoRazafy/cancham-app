@@ -10,11 +10,14 @@ import {
   Th,
   ViewHead,
 } from "@/components/ui";
-import { fmtDate, fmtDateShort, fmtMoney } from "@/lib/format";
+import { fmtDate, fmtDateShort } from "@/lib/format";
 import {
   ADHESION_PENDING,
-  COTISATION_ANNUELLE,
+  FORMULES,
+  fmtCotisation,
+  fmtMontant,
   isOverdueWarning,
+  libelleFormule,
   joursDeRetard,
   retardBloque,
   RETARD_BLOCAGE_JOURS,
@@ -41,8 +44,11 @@ export default async function CotisationsPage() {
   const enRetard = isOverdueWarning(m);
   const jours = joursDeRetard(m);
 
+  // Le total se compte dans la devise de la formule : additionner des Ariary
+  // et des dollars donnerait un nombre sans unité et sans aucun sens.
+  const { devise } = FORMULES[m.formule];
   const totalPaye = factures
-    .filter((f) => f.statut === "payee")
+    .filter((f) => f.statut === "payee" && f.devise === devise)
     .reduce((somme, f) => somme + f.montant, 0);
 
   return (
@@ -81,7 +87,7 @@ export default async function CotisationsPage() {
               </h2>
               <p className="text-[13.5px] text-muted m-0 mt-1">
                 {m.paiementNote ??
-                  `Cotisation annuelle : ${fmtMoney(COTISATION_ANNUELLE)}`}
+                  `${libelleFormule(m.formule)} · ${fmtCotisation(m.formule)} par an`}
               </p>
             </div>
             <StatusPill status={m.statut} />
@@ -89,7 +95,11 @@ export default async function CotisationsPage() {
 
           <div className="grid gap-4 mt-6 pt-5 border-t border-line sm:grid-cols-3">
             <Donnee libelle="Membre depuis" valeur={fmtDate(m.adhesion)} />
-            <Donnee libelle="Total réglé" valeur={fmtMoney(totalPaye)} mono />
+            <Donnee
+              libelle="Total réglé"
+              valeur={fmtMontant(totalPaye, devise)}
+              mono
+            />
             <Donnee
               libelle={
                 m.paiementNote ? "Dernier règlement" : "Prochain renouvellement"
@@ -142,7 +152,7 @@ export default async function CotisationsPage() {
                 <Td className="text-muted">{fmtDateShort(f.date)}</Td>
                 <Td>{f.objet}</Td>
                 <Td className="font-[family-name:var(--font-mono)]">
-                  {fmtMoney(f.montant)}
+                  {fmtMontant(f.montant, f.devise)}
                 </Td>
                 <Td>
                   <StatusPill status={f.statut} />
