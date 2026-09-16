@@ -371,6 +371,7 @@ export async function getThreads(currentUserId: string): Promise<MessageThread[]
       moi: m.userId === currentUserId,
       texte: m.texte,
       heure: heureRelative(m.sentAt),
+      envoyeLe: m.sentAt.toISOString(),
     })),
   }));
 }

@@ -1,7 +1,22 @@
-import type { MessageThread } from "../../lib/types";
 
-/** Fils de discussion du membre de démonstration (m1). */
-export const THREADS: MessageThread[] = [
+
+/**
+ * Fils de discussion du membre de démonstration (m1).
+ *
+ * Forme d'entrée, distincte du modèle de vue : `heure` n'est qu'une indication
+ * d'ancienneté relative, les horodatages réels sont calculés au chargement.
+ */
+export const THREADS: {
+  id: string;
+  type: "individuel" | "groupe";
+  nom: string;
+  sousTitre: string;
+  init: string;
+  avatar?: string | null;
+  memberId?: string | null;
+  unread: number;
+  messages: { id: string; de: string; moi: boolean; texte: string; heure: string }[];
+}[] = [
   {
     id: "t1",
     type: "individuel",
