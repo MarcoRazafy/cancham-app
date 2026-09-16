@@ -818,3 +818,15 @@ h3 {
     transition: none;
   }
 }
+
+/*
+ * Lecteur de ressources : rien à l'impression.
+ *
+ * Le raccourci d'impression est neutralisé par le lecteur, mais le menu du
+ * navigateur reste accessible ; cette règle couvre ce chemin-là.
+ */
+@media print {
+  .lecteur-protege {
+    display: none !important;
+  }
+}

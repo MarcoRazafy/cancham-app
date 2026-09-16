@@ -179,8 +179,7 @@ export async function downloadResource(formData: FormData) {
   const user = await getCurrentUser(space);
   await prisma.auditLog.create({
     data: {
-      action:
-        r.type === "payant" ? "ressource_achetee" : "ressource_telechargee",
+      action: "ressource_achetee",
       entite: "Resource",
       entiteId: id,
       acteur: user.nom,
@@ -191,9 +190,7 @@ export async function downloadResource(formData: FormData) {
   revalideTout();
   redirectWithFlash(
     `/${space}/ressources`,
-    r.type === "payant"
-      ? `Demande d’achat consignée pour « ${r.titre} » — le paiement en ligne n’est pas branché`
-      : `Demande consignée pour « ${r.titre} » — aucun fichier n’est encore stocké`,
+    `Demande d’achat consignée pour « ${r.titre} » — le paiement en ligne n’est pas branché`,
   );
 }
 

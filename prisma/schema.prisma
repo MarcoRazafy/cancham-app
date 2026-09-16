@@ -362,6 +362,13 @@ model Resource {
   taille String
   date   DateTime         @db.Date
 
+  /// Nom du fichier source, rangé dans le stockage privé des ressources —
+  /// jamais dans `public/`, sans quoi il suffirait de son URL pour le récupérer.
+  /// `null` = ressource sans contenu consultable.
+  fichier String?
+  /// Nombre de pages rendues en images, pour un document. `null` pour une vidéo.
+  pages   Int?
+
   /// Inclus dans l'adhésion, ou facturé en supplément.
   type PricingType @default(gratuit)
   /// En Ariary. 0 si gratuit.

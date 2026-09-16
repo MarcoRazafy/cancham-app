@@ -49,3 +49,7 @@ lib/generated/
 
 # Images envoyées par les membres : contenu d'exécution, pas du code.
 /public/televersements/
+
+# Fichiers des ressources : stockage privé, servi par des routes contrôlées.
+# Les fichiers de démonstration se régénèrent avec `npm run ressources:demo`.
+/stockage/
