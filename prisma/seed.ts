@@ -16,7 +16,7 @@ import { NEWS } from "./fixtures/news";
 import { OFFERS, SERVICES } from "./fixtures/offers";
 import { RESOURCES } from "./fixtures/resources";
 import { THREADS } from "./fixtures/threads";
-import { USERS } from "./fixtures/users";
+import { CONTACTS, USERS } from "./fixtures/users";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -172,6 +172,11 @@ async function main() {
         memberId: u.memberId,
         contactPrincipal: u.role === "membre" || u.role === "visiteur",
       },
+    });
+  }
+  for (const c of CONTACTS) {
+    await prisma.user.create({
+      data: { ...c, role: "membre", contactPrincipal: false },
     });
   }
 
