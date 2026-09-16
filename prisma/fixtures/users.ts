@@ -70,3 +70,42 @@ export const USERS: Record<Space, User> = {
 export function getCurrentUser(space: Space): User {
   return USERS[space];
 }
+
+/**
+ * Les autres personnes à joindre chez un membre.
+ *
+ * Elles peuplent le bloc « Contacts » de la fiche entreprise. Ce sont des
+ * utilisateurs comme les autres : quelqu'un que la chambre peut appeler est
+ * quelqu'un à qui l'on ouvrira un accès le jour venu. Aucune ne porte
+ * `contactPrincipal` — ce rôle est déjà tenu par l'utilisateur de l'espace.
+ */
+export const CONTACTS: {
+  id: string;
+  memberId: string;
+  nom: string;
+  fonction: string;
+  email: string;
+  tel: string | null;
+  photo: string | null;
+}[] = [
+  {
+    id: "u-m1-export",
+    memberId: "m1",
+    nom: "Tahiry Rakotomalala",
+    fonction: "Responsable export",
+    email: "export@biosudessences.mg",
+    tel: "+261 34 12 345 68",
+    photo:
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
+  },
+  {
+    id: "u-m1-qualite",
+    memberId: "m1",
+    nom: "Noro Rasoanaivo",
+    fonction: "Qualité & certification",
+    email: "qualite@biosudessences.mg",
+    tel: "+261 32 44 556 67",
+    photo:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
+  },
+];

@@ -303,3 +303,95 @@ export async function deleteMember(formData: FormData) {
   revalideTout();
   redirectWithFlash("/admin/membres", `${m?.nom ?? "Le membre"} a été retiré de l’annuaire`);
 }
+
+/* ============================ Contacts ============================ */
+
+/**
+ * Ajout d'une personne à joindre chez un membre.
+ *
+ * L'adresse est unique en base — c'est elle qui servira d'identifiant de
+ * connexion le jour où l'authentification arrivera. On le vérifie avant
+ * d'écrire pour renvoyer un message lisible plutôt qu'une erreur de contrainte.
+ */
+export async function addContact(formData: FormData) {
+  const memberId = texte(formData, "memberId");
+  const nom = texte(formData, "nom");
+  const email = texte(formData, "email").toLowerCase();
+  const retour = texte(formData, "retour") || "/membre/profil";
+
+  if (!nom || !email) {
+    redirectWithFlash(retour, "Nom et courriel sont obligatoires.");
+  }
+
+  const occupe = await prisma.user.findUnique({ where: { email } });
+  if (occupe) {
+    redirectWithFlash(retour, `Le courriel ${email} est déjà rattaché à un contact.`);
+  }
+
+  const principal = formData.get("principal") === "on";
+
+  await prisma.$transaction(async (tx) => {
+    // Un seul référent par entreprise : le nouveau détrône l'ancien.
+    if (principal) {
+      await tx.user.updateMany({
+        where: { memberId },
+        data: { contactPrincipal: false },
+      });
+    }
+    await tx.user.create({
+      data: {
+        memberId,
+        role: "membre",
+        nom,
+        fonction: texte(formData, "fonction") || "Contact",
+        email,
+        tel: texte(formData, "tel") || null,
+        contactPrincipal: principal,
+      },
+    });
+  });
+
+  await journal("contact_ajoute", "Member", memberId, nom, `Ajout du contact ${nom} (${email}).`);
+  revalideTout();
+  redirectWithFlash(retour, `${nom} a été ajouté aux contacts.`);
+}
+
+/** Retrait d'un contact. Le dernier de la liste ne peut pas être retiré. */
+export async function removeContact(formData: FormData) {
+  const id = texte(formData, "contactId");
+  const retour = texte(formData, "retour") || "/membre/profil";
+
+  const contact = await prisma.user.findUnique({ where: { id } });
+  if (!contact?.memberId) redirectWithFlash(retour, "Contact introuvable.");
+
+  const reste = await prisma.user.count({ where: { memberId: contact.memberId } });
+  if (reste <= 1) {
+    redirectWithFlash(retour, "Une entreprise doit garder au moins un contact.");
+  }
+
+  await prisma.user.delete({ where: { id } });
+
+  // Le référent part sans remplaçant désigné : le plus ancien reprend le rôle.
+  if (contact.contactPrincipal) {
+    const suivant = await prisma.user.findFirst({
+      where: { memberId: contact.memberId },
+      orderBy: { createdAt: "asc" },
+    });
+    if (suivant) {
+      await prisma.user.update({
+        where: { id: suivant.id },
+        data: { contactPrincipal: true },
+      });
+    }
+  }
+
+  await journal(
+    "contact_retire",
+    "Member",
+    contact.memberId,
+    contact.nom,
+    `Retrait du contact ${contact.nom} (${contact.email}).`,
+  );
+  revalideTout();
+  redirectWithFlash(retour, `${contact.nom} a été retiré des contacts.`);
+}

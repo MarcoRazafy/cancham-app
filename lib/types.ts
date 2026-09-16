@@ -247,3 +247,21 @@ export interface Registration {
   code: string;
   date: string;
 }
+
+/**
+ * Une personne à joindre chez un membre.
+ *
+ * C'est la même table que les utilisateurs : quelqu'un qu'on peut appeler est
+ * quelqu'un à qui l'on ouvrira un accès le jour où l'authentification arrivera.
+ * Dupliquer la notion nous aurait laissés avec deux annuaires à réconcilier.
+ */
+export interface Contact {
+  id: string;
+  nom: string;
+  fonction: string;
+  email: string;
+  tel: string | null;
+  photo: string | null;
+  /** Le référent de l'entreprise auprès de la chambre. Un seul par membre. */
+  principal: boolean;
+}

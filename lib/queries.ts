@@ -10,7 +10,8 @@ import {
   toISODate,
 } from "@/lib/enums";
 import type {
-  CanchamEvent,
+    CanchamEvent,
+  Contact,
   CanchamService,
   Comment,
   Invoice,
@@ -589,4 +590,27 @@ export async function getEntreprisesInscrites(
   });
   const noms = rows.map((r) => r.entreprise);
   return { noms: noms.slice(0, n), total: noms.length };
+}
+
+/**
+ * Contacts d'une entreprise.
+ *
+ * Le contact principal remonte en tête : c'est lui que la chambre appelle en
+ * premier, et l'ordre de la liste doit le dire sans qu'on ait à lire les
+ * pastilles. Les autres suivent par ancienneté.
+ */
+export async function getContacts(memberId: string): Promise<Contact[]> {
+  const rows = await prisma.user.findMany({
+    where: { memberId },
+    orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
+  });
+  return rows.map((u) => ({
+    id: u.id,
+    nom: u.nom,
+    fonction: u.fonction,
+    email: u.email,
+    tel: u.tel,
+    photo: u.photo,
+    principal: u.contactPrincipal,
+  }));
 }
