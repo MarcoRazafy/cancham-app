@@ -21,9 +21,9 @@ export default async function ConfirmationPage({
         </h1>
         <p className="text-[15px] leading-relaxed text-white/70 max-w-[48ch] mx-auto mb-8">
           Merci pour votre intérêt envers CanCham Madagascar
-          {nom ? ` au nom de ${nom}` : ""}. Votre demande est en attente d’examen par
-          notre équipe. Une fois validée, il vous restera à régler la cotisation pour
-          activer votre accès complet à l’espace membre.
+          {nom ? ` au nom de ${nom}` : ""}. Votre demande est en attente
+          d’examen par notre équipe. Une fois validée, il vous restera à régler
+          la cotisation pour activer votre accès complet à l’espace membre.
         </p>
         <Link
           href="/public"

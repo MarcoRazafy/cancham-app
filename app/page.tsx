@@ -59,8 +59,9 @@ export default async function Home() {
           Chambre de Commerce et de Coopération Canada – Madagascar
         </div>
         <p className="text-muted text-[13.6px] max-w-[52ch] mx-auto mt-5">
-          Maquette fonctionnelle, sans authentification pour l’instant. Choisissez un
-          espace : un utilisateur de démonstration y est chargé automatiquement.
+          Maquette fonctionnelle, sans authentification pour l’instant.
+          Choisissez un espace : un utilisateur de démonstration y est chargé
+          automatiquement.
         </p>
       </div>
 
@@ -72,7 +73,9 @@ export default async function Home() {
             <Link key={s.href} href={s.href} className="no-underline group">
               <Card className="p-[22px] h-full flex flex-col hover:border-accent transition-colors">
                 <Icon size={22} className={`${s.accent} mb-3`} />
-                <h2 className="text-[17px] font-semibold m-0 mb-1.5">{s.label}</h2>
+                <h2 className="text-[17px] font-semibold m-0 mb-1.5">
+                  {s.label}
+                </h2>
                 <p className="text-[12.8px] text-muted leading-relaxed m-0 flex-1">
                   {s.desc}
                 </p>
@@ -81,7 +84,9 @@ export default async function Home() {
                     Utilisateur de démonstration
                   </div>
                   <div className="text-[13px] font-semibold">{user.nom}</div>
-                  <div className="text-[11.5px] text-muted">{user.fonction}</div>
+                  <div className="text-[11.5px] text-muted">
+                    {user.fonction}
+                  </div>
                 </div>
                 <div className="mt-3.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-accent">
                   Entrer

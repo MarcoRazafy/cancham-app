@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { EventCard, Visuel } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
-import { Banner, BtnLink, Card, Kicker, Stat } from "@/components/ui";
+import { Banner, BtnLink, Card, Kicker, Saillant, Stat } from "@/components/ui";
 import {
   CancelRegistrationButton,
   RegisterButton,
@@ -128,7 +128,7 @@ export default async function EvenementDetailPage({
             <Card className="carte-filet filet-fixe filet-rouge p-[22px]">
               <Kicker>Au programme</Kicker>
               <h2 className="mt-1.5 mb-4 text-[19px]">
-                Le déroulé de la séance
+                Le déroulé de la {<Saillant>séance</Saillant>}
               </h2>
               <ol className="list-none m-0 p-0 flex flex-col">
                 {e.programme.map((etape, i) => (
@@ -162,7 +162,7 @@ export default async function EvenementDetailPage({
             <Card className="carte-filet filet-fixe filet-vert p-[22px]">
               <Kicker>Public visé</Kicker>
               <h2 className="mt-1.5 mb-2 text-[19px]">
-                À qui s’adresse ce rendez-vous
+                À qui s’adresse ce {<Saillant ton="vert">rendez-vous</Saillant>}
               </h2>
               <p className="m-0 text-muted text-[14px] leading-relaxed">
                 {e.pourQui}
@@ -332,7 +332,7 @@ export default async function EvenementDetailPage({
             <div>
               <Kicker>Et ensuite</Kicker>
               <h2 className="mt-1 mb-0 text-[20px]">
-                Autres rendez-vous à venir
+                Autres rendez-vous {<Saillant>à venir</Saillant>}
               </h2>
             </div>
             <Link

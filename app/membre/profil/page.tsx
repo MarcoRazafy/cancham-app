@@ -24,12 +24,13 @@ import {
   BtnLink,
   Card,
   Pill,
+  Saillant,
   SectionTitle,
   Stat,
   StatusPill,
+  TableWrap,
   Td,
   Th,
-  TableWrap,
   ViewHead,
 } from "@/components/ui";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
@@ -59,7 +60,7 @@ export default async function ProfilPage() {
   return (
     <>
       <ViewHead
-        title="Profil & adhésion"
+        title={<>Profil &amp; {<Saillant>adhésion</Saillant>}</>}
         action={
           <div className="flex gap-2 flex-wrap">
             <EditProfileButton

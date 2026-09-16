@@ -15,7 +15,7 @@ import {
 import { AvatarRond, OfferCard } from "@/components/domain";
 import { CarrouselOffres } from "@/components/membre/CarrouselOffres";
 import { RegisterButton } from "@/components/forms/EventForms";
-import { Card } from "@/components/ui";
+import { Card, Saillant } from "@/components/ui";
 import { fmtMoney, isPast, parseISO } from "@/lib/format";
 import {
   ADHESION_PENDING,
@@ -103,7 +103,9 @@ export default async function VueDEnsemble() {
       <Card className="carte-filet filet-fixe filet-degrade p-6 mb-5">
         <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
           <div>
-            <h2 className="text-[19px] m-0">Offres &amp; promotions membres</h2>
+            <h2 className="text-[19px] m-0">
+              Offres &amp; promotions {<Saillant ton="vert">membres</Saillant>}
+            </h2>
             <p className="text-[13.5px] text-muted m-0 mt-1">
               Les avantages que les adhérents se réservent entre eux
             </p>
@@ -200,7 +202,9 @@ export default async function VueDEnsemble() {
         </Card>
 
         <Card className="carte-filet filet-fixe filet-vert p-6">
-          <h2 className="text-[19px] m-0">Développez votre réseau</h2>
+          <h2 className="text-[19px] m-0">
+            Développez votre {<Saillant>réseau</Saillant>}
+          </h2>
           <p className="text-[13.5px] text-muted m-0 mt-1 mb-4">
             Des entreprises à découvrir
           </p>

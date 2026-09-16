@@ -10,10 +10,19 @@ import {
 } from "next/font/google";
 import "./globals.css";
 
+/**
+ * Fraunces porte les titres des espaces membre et back-office.
+ *
+ * L'italique est chargé explicitement : les mots saillants des titres le
+ * réclament, et sans le fichier le navigateur se rabat sur une inclinaison
+ * synthétique — un vrai italique de Fraunces redessine ses lettres, l'oblique
+ * se contente de les pencher.
+ */
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 

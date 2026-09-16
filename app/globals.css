@@ -44,8 +44,18 @@
 
 :root {
   /* Dégradé des boutons d'action, disponible dans toute l'application. */
-  --bouton-rouge: linear-gradient(120deg, #d81f3a 0%, #ad0707 58%, #880511 100%);
-  --bouton-rouge-survol: linear-gradient(120deg, #e83a52 0%, #c00f18 58%, #9c0715 100%);
+  --bouton-rouge: linear-gradient(
+    120deg,
+    #d81f3a 0%,
+    #ad0707 58%,
+    #880511 100%
+  );
+  --bouton-rouge-survol: linear-gradient(
+    120deg,
+    #e83a52 0%,
+    #c00f18 58%,
+    #9c0715 100%
+  );
 
   --bg: #ffffff;
   --surface: #ffffff;
@@ -68,7 +78,8 @@
   --navy: #1b3a6b;
   --navy-2: #15305a;
   --navy-soft: #e4eaf6;
-  --shadow: 0 1px 2px rgb(15 29 44 / 0.06), 0 8px 24px -12px rgb(15 29 44 / 0.18);
+  --shadow:
+    0 1px 2px rgb(15 29 44 / 0.06), 0 8px 24px -12px rgb(15 29 44 / 0.18);
   --sidebar-w: 250px;
   color-scheme: light;
 }
@@ -122,7 +133,6 @@ h3 {
     transition-duration: 0.001ms !important;
   }
 }
-
 
 /* ============================================================
    Charte CanCham — appliquée à l'espace public uniquement.
@@ -226,7 +236,6 @@ h3 {
   outline-offset: 3px;
 }
 
-
 /* ---------- Animations de l'espace public ---------- */
 
 @keyframes marque-apparition {
@@ -280,7 +289,6 @@ h3 {
   background-color: #ffffff;
 }
 
-
 /* ============================================================
    Espace membre — habillage sombre aux couleurs de la chambre.
 
@@ -318,7 +326,8 @@ h3 {
   --navy-2: #16283c;
   --navy-soft: #e6ecf4;
 
-  --shadow: 0 1px 2px rgb(15 29 44 / 0.05), 0 12px 28px -18px rgb(15 29 44 / 0.22);
+  --shadow:
+    0 1px 2px rgb(15 29 44 / 0.05), 0 12px 28px -18px rgb(15 29 44 / 0.22);
 
   /*
    * Barre latérale : le dégradé linéaire de la charte, basculé à la verticale.
@@ -340,8 +349,18 @@ h3 {
   --superieure: linear-gradient(90deg, #14293e 0%, #0f1d2c 100%);
 
   /* Dégradé des boutons d'action : rouge clair vers rouge foncé. */
-  --bouton-rouge: linear-gradient(120deg, #d81f3a 0%, #ad0707 58%, #880511 100%);
-  --bouton-rouge-survol: linear-gradient(120deg, #e83a52 0%, #c00f18 58%, #9c0715 100%);
+  --bouton-rouge: linear-gradient(
+    120deg,
+    #d81f3a 0%,
+    #ad0707 58%,
+    #880511 100%
+  );
+  --bouton-rouge-survol: linear-gradient(
+    120deg,
+    #e83a52 0%,
+    #c00f18 58%,
+    #9c0715 100%
+  );
 
   background: var(--bg);
   color: var(--text);
@@ -391,7 +410,6 @@ h3 {
   }
 }
 
-
 /* ============================================================
    Boutons d'action.
 
@@ -421,7 +439,9 @@ h3 {
   color: #ffffff;
   background-image: var(--bouton-rouge);
   cursor: pointer;
-  transition: background-image 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-image 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .btn-action:hover {
@@ -551,7 +571,9 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .tuile,
   .tuile-hote:hover .tuile {
-    transition: background-color 0.25s ease, background-image 0.25s ease;
+    transition:
+      background-color 0.25s ease,
+      background-image 0.25s ease;
     transform: none;
   }
 }
@@ -609,6 +631,53 @@ h3 {
  */
 .filet-bas::before {
   inset: auto auto 0 0;
+}
+
+/* ============================================================
+   MOTS SAILLANTS DANS LES TITRES
+
+   La chambre écrit ses titres en posant un ou deux mots dans une couleur
+   de la charte : « Le pont entre le Canada et Madagascar », rouge puis
+   vert. C'est la seule fantaisie typographique du site, et elle porte à
+   chaque fois le mot qui compte.
+
+   Le rouge est le défaut. Le vert sert au second terme d'une paire, ou
+   partout où le rouge dirait « attention » à tort.
+   ============================================================ */
+
+.saillant {
+  color: var(--ton-saillant, var(--marque-rouge));
+  font-style: italic;
+}
+
+.saillant-vert {
+  --ton-saillant: var(--marque-vert);
+}
+
+/*
+ * Espace public, sur fond de nuit.
+ *
+ * Hammersmith One n'existe qu'en romain : l'italique y serait synthétique et
+ * jurerait avec le reste du titre. La couleur suffit.
+ *
+ * Et les teintes de la charte, calculées pour du texte sur blanc, s'éteignent
+ * sur le bleu nuit — le vert #007140 y passe pour du gris foncé. On prend donc
+ * leurs déclinaisons claires, qui gardent l'identité en restant lisibles.
+ */
+.marque .saillant {
+  font-style: normal;
+  color: var(--ton-saillant, var(--marque-rouge-clair));
+}
+
+.marque .saillant-vert {
+  --ton-saillant: #3fc98a;
+}
+
+@media (prefers-contrast: more) {
+  .saillant {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
 }
 
 .filet-vert {

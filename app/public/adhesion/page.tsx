@@ -12,9 +12,10 @@ export default function AdhesionPage() {
           Devenir membre de CanCham Madagascar
         </h1>
         <p className="text-[15px] leading-relaxed text-white/70 m-0 mb-8 max-w-[56ch]">
-          Complétez ce formulaire pour soumettre votre candidature. Un profil est créé
-          immédiatement : vous pourrez le compléter, mais l’accès aux autres services
-          ne sera activé qu’après validation par l’équipe et paiement de la cotisation.
+          Complétez ce formulaire pour soumettre votre candidature. Un profil
+          est créé immédiatement : vous pourrez le compléter, mais l’accès aux
+          autres services ne sera activé qu’après validation par l’équipe et
+          paiement de la cotisation.
         </p>
 
         <form action={submitAdhesion} className="flex flex-col gap-3.5">
@@ -26,15 +27,31 @@ export default function AdhesionPage() {
           </Field>
 
           <Field label="Nom de l’entreprise">
-            <input type="text" name="nom" required placeholder="Ex. Zafy Design" className={INPUT} />
+            <input
+              type="text"
+              name="nom"
+              required
+              placeholder="Ex. Zafy Design"
+              className={INPUT}
+            />
           </Field>
 
           <div className="grid gap-3.5 md:grid-cols-2">
             <Field label="Secteur d’activité">
-              <input type="text" name="secteur" placeholder="Ex. Artisanat & design" className={INPUT} />
+              <input
+                type="text"
+                name="secteur"
+                placeholder="Ex. Artisanat & design"
+                className={INPUT}
+              />
             </Field>
             <Field label="Ville">
-              <input type="text" name="ville" placeholder="Antananarivo" className={INPUT} />
+              <input
+                type="text"
+                name="ville"
+                placeholder="Antananarivo"
+                className={INPUT}
+              />
             </Field>
           </div>
 
@@ -56,24 +73,49 @@ export default function AdhesionPage() {
           </div>
 
           <Field label="Site web (optionnel)">
-            <input type="url" name="siteweb" placeholder="https://www.entreprise.mg" className={INPUT} />
+            <input
+              type="url"
+              name="siteweb"
+              placeholder="https://www.entreprise.mg"
+              className={INPUT}
+            />
           </Field>
 
           <div className="grid gap-3.5 md:grid-cols-2">
             <Field label="Nom du représentant">
-              <input type="text" name="rep" placeholder="Nom complet" className={INPUT} />
+              <input
+                type="text"
+                name="rep"
+                placeholder="Nom complet"
+                className={INPUT}
+              />
             </Field>
             <Field label="Fonction">
-              <input type="text" name="repTitre" placeholder="Ex. Directrice Générale" className={INPUT} />
+              <input
+                type="text"
+                name="repTitre"
+                placeholder="Ex. Directrice Générale"
+                className={INPUT}
+              />
             </Field>
           </div>
 
           <div className="grid gap-3.5 md:grid-cols-2">
             <Field label="Courriel">
-              <input type="email" name="email" placeholder="contact@entreprise.mg" className={INPUT} />
+              <input
+                type="email"
+                name="email"
+                placeholder="contact@entreprise.mg"
+                className={INPUT}
+              />
             </Field>
             <Field label="Téléphone">
-              <input type="tel" name="tel" placeholder="+261 3…" className={INPUT} />
+              <input
+                type="tel"
+                name="tel"
+                placeholder="+261 3…"
+                className={INPUT}
+              />
             </Field>
           </div>
 
@@ -112,10 +154,18 @@ export default function AdhesionPage() {
 const INPUT =
   "w-full rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/35 px-3.5 py-3 text-[13.8px] outline-none focus:border-marque-vert focus:bg-white/[0.07]";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
-      <span className="block text-[12.5px] font-semibold text-white/70 mb-1.5">{label}</span>
+      <span className="block text-[12.5px] font-semibold text-white/70 mb-1.5">
+        {label}
+      </span>
       {children}
     </label>
   );

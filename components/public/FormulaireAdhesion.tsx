@@ -119,15 +119,21 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
           <span>J’accepte d’être contacté au sujet de mon adhésion.</span>
         </label>
 
-        <BoutonEnvoi enCours="Envoi de la candidature…">Envoyer ma candidature</BoutonEnvoi>
+        <BoutonEnvoi enCours="Envoi de la candidature…">
+          Envoyer ma candidature
+        </BoutonEnvoi>
 
         <p className="text-[12px] text-white/50 m-0">
-          L’adhésion devient active après validation et règlement de la cotisation.
+          L’adhésion devient active après validation et règlement de la
+          cotisation.
         </p>
 
         <p className="text-[13px] text-white/60 m-0">
           Déjà membre ?{" "}
-          <Link href="/membre" className="text-marque-vert font-semibold underline underline-offset-2">
+          <Link
+            href="/membre"
+            className="text-marque-vert font-semibold underline underline-offset-2"
+          >
             Se connecter
           </Link>
         </p>

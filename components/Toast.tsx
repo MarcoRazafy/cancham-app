@@ -30,7 +30,9 @@ function ToastVisible({ message }: { message: string }) {
       const reste = new URLSearchParams(params.toString());
       reste.delete("msg");
       const query = reste.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
     }, 4600);
 
     return () => {

@@ -85,13 +85,22 @@ export function PiedPublique() {
       <div className="max-w-[1120px] mx-auto px-5 py-6 flex items-center justify-between gap-4 flex-wrap text-[12.5px] text-white/55">
         <span>CanCham Connect · Canada–Madagascar</span>
         <span className="flex gap-5">
-          <Link href="/public/adhesion" className="text-white/55 hover:text-white no-underline">
+          <Link
+            href="/public/adhesion"
+            className="text-white/55 hover:text-white no-underline"
+          >
             Devenir membre
           </Link>
-          <Link href="/membre" className="text-white/55 hover:text-white no-underline">
+          <Link
+            href="/membre"
+            className="text-white/55 hover:text-white no-underline"
+          >
             Espace membre
           </Link>
-          <Link href="/admin" className="text-white/55 hover:text-white no-underline">
+          <Link
+            href="/admin"
+            className="text-white/55 hover:text-white no-underline"
+          >
             Back-office
           </Link>
         </span>

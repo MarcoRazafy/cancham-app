@@ -10,7 +10,11 @@ import { PiedPublique } from "@/components/public/Marque";
  * L'en-tête n'est pas ici : la page d'accueil intègre le logo dans sa bannière,
  * les pages secondaires utilisent `EnTetePublique`.
  */
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="marque min-h-screen flex flex-col">
       {children}

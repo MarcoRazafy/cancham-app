@@ -1,6 +1,12 @@
 import { Users } from "lucide-react";
 import { EventCard } from "@/components/domain";
-import { BtnLink, EmptyState, SectionTitle, ViewHead } from "@/components/ui";
+import {
+  BtnLink,
+  EmptyState,
+  Saillant,
+  SectionTitle,
+  ViewHead,
+} from "@/components/ui";
 import {
   DeleteEventButton,
   EventFormButton,
@@ -28,18 +34,20 @@ export default async function AdminEvenements() {
   return (
     <>
       <ViewHead
-        title="Gestion des événements"
+        title={<>Gestion des {<Saillant>événements</Saillant>}</>}
         action={<EventFormButton />}
       >
-        Créez un événement, suivez les inscriptions et préparez l’enregistrement par QR
-        le jour J. Même présentation que côté membre, avec les options de modification
-        en plus.
+        Créez un événement, suivez les inscriptions et préparez l’enregistrement
+        par QR le jour J. Même présentation que côté membre, avec les options de
+        modification en plus.
       </ViewHead>
 
       <SectionTitle>À venir</SectionTitle>
       <div className="grid gap-4 mb-7 md:grid-cols-2">
         {upcoming.length ? (
-          upcoming.map((e) => <EventCard key={e.id} event={e} footer={controls(e)} />)
+          upcoming.map((e) => (
+            <EventCard key={e.id} event={e} footer={controls(e)} />
+          ))
         ) : (
           <EmptyState>Aucun événement à venir.</EmptyState>
         )}
@@ -48,7 +56,9 @@ export default async function AdminEvenements() {
       <SectionTitle>Passés</SectionTitle>
       <div className="grid gap-4 md:grid-cols-2">
         {past.length ? (
-          past.map((e) => <EventCard key={e.id} event={e} footer={controls(e)} />)
+          past.map((e) => (
+            <EventCard key={e.id} event={e} footer={controls(e)} />
+          ))
         ) : (
           <EmptyState>Aucun événement passé.</EmptyState>
         )}

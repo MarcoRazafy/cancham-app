@@ -80,7 +80,8 @@ export function Shell({
                 const LockIcon = NAV_ICONS.lock;
                 const active =
                   pathname === item.href ||
-                  (item.href !== `/${space}` && pathname.startsWith(`${item.href}/`));
+                  (item.href !== `/${space}` &&
+                    pathname.startsWith(`${item.href}/`));
                 const locked = lockedHrefs.includes(item.href);
                 const badge = badges[item.href];
 
@@ -141,7 +142,9 @@ export function Shell({
             <div className="text-[12.8px] font-semibold text-white truncate">
               {user.nom}
             </div>
-            <div className="text-[11px] text-[#8fa396] truncate">{user.fonction}</div>
+            <div className="text-[11px] text-[#8fa396] truncate">
+              {user.fonction}
+            </div>
           </div>
         </div>
       </aside>
@@ -269,7 +272,9 @@ function NotificationsMenu({
                   <span className="block text-[13px] font-medium text-ink">
                     {n.titre}
                   </span>
-                  <span className="block text-[11.5px] text-faint">{n.temps}</span>
+                  <span className="block text-[11.5px] text-faint">
+                    {n.temps}
+                  </span>
                 </span>
               </Link>
             ))}

@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { StatusPill, TableWrap, Td, Th, ViewHead } from "@/components/ui";
+import {
+  Saillant,
+  StatusPill,
+  TableWrap,
+  Td,
+  Th,
+  ViewHead,
+} from "@/components/ui";
 import { AddMemberButton } from "@/components/forms/MemberForms";
 import { getMembers } from "@/lib/queries";
 import { fmtDateShort } from "@/lib/format";
@@ -19,17 +26,20 @@ export default async function AdminMembres({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const [{ tab = "tous" }, membres] = await Promise.all([searchParams, getMembers()]);
+  const [{ tab = "tous" }, membres] = await Promise.all([
+    searchParams,
+    getMembers(),
+  ]);
   const list = membres.filter((m) => tab === "tous" || m.statut === tab);
 
   return (
     <>
       <ViewHead
-        title="Gestion des membres"
+        title={<>Gestion des {<Saillant>membres</Saillant>}</>}
         action={<AddMemberButton />}
       >
-        {membres.length} entreprises. Voyez qui n’est pas à jour de cotisation, validez
-        les nouvelles demandes ou ajoutez un membre manuellement.
+        {membres.length} entreprises. Voyez qui n’est pas à jour de cotisation,
+        validez les nouvelles demandes ou ajoutez un membre manuellement.
       </ViewHead>
 
       <div className="flex gap-1 border-b border-line mb-[18px] flex-wrap">
@@ -37,7 +47,8 @@ export default async function AdminMembres({
           const count =
             t.key === "tous"
               ? null
-              : membres.filter((m) => m.statut === (t.key as MemberStatus)).length;
+              : membres.filter((m) => m.statut === (t.key as MemberStatus))
+                  .length;
           return (
             <Link
               key={t.key}

@@ -36,7 +36,8 @@ export function ViewHead({
   children,
   action,
 }: {
-  title: string;
+  /** Un nœud, pas une chaîne : les titres portent des mots saillants. */
+  title: ReactNode;
   children?: ReactNode;
   action?: ReactNode;
 }) {
@@ -45,7 +46,9 @@ export function ViewHead({
       <div>
         <h1 className="text-[26px] font-semibold m-0 mb-1">{title}</h1>
         {children ? (
-          <p className="m-0 text-muted text-[13.6px] max-w-[56ch]">{children}</p>
+          <p className="m-0 text-muted text-[13.6px] max-w-[56ch]">
+            {children}
+          </p>
         ) : null}
       </div>
       {action}
@@ -83,7 +86,10 @@ export function Pill({
   );
 }
 
-const STATUS_TONE: Record<MemberStatus | InvoiceStatus | AttendeeStatus, PillTone> = {
+const STATUS_TONE: Record<
+  MemberStatus | InvoiceStatus | AttendeeStatus,
+  PillTone
+> = {
   a_jour: "ok",
   payee: "ok",
   présent: "ok",
@@ -125,7 +131,8 @@ type BtnVariant = "primary" | "line" | "ghost";
 const BTN_VARIANTS: Record<BtnVariant, string> = {
   primary: "btn-action",
   line: "bg-transparent border-line text-ink hover:border-faint hover:bg-surface-2",
-  ghost: "bg-transparent border-transparent text-muted hover:text-ink hover:bg-surface-2",
+  ghost:
+    "bg-transparent border-transparent text-muted hover:text-ink hover:bg-surface-2",
 };
 
 const BTN_BASE =
@@ -327,8 +334,35 @@ export function Th({ children, className = "" }: ComponentProps<"th">) {
 
 export function Td({ children, className = "" }: ComponentProps<"td">) {
   return (
-    <td className={`px-3.5 py-3 border-b border-line align-middle ${className}`}>
+    <td
+      className={`px-3.5 py-3 border-b border-line align-middle ${className}`}
+    >
       {children}
     </td>
+  );
+}
+
+/**
+ * Mot saillant d'un titre.
+ *
+ * La chambre écrit ses titres en posant le mot qui compte dans une couleur de
+ * la charte — « Le pont entre le Canada et Madagascar », rouge puis vert. Le
+ * rouge est le défaut ; le vert sert au second terme d'une paire, ou partout
+ * où le rouge dirait « attention » à tort.
+ *
+ * Un seul mot ou groupe par titre, deux au maximum : au-delà, plus rien ne
+ * ressort.
+ */
+export function Saillant({
+  children,
+  ton = "rouge",
+}: {
+  children: ReactNode;
+  ton?: "rouge" | "vert";
+}) {
+  return (
+    <span className={`saillant ${ton === "vert" ? "saillant-vert" : ""}`}>
+      {children}
+    </span>
   );
 }

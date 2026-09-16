@@ -18,9 +18,13 @@ export function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-[12.3px] font-semibold text-muted mb-1.5">{label}</span>
+      <span className="block text-[12.3px] font-semibold text-muted mb-1.5">
+        {label}
+      </span>
       {children}
-      {hint ? <span className="block text-[11.5px] text-faint mt-1">{hint}</span> : null}
+      {hint ? (
+        <span className="block text-[11.5px] text-faint mt-1">{hint}</span>
+      ) : null}
     </label>
   );
 }
@@ -47,7 +51,8 @@ export function SubmitButton({
   const variants = {
     primary: "btn-action",
     line: "bg-transparent border-line text-ink hover:border-faint hover:bg-surface-2",
-    ghost: "bg-transparent border-transparent text-muted hover:text-ink hover:bg-surface-2",
+    ghost:
+      "bg-transparent border-transparent text-muted hover:text-ink hover:bg-surface-2",
     danger: "bg-bad text-white border-transparent hover:opacity-90",
   };
   const primaire = variant === "primary";
@@ -77,7 +82,9 @@ export function SubmitButton({
 
 export function ModalFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="px-5 py-4 border-t border-line flex justify-end gap-2.5">{children}</div>
+    <div className="px-5 py-4 border-t border-line flex justify-end gap-2.5">
+      {children}
+    </div>
   );
 }
 

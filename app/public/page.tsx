@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, FileText, Users } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
@@ -140,7 +141,7 @@ export default async function PublicHome() {
                   className="apparition block whitespace-nowrap"
                   style={{ animationDelay: "0.36s" }}
                 >
-                  Des <span className="text-[#3fc98a]">opportunités.</span>
+                  Des <Saillant ton="vert">opportunités.</Saillant>
                 </span>
               </h1>
 
@@ -224,7 +225,7 @@ export default async function PublicHome() {
               <div>
                 <span className="surtitre text-white/45">Rencontrons-nous</span>
                 <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
-                  Les prochains rendez-vous
+                  Les prochains <Saillant>rendez-vous</Saillant>
                 </h2>
                 <p className="text-[15px] text-white/65 m-0 mt-2.5">
                   Des rencontres pour apprendre, échanger et créer des liens.
@@ -264,7 +265,8 @@ export default async function PublicHome() {
                   Rejoignez CanCham
                 </span>
                 <h2 className="titre text-[clamp(26px,3.6vw,38px)] m-0 mt-2.5 max-w-[16ch]">
-                  Votre prochain partenariat commence ici.
+                  Votre prochain <Saillant ton="vert">partenariat</Saillant>{" "}
+                  commence ici.
                 </h2>
                 <p className="text-[15px] text-white/70 m-0 mt-3.5 max-w-[44ch]">
                   Présentez votre entreprise et faites le premier pas vers le

@@ -18,11 +18,7 @@ export function BoutonEnvoi({
 }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="btn-action w-full"
-    >
+    <button type="submit" disabled={pending} className="btn-action w-full">
       {pending ? enCours : children}
       {pending ? null : <ArrowRight size={17} />}
     </button>

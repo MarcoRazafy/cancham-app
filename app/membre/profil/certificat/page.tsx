@@ -46,7 +46,9 @@ export default async function CertificatPage() {
             Chambre de Commerce et de Coopération Canada–Madagascar
           </div>
 
-          <div className="text-[13px] text-muted">Ce certificat atteste que</div>
+          <div className="text-[13px] text-muted">
+            Ce certificat atteste que
+          </div>
           <div className="font-[family-name:var(--font-display)] text-[26px] font-semibold my-3.5">
             {m.nom}
           </div>
