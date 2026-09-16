@@ -236,6 +236,8 @@ export interface MessageThread {
   init: string;
   /** Visuel du fil, par URL. Les initiales servent de repli. */
   avatar?: string | null;
+  /** Entreprise en face, pour un échange individuel. */
+  memberId?: string | null;
   unread: number;
   messages: Message[];
 }

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
 import { fmtMoney } from "@/lib/format";
 import { COTISATION_ANNUELLE } from "@/lib/membership";
+import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import type { MemberStatus, MemberType } from "@/lib/types";
 
 /**
@@ -261,9 +262,45 @@ export async function createMember(formData: FormData) {
 /** Mise à jour de la fiche par le membre lui-même. */
 export async function updateMemberProfile(formData: FormData) {
   const id = texte(formData, "memberId");
-  const labels = [0, 1, 2]
-    .map((i) => texte(formData, `produit${i}`))
-    .filter(Boolean);
+  const produits = [0, 1, 2]
+    .map((i) => ({ label: texte(formData, `produit${i}`), rang: i }))
+    .filter((p) => p.label);
+
+  // Les visuels d'origine servent de repli : un champ fichier laissé vide
+  // signifie « garde l'image actuelle », jamais « efface-la ».
+  const actuel = await prisma.member.findUnique({
+    where: { id },
+    select: { cover: true, logo: true, produits: { orderBy: { ordre: "asc" } } },
+  });
+  if (!actuel) redirectWithFlash("/membre/profil", "Fiche introuvable.");
+
+  let couverture: string | null = null;
+  let logo: string | null = null;
+  const photos: (string | null)[] = [];
+  try {
+    couverture = await enregistrerImage(formData.get("cover"), {
+      prefixe: `couverture-${id}`,
+      largeur: 1600,
+    });
+    logo = await enregistrerImage(formData.get("logo"), {
+      prefixe: `logo-${id}`,
+      largeur: 600,
+      transparence: true,
+    });
+    for (const p of produits) {
+      photos[p.rang] = await enregistrerImage(formData.get(`photo${p.rang}`), {
+        prefixe: `produit-${id}-${p.rang}`,
+        largeur: 900,
+      });
+    }
+  } catch (e) {
+    if (e instanceof ImageRefusee) {
+      redirectWithFlash("/membre/profil", e.message);
+    }
+    throw e;
+  }
+
+  const anciennePhoto = (rang: number) => actuel.produits[rang]?.photo ?? null;
 
   await prisma.$transaction([
     prisma.member.update({
@@ -273,13 +310,21 @@ export async function updateMemberProfile(formData: FormData) {
         desc: texte(formData, "desc") || undefined,
         besoins: texte(formData, "besoins") || null,
         interets: texte(formData, "interets") || null,
+        cover: couverture ?? actuel.cover,
+        logo: logo ?? actuel.logo,
       },
     }),
     prisma.produit.deleteMany({ where: { memberId: id } }),
     prisma.produit.createMany({
-      data: (labels.length ? labels : ["Fiche à compléter"]).map((label, ordre) => ({
+      data: (produits.length
+        ? produits
+        : [{ label: "Fiche à compléter", rang: 0 }]
+      ).map((p, ordre) => ({
         memberId: id,
-        label,
+        label: p.label,
+        // Le rang d'origine suit le produit : renommer le deuxième produit ne
+        // doit pas lui faire hériter de la photo du premier.
+        photo: photos[p.rang] ?? anciennePhoto(p.rang),
         ordre,
       })),
     }),

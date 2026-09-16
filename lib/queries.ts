@@ -363,6 +363,7 @@ export async function getThreads(currentUserId: string): Promise<MessageThread[]
     sousTitre: t.sousTitre,
     init: t.init,
     avatar: t.avatar,
+    memberId: t.memberId,
     unread: t.unread,
     messages: t.messages.map((m) => ({
       id: m.id,

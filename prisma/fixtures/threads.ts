@@ -7,6 +7,7 @@ export const THREADS: MessageThread[] = [
     type: "individuel",
     nom: "Fanomezantsoa Randria",
     sousTitre: "Highlands Artisanat · Responsable Export",
+    memberId: "m2",
     init: "FR",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
     unread: 2,

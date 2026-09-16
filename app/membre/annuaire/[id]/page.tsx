@@ -7,6 +7,7 @@ import {
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
@@ -23,10 +24,11 @@ export default async function FicheMembrePage({
 
   return (
     <>
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <BtnLink href="/membre/annuaire" variant="ghost" sm>
           <ArrowLeft size={14} /> Retour à l’annuaire
         </BtnLink>
+        <BoutonMessage memberId={m.id} />
       </div>
 
       <Card className="overflow-hidden p-0">

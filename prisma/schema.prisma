@@ -409,11 +409,15 @@ model MessageThread {
   /// Messages non lus. Provisoire : un vrai accusé de lecture par utilisateur
   /// remplacera ce compteur global quand l'authentification sera en place.
   unread    Int        @default(0)
+  /// Entreprise en face, pour un échange individuel. Sert à retrouver le fil
+  /// existant plutôt qu'à en ouvrir un second depuis la fiche d'annuaire.
+  memberId  String?
 
   createdAt DateTime @default(now())
 
   messages Message[]
 
+  @@index([memberId])
   @@map("message_threads")
 }
 

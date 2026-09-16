@@ -330,6 +330,7 @@ async function main() {
         sousTitre: t.sousTitre,
         init: t.init,
         avatar: t.avatar ?? null,
+        memberId: t.memberId ?? null,
         unread: t.unread,
         messages: {
           create: t.messages.map((m, i) => ({
