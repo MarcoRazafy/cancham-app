@@ -432,9 +432,38 @@ export async function getThreads(
   currentUserId: string,
 ): Promise<MessageThread[]> {
   const rows = await prisma.messageThread.findMany({
-    include: { messages: { orderBy: { sentAt: "asc" } } },
+    include: {
+      messages: {
+        orderBy: { sentAt: "asc" },
+        include: { piecesJointes: { orderBy: { createdAt: "asc" } } },
+      },
+      contact: {
+        select: {
+          nom: true,
+          fonction: true,
+          email: true,
+          tel: true,
+          photo: true,
+        },
+      },
+    },
     orderBy: { createdAt: "asc" },
   });
+
+  // Le fil ne porte que l'identifiant de l'entreprise : on lit les noms d'un
+  // seul coup plutôt qu'une requête par fil.
+  const ids = [
+    ...new Set(rows.map((t) => t.memberId).filter(Boolean)),
+  ] as string[];
+  const entreprises = new Map(
+    (
+      await prisma.member.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, nom: true, siteweb: true },
+      })
+    ).map((m) => [m.id, m]),
+  );
+
   return rows.map((t) => ({
     id: t.id,
     type: t.type,
@@ -443,6 +472,8 @@ export async function getThreads(
     init: t.init,
     avatar: t.avatar,
     memberId: t.memberId,
+    membre: t.memberId ? (entreprises.get(t.memberId) ?? null) : null,
+    contact: t.contact,
     unread: t.unread,
     messages: t.messages.map((m) => ({
       id: m.id,
@@ -451,6 +482,12 @@ export async function getThreads(
       texte: m.texte,
       heure: heureRelative(m.sentAt),
       envoyeLe: m.sentAt.toISOString(),
+      pieces: m.piecesJointes.map((p) => ({
+        id: p.id,
+        nom: p.nom,
+        type: p.type,
+        taille: p.taille,
+      })),
     })),
   }));
 }
@@ -701,5 +738,53 @@ export async function getContacts(memberId: string): Promise<Contact[]> {
     tel: u.tel,
     photo: u.photo,
     principal: u.contactPrincipal,
+  }));
+}
+
+/**
+ * Membres que l'on peut joindre par une nouvelle conversation.
+ *
+ * Ceux de l'annuaire, sans l'entreprise de l'utilisateur ni celles avec qui
+ * un échange individuel existe déjà — la recherche de la messagerie les
+ * propose sous « Nouvelle conversation ». Le référent est lu d'une requête
+ * pour tous, et non membre par membre.
+ */
+export async function getMembresJoignables(memberIdCourant: string | null) {
+  const [membres, fils] = await Promise.all([
+    prisma.member.findMany({
+      where: {
+        statut: { in: ["a_jour", "en_retard"] },
+        ...(memberIdCourant ? { id: { not: memberIdCourant } } : {}),
+      },
+      select: { id: true, nom: true, secteur: true, logo: true, photo: true },
+      orderBy: { nom: "asc" },
+    }),
+    prisma.messageThread.findMany({
+      where: { type: "individuel", memberId: { not: null } },
+      select: { memberId: true },
+    }),
+  ]);
+
+  const dejaEnContact = new Set(fils.map((f) => f.memberId));
+  const disponibles = membres.filter((m) => !dejaEnContact.has(m.id));
+
+  const referents = new Map(
+    (
+      await prisma.user.findMany({
+        where: {
+          memberId: { in: disponibles.map((m) => m.id) },
+          contactPrincipal: true,
+        },
+        select: { memberId: true, nom: true },
+      })
+    ).map((u) => [u.memberId, u.nom]),
+  );
+
+  return disponibles.map((m) => ({
+    id: m.id,
+    nom: m.nom,
+    secteur: m.secteur,
+    vignette: m.photo ?? m.logo,
+    referent: referents.get(m.id) ?? null,
   }));
 }

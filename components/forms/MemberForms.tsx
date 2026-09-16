@@ -369,6 +369,7 @@ export function EditProfileButton({
   desc,
   besoins,
   interets,
+  siteweb = null,
   cover = null,
   logo = null,
 }: {
@@ -377,6 +378,7 @@ export function EditProfileButton({
   desc: string;
   besoins?: string;
   interets?: string;
+  siteweb?: string | null;
   /** Visuels actuels, affichés en aperçu à côté du sélecteur de fichier. */
   cover?: string | null;
   logo?: string | null;
@@ -398,6 +400,20 @@ export function EditProfileButton({
         <form action={updateMemberProfile}>
           <input type="hidden" name="memberId" value={memberId} />
           <ModalBody>
+            <Field
+              label="Site web"
+              hint="Facultatif. Par exemple : monentreprise.mg"
+            >
+              <input
+                type="text"
+                name="siteweb"
+                inputMode="url"
+                autoComplete="url"
+                defaultValue={siteweb ?? ""}
+                placeholder="www.monentreprise.mg"
+                className={INPUT}
+              />
+            </Field>
             <Field label="Activité (description courte)">
               <input
                 type="text"

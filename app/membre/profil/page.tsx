@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import {
   Building2,
+  Globe,
   Clock,
   CreditCard,
   Lock,
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
+import { affichageSite } from "@/lib/liens";
 import { fmtDate, fmtDateShort } from "@/lib/format";
 import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
 import {
@@ -75,6 +77,7 @@ export default async function ProfilPage() {
               desc={m.desc}
               besoins={m.besoins}
               interets={m.interets}
+              siteweb={m.siteweb}
               cover={m.cover}
               logo={m.logo}
             />
@@ -153,6 +156,17 @@ export default async function ProfilPage() {
                 {m.secteur} · {m.ville}
                 {m.pays ? ` · ${m.pays}` : ""}
               </div>
+              {m.siteweb ? (
+                <a
+                  href={m.siteweb}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-1 text-[13.2px] font-semibold text-accent no-underline hover:underline"
+                >
+                  <Globe size={14} className="shrink-0" />
+                  {affichageSite(m.siteweb)}
+                </a>
+              ) : null}
               <div className="flex gap-1.5 flex-wrap pt-2.5">
                 <StatusPill status={m.statut} />
                 {m.type === "physique" ? (

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, User as UserIcon } from "lucide-react";
+import { ArrowLeft, Building2, Globe, User as UserIcon } from "lucide-react";
 import {
   ListeContacts,
   LogoMark,
@@ -13,6 +13,7 @@ import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
+import { affichageSite } from "@/lib/liens";
 
 export default async function FicheMembrePage({
   params,
@@ -59,6 +60,17 @@ export default async function FicheMembrePage({
                 <div className="text-muted text-[13.6px]">
                   {m.secteur} · {m.ville}
                 </div>
+                {m.siteweb ? (
+                  <a
+                    href={m.siteweb}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-1 text-[13.2px] font-semibold text-accent no-underline hover:underline"
+                  >
+                    <Globe size={14} className="shrink-0" />
+                    {affichageSite(m.siteweb)}
+                  </a>
+                ) : null}
                 <div className="flex gap-1.5 flex-wrap pt-2.5">
                   <StatusPill status={m.statut} />
                   {m.type === "physique" ? (

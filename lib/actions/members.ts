@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
+import { normaliserSite } from "@/lib/liens";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import type { MemberStatus, MemberType } from "@/lib/types";
 
@@ -323,6 +324,15 @@ export async function updateMemberProfile(formData: FormData) {
   });
   if (!actuel) redirectWithFlash("/membre/profil", "Fiche introuvable.");
 
+  const siteSaisi = texte(formData, "siteweb");
+  const siteweb = normaliserSite(siteSaisi);
+  if (siteSaisi && !siteweb) {
+    redirectWithFlash(
+      "/membre/profil",
+      `« ${siteSaisi} » n’est pas une adresse de site valide.`,
+    );
+  }
+
   let couverture: string | null = null;
   let logo: string | null = null;
   try {
@@ -336,7 +346,8 @@ export async function updateMemberProfile(formData: FormData) {
       transparence: true,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash("/membre/profil", e.message);
+    if (e instanceof ImageRefusee)
+      redirectWithFlash("/membre/profil", e.message);
     throw e;
   }
 
@@ -347,6 +358,7 @@ export async function updateMemberProfile(formData: FormData) {
       desc: texte(formData, "desc") || undefined,
       besoins: texte(formData, "besoins") || null,
       interets: texte(formData, "interets") || null,
+      siteweb,
       cover: couverture ?? actuel.cover,
       logo: logo ?? actuel.logo,
     },
@@ -380,8 +392,7 @@ function champsService(formData: FormData) {
   return {
     label: texte(formData, "label"),
     type: (texte(formData, "type") === "produit" ? "produit" : "service") as
-      | "produit"
-      | "service",
+      "produit" | "service",
     description: texte(formData, "description") || null,
     prix: texte(formData, "prix") || null,
   };
@@ -390,13 +401,15 @@ function champsService(formData: FormData) {
 export async function ajouterService(formData: FormData) {
   const memberId = texte(formData, "memberId");
   const champs = champsService(formData);
-  if (!champs.label) redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
+  if (!champs.label)
+    redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
 
   let photos: string[] = [];
   try {
     photos = await recevoirPhotos(formData, memberId, PHOTOS_PAR_PRODUIT);
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash("/membre/profil", e.message);
+    if (e instanceof ImageRefusee)
+      redirectWithFlash("/membre/profil", e.message);
     throw e;
   }
 
@@ -416,13 +429,17 @@ export async function ajouterService(formData: FormData) {
   });
 
   revalideTout();
-  redirectWithFlash("/membre/profil", `« ${champs.label} » ajouté au catalogue.`);
+  redirectWithFlash(
+    "/membre/profil",
+    `« ${champs.label} » ajouté au catalogue.`,
+  );
 }
 
 export async function modifierService(formData: FormData) {
   const id = texte(formData, "produitId");
   const champs = champsService(formData);
-  if (!champs.label) redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
+  if (!champs.label)
+    redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
 
   const actuel = await prisma.produit.findUnique({ where: { id } });
   if (!actuel) redirectWithFlash("/membre/profil", "Offre introuvable.");
@@ -441,7 +458,8 @@ export async function modifierService(formData: FormData) {
       PHOTOS_PAR_PRODUIT - conservees.length,
     );
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash("/membre/profil", e.message);
+    if (e instanceof ImageRefusee)
+      redirectWithFlash("/membre/profil", e.message);
     throw e;
   }
 
@@ -465,7 +483,10 @@ export async function supprimerService(formData: FormData) {
   await prisma.produit.delete({ where: { id } });
 
   revalideTout();
-  redirectWithFlash("/membre/profil", `« ${actuel.label} » retiré du catalogue.`);
+  redirectWithFlash(
+    "/membre/profil",
+    `« ${actuel.label} » retiré du catalogue.`,
+  );
 }
 
 export async function deleteMember(formData: FormData) {

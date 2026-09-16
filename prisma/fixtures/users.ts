@@ -135,6 +135,19 @@ export const CONTACTS: {
     principal: false,
   },
   {
+    // L'interlocuteur du fil de démonstration t1 : il doit exister parmi les
+    // contacts de son entreprise pour que le panneau d'information le montre.
+    id: "u-m2-export",
+    memberId: "m2",
+    nom: "Fanomezantsoa Randria",
+    fonction: "Responsable Export",
+    email: "export@highlands-artisanat.mg",
+    tel: "+261 34 58 201 46",
+    photo:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
+    principal: false,
+  },
+  {
     id: "u-m3-3",
     memberId: "m3",
     nom: "Lova Andrianjafy",
@@ -172,7 +185,7 @@ export const CONTACTS: {
     memberId: "m5",
     nom: "Ny Aina Rakotobe",
     fonction: "Directeur technique",
-    email: "nyaina@madatech.mg",
+    email: "nyaina@madatech-solutions.mg",
     tel: "+261 32 90 116 44",
     photo:
       "https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
@@ -183,7 +196,7 @@ export const CONTACTS: {
     memberId: "m5",
     nom: "Soa Ravelojaona",
     fonction: "Responsable comptes clients",
-    email: "comptes@madatech.mg",
+    email: "comptes@madatech-solutions.mg",
     tel: "+261 33 74 902 58",
     photo:
       "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",

@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MOTIFS_CONTACT } from "@/lib/coordonnees";
+import {
+  PIECES_PAR_MESSAGE,
+  PieceRefusee,
+  recevoirPiece,
+} from "@/lib/stockage-messagerie";
 import { prisma } from "@/lib/db";
 import { redirectWithFlash } from "@/lib/flash";
 import { getCurrentUser } from "@/lib/session";
@@ -10,14 +15,42 @@ import type { Space } from "@/lib/types";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-/** Envoi d'un message dans un fil. */
+/**
+ * Envoi d'un message dans un fil : du texte, des pièces jointes, ou les deux.
+ *
+ * Les pièces sont toutes contrôlées avant d'écrire quoi que ce soit : un
+ * fichier refusé dans un lot ne doit pas laisser un message à moitié envoyé.
+ */
 export async function sendMessage(formData: FormData) {
   const threadId = texte(formData, "threadId");
   const space = (texte(formData, "space") || "membre") as Space;
   const contenu = texte(formData, "texte");
   const retour = `/${space}/messagerie?t=${threadId}`;
 
-  if (!contenu) redirectWithFlash(retour, "Le message est vide.");
+  const fichiers = formData
+    .getAll("pieces")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+
+  if (!contenu && fichiers.length === 0) {
+    redirectWithFlash(retour, "Le message est vide.");
+  }
+  if (fichiers.length > PIECES_PAR_MESSAGE) {
+    redirectWithFlash(
+      retour,
+      `${PIECES_PAR_MESSAGE} pièces jointes au plus par message.`,
+    );
+  }
+
+  const pieces = [];
+  try {
+    for (const f of fichiers) {
+      const recue = await recevoirPiece(f);
+      if (recue) pieces.push(recue);
+    }
+  } catch (e) {
+    if (e instanceof PieceRefusee) redirectWithFlash(retour, e.message);
+    throw e;
+  }
 
   const user = await getCurrentUser(space);
 
@@ -28,6 +61,7 @@ export async function sendMessage(formData: FormData) {
       texte: contenu,
       sentAt: new Date(),
       userId: user.id,
+      piecesJointes: { create: pieces },
     },
   });
 
@@ -38,7 +72,7 @@ export async function sendMessage(formData: FormData) {
   });
 
   revalidatePath("/", "layout");
-  redirectWithFlash(retour, "Message envoyé");
+  redirect(retour);
 }
 
 /** Marque un fil comme lu à son ouverture. */
@@ -91,6 +125,7 @@ export async function ouvrirConversation(formData: FormData) {
       sousTitre: referent ? `${membre.nom} · ${referent.fonction}` : membre.nom,
       init: initiales(nom),
       avatar: referent?.photo ?? null,
+      contactId: referent?.id ?? null,
       unread: 0,
     },
   });
