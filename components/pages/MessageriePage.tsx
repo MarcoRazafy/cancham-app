@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { AvatarRond } from "@/components/domain";
+import { heureExacte, jourLisible } from "@/lib/enums";
 import { ViewHead } from "@/components/ui";
 import { MessageComposer } from "@/components/forms/MessageComposer";
 import { getThreads } from "@/lib/queries";
@@ -57,6 +59,15 @@ export async function MessageriePage({
                   <span className="font-semibold text-[13px] truncate">
                     {t.nom}
                   </span>
+                  {/* Dernière activité, sous sa forme abrégée : l'heure
+                      aujourd'hui, le jour cette semaine, la date au-delà. */}
+                  <span
+                    className={`text-[10.5px] shrink-0 tabular-nums ${
+                      t.id === active.id ? "text-white/55" : "text-faint"
+                    }`}
+                  >
+                    {t.messages[t.messages.length - 1]?.heure}
+                  </span>
                   {t.unread ? (
                     <span className="text-[10.5px] font-bold px-[7px] py-px rounded-full bg-accent text-white shrink-0">
                       {t.unread}
@@ -68,7 +79,8 @@ export async function MessageriePage({
                     t.id === active.id ? "text-white/60" : "text-faint"
                   }`}
                 >
-                  {t.messages[t.messages.length - 1].texte}
+                  {t.messages[t.messages.length - 1]?.texte ??
+                    "Nouvelle conversation"}
                 </div>
               </div>
             </Link>
@@ -95,23 +107,54 @@ export async function MessageriePage({
           </div>
 
           <div className="flex-1 overflow-y-auto p-[18px] flex flex-col gap-2.5">
-            {active.messages.map((m) => (
-              <div
-                key={m.id}
-                className={`max-w-[72%] px-3 py-2.5 text-[13.3px] leading-relaxed ${
-                  m.moi
-                    ? "self-end bg-accent text-white rounded-[14px] rounded-br-[4px]"
-                    : "self-start bg-surface-2 rounded-[14px] rounded-bl-[4px]"
-                }`}
-              >
-                {!m.moi && active.type === "groupe" ? (
-                  <div className="text-[10.6px] font-bold opacity-75 mb-0.5">
-                    {m.de}
+            {active.messages.length === 0 ? (
+              <p className="m-auto text-[13px] text-faint text-center max-w-[32ch]">
+                Aucun message pour l’instant. Écrivez le premier.
+              </p>
+            ) : null}
+
+            {active.messages.map((m, i) => {
+              // Un séparateur dès que l'on change de jour, et devant le premier
+              // message : sans lui, trois heures et trois jours se ressemblent.
+              const jour = jourLisible(m.envoyeLe);
+              const nouveauJour =
+                i === 0 ||
+                jourLisible(active.messages[i - 1].envoyeLe) !== jour;
+
+              return (
+                <Fragment key={m.id}>
+                  {nouveauJour ? (
+                    <div className="self-center my-1.5 text-[11px] font-semibold text-muted bg-surface-2 border border-line rounded-full px-3 py-1">
+                      {jour}
+                    </div>
+                  ) : null}
+
+                  <div
+                    className={`max-w-[72%] px-3 py-2 text-[13.3px] leading-relaxed ${
+                      m.moi
+                        ? "self-end bg-accent text-white rounded-[14px] rounded-br-[4px]"
+                        : "self-start bg-surface-2 rounded-[14px] rounded-bl-[4px]"
+                    }`}
+                  >
+                    {!m.moi && active.type === "groupe" ? (
+                      <div className="text-[10.6px] font-bold opacity-75 mb-0.5">
+                        {m.de}
+                      </div>
+                    ) : null}
+                    {m.texte}
+                    {/* L'heure se loge dans la bulle, alignée à droite : posée
+                        dessous, elle décalerait l'alignement des messages. */}
+                    <span
+                      className={`block text-right text-[10.5px] mt-1 tabular-nums ${
+                        m.moi ? "text-white/70" : "text-faint"
+                      }`}
+                    >
+                      {heureExacte(m.envoyeLe)}
+                    </span>
                   </div>
-                ) : null}
-                {m.texte}
-              </div>
-            ))}
+                </Fragment>
+              );
+            })}
           </div>
 
           <MessageComposer threadId={active.id} space={space} />

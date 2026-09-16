@@ -79,3 +79,36 @@ export function heureRelative(d: Date, maintenant = new Date()): string {
     return d.toLocaleDateString("fr-FR", { weekday: "long" }).replace(/^./, (c) => c.toUpperCase());
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
+
+/** Heure d'envoi d'un message, « 14:32 ». */
+export function heureExacte(iso: string): string {
+  return new Date(iso).toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Jour d'envoi, tel qu'on l'écrit sur un séparateur de conversation.
+ *
+ * « Aujourd'hui » et « Hier » plutôt que la date : dans un fil, c'est ce que
+ * le lecteur cherche. Au-delà, la date complète, sans l'année tant qu'on est
+ * dans l'année courante.
+ */
+export function jourLisible(iso: string, maintenant = new Date()): string {
+  const d = new Date(iso);
+  const jour = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const ecart = Math.round((jour(maintenant) - jour(d)) / 86_400_000);
+
+  if (ecart === 0) return "Aujourd’hui";
+  if (ecart === 1) return "Hier";
+  return d
+    .toLocaleDateString("fr-FR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      ...(d.getFullYear() === maintenant.getFullYear() ? {} : { year: "numeric" }),
+    })
+    .replace(/^./, (c) => c.toUpperCase());
+}

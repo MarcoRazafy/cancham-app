@@ -319,8 +319,10 @@ async function main() {
   }
 
   console.log("Messagerie…");
-  // Le jeu de données porte des heures d'affichage (« Hier », « Lundi ») ;
-  // on les convertit en horodatages décroissants, plus récents en dernier.
+  // Le jeu de données porte des heures d'affichage (« Hier », « Lundi ») ; on
+  // les convertit en horodatages décroissants, plus récents en dernier. Les
+  // deux premiers messages d'un fil sont reculés d'un à deux jours, pour que
+  // les séparateurs de date de la messagerie aient quelque chose à séparer.
   for (const t of THREADS) {
     await prisma.messageThread.create({
       data: {
@@ -339,7 +341,8 @@ async function main() {
             sentAt: new Date(
               aujourdhui.getTime() -
                 (t.messages.length - i) * 36e5 -
-                THREADS.indexOf(t) * 24 * 36e5,
+                THREADS.indexOf(t) * 24 * 36e5 -
+                Math.max(0, t.messages.length - 1 - i) * 24 * 36e5,
             ),
             userId: m.moi ? USERS.membre.id : null,
           })),

@@ -225,7 +225,10 @@ export interface Message {
   /** `true` si l'auteur est l'utilisateur courant. */
   moi: boolean;
   texte: string;
+  /** Forme abrégée : « 14:32 » aujourd'hui, « Hier », « Lundi », « 12 sept. ». */
   heure: string;
+  /** Horodatage ISO. La vue en tire l'heure exacte et le regroupement par jour. */
+  envoyeLe: string;
 }
 
 export interface MessageThread {
