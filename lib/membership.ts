@@ -125,6 +125,7 @@ export const PAGES_TOUJOURS_OUVERTES = [
   "/membre/profil",
   "/membre/cotisations",
   "/membre/contact",
+  "/membre/aide",
 ];
 
 /** Statuts pour lesquels l'adhésion n'est pas encore effective. */
