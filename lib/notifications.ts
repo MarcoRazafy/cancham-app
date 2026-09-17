@@ -16,9 +16,19 @@ export interface Notification {
   id: string;
   titre: string;
   temps: string;
+  /** La page exacte qui traite la notification, pas une liste générale. */
   href: string;
-  /** Sévérité, pour la pastille de couleur. */
+  /** Sévérité, pour la couleur de l'icône. */
   ton: "info" | "warn" | "bad";
+  /** Nature de la notification, pour l'icône. */
+  categorie:
+    | "adhesion"
+    | "paiement"
+    | "message"
+    | "evenement"
+    | "actualite"
+    | "offre"
+    | "ressource";
 }
 
 /**
@@ -26,8 +36,8 @@ export interface Notification {
  *
  * Elles sont recalculées à chaque affichage à partir de l'état réel de la base :
  * aucune table de notifications à tenir à jour, donc rien qui puisse se
- * désynchroniser. En contrepartie, elles ne se « marquent pas comme lues » —
- * elles disparaissent quand la situation qui les motive est réglée.
+ * désynchroniser. En contrepartie, elles disparaissent quand la situation qui
+ * les motive est réglée, et non quand on les lit.
  */
 export async function getNotifications(
   space: Space,
@@ -40,60 +50,141 @@ export async function getNotifications(
     : notificationsMembre(memberId, userId);
 }
 
+const pluriel = (n: number, mot: string, pluriel = `${mot}s`) =>
+  `${n} ${n > 1 ? pluriel : mot}`;
+
+/**
+ * La conversation où attend le message non lu le plus récent : une
+ * notification de messages y mène directement, plutôt qu'à la liste.
+ */
+async function filNonLu(userId: string): Promise<string | null> {
+  const [fil] = await prisma.$queryRaw<{ threadId: string }[]>`
+    SELECT m."threadId"
+    FROM messages m
+    JOIN participants_fils p
+      ON p."threadId" = m."threadId" AND p."userId" = ${userId}
+    WHERE m."supprimeLe" IS NULL
+      AND m."userId" IS DISTINCT FROM ${userId}
+      AND (p."luLe" IS NULL OR m."sentAt" > p."luLe")
+    ORDER BY m."sentAt" DESC
+    LIMIT 1`;
+  return fil?.threadId ?? null;
+}
+
 async function notificationsAdmin(userId: string): Promise<Notification[]> {
-  const [parStatut, nonLus, prochain] = await Promise.all([
-    prisma.member.groupBy({ by: ["statut"], _count: { _all: true } }),
+  const semaine = new Date(Date.now() - 7 * 86_400_000);
+  const [membres, nonLus, fil, prochain, aRegler, achats] = await Promise.all([
+    prisma.member.findMany({
+      where: { statut: { not: "a_jour" } },
+      select: { id: true, nom: true, statut: true },
+      orderBy: { nom: "asc" },
+    }),
     getUnreadTotal(userId),
+    filNonLu(userId),
     prisma.event.findFirst({
       where: { date: { gte: new Date() } },
       orderBy: { date: "asc" },
       select: { id: true, titre: true, date: true },
     }),
+    prisma.invoice.findMany({
+      where: { statut: "envoyee" },
+      select: { id: true, numero: true, member: { select: { nom: true } } },
+    }),
+    prisma.auditLog.count({
+      where: { action: "ressource_achetee", createdAt: { gte: semaine } },
+    }),
   ]);
-
-  const compte = (s: string) =>
-    parStatut.find((r) => r.statut === s)?._count._all ?? 0;
 
   const liste: Notification[] = [];
 
-  const candidatures = compte("candidature");
-  if (candidatures)
+  /** Un seul membre concerné : sa fiche. Plusieurs : la liste filtrée. */
+  const versMembres = (statut: "candidature" | "en_retard" | "en_attente") => {
+    const concernes = membres.filter((m) => m.statut === statut);
+    return {
+      concernes,
+      href:
+        concernes.length === 1
+          ? `/admin/membres/${concernes[0].id}`
+          : `/admin/membres?statut=${statut}`,
+    };
+  };
+
+  const demandes = versMembres("candidature");
+  if (demandes.concernes.length)
     liste.push({
       id: "candidatures",
-      titre: `${candidatures} demande${candidatures > 1 ? "s" : ""} d’adhésion à examiner`,
+      titre:
+        demandes.concernes.length === 1
+          ? `Demande d’adhésion de ${demandes.concernes[0].nom} à examiner`
+          : `${pluriel(demandes.concernes.length, "demande")} d’adhésion à examiner`,
       temps: "À traiter",
-      href: "/admin/membres?statut=candidature",
+      href: demandes.href,
       ton: "warn",
+      categorie: "adhesion",
     });
 
-  const enRetard = compte("en_retard");
-  if (enRetard)
+  const retards = versMembres("en_retard");
+  if (retards.concernes.length)
     liste.push({
       id: "retard",
-      titre: `${enRetard} cotisation${enRetard > 1 ? "s" : ""} en retard`,
+      titre:
+        retards.concernes.length === 1
+          ? `Cotisation en retard : ${retards.concernes[0].nom}`
+          : `${pluriel(retards.concernes.length, "cotisation")} en retard`,
       temps: "À relancer",
-      href: "/admin/membres?statut=en_retard",
+      href: retards.href,
       ton: "bad",
+      categorie: "paiement",
     });
 
-  const enAttente = compte("en_attente");
-  if (enAttente)
+  const attentes = versMembres("en_attente");
+  if (attentes.concernes.length)
     liste.push({
       id: "attente",
-      titre: `${enAttente} adhésion${enAttente > 1 ? "s" : ""} en attente de paiement`,
+      titre:
+        attentes.concernes.length === 1
+          ? `Paiement attendu : ${attentes.concernes[0].nom}`
+          : `${pluriel(attentes.concernes.length, "adhésion")} en attente de paiement`,
       temps: "À encaisser",
-      href: "/admin/membres?statut=en_attente",
+      href: attentes.href,
       ton: "warn",
+      categorie: "paiement",
     });
 
-  const messages = nonLus;
-  if (messages)
+  if (aRegler.length)
+    liste.push({
+      id: "factures",
+      titre:
+        aRegler.length === 1
+          ? `Facture ${aRegler[0].numero} à régler · ${aRegler[0].member.nom}`
+          : `${pluriel(aRegler.length, "facture")} à régler`,
+      temps: "Paiements",
+      href:
+        aRegler.length === 1
+          ? `/admin/paiements/${aRegler[0].id}`
+          : "/admin/paiements?statut=envoyee",
+      ton: "warn",
+      categorie: "paiement",
+    });
+
+  if (nonLus)
     liste.push({
       id: "messages",
-      titre: `${messages} message${messages > 1 ? "s" : ""} non lu${messages > 1 ? "s" : ""}`,
+      titre: `${pluriel(nonLus, "message")} non ${nonLus > 1 ? "lus" : "lu"}`,
       temps: "Messagerie",
-      href: "/admin/messagerie",
+      href: fil ? `/admin/messagerie?t=${fil}` : "/admin/messagerie",
       ton: "info",
+      categorie: "message",
+    });
+
+  if (achats)
+    liste.push({
+      id: "achats",
+      titre: `${pluriel(achats, "demande")} d’achat de ressource cette semaine`,
+      temps: "Ressources",
+      href: "/admin/ressources",
+      ton: "info",
+      categorie: "ressource",
     });
 
   if (prochain)
@@ -106,6 +197,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       }),
       href: `/admin/evenements/${prochain.id}`,
       ton: "info",
+      categorie: "evenement",
     });
 
   return liste;
@@ -117,26 +209,33 @@ async function notificationsMembre(
 ): Promise<Notification[]> {
   if (!memberId) return [];
 
-  const [membre, nonLus, inscription, offre, actualite] = await Promise.all([
-    prisma.member.findUnique({
-      where: { id: memberId },
-      select: { statut: true, retardDepuis: true },
-    }),
-    getUnreadTotal(userId),
-    prisma.registration.findFirst({
-      where: { memberId, event: { date: { gte: new Date() } } },
-      orderBy: { event: { date: "asc" } },
-      select: { event: { select: { id: true, titre: true, date: true } } },
-    }),
-    prisma.offer.findFirst({
-      orderBy: { createdAt: "desc" },
-      select: { titre: true },
-    }),
-    prisma.news.findFirst({
-      orderBy: { date: "desc" },
-      select: { id: true, titre: true, date: true },
-    }),
-  ]);
+  const [membre, nonLus, fil, inscription, offre, actualite] =
+    await Promise.all([
+      prisma.member.findUnique({
+        where: { id: memberId },
+        select: { statut: true, retardDepuis: true },
+      }),
+      getUnreadTotal(userId),
+      filNonLu(userId),
+      prisma.registration.findFirst({
+        where: { memberId, event: { date: { gte: new Date() } } },
+        orderBy: { event: { date: "asc" } },
+        select: { event: { select: { id: true, titre: true, date: true } } },
+      }),
+      prisma.offer.findFirst({
+        where: { memberId: { not: memberId } },
+        orderBy: { createdAt: "desc" },
+        select: {
+          titre: true,
+          memberId: true,
+          member: { select: { nom: true } },
+        },
+      }),
+      prisma.news.findFirst({
+        orderBy: { date: "desc" },
+        select: { id: true, titre: true, date: true },
+      }),
+    ]);
 
   const liste: Notification[] = [];
 
@@ -151,8 +250,9 @@ async function notificationsMembre(
         id: "cotisation",
         titre: "Cotisation à régler pour activer votre accès complet",
         temps: "À traiter",
-        href: "/membre/profil",
+        href: "/membre/cotisations",
         ton: "warn",
+        categorie: "paiement",
       });
     else if (membre.statut === "en_retard")
       liste.push({
@@ -161,19 +261,20 @@ async function notificationsMembre(
           ? `Accès restreint — ${joursDeRetard(vue)} jours de retard`
           : `Cotisation en retard — ${joursDeRetard(vue)}/${RETARD_BLOCAGE_JOURS} jours écoulés`,
         temps: "À régulariser",
-        href: "/membre/profil",
+        href: "/membre/cotisations",
         ton: "bad",
+        categorie: "paiement",
       });
   }
 
-  const messages = nonLus;
-  if (messages)
+  if (nonLus)
     liste.push({
       id: "messages",
-      titre: `${messages} message${messages > 1 ? "s" : ""} non lu${messages > 1 ? "s" : ""}`,
+      titre: `${pluriel(nonLus, "message")} non ${nonLus > 1 ? "lus" : "lu"}`,
       temps: "Messagerie",
-      href: "/membre/messagerie",
+      href: fil ? `/membre/messagerie?t=${fil}` : "/membre/messagerie",
       ton: "info",
+      categorie: "message",
     });
 
   if (inscription)
@@ -186,15 +287,17 @@ async function notificationsMembre(
       }),
       href: `/membre/evenements/${inscription.event.id}`,
       ton: "info",
+      categorie: "evenement",
     });
 
   if (offre)
     liste.push({
       id: "offre",
-      titre: `Offre membre : ${offre.titre}`,
-      temps: "Cette semaine",
-      href: "/membre/actualites",
+      titre: `Offre de ${offre.member.nom} : ${offre.titre}`,
+      temps: "Offres membres",
+      href: `/membre/annuaire/${offre.memberId}`,
       ton: "info",
+      categorie: "offre",
     });
 
   if (actualite)
@@ -207,7 +310,8 @@ async function notificationsMembre(
       }),
       href: `/membre/actualites/${actualite.id}`,
       ton: "info",
+      categorie: "actualite",
     });
 
-  return liste.slice(0, 5);
+  return liste;
 }
