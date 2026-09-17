@@ -189,7 +189,9 @@ export interface Offer {
   membre: string;
   titre: string;
   desc: string;
-  /** Couverture de l'entreprise qui publie l'offre. */
+  /** Visuel propre à l'offre, choisi par l'équipe. */
+  image?: string | null;
+  /** Ce que la carte affiche : le visuel de l'offre, sinon la couverture de l'entreprise. */
   cover?: string | null;
 }
 
@@ -218,6 +220,10 @@ export interface Resource {
   /** En Ariary. 0 si gratuit. */
   prix: number;
   commentaires: Comment[];
+  /** Visuel de la carte. `null` = motif décoratif. */
+  cover?: string | null;
+  /** Fichier converti et lisible dans la plateforme. */
+  pret?: boolean;
 }
 
 export type InvoiceStatus = "payee" | "envoyee";

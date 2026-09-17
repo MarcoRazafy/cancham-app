@@ -266,11 +266,29 @@ export async function enregistrerRessource(formData: FormData) {
     redirectWithFlash(retour, "Joignez le fichier de la ressource.");
   }
 
+  let cover: string | null = null;
+  try {
+    cover = await enregistrerImage(formData.get("cover"), {
+      prefixe: "ressource",
+      largeur: 1200,
+    });
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    throw e;
+  }
+  const retirerCover = texte(formData, "retirerCover") === "1";
+
   // La ligne d'abord : son identifiant nomme le dossier du fichier.
   const r = id
     ? await prisma.resource.update({
         where: { id },
-        data: { titre, cat, type, prix },
+        data: {
+          titre,
+          cat,
+          type,
+          prix,
+          ...(cover ? { cover } : retirerCover ? { cover: null } : {}),
+        },
       })
     : await prisma.resource.create({
         data: {
@@ -278,6 +296,7 @@ export async function enregistrerRessource(formData: FormData) {
           cat,
           type,
           prix,
+          cover,
           fmt: "pdf",
           taille: "—",
           date: new Date(),
@@ -389,7 +408,7 @@ export async function enregistrerOffre(formData: FormData) {
   const titre = texte(formData, "titre");
   const desc = texte(formData, "desc");
   const memberId = texte(formData, "memberId");
-  const retour = "/admin/actualites?vue=offres";
+  const retour = "/admin/actualites";
 
   if (!titre || !desc) {
     redirectWithFlash(retour, "Le titre et la description sont requis.");
@@ -401,13 +420,30 @@ export async function enregistrerOffre(formData: FormData) {
   if (!membre)
     redirectWithFlash(retour, "Choisissez le membre qui propose l’offre.");
 
+  let image: string | null = null;
+  try {
+    image = await enregistrerImage(formData.get("image"), {
+      prefixe: "offre",
+      largeur: 1200,
+    });
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    throw e;
+  }
+  const retirerImage = texte(formData, "retirerImage") === "1";
+
   if (id) {
     await prisma.offer.update({
       where: { id },
-      data: { titre, desc, memberId },
+      data: {
+        titre,
+        desc,
+        memberId,
+        ...(image ? { image } : retirerImage ? { image: null } : {}),
+      },
     });
   } else {
-    await prisma.offer.create({ data: { titre, desc, memberId } });
+    await prisma.offer.create({ data: { titre, desc, memberId, image } });
   }
   revalideTout();
   redirectWithFlash(
@@ -419,7 +455,7 @@ export async function enregistrerOffre(formData: FormData) {
 export async function deleteOffer(formData: FormData) {
   await prisma.offer.deleteMany({ where: { id: texte(formData, "offerId") } });
   revalideTout();
-  redirectWithFlash("/admin/actualites?vue=offres", "Offre retirée");
+  redirectWithFlash("/admin/actualites", "Offre retirée");
 }
 
 export async function saveService(formData: FormData) {

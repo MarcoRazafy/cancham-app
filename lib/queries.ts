@@ -323,6 +323,8 @@ export async function getResources(
     type: r.type,
     prix: r.prix,
     commentaires: versCommentaires(r.commentaires),
+    cover: r.cover,
+    pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
   }));
 }
 
@@ -363,6 +365,7 @@ function versOffre(o: {
   memberId: string;
   titre: string;
   desc: string;
+  image: string | null;
   member: { nom: string; cover: string | null };
 }): Offer {
   return {
@@ -371,7 +374,8 @@ function versOffre(o: {
     membre: o.member.nom,
     titre: o.titre,
     desc: o.desc,
-    cover: o.member.cover,
+    image: o.image,
+    cover: o.image ?? o.member.cover,
   };
 }
 

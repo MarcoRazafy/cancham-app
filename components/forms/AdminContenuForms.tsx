@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Check, FileUp, ImagePlus, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, FileUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
+  ChampPhoto,
   Field,
   INPUT,
   ModalBody,
@@ -37,21 +38,20 @@ const BTN_ICONE =
 
 /** Rédaction d'une actualité, sur sa propre page. */
 export function FormulaireActualite({ news }: { news?: NewsItem }) {
-  const [imageChoisie, setImageChoisie] = useState<string | null>(null);
-  const [retirerImage, setRetirerImage] = useState(false);
-  const apercu = imageChoisie ?? (retirerImage ? null : (news?.image ?? null));
-
   return (
     <form
       action={enregistrerActualite}
       className="grid gap-4 lg:grid-cols-[1fr_340px] items-start"
     >
       {news ? <input type="hidden" name="newsId" value={news.id} /> : null}
-      {retirerImage ? (
-        <input type="hidden" name="retirerImage" value="1" />
-      ) : null}
 
       <Card className="p-6 flex flex-col gap-4 min-w-0">
+        <ChampPhoto
+          name="image"
+          retirer="retirerImage"
+          apercu={news?.image}
+          aide="Sans photo, un bandeau aux couleurs de la chambre la remplace dans le fil."
+        />
         <Field label="Titre">
           <input
             name="titre"
@@ -111,45 +111,6 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
               className={INPUT}
             />
           </Field>
-        </Card>
-
-        <Card className="p-6 flex flex-col gap-3">
-          <span className="text-[12.3px] font-semibold text-muted">Photo</span>
-          <div className="aspect-[16/9] rounded-[var(--radius-m)] border border-line bg-surface-2 overflow-hidden flex items-center justify-center">
-            {apercu ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={apercu} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-[12.5px] text-faint px-4 text-center">
-                Sans photo, un bandeau aux couleurs de la chambre la remplace.
-              </span>
-            )}
-          </div>
-          <label className="btn-contour btn-contour-sm text-ink hover:bg-surface-2 cursor-pointer justify-center">
-            <ImagePlus size={14} />
-            {apercu ? "Remplacer la photo" : "Choisir une photo"}
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              className="sr-only"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                setImageChoisie(f ? URL.createObjectURL(f) : null);
-                if (f) setRetirerImage(false);
-              }}
-            />
-          </label>
-          {news?.image && !imageChoisie ? (
-            <label className="flex items-center gap-2 text-[12.8px] text-muted cursor-pointer">
-              <input
-                type="checkbox"
-                checked={retirerImage}
-                onChange={(e) => setRetirerImage(e.target.checked)}
-              />
-              Retirer la photo actuelle
-            </label>
-          ) : null}
         </Card>
 
         <SubmitButton pendingLabel="Publication…" className="w-full">
@@ -297,6 +258,12 @@ export function OffreButton({
             <input type="hidden" name="offerId" value={offre.id} />
           ) : null}
           <ModalBody>
+            <ChampPhoto
+              name="image"
+              retirer="retirerImage"
+              apercu={offre?.image}
+              aide="Sans photo, la carte reprend la couverture de l’entreprise."
+            />
             <Field label="Membre qui propose l’offre">
               <select
                 name="memberId"
@@ -403,6 +370,7 @@ export interface RessourceEditee {
   taille: string;
   pret: boolean;
   pages: number | null;
+  cover: string | null;
 }
 
 /** Ajout ou modification d'une ressource, fichier compris. */
@@ -425,6 +393,13 @@ export function FormulaireRessource({
       ) : null}
 
       <Card className="p-6 flex flex-col gap-4 min-w-0">
+        <ChampPhoto
+          name="cover"
+          retirer="retirerCover"
+          apercu={ressource?.cover}
+          libelle="Photo de la carte"
+          aide="Illustre la ressource dans la bibliothèque. Sans photo, un motif décoratif la remplace."
+        />
         <Field label="Titre">
           <input
             name="titre"

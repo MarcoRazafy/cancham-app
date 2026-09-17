@@ -1,20 +1,50 @@
+import Link from "next/link";
+import { Pencil, Plus } from "lucide-react";
 import { NewsFeedItem, OfferCard } from "@/components/domain";
+import {
+  OffreButton,
+  SupprimerActualiteButton,
+  SupprimerOffreButton,
+} from "@/components/forms/AdminContenuForms";
 import { EmptyState, ViewHead } from "@/components/ui";
-import { getNews, getOffers } from "@/lib/queries";
+import { getMembers, getNews, getOffers } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import type { Space } from "@/lib/types";
 
-/** Fil d'actualité, identique pour le membre et pour l'admin, aux contrôles près. */
+/**
+ * Fil d'actualité, identique pour le membre et pour l'équipe. L'équipe y
+ * trouve en plus ses commandes : publier, modifier, supprimer une actualité,
+ * gérer les offres du rail.
+ */
 export async function ActualitesPage({ space }: { space: Space }) {
   const admin = space === "admin";
   const base = `/${space}/actualites`;
   // La requête rend déjà le fil du plus récent au plus ancien.
   const user = await getCurrentUser(space);
-  const [feed, offers] = await Promise.all([getNews(user.id), getOffers()]);
+  const [feed, offers, membres] = await Promise.all([
+    getNews(user.id),
+    getOffers(),
+    admin ? getMembers() : Promise.resolve([]),
+  ]);
+  const proposants = membres
+    .filter((m) => m.statut !== "candidature")
+    .map((m) => ({ id: m.id, nom: m.nom }));
 
   return (
     <>
-      <ViewHead title="Actualités">
+      <ViewHead
+        title="Actualités"
+        action={
+          admin ? (
+            <Link
+              href="/admin/actualites/nouvelle"
+              className="btn-action btn-action-sm no-underline"
+            >
+              <Plus size={15} /> Nouvelle actualité
+            </Link>
+          ) : null
+        }
+      >
         Le fil d’actualité de la chambre : programmation, retours d’événements
         et vie institutionnelle, dans l’ordre chronologique.
       </ViewHead>
@@ -27,7 +57,31 @@ export async function ActualitesPage({ space }: { space: Space }) {
       <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
         <div className="flex-1 min-w-0 max-w-[620px]">
           {feed.map((n) => (
-            <NewsFeedItem key={n.id} news={n} base={base} space={space} />
+            <NewsFeedItem
+              key={n.id}
+              news={n}
+              base={base}
+              space={space}
+              actions={
+                admin ? (
+                  <>
+                    <Link
+                      href={`/admin/actualites/${n.id}/modifier`}
+                      aria-label={`Modifier « ${n.titre} »`}
+                      title="Modifier"
+                      className="w-9 h-9 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center text-muted hover:text-ink hover:border-faint"
+                    >
+                      <Pencil size={15} />
+                    </Link>
+                    <SupprimerActualiteButton
+                      newsId={n.id}
+                      titre={n.titre}
+                      commentaires={n.commentaires.length}
+                    />
+                  </>
+                ) : undefined
+              }
+            />
           ))}
         </div>
 
@@ -36,16 +90,32 @@ export async function ActualitesPage({ space }: { space: Space }) {
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
             </h2>
+            {admin ? <OffreButton membres={proposants} /> : null}
           </div>
           {offers.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
-              {offers.map((o) => (
-                <OfferCard
-                  key={o.id}
-                  offer={o}
-                  href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
-                />
-              ))}
+              {offers.map((o) => {
+                const carte = (
+                  <OfferCard
+                    key={o.id}
+                    offer={o}
+                    href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
+                  />
+                );
+                // Les commandes sous la carte, et non dedans : la carte
+                // entière est un lien, qui ne peut pas contenir de bouton.
+                return admin ? (
+                  <div key={o.id} className="flex flex-col gap-1.5">
+                    {carte}
+                    <div className="flex justify-end gap-1.5">
+                      <OffreButton offre={o} membres={proposants} />
+                      <SupprimerOffreButton offerId={o.id} titre={o.titre} />
+                    </div>
+                  </div>
+                ) : (
+                  carte
+                );
+              })}
             </div>
           ) : (
             <EmptyState>Aucune offre en vedette pour le moment.</EmptyState>
