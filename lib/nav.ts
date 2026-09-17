@@ -63,21 +63,28 @@ export const NAV_ADMIN: NavGroup[] = [
     items: [{ href: "/admin", label: "Tableau de bord", icon: "gauge" }],
   },
   {
-    label: "Gestion",
+    label: "Adhérents",
     items: [
       { href: "/admin/membres", label: "Membres", icon: "users" },
-      { href: "/admin/evenements", label: "Événements", icon: "calendar" },
       { href: "/admin/paiements", label: "Paiements & factures", icon: "card" },
-      { href: "/admin/offres-cancham", label: "Offres CanCham", icon: "award" },
     ],
   },
   {
-    label: "Communauté",
+    label: "Programme",
     items: [
-      { href: "/admin/messagerie", label: "Messagerie", icon: "chat" },
+      { href: "/admin/evenements", label: "Événements", icon: "calendar" },
       { href: "/admin/actualites", label: "Actualités", icon: "news" },
       { href: "/admin/ressources", label: "Ressources", icon: "folder" },
+      {
+        href: "/admin/offres-cancham",
+        label: "Services CanCham",
+        icon: "briefcase",
+      },
     ],
+  },
+  {
+    label: "Échanges",
+    items: [{ href: "/admin/messagerie", label: "Messagerie", icon: "chat" }],
   },
 ];
 
@@ -101,11 +108,27 @@ export const TITLES: Record<string, [string, string]> = {
   "/membre/aide": ["Espace membre", "Besoin d’aide ?"],
   "/admin": ["Back-office", "Tableau de bord"],
   "/admin/recherche": ["Back-office", "Recherche"],
-  "/admin/membres": ["Back-office", "Gestion des membres"],
-  "/admin/evenements": ["Back-office", "Gestion des événements"],
+  "/admin/membres": ["Back-office", "Membres"],
+  "/admin/evenements": ["Back-office", "Événements"],
   "/admin/paiements": ["Back-office", "Paiements & factures"],
-  "/admin/offres-cancham": ["Back-office", "Offres CanCham"],
+  "/admin/offres-cancham": ["Back-office", "Services CanCham"],
   "/admin/messagerie": ["Back-office", "Messagerie"],
   "/admin/actualites": ["Back-office", "Actualités"],
   "/admin/ressources": ["Back-office", "Ressources"],
 };
+
+/**
+ * Titre d'une route, y compris pour une page de détail : `/admin/membres/m1`
+ * prend celui de `/admin/membres`. La clé la plus longue qui préfixe le chemin
+ * l'emporte.
+ */
+export function titrePour(
+  chemin: string,
+  defaut: [string, string],
+): [string, string] {
+  if (TITLES[chemin]) return TITLES[chemin];
+  const cle = Object.keys(TITLES)
+    .filter((k) => chemin.startsWith(`${k}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  return cle ? TITLES[cle] : defaut;
+}

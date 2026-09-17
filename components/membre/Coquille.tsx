@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { Bell, ChevronDown, Menu, Search } from "lucide-react";
 import { NAV_ICONS } from "@/components/nav-icons";
-import { TITLES, type NavGroup } from "@/lib/nav";
+import { titrePour, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
 import type { Member, User } from "@/lib/types";
 
@@ -42,7 +42,7 @@ export function Coquille({
   const pathname = usePathname();
   const [menuOuvert, setMenuOuvert] = useState(false);
 
-  const [fil, titre] = TITLES[pathname] ?? ["Espace membre", ""];
+  const [fil, titre] = titrePour(pathname, ["Espace membre", ""]);
 
   return (
     <div className="espace-membre flex min-h-screen">

@@ -1,4 +1,4 @@
-import { Shell } from "@/components/Shell";
+import { CoquilleAdmin } from "@/components/admin/CoquilleAdmin";
 import { getMemberStats, getUnreadTotal } from "@/lib/queries";
 import { getNotifications } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/session";
@@ -20,14 +20,13 @@ export default async function AdminLayout({
   const aTraiter = stats.total - stats.aJour;
 
   return (
-    <Shell
-      space="admin"
+    <CoquilleAdmin
       user={user}
       nav={NAV_ADMIN}
       badges={{ "/admin/membres": aTraiter, "/admin/messagerie": unread }}
       notifications={notifications}
     >
       {children}
-    </Shell>
+    </CoquilleAdmin>
   );
 }
