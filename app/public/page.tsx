@@ -6,7 +6,12 @@ import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
 import { FormulaireAdhesion } from "@/components/public/FormulaireAdhesion";
-import { LogoOfficiel } from "@/components/public/Marque";
+import { EnTetePublique } from "@/components/public/Marque";
+import {
+  fmtCotisation,
+  libelleFormule,
+  ORDRE_FORMULES,
+} from "@/lib/membership";
 import { VISUELS } from "@/lib/images-publiques";
 import {
   getProchainsEvenements,
@@ -105,16 +110,12 @@ export default async function PublicHome() {
           <div className="absolute inset-0 bg-[var(--marque-nuit)]/22" />
         </div>
 
-        <div className="relative max-w-[1120px] mx-auto px-5 pt-8 pb-0">
-          <Link
-            href="/public"
-            aria-label="CanCham Connect"
-            className="apparition inline-block"
-          >
-            <LogoOfficiel className="w-[240px] md:w-[300px] h-auto" priority />
-          </Link>
+        <div className="relative apparition">
+          <EnTetePublique surBanniere />
+        </div>
 
-          <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center mt-9">
+        <div className="relative max-w-[1120px] mx-auto px-5 pt-2 md:pt-4 pb-0">
+          <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center">
             <div>
               <span
                 className="surtitre apparition inline-block px-3.5 py-1.5 rounded-full border border-white/30 text-white/85"
@@ -154,7 +155,7 @@ export default async function PublicHome() {
               </p>
 
               <div
-                className="apparition flex gap-3 flex-wrap mt-7"
+                className="apparition flex flex-col sm:flex-row gap-3 mt-7"
                 style={{ animationDelay: "0.56s" }}
               >
                 <Link href="#adhesion" className="btn-action">
@@ -220,7 +221,7 @@ export default async function PublicHome() {
       {/* ==================== Événements ==================== */}
       <section id="evenements" className="scroll-mt-6">
         <div className="max-w-[1120px] mx-auto px-5 pt-14 pb-8">
-          <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-10">
+          <div className="apparition-defilement overflow-hidden rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-5 md:p-10">
             <div className="flex items-end justify-between gap-6 flex-wrap">
               <div>
                 <span className="surtitre text-white/45">Rencontrons-nous</span>
@@ -240,7 +241,7 @@ export default async function PublicHome() {
 
             {evenements.length ? (
               <div className="mt-8">
-                <CarrouselEvenements>
+                <CarrouselEvenements debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0">
                   {evenements.map((e, i) => (
                     <CarteEvenement key={e.id} evenement={e} index={i} />
                   ))}
@@ -258,9 +259,12 @@ export default async function PublicHome() {
       {/* ==================== Adhésion ==================== */}
       <section id="adhesion" className="scroll-mt-6">
         <div className="max-w-[1120px] mx-auto px-5 pb-16">
-          <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-6 md:p-10">
-            <div className="grid gap-10 lg:grid-cols-2 items-start">
-              <div>
+          <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-5 md:p-10">
+            {/* `minmax(0, 1fr)` : sans cela, la liste des formules — un menu
+                déroulant à libellés longs — élargit la colonne au-delà du
+                cadre sur téléphone. */}
+            <div className="grid gap-10 grid-cols-[minmax(0,1fr)] lg:grid-cols-2 items-start">
+              <div className="min-w-0 lg:sticky lg:top-8">
                 <span className="surtitre text-white/45">
                   Rejoignez CanCham
                 </span>
@@ -278,7 +282,7 @@ export default async function PublicHome() {
                     const Icone = a.icone;
                     return (
                       <li key={a.texte} className="flex items-center gap-4">
-                        <span className="shrink-0 w-11 h-11 rounded-full border border-marque-vert/50 text-marque-vert flex items-center justify-center">
+                        <span className="shrink-0 w-11 h-11 rounded-full border border-[#3fc98a]/40 bg-[#3fc98a]/10 text-[#3fc98a] flex items-center justify-center">
                           <Icone size={19} />
                         </span>
                         <span className="text-[15px] text-white/90">
@@ -289,7 +293,29 @@ export default async function PublicHome() {
                   })}
                 </ul>
 
-                <p className="text-[13px] text-white/50 mt-8 pt-6 border-t border-white/10 mb-0">
+                {/* Les tarifs, sous les yeux pendant qu'on remplit le formulaire. */}
+                <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
+                  <div className="surtitre text-white/45 mb-2">
+                    Cotisation annuelle
+                  </div>
+                  <ul className="list-none m-0 p-0">
+                    {ORDRE_FORMULES.map((f) => (
+                      <li
+                        key={f}
+                        className="flex items-baseline justify-between gap-4 py-2 border-b border-white/[0.07] last:border-b-0 text-[13.5px]"
+                      >
+                        <span className="text-white/80 min-w-0">
+                          {libelleFormule(f)}
+                        </span>
+                        <span className="text-white font-semibold whitespace-nowrap tabular-nums">
+                          {fmtCotisation(f)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <p className="text-[13px] text-white/55 mt-6 mb-0">
                   Votre candidature sera examinée par l’équipe CanCham. Besoin
                   d’un dossier complet ?{" "}
                   <Link
@@ -302,7 +328,9 @@ export default async function PublicHome() {
                 </p>
               </div>
 
-              <FormulaireAdhesion secteurs={secteurs} />
+              <div className="min-w-0">
+                <FormulaireAdhesion secteurs={secteurs} />
+              </div>
             </div>
           </div>
         </div>
