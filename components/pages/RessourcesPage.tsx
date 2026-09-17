@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { ResourceCard } from "@/components/domain";
 import { EmptyState, ViewHead } from "@/components/ui";
-import {
-  DeleteResourceButton,
-  DownloadResourceButton,
-  NewResourceButton,
-} from "@/components/forms/ContentForms";
+import { DownloadResourceButton } from "@/components/forms/ContentForms";
 import { getResourceCounts, getResources } from "@/lib/queries";
 import type { Space } from "@/lib/types";
 
@@ -24,7 +20,6 @@ export async function RessourcesPage({
   space: Space;
   type?: string;
 }) {
-  const admin = space === "admin";
   const actif: Filtre = type === "gratuit" || type === "payant" ? type : "tout";
 
   const [list, counts] = await Promise.all([
@@ -34,10 +29,7 @@ export async function RessourcesPage({
 
   return (
     <>
-      <ViewHead
-        title="Ressources"
-        action={admin ? <NewResourceButton /> : null}
-      >
+      <ViewHead title="Ressources">
         Documents, modèles et formations mis à disposition des membres. Certains
         livrables de fond sont facturés en supplément de la cotisation.
       </ViewHead>
@@ -75,7 +67,6 @@ export async function RessourcesPage({
                     payant={r.type === "payant"}
                     video={r.fmt === "Vidéo"}
                   />
-                  {admin ? <DeleteResourceButton resourceId={r.id} /> : null}
                 </div>
               }
             />

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import { RESOURCE_CAT_LABEL } from "@/lib/enums";
 import { codesDeFamille, type FamilleJournal } from "@/lib/journal";
 import type { Devise, FormuleId } from "@/lib/membership";
 
@@ -210,4 +211,52 @@ export async function getParticipants(eventId: string): Promise<Participant[]> {
       statut: true,
     },
   });
+}
+
+export interface RessourceAdmin {
+  id: string;
+  titre: string;
+  cat: string;
+  fmt: "pdf" | "docx" | "video";
+  taille: string;
+  date: string;
+  type: "gratuit" | "payant";
+  prix: number;
+  /** Fichier prêt pour la lecture. */
+  pret: boolean;
+  pages: number | null;
+  commentaires: number;
+  demandes: number;
+}
+
+/** Bibliothèque vue par l'équipe : état des fichiers et demandes d'achat. */
+export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
+  const [rows, demandes] = await Promise.all([
+    prisma.resource.findMany({
+      include: { _count: { select: { commentaires: true } } },
+      orderBy: { date: "desc" },
+    }),
+    prisma.auditLog.groupBy({
+      by: ["entiteId"],
+      where: { action: "ressource_achetee" },
+      _count: { _all: true },
+    }),
+  ]);
+  const parRessource = new Map(
+    demandes.map((d) => [d.entiteId, d._count._all]),
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    titre: r.titre,
+    cat: RESOURCE_CAT_LABEL[r.cat],
+    fmt: r.fmt,
+    taille: r.taille,
+    date: r.date.toISOString().slice(0, 10),
+    type: r.type,
+    prix: r.prix,
+    pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
+    pages: r.pages,
+    commentaires: r._count.commentaires,
+    demandes: parRessource.get(r.id) ?? 0,
+  }));
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ImagePlus, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, FileUp, ImagePlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -15,8 +15,10 @@ import { Card } from "@/components/ui";
 import {
   deleteNews,
   deleteOffer,
+  deleteResource,
   enregistrerActualite,
   enregistrerOffre,
+  enregistrerRessource,
   supprimerCommentaire,
 } from "@/lib/actions/content";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
@@ -372,6 +374,200 @@ export function SupprimerOffreButton({
             <p className="m-0 text-[13.6px] text-muted">
               « <b className="text-ink">{titre}</b> » ne sera plus proposée aux
               membres.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton variant="danger" pendingLabel="Retrait…">
+              <Trash2 size={14} /> Retirer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+/* ============================ Ressources ============================ */
+
+/** Même plafond que le serveur, pour prévenir avant d'envoyer 60 Mo pour rien. */
+const PLAFOND_MO = 38;
+
+export interface RessourceEditee {
+  id: string;
+  titre: string;
+  cat: string;
+  type: "gratuit" | "payant";
+  prix: number;
+  fmt: "pdf" | "docx" | "video";
+  taille: string;
+  pret: boolean;
+  pages: number | null;
+}
+
+/** Ajout ou modification d'une ressource, fichier compris. */
+export function FormulaireRessource({
+  ressource,
+}: {
+  ressource?: RessourceEditee;
+}) {
+  const [payant, setPayant] = useState(ressource?.type === "payant");
+  const [fichier, setFichier] = useState<File | null>(null);
+  const trop = fichier ? fichier.size > PLAFOND_MO * 1024 * 1024 : false;
+
+  return (
+    <form
+      action={enregistrerRessource}
+      className="grid gap-4 lg:grid-cols-[1fr_340px] items-start"
+    >
+      {ressource ? (
+        <input type="hidden" name="resourceId" value={ressource.id} />
+      ) : null}
+
+      <Card className="p-6 flex flex-col gap-4 min-w-0">
+        <Field label="Titre">
+          <input
+            name="titre"
+            required
+            defaultValue={ressource?.titre}
+            placeholder="Ex. Guide pratique — Exporter vers le Québec"
+            className={INPUT}
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Catégorie">
+            <select
+              name="cat"
+              defaultValue={ressource?.cat ?? "Guide"}
+              className={INPUT}
+            >
+              {["Guide", "Modèle", "Formation", "Rapport"].map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Accès">
+            <select
+              name="type"
+              value={payant ? "payant" : "gratuit"}
+              onChange={(e) => setPayant(e.target.value === "payant")}
+              className={INPUT}
+            >
+              <option value="gratuit">Inclus dans l’adhésion</option>
+              <option value="payant">Payant</option>
+            </select>
+          </Field>
+        </div>
+        {payant ? (
+          <Field
+            label="Prix (Ariary)"
+            hint="Le paiement en ligne n’est pas branché : les membres envoient une demande d’achat, visible au tableau de bord."
+          >
+            <input
+              type="number"
+              name="prix"
+              min={1}
+              required
+              defaultValue={ressource?.prix || 50000}
+              className={INPUT}
+            />
+          </Field>
+        ) : null}
+      </Card>
+
+      <div className="flex flex-col gap-4 lg:sticky lg:top-[88px]">
+        <Card className="p-6 flex flex-col gap-3">
+          <span className="text-[12.3px] font-semibold text-muted">
+            Fichier
+          </span>
+          {ressource ? (
+            <p
+              className={`m-0 text-[13px] ${ressource.pret ? "text-success-strong" : "text-accent font-semibold"}`}
+            >
+              {ressource.pret
+                ? `Fichier actuel : ${ressource.fmt === "video" ? "vidéo" : `${ressource.fmt.toUpperCase()}, ${ressource.pages} page${(ressource.pages ?? 0) > 1 ? "s" : ""}`} · ${ressource.taille}`
+                : "Aucun fichier lisible : les membres ne peuvent pas l’ouvrir."}
+            </p>
+          ) : null}
+          <label
+            className={`flex flex-col items-center justify-center gap-2 text-center rounded-[var(--radius-m)] border-2 border-dashed px-4 py-7 cursor-pointer ${
+              trop
+                ? "border-accent bg-accent-soft"
+                : "border-line bg-surface-2 hover:border-faint"
+            }`}
+          >
+            <FileUp size={24} className="text-muted" />
+            <span className="text-[13px] font-semibold text-ink">
+              {fichier
+                ? fichier.name
+                : ressource
+                  ? "Remplacer le fichier"
+                  : "Choisir le fichier"}
+            </span>
+            <span
+              className={`text-[11.8px] ${trop ? "text-accent font-semibold" : "text-faint"}`}
+            >
+              {trop
+                ? `Trop lourd : ${PLAFOND_MO} Mo au plus.`
+                : `PDF, DOCX ou vidéo MP4 · ${PLAFOND_MO} Mo au plus`}
+            </span>
+            <input
+              type="file"
+              name="fichier"
+              accept="application/pdf,.docx,video/mp4"
+              required={!ressource}
+              className="sr-only"
+              onChange={(e) => setFichier(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <p className="m-0 text-[11.8px] text-faint">
+            Les documents sont convertis en pages images pour la lecture
+            protégée : comptez quelques secondes, un peu plus pour un DOCX.
+          </p>
+        </Card>
+
+        <SubmitButton
+          pendingLabel="Préparation du fichier…"
+          className="w-full"
+          disabled={trop}
+        >
+          <Check size={15} />{" "}
+          {ressource ? "Enregistrer les modifications" : "Ajouter la ressource"}
+        </SubmitButton>
+      </div>
+    </form>
+  );
+}
+
+export function SupprimerRessourceButton({
+  resourceId,
+  titre,
+}: {
+  resourceId: string;
+  titre: string;
+}) {
+  return (
+    <Modal
+      title="Retirer la ressource"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Retirer « ${titre} »`}
+          title="Retirer"
+          className={`${BTN_ICONE} hover:text-accent hover:border-accent`}
+        >
+          <Trash2 size={15} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={deleteResource}>
+          <input type="hidden" name="resourceId" value={resourceId} />
+          <ModalBody>
+            <p className="m-0 text-[13.6px] text-muted">
+              « <b className="text-ink">{titre}</b> » sera retirée de la
+              bibliothèque, fichier et commentaires compris.
             </p>
           </ModalBody>
           <ModalFooter>
