@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { estHeure, estJourISO } from "@/lib/agenda";
+import { espaceDe, estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
@@ -20,14 +20,20 @@ const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const TITRE_MAX = 120;
 const NOTE_MAX = 500;
 
-/** Page de retour : l'agenda tel qu'il était affiché, jamais une adresse tierce. */
+/**
+ * Page de retour : celle où le rappel a été saisi — l'agenda, ou n'importe
+ * quelle page quand on passe par la bulle. Jamais une adresse tierce.
+ */
 function retour(fd: FormData): string {
   const r = texte(fd, "retour");
-  return r.startsWith("/membre/") && !r.startsWith("//") ? r : "/membre/agenda";
+  return /^\/(membre|admin)([/?]|$)/.test(r) ? r : "/membre/agenda";
 }
 
-const revalider = () => {
-  revalidatePath("/membre", "layout");
+/** L'espace, et donc la personne connectée, se lisent dans la page de retour. */
+const utilisateur = (page: string) => getCurrentUser(espaceDe(page));
+
+const revalider = (page: string) => {
+  revalidatePath(`/${espaceDe(page)}`, "layout");
 };
 
 /** Champs d'un rappel, validés. Redirige avec le motif en cas d'erreur. */
@@ -60,7 +66,7 @@ function lireRappel(fd: FormData, page: string) {
 
 /** Le rappel, s'il appartient à la personne connectée. */
 async function rappelDe(fd: FormData, page: string) {
-  const user = await getCurrentUser("membre");
+  const user = await utilisateur(page);
   const r = await prisma.rappel.findUnique({
     where: { id: texte(fd, "rappelId") },
     select: { id: true, userId: true, titre: true, fait: true },
@@ -74,10 +80,10 @@ async function rappelDe(fd: FormData, page: string) {
 export async function creerRappel(formData: FormData) {
   const page = retour(formData);
   const data = lireRappel(formData, page);
-  const user = await getCurrentUser("membre");
+  const user = await utilisateur(page);
 
   await prisma.rappel.create({ data: { ...data, userId: user.id } });
-  revalider();
+  revalider(page);
   redirectWithFlash(page, "Rappel ajouté à l’agenda");
 }
 
@@ -87,7 +93,7 @@ export async function modifierRappel(formData: FormData) {
   const r = await rappelDe(formData, page);
 
   await prisma.rappel.update({ where: { id: r.id }, data });
-  revalider();
+  revalider(page);
   redirectWithFlash(page, "Rappel mis à jour");
 }
 
@@ -97,7 +103,7 @@ export async function basculerRappelFait(formData: FormData) {
   const r = await rappelDe(formData, page);
 
   await prisma.rappel.update({ where: { id: r.id }, data: { fait: !r.fait } });
-  revalider();
+  revalider(page);
 }
 
 export async function supprimerRappel(formData: FormData) {
@@ -105,6 +111,6 @@ export async function supprimerRappel(formData: FormData) {
   const r = await rappelDe(formData, page);
 
   await prisma.rappel.delete({ where: { id: r.id } });
-  revalider();
+  revalider(page);
   redirectWithFlash(page, `Rappel « ${r.titre} » supprimé`);
 }

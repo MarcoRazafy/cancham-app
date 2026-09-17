@@ -1,4 +1,7 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { BulleAgenda } from "@/components/agenda/BulleAgenda";
+import { aujourdhuiISO } from "@/lib/format";
 import { PAGES_TOUJOURS_OUVERTES } from "@/lib/membership";
 import { Coquille } from "@/components/membre/Coquille";
 import { getMember, getStatsPubliques, getUnreadTotal } from "@/lib/queries";
@@ -47,6 +50,13 @@ export default async function MembreLayout({
       }
     >
       {children}
+      {/* L'agenda flotte au-dessus de chaque page — sauf pour un accès
+          restreint, que l'agenda ne concerne plus. */}
+      {verrouille ? null : (
+        <Suspense fallback={null}>
+          <BulleAgenda espace="membre" aujourdhui={aujourdhuiISO()} />
+        </Suspense>
+      )}
     </Coquille>
   );
 }

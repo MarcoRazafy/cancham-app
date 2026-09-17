@@ -74,31 +74,67 @@ async function filNonLu(userId: string): Promise<string | null> {
   return fil?.threadId ?? null;
 }
 
+/** Rappels d'aujourd'hui et de demain pas encore cochés, dans les deux espaces. */
+async function rappelsProches(
+  userId: string,
+  espace: "membre" | "admin",
+): Promise<Notification[]> {
+  const aujourdhui = aujourdhuiISO();
+  const rows = await prisma.rappel.findMany({
+    where: {
+      userId,
+      fait: false,
+      jour: {
+        gte: jourBase(aujourdhui),
+        lte: jourBase(ajouterJours(aujourdhui, 1)),
+      },
+    },
+    orderBy: [{ jour: "asc" }, { heure: "asc" }],
+    select: { id: true, titre: true, jour: true, heure: true },
+    take: 3,
+  });
+  return rows.map((r) => {
+    const jour = toISODate(r.jour);
+    return {
+      id: `rappel-${r.id}`,
+      titre: `Rappel : ${r.titre}`,
+      temps: `${jour === aujourdhui ? "Aujourd’hui" : "Demain"}${
+        r.heure ? ` · ${fmtHeure(r.heure)}` : ""
+      }`,
+      href: `/${espace}/agenda?date=${jour}&jour=${jour}`,
+      ton: jour === aujourdhui ? "warn" : "info",
+      categorie: "rappel",
+    };
+  });
+}
+
 async function notificationsAdmin(userId: string): Promise<Notification[]> {
   const semaine = new Date(Date.now() - 7 * 86_400_000);
-  const [membres, nonLus, fil, prochain, aRegler, achats] = await Promise.all([
-    prisma.member.findMany({
-      where: { statut: { not: "a_jour" } },
-      select: { id: true, nom: true, statut: true },
-      orderBy: { nom: "asc" },
-    }),
-    getUnreadTotal(userId),
-    filNonLu(userId),
-    prisma.event.findFirst({
-      where: { date: { gte: jourBase() } },
-      orderBy: { date: "asc" },
-      select: { id: true, titre: true, date: true },
-    }),
-    prisma.invoice.findMany({
-      where: { statut: "envoyee" },
-      select: { id: true, numero: true, member: { select: { nom: true } } },
-    }),
-    prisma.auditLog.count({
-      where: { action: "ressource_achetee", createdAt: { gte: semaine } },
-    }),
-  ]);
+  const [rappels, membres, nonLus, fil, prochain, aRegler, achats] =
+    await Promise.all([
+      rappelsProches(userId, "admin"),
+      prisma.member.findMany({
+        where: { statut: { not: "a_jour" } },
+        select: { id: true, nom: true, statut: true },
+        orderBy: { nom: "asc" },
+      }),
+      getUnreadTotal(userId),
+      filNonLu(userId),
+      prisma.event.findFirst({
+        where: { date: { gte: jourBase() } },
+        orderBy: { date: "asc" },
+        select: { id: true, titre: true, date: true },
+      }),
+      prisma.invoice.findMany({
+        where: { statut: "envoyee" },
+        select: { id: true, numero: true, member: { select: { nom: true } } },
+      }),
+      prisma.auditLog.count({
+        where: { action: "ressource_achetee", createdAt: { gte: semaine } },
+      }),
+    ]);
 
-  const liste: Notification[] = [];
+  const liste: Notification[] = [...rappels];
 
   /** Un seul membre concerné : sa fiche. Plusieurs : la liste filtrée. */
   const versMembres = (statut: "candidature" | "en_retard" | "en_attente") => {
@@ -213,7 +249,6 @@ async function notificationsMembre(
   if (!memberId) return [];
 
   const aujourdhui = aujourdhuiISO();
-  const demain = ajouterJours(aujourdhui, 1);
 
   const [
     membre,
@@ -249,17 +284,7 @@ async function notificationsMembre(
       orderBy: { date: "desc" },
       select: { id: true, titre: true, date: true },
     }),
-    // Rappels d'aujourd'hui et de demain pas encore cochés.
-    prisma.rappel.findMany({
-      where: {
-        userId,
-        fait: false,
-        jour: { gte: jourBase(aujourdhui), lte: jourBase(demain) },
-      },
-      orderBy: [{ jour: "asc" }, { heure: "asc" }],
-      select: { id: true, titre: true, jour: true, heure: true },
-      take: 3,
-    }),
+    rappelsProches(userId, "membre"),
     // Factures dont l'échéance tombe dans la semaine, ou est dépassée.
     prisma.invoice.findMany({
       where: {
@@ -277,19 +302,7 @@ async function notificationsMembre(
 
   const liste: Notification[] = [];
 
-  for (const r of rappels) {
-    const jour = toISODate(r.jour);
-    liste.push({
-      id: `rappel-${r.id}`,
-      titre: `Rappel : ${r.titre}`,
-      temps: `${jour === aujourdhui ? "Aujourd’hui" : "Demain"}${
-        r.heure ? ` · ${fmtHeure(r.heure)}` : ""
-      }`,
-      href: `/membre/agenda?date=${jour}&jour=${jour}`,
-      ton: jour === aujourdhui ? "warn" : "info",
-      categorie: "rappel",
-    });
-  }
+  liste.push(...rappels);
 
   for (const f of factures) {
     const echeance = echeanceFacture(toISODate(f.date));

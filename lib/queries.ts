@@ -553,17 +553,7 @@ export async function getAgenda(
         })
       : null,
     memberId ? getAnneesCotisationReglees(memberId) : ([] as number[]),
-    prisma.rappel.findMany({
-      where: { userId, jour: periode },
-      select: {
-        id: true,
-        titre: true,
-        note: true,
-        jour: true,
-        heure: true,
-        fait: true,
-      },
-    }),
+    rappelsAgenda(userId, du, au),
   ]);
 
   const elements: ElementAgenda[] = [];
@@ -644,22 +634,160 @@ export async function getAgenda(
     }
   }
 
-  for (const r of rappels) {
+  return trierElements([...elements, ...rappels]);
+}
+
+/** Les rappels personnels d'une personne sur une période. */
+async function rappelsAgenda(
+  userId: string,
+  du: string,
+  au: string,
+): Promise<ElementAgenda[]> {
+  const rows = await prisma.rappel.findMany({
+    where: { userId, jour: { gte: jourBase(du), lte: jourBase(au) } },
+    select: {
+      id: true,
+      titre: true,
+      note: true,
+      jour: true,
+      heure: true,
+      fait: true,
+    },
+  });
+  return rows.map((r) => ({
+    id: `rappel-${r.id}`,
+    type: "rappel",
+    titre: r.titre,
+    jour: toISODate(r.jour),
+    debut: r.heure,
+    fin: null,
+    detail: r.note,
+    href: null,
+    fait: r.fait,
+    rappel: { id: r.id, note: r.note },
+  }));
+}
+
+/**
+ * L'agenda de l'équipe : tous les événements, les factures à encaisser de
+ * tous les membres, les accès qui vont se restreindre, l'échéance annuelle
+ * des cotisations, et les rappels de la personne connectée.
+ */
+export async function getAgendaEquipe(
+  userId: string,
+  du: string,
+  au: string,
+): Promise<ElementAgenda[]> {
+  const aujourdhui = aujourdhuiISO();
+  const periode = { gte: jourBase(du), lte: jourBase(au) };
+  // Une échéance dans la période vient d'une date plus tôt d'autant.
+  const avant = (jours: number) => ({
+    gte: jourBase(ajouterJours(du, -jours)),
+    lte: jourBase(ajouterJours(au, -jours)),
+  });
+
+  const [evenements, factures, retards, rappels] = await Promise.all([
+    prisma.event.findMany({
+      where: { date: periode },
+      select: {
+        id: true,
+        titre: true,
+        date: true,
+        debut: true,
+        fin: true,
+        lieu: true,
+        format: true,
+        cap: true,
+        _count: { select: { participants: true } },
+      },
+    }),
+    prisma.invoice.findMany({
+      where: { statut: "envoyee", date: avant(DELAI_REGLEMENT_JOURS) },
+      select: {
+        id: true,
+        numero: true,
+        date: true,
+        objet: true,
+        montant: true,
+        devise: true,
+        member: { select: { nom: true } },
+      },
+    }),
+    prisma.member.findMany({
+      where: {
+        statut: "en_retard",
+        retardDepuis: avant(RETARD_BLOCAGE_JOURS + 1),
+      },
+      select: { id: true, nom: true, retardDepuis: true },
+    }),
+    rappelsAgenda(userId, du, au),
+  ]);
+
+  const elements: ElementAgenda[] = [];
+
+  for (const e of evenements) {
     elements.push({
-      id: `rappel-${r.id}`,
-      type: "rappel",
-      titre: r.titre,
-      jour: toISODate(r.jour),
-      debut: r.heure,
-      fin: null,
-      detail: r.note,
-      href: null,
-      fait: r.fait,
-      rappel: { id: r.id, note: r.note },
+      id: `evenement-${e.id}`,
+      type: "evenement",
+      titre: e.titre,
+      jour: toISODate(e.date),
+      debut: e.debut,
+      fin: e.fin,
+      lieu: e.lieu,
+      detail: `${EVENT_FORMAT_LABEL[e.format]} · ${e._count.participants}/${e.cap} inscrits`,
+      href: `/admin/evenements/${e.id}`,
     });
   }
 
-  return trierElements(elements);
+  for (const f of factures) {
+    const jour = echeanceFacture(toISODate(f.date));
+    elements.push({
+      id: `facture-${f.id}`,
+      type: "echeance",
+      titre: `Facture ${f.numero} · ${f.member.nom}`,
+      jour,
+      debut: null,
+      fin: null,
+      detail: `${f.objet} · ${fmtMontant(f.montant, f.devise)}`,
+      href: `/admin/paiements/${f.id}`,
+      urgent: jour < aujourdhui,
+    });
+  }
+
+  for (const m of retards) {
+    elements.push({
+      id: `restriction-${m.id}`,
+      type: "echeance",
+      titre: `Accès restreint : ${m.nom}`,
+      jour: dateRestriction(toISODate(m.retardDepuis!)),
+      debut: null,
+      fin: null,
+      detail: `Cotisation non réglée après ${RETARD_BLOCAGE_JOURS} jours de retard`,
+      href: `/admin/membres/${m.id}`,
+      urgent: true,
+    });
+  }
+
+  for (
+    let annee = Number(du.slice(0, 4));
+    annee <= Number(au.slice(0, 4));
+    annee++
+  ) {
+    const jour = echeanceCotisation(annee);
+    if (jour < du || jour > au) continue;
+    elements.push({
+      id: `cotisation-${annee}`,
+      type: "echeance",
+      titre: `Échéance des cotisations ${annee}`,
+      jour,
+      debut: null,
+      fin: null,
+      detail: "Renouvellement annuel des adhésions",
+      href: "/admin/paiements",
+    });
+  }
+
+  return trierElements([...elements, ...rappels]);
 }
 
 /* ============================ Messagerie ============================ */
