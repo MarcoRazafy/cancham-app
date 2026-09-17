@@ -31,6 +31,41 @@ export interface MembreJoignable {
 }
 
 /**
+ * Teintes d'une ligne de la liste.
+ *
+ * Sans conversation choisie dans l'adresse, la première s'ouvre d'office à
+ * côté de la liste sur grand écran. Sur téléphone, la liste est seule : rien
+ * n'y est ouvert, rien ne doit y paraître sélectionné — d'où la teinte
+ * « implicite », sombre à partir de `md` seulement. Les classes sont écrites
+ * en entier : Tailwind ne repère pas celles qu'on assemble.
+ */
+const TEINTES = {
+  normal: {
+    ligne: "hover:bg-surface-2",
+    heure: "text-faint",
+    apercu: "text-faint",
+    groupe: "bg-navy-soft text-navy",
+    individuel: "bg-accent-soft text-accent-strong",
+  },
+  actif: {
+    ligne: "bg-[#14263a] text-white",
+    heure: "text-white/55",
+    apercu: "text-white/60",
+    groupe: "bg-white/15 text-white",
+    individuel: "bg-white/15 text-white",
+  },
+  implicite: {
+    ligne:
+      "hover:bg-surface-2 md:bg-[#14263a] md:text-white md:hover:bg-[#14263a]",
+    heure: "text-faint md:text-white/55",
+    apercu: "text-faint md:text-white/60",
+    groupe: "bg-navy-soft text-navy md:bg-white/15 md:text-white",
+    individuel:
+      "bg-accent-soft text-accent-strong md:bg-white/15 md:text-white",
+  },
+};
+
+/**
  * Liste des conversations, avec recherche de personnes.
  *
  * La recherche porte sur le nom du fil, son sous-titre — l'entreprise, la
@@ -42,19 +77,24 @@ export interface MembreJoignable {
 export function ListeFils({
   fils,
   actifId,
+  choixExplicite,
   base,
   space,
   membres,
   personnes,
+  className = "flex",
 }: {
   fils: ResumeFil[];
   actifId: string;
+  /** La conversation ouverte a été choisie (`?t=`), pas prise par défaut. */
+  choixExplicite: boolean;
   base: string;
   space: Space;
   /** Membres sans conversation individuelle en cours. Vide côté back-office. */
   membres: MembreJoignable[];
   /** Personnes qu'on peut réunir dans un groupe. */
   personnes: ElementACocher[];
+  className?: string;
 }) {
   const [saisie, setSaisie] = useState("");
   const terme = normaliser(saisie.trim());
@@ -82,7 +122,9 @@ export function ListeFils({
   );
 
   return (
-    <div className="w-full md:w-[290px] md:shrink-0 border-b md:border-b-0 md:border-r border-line flex flex-col min-h-0 max-h-[40%] md:max-h-none">
+    <div
+      className={`w-full md:w-[290px] md:shrink-0 md:border-r border-line flex-col min-h-0 ${className}`}
+    >
       <div className="p-2.5 border-b border-line shrink-0 flex gap-2">
         <div className="relative flex-1 min-w-0">
           <Search
@@ -113,27 +155,24 @@ export function ListeFils({
 
       <div className="overflow-y-auto flex-1 min-h-0">
         {filsTrouves.map((f) => {
-          const actif = f.id === actifId;
+          const teinte =
+            f.id !== actifId
+              ? TEINTES.normal
+              : choixExplicite
+                ? TEINTES.actif
+                : TEINTES.implicite;
           return (
             <Link
               key={f.id}
               href={`${base}?t=${f.id}`}
-              className={`flex gap-2.5 px-3.5 py-3 border-b border-line no-underline ${
-                actif ? "bg-[#14263a] text-white" : "hover:bg-surface-2"
-              }`}
+              className={`flex gap-2.5 px-3.5 py-3 border-b border-line no-underline ${teinte.ligne}`}
             >
               <Pastille
                 src={f.avatar}
                 alt={f.nom}
                 initiales={f.init}
                 taille={36}
-                className={
-                  actif
-                    ? "bg-white/15 text-white"
-                    : f.type === "groupe"
-                      ? "bg-navy-soft text-navy"
-                      : "bg-accent-soft text-accent-strong"
-                }
+                className={teinte[f.type]}
               />
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between gap-1.5 items-baseline">
@@ -141,7 +180,7 @@ export function ListeFils({
                     {f.nom}
                   </span>
                   <span
-                    className={`text-[10.5px] shrink-0 tabular-nums ${actif ? "text-white/55" : "text-faint"}`}
+                    className={`text-[10.5px] shrink-0 tabular-nums ${teinte.heure}`}
                   >
                     {f.heure}
                   </span>
@@ -151,9 +190,7 @@ export function ListeFils({
                     </span>
                   ) : null}
                 </div>
-                <div
-                  className={`text-[11.6px] truncate ${actif ? "text-white/60" : "text-faint"}`}
-                >
+                <div className={`text-[11.6px] truncate ${teinte.apercu}`}>
                   {f.apercu}
                 </div>
               </div>
