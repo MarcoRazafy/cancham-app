@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /**
+   * Adresses autorisées à interroger le serveur de développement.
+   *
+   * Next n'accepte que `localhost` par défaut et bloque le reste. Ouvert
+   * depuis un téléphone sur le même réseau — http://192.168.1.34:3000 —, le
+   * site s'affichait mais restait inerte : le menu ne s'ouvrait pas, aucun
+   * bouton ne répondait. Sans effet en production.
+   */
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "100.*.*.*", "172.16.*.*"],
+
   experimental: {
     serverActions: {
       /**

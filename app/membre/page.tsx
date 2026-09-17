@@ -163,7 +163,7 @@ export default async function VueDEnsemble() {
             <>
               <Link
                 href={`/membre/evenements/${prochain.id}`}
-                className="relative mx-6 rounded-xl overflow-hidden aspect-[16/7] bg-surface-2 block group"
+                className="relative mx-5 sm:mx-6 rounded-xl overflow-hidden aspect-[16/9] sm:aspect-[16/7] bg-surface-2 block group"
               >
                 {prochain.photo ? (
                   <Image
@@ -176,43 +176,50 @@ export default async function VueDEnsemble() {
                 ) : null}
               </Link>
 
-              <div className="flex items-center gap-5 flex-wrap px-6 py-5">
-                <PastilleDate date={prochain.date} />
+              {/* Sur téléphone, la date et le titre tiennent une ligne, le tarif
+                  et le bouton la suivante : à trois blocs sur la même ligne, le
+                  titre se retrouvait à une lettre par ligne. */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 px-5 sm:px-6 py-5">
+                <div className="flex items-center gap-4 min-w-0 sm:contents">
+                  <PastilleDate date={prochain.date} />
 
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-[18px] m-0 mb-2">{prochain.titre}</h3>
-                  <div className="flex gap-4 flex-wrap text-[13px] text-muted">
-                    <span className="inline-flex items-center gap-1.5">
-                      <MapPin size={14} /> {prochain.lieu}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock size={14} />{" "}
-                      {plageHoraire(prochain.debut, prochain.fin) ??
-                        prochain.format}
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[18px] m-0 mb-2">{prochain.titre}</h3>
+                    <div className="flex gap-4 flex-wrap text-[13px] text-muted">
+                      <span className="inline-flex items-center gap-1.5">
+                        <MapPin size={14} /> {prochain.lieu}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock size={14} />{" "}
+                        {plageHoraire(prochain.debut, prochain.fin) ??
+                          prochain.format}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <span className="inline-flex items-center text-[12px] font-semibold px-3 py-1.5 rounded-md bg-success-soft text-success-strong">
-                  {prochain.payant ? fmtMoney(prochain.prix) : "Inclus"}
-                </span>
+                <div className="flex items-center gap-3 shrink-0 sm:contents">
+                  <span className="inline-flex items-center text-[12px] font-semibold px-3 py-1.5 rounded-md bg-success-soft text-success-strong">
+                    {prochain.payant ? fmtMoney(prochain.prix) : "Inclus"}
+                  </span>
 
-                {dejaInscrit ? (
-                  <Link
-                    href={`/membre/evenements/${prochain.id}`}
-                    className="btn-contour btn-contour-sm text-success hover:bg-success-soft"
-                  >
-                    <CheckCircle2 size={15} /> Inscrit
-                  </Link>
-                ) : (
-                  <RegisterButton
-                    event={prochain}
-                    nom={user.nom}
-                    email={user.email}
-                    tel={user.tel}
-                    libelle="M’inscrire"
-                  />
-                )}
+                  {dejaInscrit ? (
+                    <Link
+                      href={`/membre/evenements/${prochain.id}`}
+                      className="btn-contour btn-contour-sm text-success hover:bg-success-soft"
+                    >
+                      <CheckCircle2 size={15} /> Inscrit
+                    </Link>
+                  ) : (
+                    <RegisterButton
+                      event={prochain}
+                      nom={user.nom}
+                      email={user.email}
+                      tel={user.tel}
+                      libelle="M’inscrire"
+                    />
+                  )}
+                </div>
               </div>
             </>
           ) : (
