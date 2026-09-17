@@ -115,22 +115,28 @@ export async function getHistoriqueMembre(
 export type Montants = Record<Devise, number>;
 
 /**
- * Encaissé et restant dû sur une année, par devise.
+ * Encaissé et restant dû sur une année — ou depuis toujours —, par devise.
  *
  * Deux devises, deux totaux : additionner Ariary et dollars n'aurait pas de
  * sens.
  */
-export async function getFinancesAnnee(annee: number): Promise<{
+export async function getFinancesAnnee(annee: number | null): Promise<{
   encaisse: Montants;
   aEncaisser: Montants;
   factures: number;
   enAttente: number;
 }> {
-  const debut = new Date(`${annee}-01-01T00:00:00`);
-  const fin = new Date(`${annee + 1}-01-01T00:00:00`);
   const rows = await prisma.invoice.groupBy({
     by: ["devise", "statut"],
-    where: { date: { gte: debut, lt: fin } },
+    where:
+      annee === null
+        ? undefined
+        : {
+            date: {
+              gte: new Date(`${annee}-01-01T00:00:00`),
+              lt: new Date(`${annee + 1}-01-01T00:00:00`),
+            },
+          },
     _sum: { montant: true },
     _count: { _all: true },
   });

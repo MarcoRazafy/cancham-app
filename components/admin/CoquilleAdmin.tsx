@@ -48,7 +48,7 @@ export function CoquilleAdmin({
 
       {/* ==================== Barre latérale ==================== */}
       <aside
-        className={`w-[274px] shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 text-white transition-transform duration-200 ${
+        className={`print:hidden w-[274px] shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 text-white transition-transform duration-200 ${
           menuOuvert ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
         style={{ background: "var(--laterale)" }}
@@ -146,9 +146,9 @@ export function CoquilleAdmin({
       </aside>
 
       {/* ==================== Contenu ==================== */}
-      <div className="flex-1 min-w-0 flex flex-col lg:ml-[274px]">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-[274px] print:ml-0">
         <header
-          className="sticky top-0 z-30 border-b border-white/10 flex items-center gap-4 px-4 md:px-7 py-3 text-white"
+          className="print:hidden sticky top-0 z-30 border-b border-white/10 flex items-center gap-4 px-4 md:px-7 py-3 text-white"
           style={{ background: "var(--superieure)" }}
         >
           <button
@@ -174,7 +174,7 @@ export function CoquilleAdmin({
           </div>
         </header>
 
-        <main className="px-4 md:px-7 pt-7 pb-16 max-w-[1240px] w-full mx-auto">
+        <main className="px-4 md:px-7 pt-7 pb-16 max-w-[1240px] w-full mx-auto print:p-0">
           {children}
         </main>
       </div>

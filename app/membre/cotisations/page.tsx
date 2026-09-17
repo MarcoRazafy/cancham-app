@@ -158,9 +158,12 @@ export default async function CotisationsPage() {
                   <StatusPill status={f.statut} />
                 </Td>
                 <Td>
-                  <span className="inline-flex items-center gap-1.5 text-[12.5px] text-faint">
-                    <Download size={13} /> PDF
-                  </span>
+                  <Link
+                    href={`/membre/cotisations/${f.id}`}
+                    className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent no-underline hover:underline"
+                  >
+                    <Download size={13} /> Voir · PDF
+                  </Link>
                 </Td>
               </tr>
             ))

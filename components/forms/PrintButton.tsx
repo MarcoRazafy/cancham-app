@@ -3,11 +3,20 @@
 import { Printer } from "lucide-react";
 
 /** Déclenche l'impression, donc l'export PDF du navigateur. */
-export function PrintButton() {
+export function PrintButton({
+  contour = false,
+}: {
+  /** Bouton secondaire, quand une autre action occupe la place principale. */
+  contour?: boolean;
+}) {
   return (
     <button
       onClick={() => window.print()}
-      className="inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-transparent bg-accent text-white hover:bg-accent-strong text-[13.4px] px-[15px] py-[9px]"
+      className={
+        contour
+          ? "btn-contour btn-contour-sm text-ink hover:bg-surface-2"
+          : "btn-action btn-action-sm"
+      }
     >
       <Printer size={15} /> Imprimer / Exporter PDF
     </button>

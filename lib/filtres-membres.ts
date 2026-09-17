@@ -1,5 +1,6 @@
 import { ORDRE_FORMULES, type FormuleId } from "@/lib/membership";
 import type { Member, MemberStatus } from "@/lib/types";
+import { plat } from "@/lib/texte";
 
 /**
  * Filtres de la liste des membres, lus depuis l'adresse.
@@ -41,13 +42,6 @@ export function lireFiltres(params: {
       : null,
   };
 }
-
-/** Minuscules sans accents, pour une recherche qui pardonne la saisie. */
-const plat = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
 
 /** Membres retenus par la recherche et la formule, tous statuts confondus. */
 export function filtrerHorsStatut(membres: Member[], f: FiltresMembres) {

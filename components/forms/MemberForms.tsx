@@ -208,6 +208,7 @@ export function RegisterPaymentButton({
               <select name="mode" className={INPUT} defaultValue="Espèces">
                 <option>Espèces</option>
                 <option>Virement bancaire</option>
+                <option>Mobile Money</option>
                 <option>Chèque</option>
               </select>
             </Field>

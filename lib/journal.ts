@@ -58,6 +58,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "ok",
   },
+  facture_emise: {
+    libelle: "Facture émise",
+    famille: "finance",
+    ton: "info",
+  },
   facture_payee: {
     libelle: "Facture marquée payée",
     famille: "finance",
