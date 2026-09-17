@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  ArrowLeft,
   Building2,
   ExternalLink,
   FileText,
@@ -67,6 +68,7 @@ export interface InfoConversation {
  * la droite de la conversation.
  */
 export function EnTeteConversation({
+  retour,
   threadId,
   space,
   moiId,
@@ -79,6 +81,8 @@ export function EnTeteConversation({
   ajoutables,
   messages,
 }: {
+  /** Retour à la liste des conversations, sur téléphone. */
+  retour: string;
   threadId: string;
   space: Space;
   moiId: string;
@@ -154,7 +158,14 @@ export function EnTeteConversation({
 
   return (
     <>
-      <div className="px-[18px] py-3 border-b border-line flex items-center gap-2.5 shrink-0">
+      <div className="pl-2 pr-3.5 md:px-[18px] py-3 border-b border-line flex items-center gap-2.5 shrink-0">
+        <Link
+          href={retour}
+          aria-label="Retour aux conversations"
+          className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-ink shrink-0 no-underline hover:bg-surface-2"
+        >
+          <ArrowLeft size={20} />
+        </Link>
         {lienProfil ? (
           <Link
             href={lienProfil}

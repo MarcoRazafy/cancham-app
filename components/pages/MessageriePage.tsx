@@ -76,7 +76,12 @@ export async function MessageriePage({
     space === "membre" ? getMembresJoignables(user) : Promise.resolve([]),
     getPersonnesJoignables(user.id),
   ]);
-  const active = threads.find((t) => t.id === threadId) ?? threads[0];
+  // Une conversation choisie dans l'adresse, ou à défaut la plus récente.
+  // Sur grand écran, liste et conversation sont côte à côte. Sur téléphone, un
+  // seul volet à la fois : la liste tant qu'aucune conversation n'est choisie,
+  // puis la conversation seule, avec un retour vers la liste.
+  const choisie = threads.find((t) => t.id === threadId);
+  const active = choisie ?? threads[0];
   const base = `/${space}/messagerie`;
 
   const resumes: ResumeFil[] = threads.map((t) => ({
@@ -93,26 +98,32 @@ export async function MessageriePage({
 
   return (
     <>
-      <ViewHead
-        title={
-          <>
-            Messa<Saillant>gerie</Saillant>
-          </>
-        }
-      >
-        {space === "admin"
-          ? "Échangez avec les membres et les comités depuis l’espace d’administration."
-          : "Échangez directement avec un autre membre ou un groupe : comités, organisateurs d’événements, équipe CanCham."}
-      </ViewHead>
+      <div className={choisie ? "hidden md:block" : undefined}>
+        <ViewHead
+          title={
+            <>
+              Messa<Saillant>gerie</Saillant>
+            </>
+          }
+        >
+          {space === "admin"
+            ? "Échangez avec les membres et les comités depuis l’espace d’administration."
+            : "Échangez directement avec un autre membre ou un groupe : comités, organisateurs d’événements, équipe CanCham."}
+        </ViewHead>
+      </div>
 
-      <div className="flex border border-line rounded-[var(--radius-m)] bg-surface overflow-hidden h-[min(680px,calc(100vh-220px))] min-h-[480px] flex-col md:flex-row">
+      {/* Sur téléphone, le cadre suit la hauteur de la liste : la conversation,
+          elle, s'ouvre en plein écran. */}
+      <div className="flex border border-line rounded-[var(--radius-m)] bg-surface overflow-hidden flex-col md:flex-row md:h-[min(680px,calc(100vh-220px))] md:min-h-[480px]">
         <ListeFils
           fils={resumes}
           actifId={active?.id ?? ""}
+          choixExplicite={Boolean(choisie)}
           base={base}
           space={space}
           membres={membres}
           personnes={personnes.map((p) => versElement(p))}
+          className={choisie ? "hidden md:flex" : "flex"}
         />
 
         {active ? (
@@ -122,9 +133,11 @@ export async function MessageriePage({
             personnes={personnes}
             space={space}
             user={user}
+            base={base}
+            choixExplicite={Boolean(choisie)}
           />
         ) : (
-          <p className="m-auto text-[13.4px] text-faint">
+          <p className="hidden md:block m-auto text-[13.4px] text-faint">
             Aucune conversation.
           </p>
         )}
@@ -139,12 +152,16 @@ function Conversation({
   personnes,
   space,
   user,
+  base,
+  choixExplicite,
 }: {
   fil: MessageThread;
   fils: MessageThread[];
   personnes: Personne[];
   space: Space;
   user: User;
+  base: string;
+  choixExplicite: boolean;
 }) {
   const lienProfil = fil.membre
     ? fil.membre.id === user.memberId
@@ -199,13 +216,27 @@ function Conversation({
   const visibles = fil.messages.filter((m) => !m.supprime);
 
   return (
-    // `relative` : le panneau d'information se pose sur la droite de la conversation.
-    <div className="flex-1 min-w-0 min-h-0 flex flex-col relative">
-      <MarquerLu threadId={fil.id} space={space} nonLus={fil.unread} />
+    // `relative` : le panneau d'information se pose sur la droite de la
+    // conversation. Sur téléphone, la conversation couvre tout l'écran, barre
+    // supérieure comprise, comme dans une application de messagerie : son
+    // en-tête porte le retour vers la liste. Prise par défaut, elle n'y est
+    // pas affichée du tout.
+    <div
+      className={`${
+        choixExplicite ? "flex fixed inset-0 z-[35]" : "hidden"
+      } bg-surface md:relative md:inset-auto md:z-auto md:flex flex-1 min-w-0 min-h-0 flex-col`}
+    >
+      <MarquerLu
+        threadId={fil.id}
+        space={space}
+        nonLus={fil.unread}
+        choixExplicite={choixExplicite}
+      />
 
       <EnTeteConversation
         // Changer de fil referme le panneau et vide sa recherche.
         key={fil.id}
+        retour={base}
         threadId={fil.id}
         space={space}
         moiId={user.id}
