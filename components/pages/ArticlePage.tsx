@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import Image from "next/image";
 import { MediaBanner, OfferCard } from "@/components/domain";
 import { BtnLink, Card, EmptyState, Kicker } from "@/components/ui";
 import { Agrandir } from "@/components/Agrandir";
+import {
+  SupprimerActualiteButton,
+  SupprimerCommentaireButton,
+} from "@/components/forms/AdminContenuForms";
 import { CommentForm } from "@/components/forms/ContentForms";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
@@ -23,10 +27,23 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
 
   return (
     <>
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <BtnLink href={`/${space}/actualites`} variant="ghost" sm>
           <ArrowLeft size={14} /> Retour aux actualités
         </BtnLink>
+        {/* L'équipe voit l'article comme les membres, avec ses commandes. */}
+        {admin ? (
+          <div className="flex items-center gap-2">
+            <BtnLink href={`/admin/actualites/${n.id}/modifier`} sm>
+              <Pencil size={14} /> Modifier
+            </BtnLink>
+            <SupprimerActualiteButton
+              newsId={n.id}
+              titre={n.titre}
+              commentaires={n.commentaires.length}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/*
@@ -94,8 +111,15 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
                         · {c.entreprise}
                       </span>
                     </div>
-                    <div className="text-[11.5px] text-faint whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 text-[11.5px] text-faint whitespace-nowrap">
                       {fmtDate(c.date, { day: "numeric", month: "short" })}
+                      {admin ? (
+                        <SupprimerCommentaireButton
+                          commentId={c.id}
+                          auteur={c.auteur}
+                          retour={`/admin/actualites/${n.id}`}
+                        />
+                      ) : null}
                     </div>
                   </div>
                   <div className="text-[13.4px] mt-1.5 leading-relaxed whitespace-pre-line">

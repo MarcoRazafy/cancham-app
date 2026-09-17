@@ -1,7 +1,5 @@
 import { NewsFeedItem, OfferCard } from "@/components/domain";
 import { EmptyState, ViewHead } from "@/components/ui";
-import { NewNewsButton, NewOfferButton } from "@/components/forms/ContentForms";
-import { getMembers } from "@/lib/queries";
 import { getNews, getOffers } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import type { Space } from "@/lib/types";
@@ -12,15 +10,11 @@ export async function ActualitesPage({ space }: { space: Space }) {
   const base = `/${space}/actualites`;
   // La requête rend déjà le fil du plus récent au plus ancien.
   const user = await getCurrentUser(space);
-  const [feed, offers, membres] = await Promise.all([
-    getNews(user.id),
-    getOffers(),
-    admin ? getMembers() : Promise.resolve([]),
-  ]);
+  const [feed, offers] = await Promise.all([getNews(user.id), getOffers()]);
 
   return (
     <>
-      <ViewHead title="Actualités" action={admin ? <NewNewsButton /> : null}>
+      <ViewHead title="Actualités">
         Le fil d’actualité de la chambre : programmation, retours d’événements
         et vie institutionnelle, dans l’ordre chronologique.
       </ViewHead>
@@ -42,11 +36,6 @@ export async function ActualitesPage({ space }: { space: Space }) {
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
             </h2>
-            {admin ? (
-              <NewOfferButton
-                membres={membres.map((m) => ({ id: m.id, nom: m.nom }))}
-              />
-            ) : null}
           </div>
           {offers.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
