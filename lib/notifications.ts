@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import { getUnreadTotal } from "@/lib/queries";
 import { toISODate } from "@/lib/enums";
 import { fmtDate } from "@/lib/format";
 import {
@@ -31,16 +32,18 @@ export interface Notification {
 export async function getNotifications(
   space: Space,
   memberId: string | null,
+  /** Les messages non lus sont ceux de l'utilisateur, pas de l'espace. */
+  userId: string,
 ): Promise<Notification[]> {
   return space === "admin"
-    ? notificationsAdmin()
-    : notificationsMembre(memberId);
+    ? notificationsAdmin(userId)
+    : notificationsMembre(memberId, userId);
 }
 
-async function notificationsAdmin(): Promise<Notification[]> {
+async function notificationsAdmin(userId: string): Promise<Notification[]> {
   const [parStatut, nonLus, prochain] = await Promise.all([
     prisma.member.groupBy({ by: ["statut"], _count: { _all: true } }),
-    prisma.messageThread.aggregate({ _sum: { unread: true } }),
+    getUnreadTotal(userId),
     prisma.event.findFirst({
       where: { date: { gte: new Date() } },
       orderBy: { date: "asc" },
@@ -83,7 +86,7 @@ async function notificationsAdmin(): Promise<Notification[]> {
       ton: "warn",
     });
 
-  const messages = nonLus._sum.unread ?? 0;
+  const messages = nonLus;
   if (messages)
     liste.push({
       id: "messages",
@@ -110,6 +113,7 @@ async function notificationsAdmin(): Promise<Notification[]> {
 
 async function notificationsMembre(
   memberId: string | null,
+  userId: string,
 ): Promise<Notification[]> {
   if (!memberId) return [];
 
@@ -118,7 +122,7 @@ async function notificationsMembre(
       where: { id: memberId },
       select: { statut: true, retardDepuis: true },
     }),
-    prisma.messageThread.aggregate({ _sum: { unread: true } }),
+    getUnreadTotal(userId),
     prisma.registration.findFirst({
       where: { memberId, event: { date: { gte: new Date() } } },
       orderBy: { event: { date: "asc" } },
@@ -162,7 +166,7 @@ async function notificationsMembre(
       });
   }
 
-  const messages = nonLus._sum.unread ?? 0;
+  const messages = nonLus;
   if (messages)
     liste.push({
       id: "messages",

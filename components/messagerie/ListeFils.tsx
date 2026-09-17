@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { MessageSquarePlus, Search, X } from "lucide-react";
 import { ouvrirConversation } from "@/lib/actions/messages";
 import type { Space } from "@/lib/types";
+import { NouveauGroupe } from "./Groupe";
+import type { ElementACocher } from "./ListeACocher";
 import { Pastille, normaliser } from "./outils";
 
 export interface ResumeFil {
@@ -34,7 +36,8 @@ export interface MembreJoignable {
  * La recherche porte sur le nom du fil, son sous-titre — l'entreprise, la
  * fonction — et le dernier message. Elle cherche aussi dans l'annuaire : un
  * membre avec qui l'on n'a jamais échangé apparaît sous « Nouvelle
- * conversation », et un clic ouvre le fil sans repasser par sa fiche.
+ * conversation », et un clic ouvre le fil sans repasser par sa fiche. Le
+ * bouton voisin crée un groupe.
  */
 export function ListeFils({
   fils,
@@ -42,6 +45,7 @@ export function ListeFils({
   base,
   space,
   membres,
+  personnes,
 }: {
   fils: ResumeFil[];
   actifId: string;
@@ -49,6 +53,8 @@ export function ListeFils({
   space: Space;
   /** Membres sans conversation individuelle en cours. Vide côté back-office. */
   membres: MembreJoignable[];
+  /** Personnes qu'on peut réunir dans un groupe. */
+  personnes: ElementACocher[];
 }) {
   const [saisie, setSaisie] = useState("");
   const terme = normaliser(saisie.trim());
@@ -77,8 +83,8 @@ export function ListeFils({
 
   return (
     <div className="w-full md:w-[290px] md:shrink-0 border-b md:border-b-0 md:border-r border-line flex flex-col min-h-0 max-h-[40%] md:max-h-none">
-      <div className="p-2.5 border-b border-line shrink-0">
-        <div className="relative">
+      <div className="p-2.5 border-b border-line shrink-0 flex gap-2">
+        <div className="relative flex-1 min-w-0">
           <Search
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
@@ -87,7 +93,7 @@ export function ListeFils({
             type="search"
             value={saisie}
             onChange={(e) => setSaisie(e.target.value)}
-            placeholder="Rechercher une personne…"
+            placeholder="Rechercher…"
             aria-label="Rechercher une personne ou une conversation"
             className="w-full rounded-[var(--radius-s)] border border-line bg-surface-2 text-ink pl-9 pr-8 py-2 text-[13px] outline-none focus:border-accent focus:bg-surface"
           />
@@ -102,6 +108,7 @@ export function ListeFils({
             </button>
           ) : null}
         </div>
+        <NouveauGroupe space={space} personnes={personnes} />
       </div>
 
       <div className="overflow-y-auto flex-1 min-h-0">

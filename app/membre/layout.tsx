@@ -17,9 +17,9 @@ export default async function MembreLayout({
   if (!membre) notFound();
 
   const [unread, stats, notifications] = await Promise.all([
-    getUnreadTotal(),
+    getUnreadTotal(user.id),
     getStatsPubliques(),
-    getNotifications("membre", membre.id),
+    getNotifications("membre", membre.id, user.id),
   ]);
 
   const verrouille = isAccessLocked(membre);

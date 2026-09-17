@@ -2,7 +2,9 @@ import "server-only";
 
 import type { FormuleId } from "@/lib/membership";
 
+import { initialesDe } from "@/lib/avatars";
 import { prisma } from "@/lib/db";
+import { critereJoignable } from "@/lib/messagerie";
 import {
   EVENT_FORMAT_LABEL,
   heureRelative,
@@ -20,6 +22,7 @@ import type {
   Member,
   MessageThread,
   NewsItem,
+  Personne,
   Offer,
   Registration,
   Resource,
@@ -428,75 +431,173 @@ export async function getEncaisse(): Promise<Record<"MGA" | "CAD", number>> {
 
 /* ============================ Messagerie ============================ */
 
-export async function getThreads(
-  currentUserId: string,
-): Promise<MessageThread[]> {
+/** Ce qu'on lit d'un utilisateur pour l'afficher dans la messagerie. */
+const PERSONNE_FIL = {
+  id: true,
+  nom: true,
+  fonction: true,
+  email: true,
+  tel: true,
+  photo: true,
+  role: true,
+  member: { select: { id: true, nom: true, siteweb: true } },
+} as const;
+
+const EQUIPE = "Équipe CanCham";
+
+/**
+ * Fils de l'utilisateur, le plus récemment actif en tête.
+ *
+ * Seuls les fils auxquels il participe remontent. Ce qui s'affiche en tête
+ * dépend de qui regarde : dans un échange individuel chacun voit l'autre, et
+ * l'assistance apparaît au membre sous le nom de la chambre, à l'équipe sous
+ * le nom du membre.
+ */
+export async function getThreads(user: {
+  id: string;
+  role: string;
+}): Promise<MessageThread[]> {
   const rows = await prisma.messageThread.findMany({
+    where: { participants: { some: { userId: user.id } } },
     include: {
+      participants: {
+        orderBy: { ajouteLe: "asc" },
+        include: { user: { select: PERSONNE_FIL } },
+      },
       messages: {
         orderBy: { sentAt: "asc" },
         include: { piecesJointes: { orderBy: { createdAt: "asc" } } },
       },
-      contact: {
-        select: {
-          nom: true,
-          fonction: true,
-          email: true,
-          tel: true,
-          photo: true,
-        },
-      },
     },
-    orderBy: { createdAt: "asc" },
   });
 
-  // Le fil ne porte que l'identifiant de l'entreprise : on lit les noms d'un
-  // seul coup plutôt qu'une requête par fil.
-  const ids = [
-    ...new Set(rows.map((t) => t.memberId).filter(Boolean)),
-  ] as string[];
-  const entreprises = new Map(
-    (
-      await prisma.member.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, nom: true, siteweb: true },
-      })
-    ).map((m) => [m.id, m]),
-  );
+  const cote = user.role === "admin" ? "equipe" : "membre";
 
-  return rows.map((t) => ({
-    id: t.id,
-    type: t.type,
-    nom: t.nom,
-    sousTitre: t.sousTitre,
-    init: t.init,
-    avatar: t.avatar,
-    memberId: t.memberId,
-    membre: t.memberId ? (entreprises.get(t.memberId) ?? null) : null,
-    contact: t.contact,
-    unread: t.unread,
-    messages: t.messages.map((m) => ({
-      id: m.id,
-      de: m.auteur,
-      moi: m.userId === currentUserId,
-      texte: m.texte,
-      heure: heureRelative(m.sentAt),
-      envoyeLe: m.sentAt.toISOString(),
-      pieces: m.piecesJointes.map((p) => ({
-        id: p.id,
-        nom: p.nom,
-        type: p.type,
-        taille: p.taille,
+  const fils = rows.map((t): MessageThread => {
+    const moi = t.participants.find((p) => p.userId === user.id);
+    const autres = t.participants
+      .filter((p) => p.userId !== user.id)
+      .map((p) => p.user);
+
+    const entrepriseDe = (u: (typeof autres)[number]) =>
+      u.member?.nom ?? (u.role === "admin" ? EQUIPE : "");
+
+    let entete: Pick<
+      MessageThread,
+      "nom" | "sousTitre" | "avatar" | "membre" | "contact"
+    >;
+    if (t.type === "groupe") {
+      entete = {
+        nom: t.nom ?? "Groupe",
+        sousTitre: `${t.participants.length} participant${t.participants.length > 1 ? "s" : ""}`,
+        avatar: t.avatar,
+        membre: null,
+        contact: null,
+      };
+    } else if (t.equipe && cote === "membre") {
+      entete = {
+        nom: t.nom ?? EQUIPE,
+        sousTitre: "Support membres",
+        avatar: t.avatar,
+        membre: null,
+        contact: null,
+      };
+    } else {
+      // Échange individuel, ou assistance vue depuis l'équipe : la personne en face.
+      const enFace = t.equipe
+        ? (autres.find((u) => u.role !== "admin") ?? autres[0])
+        : autres[0];
+      entete = enFace
+        ? {
+            nom: enFace.nom,
+            sousTitre: [
+              t.equipe ? "Assistance" : null,
+              entrepriseDe(enFace),
+              t.equipe ? null : enFace.fonction,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+            avatar: enFace.photo,
+            membre: enFace.member,
+            contact: {
+              id: enFace.id,
+              nom: enFace.nom,
+              fonction: enFace.fonction,
+              email: enFace.email,
+              tel: enFace.tel,
+              photo: enFace.photo,
+            },
+          }
+        : {
+            // L'autre personne a quitté la plateforme.
+            nom: "Conversation",
+            sousTitre: "",
+            avatar: null,
+            membre: null,
+            contact: null,
+          };
+    }
+
+    return {
+      id: t.id,
+      type: t.type,
+      equipe: t.equipe,
+      ...entete,
+      init: initialesDe(entete.nom),
+      participants: t.participants.map(({ user: u }) => ({
+        id: u.id,
+        nom: u.nom,
+        fonction: u.fonction,
+        entreprise: entrepriseDe(u),
+        photo: u.photo,
       })),
-    })),
-  }));
+      unread: t.messages.filter(
+        (m) =>
+          !m.supprimeLe &&
+          m.userId !== user.id &&
+          (!moi?.luLe || m.sentAt > moi.luLe),
+      ).length,
+      messages: t.messages.map((m) => ({
+        id: m.id,
+        de: m.auteur,
+        moi: m.userId === user.id,
+        texte: m.supprimeLe ? "" : m.texte,
+        heure: heureRelative(m.sentAt),
+        envoyeLe: m.sentAt.toISOString(),
+        modifie: Boolean(m.modifieLe),
+        supprime: Boolean(m.supprimeLe),
+        transfere: m.transfere,
+        pieces: m.piecesJointes.map((p) => ({
+          id: p.id,
+          nom: p.nom,
+          type: p.type,
+          taille: p.taille,
+        })),
+      })),
+    };
+  });
+
+  // Un groupe tout juste créé, encore sans message, se classe à sa création.
+  const activite = (t: MessageThread) =>
+    t.messages.at(-1)?.envoyeLe ??
+    rows.find((r) => r.id === t.id)!.createdAt.toISOString();
+  return fils.sort((a, b) => activite(b).localeCompare(activite(a)));
 }
 
-export async function getUnreadTotal(): Promise<number> {
-  const { _sum } = await prisma.messageThread.aggregate({
-    _sum: { unread: true },
-  });
-  return _sum.unread ?? 0;
+/**
+ * Messages non lus de l'utilisateur, tous fils confondus : ceux des autres,
+ * arrivés depuis sa dernière ouverture de chaque fil.
+ */
+export async function getUnreadTotal(userId: string): Promise<number> {
+  const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
+    SELECT count(*)::int AS n
+    FROM messages m
+    JOIN participants_fils p
+      ON p."threadId" = m."threadId" AND p."userId" = ${userId}
+    WHERE m."supprimeLe" IS NULL
+      AND m."userId" IS DISTINCT FROM ${userId}
+      AND (p."luLe" IS NULL OR m."sentAt" > p."luLe")`;
+  return n;
 }
 
 /* ============================ Tableau de bord ============================ */
@@ -749,23 +850,38 @@ export async function getContacts(memberId: string): Promise<Contact[]> {
  * propose sous « Nouvelle conversation ». Le référent est lu d'une requête
  * pour tous, et non membre par membre.
  */
-export async function getMembresJoignables(memberIdCourant: string | null) {
+export async function getMembresJoignables(user: {
+  id: string;
+  memberId: string | null;
+}) {
   const [membres, fils] = await Promise.all([
     prisma.member.findMany({
       where: {
         statut: { in: ["a_jour", "en_retard"] },
-        ...(memberIdCourant ? { id: { not: memberIdCourant } } : {}),
+        ...(user.memberId ? { id: { not: user.memberId } } : {}),
       },
       select: { id: true, nom: true, secteur: true, logo: true, photo: true },
       orderBy: { nom: "asc" },
     }),
+    // Entreprises avec lesquelles l'utilisateur a déjà un échange individuel.
     prisma.messageThread.findMany({
-      where: { type: "individuel", memberId: { not: null } },
-      select: { memberId: true },
+      where: {
+        type: "individuel",
+        equipe: false,
+        participants: { some: { userId: user.id } },
+      },
+      select: {
+        participants: {
+          where: { userId: { not: user.id } },
+          select: { user: { select: { memberId: true } } },
+        },
+      },
     }),
   ]);
 
-  const dejaEnContact = new Set(fils.map((f) => f.memberId));
+  const dejaEnContact = new Set(
+    fils.flatMap((f) => f.participants.map((p) => p.user.memberId)),
+  );
   const disponibles = membres.filter((m) => !dejaEnContact.has(m.id));
 
   const referents = new Map(
@@ -786,5 +902,34 @@ export async function getMembresJoignables(memberIdCourant: string | null) {
     secteur: m.secteur,
     vignette: m.photo ?? m.logo,
     referent: referents.get(m.id) ?? null,
+  }));
+}
+
+/**
+ * Personnes à qui l'on peut écrire : l'équipe CanCham, et les contacts des
+ * entreprises membres dont l'adhésion est active. Sert à composer un groupe et
+ * à transférer un message.
+ */
+export async function getPersonnesJoignables(
+  userId: string,
+): Promise<Personne[]> {
+  const rows = await prisma.user.findMany({
+    where: critereJoignable(userId),
+    select: {
+      id: true,
+      nom: true,
+      fonction: true,
+      photo: true,
+      role: true,
+      member: { select: { nom: true } },
+    },
+    orderBy: { nom: "asc" },
+  });
+  return rows.map((u) => ({
+    id: u.id,
+    nom: u.nom,
+    fonction: u.fonction,
+    entreprise: u.member?.nom ?? (u.role === "admin" ? EQUIPE : ""),
+    photo: u.photo,
   }));
 }

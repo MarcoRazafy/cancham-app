@@ -247,28 +247,49 @@ export interface Message {
   envoyeLe: string;
   /** Images, vidéos et PDF joints. Un message peut n'avoir que des pièces. */
   pieces: PieceJointe[];
+  /** Texte retouché par son auteur après l'envoi. */
+  modifie: boolean;
+  /** Supprimé par son auteur : ni texte ni pièces, seulement la trace. */
+  supprime: boolean;
+  /** Copie d'un message venu d'une autre conversation. */
+  transfere: boolean;
+}
+
+/** Une personne d'un fil, ou à qui l'on peut écrire. */
+export interface Personne {
+  id: string;
+  nom: string;
+  fonction: string;
+  /** Entreprise, ou « Équipe CanCham » pour la chambre. */
+  entreprise: string;
+  photo: string | null;
 }
 
 export interface MessageThread {
   id: string;
   type: "individuel" | "groupe";
+  /** Assistance entre un membre et l'équipe CanCham. */
+  equipe: boolean;
+  /** Ce que voit l'utilisateur courant : l'autre personne, le groupe, la chambre. */
   nom: string;
   sousTitre: string;
   init: string;
   /** Visuel du fil, par URL. Les initiales servent de repli. */
   avatar?: string | null;
-  /** Entreprise en face, pour un échange individuel. */
-  memberId?: string | null;
   /** Entreprise en face, avec son nom : le panneau d'information y renvoie. */
   membre?: { id: string; nom: string; siteweb: string | null } | null;
   /** Personne en face, pour le panneau d'information. */
   contact?: {
+    id: string;
     nom: string;
     fonction: string;
     email: string;
     tel: string | null;
     photo: string | null;
   } | null;
+  /** Tous les participants, utilisateur courant compris. */
+  participants: Personne[];
+  /** Messages des autres arrivés depuis la dernière ouverture du fil. */
   unread: number;
   messages: Message[];
 }

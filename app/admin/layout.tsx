@@ -9,11 +9,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, stats, unread, notifications] = await Promise.all([
-    getCurrentUser("admin"),
+  const user = await getCurrentUser("admin");
+  const [stats, unread, notifications] = await Promise.all([
     getMemberStats(),
-    getUnreadTotal(),
-    getNotifications("admin", null),
+    getUnreadTotal(user.id),
+    getNotifications("admin", null, user.id),
   ]);
 
   // Ce qui demande une action de l'équipe : tout ce qui n'est pas à jour.
