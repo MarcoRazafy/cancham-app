@@ -531,7 +531,9 @@ export async function ouvrirConversation(formData: FormData) {
   const referent = await prisma.user.findFirst({
     where:
       space === "admin"
-        ? { memberId, role: "membre" }
+        ? // Le demandeur d'une adhésion n'a encore qu'un compte visiteur :
+          // c'est pourtant lui que l'équipe doit pouvoir joindre.
+          { memberId, role: { in: ["membre" as const, "visiteur" as const] } }
         : { AND: [critereJoignable(user.id), { memberId }] },
     orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
     select: { id: true },

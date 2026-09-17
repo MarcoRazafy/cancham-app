@@ -90,7 +90,7 @@ export function ListeFils({
   choixExplicite: boolean;
   base: string;
   space: Space;
-  /** Membres sans conversation individuelle en cours. Vide côté back-office. */
+  /** Membres sans conversation individuelle en cours. */
   membres: MembreJoignable[];
   /** Personnes qu'on peut réunir dans un groupe. */
   personnes: ElementACocher[];

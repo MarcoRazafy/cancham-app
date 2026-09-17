@@ -4,7 +4,9 @@ import {
   CalendarDays,
   FileText,
   Newspaper,
+  Receipt,
   Search,
+  UserRound,
 } from "lucide-react";
 import { Card, EmptyState, Pill, ViewHead } from "@/components/ui";
 import { TexteLie } from "@/components/TexteLie";
@@ -13,23 +15,36 @@ import type { Space } from "@/lib/types";
 
 const ICONES = {
   membre: Building2,
+  contact: UserRound,
   evenement: CalendarDays,
   actualite: Newspaper,
   ressource: FileText,
+  facture: Receipt,
 } as const;
 
 const LIBELLES = {
   membre: "Membre",
+  contact: "Contact",
   evenement: "Événement",
   actualite: "Actualité",
   ressource: "Ressource",
+  facture: "Facture",
 } as const;
 
 export async function RecherchePage({ space, q }: { space: Space; q: string }) {
   const terme = q.trim();
   const resultats = await rechercher(terme, space);
 
-  const groupes = (["membre", "evenement", "actualite", "ressource"] as const)
+  const groupes = (
+    [
+      "membre",
+      "contact",
+      "facture",
+      "evenement",
+      "actualite",
+      "ressource",
+    ] as const
+  )
     .map((type) => ({ type, items: resultats.filter((r) => r.type === type) }))
     .filter((g) => g.items.length);
 
