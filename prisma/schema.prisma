@@ -189,6 +189,7 @@ model User {
   participations     ParticipantFil[]
   commentaires       Comment[]
   jaimesCommentaires CommentLike[]
+  rappels            Rappel[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -242,8 +243,10 @@ model Event {
   prix    Int         @default(0)
   desc    String
   photo   String?
-  /// Plage horaire, en clair : « 17 h 30 – 20 h 00 ».
-  heure   String?
+  /// Heure de début, « HH:MM ». `null` = toute la journée.
+  debut   String?
+  /// Heure de fin, « HH:MM ». `null` = pas d'heure de fin annoncée.
+  fin     String?
   /// À qui l'événement s'adresse en priorité.
   pourQui String?
 
@@ -307,6 +310,32 @@ model Attendee {
 
   @@index([eventId])
   @@map("attendees")
+}
+
+// ============================ Agenda ============================
+
+/// Rappel personnel noté dans l'agenda.
+///
+/// Il appartient à une personne, pas à l'entreprise : deux collaborateurs d'un
+/// même membre ne partagent pas leurs pense-bêtes. Les événements et les
+/// échéances, eux, ne sont pas stockés ici : ils se lisent là où ils vivent.
+model Rappel {
+  id    String   @id @default(cuid())
+  titre String
+  note  String?
+  jour  DateTime @db.Date
+  /// « HH:MM ». `null` = toute la journée.
+  heure String?
+  fait  Boolean  @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, jour])
+  @@map("rappels")
 }
 
 // ============================ Contenus ============================

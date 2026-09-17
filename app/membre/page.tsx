@@ -16,7 +16,9 @@ import { AvatarRond, OfferCard } from "@/components/domain";
 import { TexteLie } from "@/components/TexteLie";
 import { RegisterButton } from "@/components/forms/EventForms";
 import { Card, Saillant } from "@/components/ui";
-import { fmtMoney, isPast, parseISO } from "@/lib/format";
+import { CetteSemaine } from "@/components/agenda/CetteSemaine";
+import { ajouterJours, plageHoraire } from "@/lib/agenda";
+import { aujourdhuiISO, fmtMoney, isPast, parseISO } from "@/lib/format";
 import {
   ADHESION_PENDING,
   isOverdueWarning,
@@ -25,6 +27,7 @@ import {
   RETARD_BLOCAGE_JOURS,
 } from "@/lib/membership";
 import {
+  getAgenda,
   getEvents,
   getMember,
   getMembresAnnuaire,
@@ -44,16 +47,30 @@ export default async function VueDEnsemble() {
   if (!membreOuNull) notFound();
   const me = membreOuNull;
 
-  const [events, annuaire, inscriptions, nonLus, offres, ressources, services] =
-    await Promise.all([
-      getEvents(),
-      getMembresAnnuaire(),
-      getRegistrations(me.id),
-      getUnreadTotal(user.id),
-      getDernieresOffres(3),
-      getResources(),
-      getServices(),
-    ]);
+  const aujourdhui = aujourdhuiISO();
+  const [
+    events,
+    annuaire,
+    inscriptions,
+    nonLus,
+    offres,
+    ressources,
+    services,
+    semaine,
+  ] = await Promise.all([
+    getEvents(),
+    getMembresAnnuaire(),
+    getRegistrations(me.id),
+    getUnreadTotal(user.id),
+    getDernieresOffres(3),
+    getResources(),
+    getServices(),
+    getAgenda(
+      { userId: user.id, memberId: me.id },
+      aujourdhui,
+      ajouterJours(aujourdhui, 6),
+    ),
+  ]);
 
   const aVenir = events.filter((e) => !isPast(e.date));
   const prochain = aVenir[0];
@@ -169,7 +186,9 @@ export default async function VueDEnsemble() {
                       <MapPin size={14} /> {prochain.lieu}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Clock size={14} /> {prochain.format}
+                      <Clock size={14} />{" "}
+                      {plageHoraire(prochain.debut, prochain.fin) ??
+                        prochain.format}
                     </span>
                   </div>
                 </div>
@@ -253,6 +272,12 @@ export default async function VueDEnsemble() {
           </Link>
         </Card>
       </div>
+
+      {/* ==================== Agenda de la semaine ==================== */}
+      <CetteSemaine
+        elements={semaine.filter((e) => !e.fait).slice(0, 5)}
+        aujourdhui={aujourdhui}
+      />
 
       {/* ==================== Raccourcis ==================== */}
       <div className="grid gap-4 md:grid-cols-3">

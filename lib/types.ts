@@ -120,8 +120,10 @@ export interface CanchamEvent {
   prix: number;
   desc: string;
   photo: string | null;
-  /** Plage horaire, en clair. */
-  heure?: string | null;
+  /** Heure de début, « HH:MM ». `null` = toute la journée. */
+  debut?: string | null;
+  /** Heure de fin, « HH:MM ». */
+  fin?: string | null;
   /** À qui l'événement s'adresse en priorité. */
   pourQui?: string | null;
   /** Déroulé de la séance, dans l'ordre. */

@@ -19,7 +19,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-25.jpg",
     desc: "Le rendez-vous régulier du réseau, dans une formule courte que chacun peut caser en fin de journée. Pas de tribune, pas de présentation en trente diapositives : on vient échanger debout, un verre à la main, avec des dirigeants qu’on n’aurait pas croisés autrement.\n\nChaque édition s’ouvre sur un tour de table express — deux minutes par entreprise pour dire qui l’on est et ce que l’on cherche. Le reste de la soirée est libre. L’équipe de la chambre circule pour provoquer les mises en relation que vos fiches membres laissent deviner, et repart avec la liste de celles à suivre.",
-    heure: "17 h 30 – 20 h 00",
+    debut: "17:30",
+    fin: "20:00",
     pourQui:
       "Tous les membres à jour de cotisation, avec la possibilité d’inviter un collaborateur de l’entreprise.",
     programme: [
@@ -42,7 +43,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-10.jpg",
     desc: "La 9ᵉ Mission Économique et Commerciale au Canada s’ouvre sur un volet Tourisme et Éducation. Cette matinée de lancement pose le cadre : calendrier, pays et villes visités, secteurs ciblés, conditions de participation et budget prévisionnel par entreprise.\n\nLes résultats de l’édition précédente sont présentés sans filtre — contrats signés, contacts restés lettre morte, ce qui a fonctionné et ce qu’il faut changer. Les entreprises retenues pour la MECC 8 viennent témoigner de leur préparation et des erreurs qu’elles ne referaient pas.\n\nÀ l’issue de la matinée, le dossier de candidature est remis en main propre et l’équipe reste disponible pour un premier examen de votre projet.",
-    heure: "08 h 30 – 12 h 30",
+    debut: "08:30",
+    fin: "12:30",
     pourQui:
       "Entreprises candidates à la mission, partenaires institutionnels et membres souhaitant comprendre le dispositif avant de s’engager.",
     programme: [
@@ -67,7 +69,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-16.jpg",
     desc: "La caravane Canada Expo descend sur Tamatave pour une journée entière consacrée aux entreprises de la côte Est. L’objectif est simple : rendre accessible, hors de la capitale, ce que la chambre propose habituellement à Antananarivo.\n\nLa journée mêle un espace d’exposition ouvert au public, des ateliers courts sur l’accès au marché canadien — normes, logistique portuaire, financement de l’export — et des rendez-vous d’affaires individuels de vingt minutes, à réserver à l’inscription.\n\nLe port de Tamatave étant le principal point de sortie des marchandises malgaches, une session est spécifiquement dédiée aux contraintes de fret vers l’Amérique du Nord.",
-    heure: "08 h 00 – 16 h 00",
+    debut: "08:00",
+    fin: "16:00",
     pourQui:
       "Entreprises de la côte Est, quel que soit leur statut d’adhésion. L’entrée est libre pour les non-membres.",
     programme: [
@@ -92,7 +95,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-13.jpg",
     desc: "Une séance pratique sur les programmes de mobilité francophone vers le Canada, animée avec nos partenaires institutionnels. Le format est volontairement resserré : deux heures, en ligne, sans déplacement.\n\nSont passés en revue les dispositifs réellement ouverts aux profils malgaches — Entrée express, Programme des travailleurs étrangers temporaires, permis d’études avec permis de travail post-diplôme — avec, pour chacun, les délais constatés, les pièces qui bloquent le plus souvent et le coût total à prévoir.\n\nLa dernière demi-heure est réservée aux questions de la salle. Le support et l’enregistrement sont adressés à tous les inscrits le lendemain.",
-    heure: "14 h 00 – 16 h 00",
+    debut: "14:00",
+    fin: "16:00",
     pourQui:
       "Dirigeants et responsables RH, ainsi que les membres accompagnant des collaborateurs dans un projet de mobilité.",
     programme: [
@@ -116,7 +120,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-02.jpg",
     desc: "Dernière édition de l’année pour le rendez-vous régulier du réseau. La formule ne change pas — une fin de journée, un verre, des dirigeants qui se parlent — mais l’édition de novembre ouvre traditionnellement sur un bilan des mises en relation de l’année.\n\nLes entreprises entrées dans le réseau au cours des douze derniers mois sont présentées à l’ensemble des membres. C’est l’occasion, pour les adhérents de longue date, de repérer les nouveaux venus avant tout le monde.",
-    heure: "17 h 30 – 20 h 00",
+    debut: "17:30",
+    fin: "20:00",
     pourQui:
       "Tous les membres à jour de cotisation, avec la possibilité d’inviter un collaborateur de l’entreprise.",
     programme: [
@@ -140,7 +145,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-05.jpg",
     desc: "Étape de la caravane dans la région SAVA, axée sur la vanille et les épices — la filière qui pèse le plus lourd dans les exportations malgaches vers l’Amérique du Nord.\n\nLa journée s’adresse d’abord aux producteurs et aux collecteurs, souvent éloignés des dispositifs d’accompagnement concentrés dans la capitale. Elle traite de la traçabilité exigée par les acheteurs canadiens, de la certification biologique et équitable, et du financement de la campagne.\n\nUn temps est réservé aux échanges avec les importateurs canadiens de la filière, en visioconférence depuis Montréal.",
-    heure: "08 h 00 – 15 h 30",
+    debut: "08:00",
+    fin: "15:30",
     pourQui:
       "Producteurs, collecteurs et exportateurs de la région SAVA, ainsi que les entreprises de la transformation agroalimentaire.",
     programme: [
@@ -164,7 +170,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-23.jpg",
     desc: "Dix ans que la chambre existe. La soirée célèbre l’anniversaire et referme, dans le même mouvement, le cycle de la 8ᵉ Mission Économique et Commerciale.\n\nLa première partie est une restitution : chiffres de la mission, contrats conclus, partenariats engagés, et ce qui reste à transformer. Les entreprises participantes prennent la parole à tour de rôle.\n\nLa seconde partie est un dîner de gala, avec remise des distinctions aux membres fondateurs et animation musicale. Le tarif couvre le dîner et les boissons ; il est réglable sur place ou par virement avant la date.",
-    heure: "18 h 00 – 23 h 00",
+    debut: "18:00",
+    fin: "23:00",
     pourQui:
       "Membres, partenaires institutionnels et invités de la chambre. Tenue de ville souhaitée.",
     programme: [
@@ -188,7 +195,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-07.jpg",
     desc: "L’étape capitale de la caravane Canada Expo, et la plus fréquentée : une journée entière d’exposition, d’ateliers et de rendez-vous d’affaires au cœur d’Antananarivo.\n\nLes stands réunissent les membres de la chambre, les institutions canadiennes présentes à Madagascar et les opérateurs de l’accompagnement à l’export. Les ateliers se succèdent en continu sur deux salles, du cadre réglementaire au financement, et n’excèdent jamais quarante-cinq minutes.\n\nLes rendez-vous d’affaires individuels se réservent à l’inscription. Ils partent vite : l’édition précédente avait affiché complet dix jours avant la date.",
-    heure: "08 h 00 – 17 h 00",
+    debut: "08:00",
+    fin: "17:00",
     pourQui:
       "Ouvert à toutes les entreprises, membres comme non-membres. L’entrée est libre.",
     programme: [
@@ -213,7 +221,8 @@ export const EVENTS: CanchamEvent[] = [
     photo:
       "/photos/cancham-24.jpg",
     desc: "Édition d’août du rendez-vous régulier du réseau. Une fin de journée pour se retrouver avant la rentrée, et pour rencontrer les entreprises entrées dans le réseau pendant l’été.\n\nLa formule reste la même : un tour de table express, puis du temps libre pour échanger. L’équipe de la chambre est présente pour orienter vers les interlocuteurs utiles.",
-    heure: "17 h 30 – 20 h 00",
+    debut: "17:30",
+    fin: "20:00",
     pourQui:
       "Tous les membres à jour de cotisation, avec la possibilité d’inviter un collaborateur de l’entreprise.",
     programme: [

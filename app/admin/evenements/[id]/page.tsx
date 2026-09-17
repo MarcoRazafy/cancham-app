@@ -25,6 +25,7 @@ import {
 } from "@/components/forms/EventForms";
 import { TexteLie } from "@/components/TexteLie";
 import { Card, Pill } from "@/components/ui";
+import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney, isPast } from "@/lib/format";
 import { getEvent, getMembers } from "@/lib/queries";
 import { getParticipants } from "@/lib/queries-admin";
@@ -142,9 +143,9 @@ export default async function EvenementAdmin({
                   year: "numeric",
                 })}
               </span>
-              {e.heure ? (
+              {plageHoraire(e.debut, e.fin) ? (
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock size={15} /> {e.heure}
+                  <Clock size={15} /> {plageHoraire(e.debut, e.fin)}
                 </span>
               ) : null}
               <span className="inline-flex items-center gap-1.5">

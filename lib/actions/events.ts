@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { EVENT_FORMAT_DB } from "@/lib/enums";
+import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithFlash } from "@/lib/flash";
+import { jourBase } from "@/lib/format";
 import { numeroFacture } from "@/lib/factures";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
@@ -84,7 +86,7 @@ export async function registerForEvent(formData: FormData) {
   ];
 
   if (event.payant) {
-    const date = new Date();
+    const date = jourBase();
     ecritures.push(
       prisma.invoice.create({
         data: {
@@ -159,9 +161,21 @@ export async function saveEvent(formData: FormData) {
   const payant = texte(formData, "type") === "payant";
   const prix = payant ? Math.round(Number(formData.get("prix"))) : 0;
 
+  const debut = texte(formData, "debut") || null;
+  const fin = texte(formData, "fin") || null;
+
   if (!titre) redirectWithFlash(retour, "Le titre est obligatoire.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) {
+  if (!estJourISO(jour)) {
     redirectWithFlash(retour, "Indiquez la date de l’événement.");
+  }
+  if ((debut && !estHeure(debut)) || (fin && !estHeure(fin))) {
+    redirectWithFlash(retour, "Les heures s’écrivent HH:MM.");
+  }
+  if (fin && !debut) {
+    redirectWithFlash(retour, "Indiquez l’heure de début avant celle de fin.");
+  }
+  if (debut && fin && fin <= debut) {
+    redirectWithFlash(retour, "L’heure de fin doit suivre celle du début.");
   }
   if (!Number.isFinite(cap) || cap < 1) {
     redirectWithFlash(retour, "La capacité doit être d’au moins une place.");
@@ -195,8 +209,9 @@ export async function saveEvent(formData: FormData) {
 
   const data = {
     titre,
-    date: new Date(`${jour}T00:00:00`),
-    heure: texte(formData, "heure") || null,
+    date: jourBase(jour),
+    debut,
+    fin,
     lieu: texte(formData, "lieu") || "Antananarivo",
     format:
       EVENT_FORMAT_DB[
@@ -235,7 +250,7 @@ export async function saveEvent(formData: FormData) {
       entite: "Event",
       entiteId: e.id,
       acteur: await acteurEquipe(),
-      detail: `« ${e.titre} » · ${e.date.toLocaleDateString("fr-FR")} · ${e.lieu}.`,
+      detail: `« ${e.titre} » · ${e.date.toLocaleDateString("fr-FR", { timeZone: "UTC" })} · ${e.lieu}.`,
     },
   });
 
