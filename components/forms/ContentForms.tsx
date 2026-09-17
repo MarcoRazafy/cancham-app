@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import {
+  ArrowDown,
+  ArrowUp,
   BookOpen,
+  Pencil,
   Check,
   PlayCircle,
   Plus,
@@ -21,15 +24,12 @@ import {
 } from "@/components/form-bits";
 import {
   deleteService,
+  deplacerService,
   downloadResource,
   postComment,
   saveService,
 } from "@/lib/actions/content";
 import type { CanchamService, Space } from "@/lib/types";
-
-const BTN_PRIMARY = "btn-action btn-action-sm";
-const BTN_LINE =
-  "inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-line bg-transparent text-ink hover:bg-surface-2";
 
 export function CommentForm({
   space,
@@ -123,17 +123,19 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
       trigger={(ouvrir) =>
         edition ? (
           <button
+            type="button"
             onClick={ouvrir}
-            className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
+            className="btn-contour btn-contour-sm text-ink hover:bg-surface-2"
           >
-            Modifier
+            <Pencil size={13} /> Modifier
           </button>
         ) : (
           <button
+            type="button"
             onClick={ouvrir}
-            className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
+            className="btn-action btn-action-sm"
           >
-            <Plus size={15} /> Ajouter un service
+            <Plus size={15} /> Nouveau service
           </button>
         )
       }
@@ -200,12 +202,72 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
   );
 }
 
-export function DeleteServiceButton({ serviceId }: { serviceId: string }) {
+export function DeleteServiceButton({
+  serviceId,
+  titre,
+}: {
+  serviceId: string;
+  titre: string;
+}) {
   return (
-    <form action={deleteService}>
+    <Modal
+      title="Retirer le service"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Retirer « ${titre} »`}
+          title="Retirer"
+          className="w-9 h-9 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center cursor-pointer text-muted hover:text-accent hover:border-accent"
+        >
+          <Trash2 size={15} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={deleteService}>
+          <input type="hidden" name="serviceId" value={serviceId} />
+          <ModalBody>
+            <p className="m-0 text-[13.6px] text-muted">
+              « <b className="text-ink">{titre}</b> » ne sera plus proposé aux
+              membres.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton variant="danger" pendingLabel="Retrait…">
+              <Trash2 size={14} /> Retirer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+/** Monter ou descendre un service dans sa liste. */
+export function DeplacerServiceButton({
+  serviceId,
+  sens,
+  desactive,
+}: {
+  serviceId: string;
+  sens: "haut" | "bas";
+  desactive: boolean;
+}) {
+  return (
+    <form action={deplacerService}>
       <input type="hidden" name="serviceId" value={serviceId} />
-      <SubmitButton sm variant="ghost" pendingLabel="…" className="text-bad">
-        <Trash2 size={13} /> Supprimer
+      <input type="hidden" name="sens" value={sens} />
+      <SubmitButton
+        sm
+        variant="line"
+        disabled={desactive}
+        aria-label={sens === "haut" ? "Monter" : "Descendre"}
+        title={sens === "haut" ? "Monter" : "Descendre"}
+        className="!px-2 disabled:opacity-35"
+      >
+        {sens === "haut" ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
       </SubmitButton>
     </form>
   );

@@ -128,6 +128,21 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "contenu",
     ton: "bad",
   },
+  service_ajoute: {
+    libelle: "Service CanCham ajouté",
+    famille: "contenu",
+    ton: "ok",
+  },
+  service_modifie: {
+    libelle: "Service CanCham modifié",
+    famille: "contenu",
+    ton: "info",
+  },
+  service_supprime: {
+    libelle: "Service CanCham retiré",
+    famille: "contenu",
+    ton: "bad",
+  },
   seed: {
     libelle: "Chargement des données",
     famille: "contenu",
@@ -180,6 +195,8 @@ export function lienJournal(
       return `/admin/actualites/${entiteId}`;
     case "Resource":
       return "/admin/ressources";
+    case "CanchamService":
+      return "/admin/offres-cancham";
     default:
       return null;
   }
