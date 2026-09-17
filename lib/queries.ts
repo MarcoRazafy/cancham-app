@@ -631,7 +631,8 @@ export async function getMembresATraiter(): Promise<Member[]> {
 /* ============================ Recherche ============================ */
 
 export interface ResultatRecherche {
-  type: "membre" | "evenement" | "actualite" | "ressource";
+  type:
+    "membre" | "contact" | "evenement" | "actualite" | "ressource" | "facture";
   id: string;
   titre: string;
   detail: string;
@@ -654,43 +655,86 @@ export async function rechercher(
   const like = { contains: terme, mode: "insensitive" } as const;
   const base = space === "admin" ? "/admin" : "/membre";
 
-  const [membres, evenements, actualites, ressources] = await Promise.all([
-    prisma.member.findMany({
-      where: {
-        ...(space === "admin"
-          ? {}
-          : { statut: { not: "candidature" as const } }),
-        OR: [
-          { nom: like },
-          { secteur: like },
-          { ville: like },
-          { activite: like },
-          { desc: like },
-        ],
-      },
-      select: { id: true, nom: true, secteur: true, ville: true },
-      take: 8,
-      orderBy: { nom: "asc" },
-    }),
-    prisma.event.findMany({
-      where: { OR: [{ titre: like }, { lieu: like }, { desc: like }] },
-      select: { id: true, titre: true, lieu: true, date: true },
-      take: 8,
-      orderBy: { date: "desc" },
-    }),
-    prisma.news.findMany({
-      where: { OR: [{ titre: like }, { extrait: like }, { corps: like }] },
-      select: { id: true, titre: true, date: true },
-      take: 8,
-      orderBy: { date: "desc" },
-    }),
-    prisma.resource.findMany({
-      where: { titre: like },
-      select: { id: true, titre: true, taille: true, type: true },
-      take: 8,
-      orderBy: { date: "desc" },
-    }),
-  ]);
+  const admin = space === "admin";
+  const [membres, evenements, actualites, ressources, contacts, factures] =
+    await Promise.all([
+      prisma.member.findMany({
+        where: {
+          ...(space === "admin"
+            ? {}
+            : { statut: { not: "candidature" as const } }),
+          OR: [
+            { nom: like },
+            { secteur: like },
+            { ville: like },
+            { activite: like },
+            { desc: like },
+          ],
+        },
+        select: { id: true, nom: true, secteur: true, ville: true },
+        take: 8,
+        orderBy: { nom: "asc" },
+      }),
+      prisma.event.findMany({
+        where: { OR: [{ titre: like }, { lieu: like }, { desc: like }] },
+        select: { id: true, titre: true, lieu: true, date: true },
+        take: 8,
+        orderBy: { date: "desc" },
+      }),
+      prisma.news.findMany({
+        where: { OR: [{ titre: like }, { extrait: like }, { corps: like }] },
+        select: { id: true, titre: true, date: true },
+        take: 8,
+        orderBy: { date: "desc" },
+      }),
+      prisma.resource.findMany({
+        where: { titre: like },
+        select: { id: true, titre: true, taille: true, type: true },
+        take: 8,
+        orderBy: { date: "desc" },
+      }),
+      // L'équipe cherche aussi une personne — « qui est tojo@… ? » — et une
+      // facture par son numéro. Rien de cela n'est ouvert aux membres.
+      admin
+        ? prisma.user.findMany({
+            where: {
+              role: "membre",
+              memberId: { not: null },
+              OR: [{ nom: like }, { email: like }, { tel: like }],
+            },
+            select: {
+              id: true,
+              nom: true,
+              fonction: true,
+              email: true,
+              memberId: true,
+              member: { select: { nom: true } },
+            },
+            take: 8,
+            orderBy: { nom: "asc" },
+          })
+        : Promise.resolve([]),
+      admin
+        ? prisma.invoice.findMany({
+            where: {
+              OR: [
+                { numero: like },
+                { objet: like },
+                { member: { nom: like } },
+              ],
+            },
+            select: {
+              id: true,
+              numero: true,
+              objet: true,
+              statut: true,
+              member: { select: { nom: true } },
+            },
+            take: 8,
+            orderBy: { date: "desc" },
+          })
+        : Promise.resolve([]),
+    ]);
 
   return [
     ...membres.map((m) => ({
@@ -709,8 +753,7 @@ export async function rechercher(
       id: e.id,
       titre: e.titre,
       detail: `${e.lieu} · ${toISODate(e.date)}`,
-      href:
-        space === "admin" ? `/admin/evenements` : `/membre/evenements/${e.id}`,
+      href: `${base}/evenements/${e.id}`,
     })),
     ...actualites.map((n) => ({
       type: "actualite" as const,
@@ -723,8 +766,22 @@ export async function rechercher(
       type: "ressource" as const,
       id: r.id,
       titre: r.titre,
-      detail: `${r.taille} · ${r.type}`,
-      href: `${base}/ressources`,
+      detail: `${r.taille} · ${r.type === "payant" ? "payante" : "incluse"}`,
+      href: admin ? `/admin/ressources/${r.id}/modifier` : `${base}/ressources`,
+    })),
+    ...contacts.map((c) => ({
+      type: "contact" as const,
+      id: c.id,
+      titre: c.nom,
+      detail: `${c.fonction} · ${c.member?.nom ?? "—"} · ${c.email}`,
+      href: `/admin/membres/${c.memberId}`,
+    })),
+    ...factures.map((f) => ({
+      type: "facture" as const,
+      id: f.id,
+      titre: `${f.numero} · ${f.member.nom}`,
+      detail: `${f.objet} · ${f.statut === "payee" ? "payée" : "à régler"}`,
+      href: `/admin/paiements/${f.id}`,
     })),
   ];
 }
@@ -850,14 +907,15 @@ export async function getContacts(memberId: string): Promise<Contact[]> {
  * propose sous « Nouvelle conversation ». Le référent est lu d'une requête
  * pour tous, et non membre par membre.
  */
-export async function getMembresJoignables(user: {
-  id: string;
-  memberId: string | null;
-}) {
+export async function getMembresJoignables(
+  user: { id: string; memberId: string | null },
+  /** L'équipe écrit à tous les membres, candidats et adhésions en attente compris. */
+  tous = false,
+) {
   const [membres, fils] = await Promise.all([
     prisma.member.findMany({
       where: {
-        statut: { in: ["a_jour", "en_retard"] },
+        ...(tous ? {} : { statut: { in: ["a_jour", "en_retard"] as const } }),
         ...(user.memberId ? { id: { not: user.memberId } } : {}),
       },
       select: { id: true, nom: true, secteur: true, logo: true, photo: true },

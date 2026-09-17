@@ -71,9 +71,9 @@ export async function MessageriePage({
   const user = await getCurrentUser(space);
   const [threads, membres, personnes] = await Promise.all([
     getThreads(user),
-    // La recherche de personnes ouvre de nouvelles conversations côté membre ;
-    // le back-office n'a pas de fiche membre à partir de laquelle écrire.
-    space === "membre" ? getMembresJoignables(user) : Promise.resolve([]),
+    // La recherche ouvre aussi une conversation avec un membre jamais
+    // contacté ; l'équipe peut écrire à tous, candidats compris.
+    getMembresJoignables(user, space === "admin"),
     getPersonnesJoignables(user.id),
   ]);
   // Une conversation choisie dans l'adresse, ou à défaut la plus récente.
