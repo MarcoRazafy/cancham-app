@@ -9,7 +9,7 @@ import { MenuNotifications } from "@/components/MenuNotifications";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { titrePour, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
-import type { Space, User } from "@/lib/types";
+import type { User } from "@/lib/types";
 
 /**
  * Coquille du back-office.
@@ -129,8 +129,6 @@ export function CoquilleAdmin({
           ))}
         </nav>
 
-        <ChoixEspace />
-
         <Link
           href="/admin/profil"
           onClick={() => setMenuOuvert(false)}
@@ -244,42 +242,5 @@ function Recherche() {
         />
       </div>
     </form>
-  );
-}
-
-/**
- * Bascule entre les trois espaces.
- *
- * Tant qu'il n'y a pas d'authentification, c'est ce sélecteur — et l'URL — qui
- * déterminent qui l'on est. Il disparaîtra le jour où l'on branchera une vraie
- * session : l'équipe n'aura alors accès qu'au back-office.
- */
-function ChoixEspace() {
-  const espaces: { cle: Space; href: string; libelle: string }[] = [
-    { cle: "public", href: "/public", libelle: "Site" },
-    { cle: "membre", href: "/membre", libelle: "Membre" },
-    { cle: "admin", href: "/admin", libelle: "Admin" },
-  ];
-  return (
-    <div className="mx-3.5 mb-1">
-      <div className="text-[10.5px] text-white/35 mx-1 mb-1.5">
-        Démonstration — changer d’espace
-      </div>
-      <div className="flex gap-0.5 p-[3px] rounded-lg bg-white/[0.06] border border-white/10">
-        {espaces.map((e) => (
-          <Link
-            key={e.cle}
-            href={e.href}
-            className={`flex-1 text-center text-[12px] font-semibold px-2 py-1.5 rounded-md no-underline ${
-              e.cle === "admin"
-                ? "bg-white text-[#0f1d2c]"
-                : "text-white/60 hover:text-white hover:bg-white/[0.08]"
-            }`}
-          >
-            {e.libelle}
-          </Link>
-        ))}
-      </div>
-    </div>
   );
 }
