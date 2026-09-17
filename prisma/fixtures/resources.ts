@@ -1,7 +1,9 @@
-import type { Resource } from "../../lib/types";
+import type { CommentaireFixture, Resource } from "../../lib/types";
 
 /** Bibliothèque de documents mise à disposition des membres. */
-export const RESOURCES: Resource[] = [
+export const RESOURCES: (Omit<Resource, "commentaires"> & {
+  commentaires: CommentaireFixture[];
+})[] = [
   {
     id: "r1",
     titre: "Guide pratique — Doing Business in Canada",

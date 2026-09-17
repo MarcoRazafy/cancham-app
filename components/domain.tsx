@@ -569,6 +569,65 @@ export function MediaBanner({
   );
 }
 
+/**
+ * Photos d'une publication dans le fil : une seule en pleine largeur, deux
+ * côte à côte, trois en une grande et deux petites, quatre et plus en
+ * damier — la dernière case annonce combien il en reste. Chaque case mène à
+ * l'article, où la galerie complète se parcourt.
+ */
+export function MosaiquePhotos({
+  images,
+  alt,
+  href,
+}: {
+  images: string[];
+  alt: string;
+  href: string;
+}) {
+  const visibles = images.slice(0, 4);
+  const reste = images.length - visibles.length;
+  const disposition =
+    visibles.length === 1
+      ? "grid-cols-1"
+      : visibles.length === 3
+        ? "grid-cols-2 grid-rows-2"
+        : "grid-cols-2";
+
+  return (
+    <div
+      className={`grid gap-1.5 mt-2.5 rounded-[var(--radius-m)] overflow-hidden ${disposition} ${
+        visibles.length === 1 ? "aspect-[16/8]" : "aspect-[16/10]"
+      }`}
+    >
+      {visibles.map((src, i) => (
+        <Link
+          key={src + i}
+          href={href}
+          aria-label={
+            i === 0 ? `Lire : ${alt}` : `Photo ${i + 1} sur ${images.length}`
+          }
+          className={`relative block overflow-hidden group bg-surface-2 ${
+            visibles.length === 3 && i === 0 ? "row-span-2" : ""
+          }`}
+        >
+          <Image
+            src={src}
+            alt={i === 0 ? alt : ""}
+            fill
+            sizes="(max-width: 768px) 100vw, 640px"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+          {reste > 0 && i === visibles.length - 1 ? (
+            <span className="absolute inset-0 bg-[#0f1d2c]/55 text-white flex items-center justify-center text-[22px] font-bold">
+              +{reste}
+            </span>
+          ) : null}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export function NewsFeedItem({
   news,
   base,
@@ -610,19 +669,12 @@ export function NewsFeedItem({
         <b className="block text-[14.6px] mb-1">{news.titre}</b>
         <TexteLie texte={news.extrait} />
       </div>
-      {news.image ? (
-        <Link
+      {news.images.length ? (
+        <MosaiquePhotos
+          images={news.images}
+          alt={news.titre}
           href={`${base}/${news.id}`}
-          className="relative w-full aspect-[16/8] rounded-[var(--radius-m)] overflow-hidden mt-2.5 block group"
-        >
-          <Image
-            src={news.image}
-            alt={news.titre}
-            fill
-            sizes="(max-width: 768px) 100vw, 640px"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-        </Link>
+        />
       ) : (
         <MediaBanner media={news.media} />
       )}

@@ -17,6 +17,12 @@ import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
 
+/** Page de retour d'un formulaire : un chemin interne, jamais une adresse tierce. */
+function cheminRetour(fd: FormData, defaut: string): string {
+  const r = texte(fd, "retour");
+  return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
+}
+
 const NEWS_CAT_DB: Record<
   NewsCategory,
   "programmation" | "evenement_passe" | "vie_de_la_chambre" | "formation"
@@ -45,11 +51,14 @@ async function journal(
   });
 }
 
+/** Photos d'une publication, au plus. */
+const PHOTOS_PAR_ACTUALITE = 10;
+
 /**
  * Publication ou modification d'une actualité.
  *
- * Sans photo, la publication garde son bandeau de couleur : le fil reste
- * lisible même quand l'équipe n'a pas d'image sous la main.
+ * Plusieurs photos, dans l'ordre choisi : la première sert de couverture
+ * dans le fil. Sans photo, la publication garde son bandeau de couleur.
  */
 export async function enregistrerActualite(formData: FormData) {
   const id = texte(formData, "newsId");
@@ -72,31 +81,65 @@ export async function enregistrerActualite(formData: FormData) {
     ? new Date(`${jour}T00:00:00`)
     : new Date();
 
-  let image: string | null = null;
+  // Les photos, dans l'ordre choisi : `ordre` liste les photos gardées
+  // (`e:<url>`) et les nouvelles (`n:<rang dans le champ fichier>`).
+  const actuelles = id
+    ? ((
+        await prisma.news.findUnique({
+          where: { id },
+          select: { images: true },
+        })
+      )?.images ?? [])
+    : [];
+  const fichiers = formData
+    .getAll("images")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  let ordre: string[];
   try {
-    image = await enregistrerImage(formData.get("image"), {
-      prefixe: "actualite",
-      largeur: 1600,
-    });
+    ordre = JSON.parse(texte(formData, "ordre") || "null") ?? [
+      ...actuelles.map((u) => `e:${u}`),
+      ...fichiers.map((_, i) => `n:${i}`),
+    ];
+  } catch {
+    redirectWithFlash(retour, "L’ordre des photos est illisible.");
+  }
+  if (ordre.length > PHOTOS_PAR_ACTUALITE) {
+    redirectWithFlash(
+      retour,
+      `${PHOTOS_PAR_ACTUALITE} photos au plus par publication.`,
+    );
+  }
+
+  const envoyees: (string | null)[] = [];
+  try {
+    for (const f of fichiers) {
+      envoyees.push(
+        await enregistrerImage(f, { prefixe: "actualite", largeur: 1600 }),
+      );
+    }
   } catch (e) {
     if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
     throw e;
   }
-  const retirerImage = texte(formData, "retirerImage") === "1";
 
-  const data = { titre, extrait, corps, cat, date };
+  const images = ordre
+    .map((jeton) =>
+      jeton.startsWith("e:")
+        ? actuelles.includes(jeton.slice(2))
+          ? jeton.slice(2)
+          : null
+        : jeton.startsWith("n:")
+          ? (envoyees[Number(jeton.slice(2))] ?? null)
+          : null,
+    )
+    .filter((u): u is string => Boolean(u));
+
+  const data = { titre, extrait, corps, cat, date, images };
   const n = id
-    ? await prisma.news.update({
-        where: { id },
-        data: {
-          ...data,
-          ...(image ? { image } : retirerImage ? { image: null } : {}),
-        },
-      })
+    ? await prisma.news.update({ where: { id }, data })
     : await prisma.news.create({
         data: {
           ...data,
-          image,
           mediaType: "image",
           mediaTheme: Math.random() > 0.5 ? "navy" : "green",
         },
@@ -140,25 +183,32 @@ export async function deleteNews(formData: FormData) {
  */
 export async function supprimerCommentaire(formData: FormData) {
   const id = texte(formData, "commentId");
-  const retour = texte(formData, "retour");
-  const destination =
-    retour.startsWith("/") && !retour.startsWith("//")
-      ? retour
-      : "/admin/actualites";
+  const space = (texte(formData, "space") || "admin") as Space;
+  const retour = cheminRetour(formData, `/${space}/actualites`);
 
+  const user = await getCurrentUser(space);
   const c = await prisma.comment.findUnique({ where: { id } });
-  if (!c) redirectWithFlash(destination, "Commentaire introuvable.");
+  if (!c) redirectWithFlash(retour, "Commentaire introuvable.");
 
-  const extrait = c.texte.length > 120 ? `${c.texte.slice(0, 117)}…` : c.texte;
-  await journal(
-    "commentaire_supprime",
-    c.newsId ? "News" : "Resource",
-    c.newsId ?? c.resourceId ?? id,
-    `${c.auteur} (${c.entreprise}) : « ${extrait} »`,
-  );
+  const auteur = c.userId === user.id;
+  if (!auteur && space !== "admin") {
+    redirectWithFlash(retour, "Vous ne pouvez supprimer que vos commentaires.");
+  }
+
+  // Seul le retrait par l'équipe du commentaire de quelqu'un d'autre est une
+  // modération, et passe au journal avec le texte retiré.
+  if (!auteur) {
+    const extrait =
+      c.texte.length > 120 ? `${c.texte.slice(0, 117)}…` : c.texte;
+    await journal(
+      "commentaire_supprime",
+      c.newsId ? "News" : "Resource",
+      c.newsId ?? c.resourceId ?? id,
+      `${c.auteur} (${c.entreprise}) : « ${extrait} »`,
+    );
+  }
   await prisma.comment.delete({ where: { id } });
   revalideTout();
-  redirectWithFlash(destination, "Commentaire retiré");
 }
 
 /* ============================ Commentaires ============================ */
@@ -200,7 +250,7 @@ export async function basculerJaime(formData: FormData) {
 export async function postComment(formData: FormData) {
   const texteCommentaire = texte(formData, "texte");
   const space = (texte(formData, "space") || "membre") as Space;
-  const retour = texte(formData, "retour") || `/${space}/actualites`;
+  const retour = cheminRetour(formData, `/${space}/actualites`);
 
   if (!texteCommentaire) {
     redirectWithFlash(retour, "Le commentaire est vide.");
@@ -216,22 +266,69 @@ export async function postComment(formData: FormData) {
       )?.nom ?? "—")
     : "Équipe CanCham";
 
-  const newsId = texte(formData, "newsId") || null;
-  const resourceId = texte(formData, "resourceId") || null;
-
   await prisma.comment.create({
     data: {
       auteur: user.nom,
       entreprise,
       texte: texteCommentaire,
       date: new Date(),
-      newsId,
-      resourceId,
+      newsId: texte(formData, "newsId") || null,
+      resourceId: texte(formData, "resourceId") || null,
+      userId: user.id,
     },
   });
 
+  // Pas de redirection : la page se met à jour sur place, et le lecteur
+  // reste au niveau des commentaires au lieu de repartir en haut de l'article.
   revalideTout();
-  redirectWithFlash(retour, "Commentaire publié");
+}
+
+/** Corrige son propre commentaire. Il porte ensuite la mention « modifié ». */
+export async function modifierCommentaire(formData: FormData) {
+  const id = texte(formData, "commentId");
+  const space = (texte(formData, "space") || "membre") as Space;
+  const retour = cheminRetour(formData, `/${space}/actualites`);
+  const nouveau = texte(formData, "texte");
+
+  const user = await getCurrentUser(space);
+  const c = await prisma.comment.findUnique({
+    where: { id },
+    select: { userId: true, texte: true },
+  });
+  if (!c || c.userId !== user.id) {
+    redirectWithFlash(retour, "Vous ne pouvez modifier que vos commentaires.");
+  }
+  if (!nouveau) redirectWithFlash(retour, "Le commentaire est vide.");
+  if (nouveau === c.texte) return;
+
+  await prisma.comment.update({
+    where: { id },
+    data: { texte: nouveau, modifieLe: new Date() },
+  });
+  revalideTout();
+}
+
+/** « J'aime » sur un commentaire, posé ou retiré. Même principe que pour une publication. */
+export async function basculerJaimeCommentaire(formData: FormData) {
+  const commentId = texte(formData, "commentId");
+  const space = (texte(formData, "space") || "membre") as Space;
+  const user = await getCurrentUser(space);
+
+  const existant = await prisma.commentLike.findUnique({
+    where: { commentId_userId: { commentId, userId: user.id } },
+  });
+  if (existant) {
+    await prisma.commentLike.deleteMany({ where: { id: existant.id } });
+  } else {
+    try {
+      await prisma.commentLike.create({
+        data: { commentId, userId: user.id },
+      });
+    } catch (e) {
+      if ((e as { code?: string }).code !== "P2002") throw e;
+    }
+  }
+  revalideTout();
 }
 
 /* ============================ Ressources ============================ */
