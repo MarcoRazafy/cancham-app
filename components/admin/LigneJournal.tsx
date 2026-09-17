@@ -1,25 +1,87 @@
 import Link from "next/link";
 import {
+  BadgeCheck,
+  Banknote,
+  BellRing,
+  Briefcase,
+  BriefcaseBusiness,
+  CalendarCog,
   CalendarDays,
+  CalendarPlus,
+  CalendarX2,
   CreditCard,
+  Database,
+  FilePenLine,
+  FilePlus2,
   FileText,
+  FileX2,
+  MessageSquareX,
+  Newspaper,
+  Receipt,
+  ShoppingBag,
+  Trash2,
+  UserCheck,
+  UserMinus,
+  UserPlus,
   UserRound,
+  UserRoundMinus,
+  UserRoundPlus,
+  UserX,
   type LucideIcon,
 } from "lucide-react";
 import { actionJournal, lienJournal, type FamilleJournal } from "@/lib/journal";
 import type { EntreeJournal } from "@/lib/queries-admin";
 
-const ICONES: Record<FamilleJournal, LucideIcon> = {
+/**
+ * Une icône par opération : ce qui s'est passé se lit avant le libellé —
+ * un membre ajouté, une facture réglée, une actualité retirée.
+ */
+const ICONES: Record<string, LucideIcon> = {
+  candidature_deposee: UserPlus,
+  candidature_approuvee: UserCheck,
+  candidature_refusee: UserX,
+  membre_cree: UserPlus,
+  membre_supprime: UserMinus,
+  contact_ajoute: UserRoundPlus,
+  contact_retire: UserRoundMinus,
+  paiement_enregistre: Banknote,
+  facture_emise: Receipt,
+  facture_payee: BadgeCheck,
+  relance_envoyee: BellRing,
+  ressource_achetee: ShoppingBag,
+  evenement_cree: CalendarPlus,
+  evenement_modifie: CalendarCog,
+  evenement_supprime: CalendarX2,
+  actualite_publiee: Newspaper,
+  actualite_modifiee: FilePenLine,
+  actualite_supprimee: Trash2,
+  commentaire_supprime: MessageSquareX,
+  ressource_ajoutee: FilePlus2,
+  ressource_modifiee: FilePenLine,
+  ressource_supprimee: FileX2,
+  service_ajoute: BriefcaseBusiness,
+  service_modifie: Briefcase,
+  service_supprime: Trash2,
+  seed: Database,
+};
+
+/** À défaut d'icône propre, celle de la famille. */
+const ICONES_FAMILLE: Record<FamilleJournal, LucideIcon> = {
   adhesion: UserRound,
   finance: CreditCard,
   programme: CalendarDays,
   contenu: FileText,
 };
 
+/**
+ * Tuiles pleines aux couleurs de la chambre, comme les compteurs et les
+ * notifications : vert pour ce qui aboutit, rouge pour ce qui retire, bleu
+ * nuit pour ce qui informe.
+ */
 const TONS = {
-  ok: "bg-success-soft text-success-strong",
-  bad: "bg-accent-soft text-accent-strong",
-  info: "bg-navy-soft text-navy",
+  ok: "bg-success text-white",
+  bad: "bg-accent text-white",
+  info: "bg-[#14263a] text-white",
 } as const;
 
 /** « il y a 5 min », « il y a 3 h », « hier à 14:02 », « 12 sept. à 09:30 ». */
@@ -50,7 +112,7 @@ export function LigneJournal({
   compacte?: boolean;
 }) {
   const action = actionJournal(entree.action);
-  const Icone = ICONES[action.famille];
+  const Icone = ICONES[entree.action] ?? ICONES_FAMILLE[action.famille];
   const lien = lienJournal(entree.action, entree.entite, entree.entiteId);
 
   const contenu = (
