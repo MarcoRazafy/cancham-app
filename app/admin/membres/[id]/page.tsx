@@ -18,16 +18,12 @@ import {
   NeedsAndInterests,
   Visuel,
 } from "@/components/domain";
-import { ModifierMembreButton } from "@/components/forms/AdminMembreForms";
 import {
-  AddContactButton,
   ApproveButton,
   DeleteMemberButton,
-  EditContactButton,
   RegisterPaymentButton,
   RejectButton,
   ReminderButton,
-  RemoveContactButton,
 } from "@/components/forms/MemberForms";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { TexteLie } from "@/components/TexteLie";
@@ -61,7 +57,6 @@ export default async function AdminMembreDetail({
   ]);
 
   const s = situation(m);
-  const retour = `/admin/membres/${m.id}`;
   const dansAnnuaire = m.statut === "a_jour" || m.statut === "en_retard";
   const jours = joursDeRetard(m);
   const dossier = m.motivation || m.statutJuridique || m.pays;
@@ -130,7 +125,6 @@ export default async function AdminMembreDetail({
           </div>
 
           <div className="flex gap-2.5 flex-wrap">
-            <ModifierMembreButton membre={m} />
             <BoutonMessage memberId={m.id} space="admin" />
           </div>
         </div>
@@ -187,39 +181,21 @@ export default async function AdminMembreDetail({
             </Panneau>
           ) : null}
 
+          {/* La fiche appartient au membre : l'équipe la consulte, elle ne la
+              modifie pas. Présentation, contacts et offres se tiennent depuis
+              « Mon entreprise ». */}
           <Card className="carte-filet filet-fixe filet-bleu px-6 pb-6">
             {contacts.length ? (
               <ListeContacts
                 contacts={contacts}
                 titre={m.type === "physique" ? "Contact" : "Contacts"}
-                intro="Les personnes déclarées par l’entreprise. Le contact principal est joint en premier."
-                action={<AddContactButton memberId={m.id} retour={retour} />}
-                actionContact={(c) => (
-                  <div className="flex flex-col gap-1.5 shrink-0">
-                    <EditContactButton
-                      contact={c}
-                      seul={contacts.length === 1}
-                      retour={retour}
-                    />
-                    {contacts.length > 1 ? (
-                      <RemoveContactButton
-                        contactId={c.id}
-                        nom={c.nom}
-                        retour={retour}
-                      />
-                    ) : null}
-                  </div>
-                )}
+                intro="Les personnes déclarées par le membre. Le contact principal est joint en premier."
               />
             ) : (
               <div className="pt-5">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <h2 className="text-[18px] m-0">Contacts</h2>
-                  <AddContactButton memberId={m.id} retour={retour} />
-                </div>
+                <h2 className="text-[18px] m-0">Contacts</h2>
                 <p className="m-0 mt-2 text-[13.4px] text-muted">
-                  Aucun contact déclaré : la chambre n’a personne à joindre chez
-                  ce membre.
+                  Aucun contact déclaré par ce membre.
                 </p>
               </div>
             )}

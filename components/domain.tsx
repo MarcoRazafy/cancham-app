@@ -573,10 +573,13 @@ export function NewsFeedItem({
   news,
   base,
   space,
+  actions,
 }: {
   news: NewsItem;
   base: string;
   space: Space;
+  /** Commandes de l'équipe, posées à côté du lien vers l'article. */
+  actions?: ReactNode;
 }) {
   return (
     <article className="border border-line rounded-[var(--radius-m)] bg-surface p-4 mb-3">
@@ -632,12 +635,15 @@ export function NewsFeedItem({
           commentaires={news.commentaires.length}
           lienCommentaires={`${base}/${news.id}#commentaires`}
         />
-        <Link
-          href={`${base}/${news.id}`}
-          className="text-[12.8px] font-semibold text-accent no-underline hover:underline"
-        >
-          Lire l’article complet
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`${base}/${news.id}`}
+            className="text-[12.8px] font-semibold text-accent no-underline hover:underline"
+          >
+            Lire l’article complet
+          </Link>
+          {actions ? <div className="flex gap-1.5">{actions}</div> : null}
+        </div>
       </div>
     </article>
   );
@@ -744,9 +750,12 @@ export function ResourceCard({
       } h-full flex flex-col p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
     >
       <div className="relative">
-        <PhotoPlaceholder
+        <Visuel
+          src={resource.cover}
+          alt=""
           seed={resource.id}
           className="h-[150px] w-full"
+          sizes="(max-width: 768px) 100vw, 400px"
           icon={video ? <Play size={28} /> : <FileText size={28} />}
         />
         <div className="absolute top-2.5 left-2.5 bg-white rounded-[var(--radius-s)] px-2.5 py-[5px] text-center shadow-[var(--shadow)] min-w-[38px]">

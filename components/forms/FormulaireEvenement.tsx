@@ -1,15 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowDown,
-  ArrowUp,
-  Check,
-  ImagePlus,
-  Plus,
-  Trash2,
-} from "lucide-react";
-import { Field, INPUT, SubmitButton } from "@/components/form-bits";
+import { ArrowDown, ArrowUp, Check, Plus, Trash2 } from "lucide-react";
+import { ChampPhoto, Field, INPUT, SubmitButton } from "@/components/form-bits";
 import { Card } from "@/components/ui";
 import { saveEvent } from "@/lib/actions/events";
 import type { CanchamEvent, EtapeProgramme } from "@/lib/types";
@@ -56,8 +49,6 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
       ? event.programme.map(nouvelleEtape)
       : [nouvelleEtape()],
   );
-  const [photoChoisie, setPhotoChoisie] = useState<string | null>(null);
-  const [retirerPhoto, setRetirerPhoto] = useState(false);
 
   const deplacer = (i: number, sens: -1 | 1) =>
     setEtapes((l) => {
@@ -68,18 +59,19 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
       return copie;
     });
 
-  const apercu = photoChoisie ?? (retirerPhoto ? null : (event?.photo ?? null));
-
   return (
     <form action={saveEvent} className="flex flex-col gap-4">
       {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
-      {retirerPhoto ? (
-        <input type="hidden" name="retirerPhoto" value="1" />
-      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_340px] items-start">
         <div className="flex flex-col gap-4 min-w-0">
           <Rubrique titre="L’essentiel">
+            <ChampPhoto
+              name="photo"
+              retirer="retirerPhoto"
+              apercu={event?.photo}
+              aide="Affichée en tête de la page de l’événement et sur sa carte."
+            />
             <Field label="Titre">
               <input
                 name="titre"
@@ -240,46 +232,6 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
         </div>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-[88px]">
-          <Rubrique titre="Photo">
-            <div className="aspect-[16/10] rounded-[var(--radius-m)] border border-line bg-surface-2 overflow-hidden flex items-center justify-center">
-              {apercu ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={apercu}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-[12.5px] text-faint">Aucune photo</span>
-              )}
-            </div>
-            <label className="btn-contour btn-contour-sm text-ink hover:bg-surface-2 cursor-pointer justify-center">
-              <ImagePlus size={14} />
-              {apercu ? "Remplacer la photo" : "Choisir une photo"}
-              <input
-                type="file"
-                name="photo"
-                accept="image/*"
-                className="sr-only"
-                onChange={(ev) => {
-                  const f = ev.target.files?.[0];
-                  setPhotoChoisie(f ? URL.createObjectURL(f) : null);
-                  if (f) setRetirerPhoto(false);
-                }}
-              />
-            </label>
-            {event?.photo && !photoChoisie ? (
-              <label className="flex items-center gap-2 text-[12.8px] text-muted cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={retirerPhoto}
-                  onChange={(ev) => setRetirerPhoto(ev.target.checked)}
-                />
-                Retirer la photo actuelle
-              </label>
-            ) : null}
-          </Rubrique>
-
           <Rubrique titre="Participation">
             <Field label="Accès">
               <select

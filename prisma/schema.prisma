@@ -369,6 +369,8 @@ model Resource {
   fichier String?
   /// Nombre de pages rendues en images, pour un document. `null` pour une vidéo.
   pages   Int?
+  /// Visuel de la carte dans la bibliothèque. `null` = motif décoratif.
+  cover   String?
 
   /// Inclus dans l'adhésion, ou facturé en supplément.
   type PricingType @default(gratuit)
@@ -406,9 +408,11 @@ model Comment {
 
 /// Promotion publiée PAR un membre, à destination des autres membres.
 model Offer {
-  id    String @id @default(cuid())
+  id    String  @id @default(cuid())
   titre String
   desc  String
+  /// Visuel de l'offre. `null` = la couverture de l'entreprise qui la propose.
+  image String?
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)

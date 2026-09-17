@@ -1,7 +1,14 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { useEffect, useRef, type ComponentProps, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
+import { ImagePlus } from "lucide-react";
 
 /** Champs de formulaire, accordés aux tokens de l'application. */
 export const INPUT =
@@ -127,4 +134,93 @@ export function FermerApresEnvoi({ fermer }: { fermer: () => void }) {
     }
   }, [pending, fermer]);
   return null;
+}
+
+/**
+ * Champ photo : l'aperçu de ce qui est en place, le choix d'une nouvelle
+ * image, et son retrait.
+ *
+ * Laisser le champ vide garde la photo actuelle ; la retirer se coche
+ * explicitement — on ne perd pas une image parce qu'on a modifié un titre.
+ */
+export function ChampPhoto({
+  name,
+  retirer,
+  apercu,
+  libelle = "Photo",
+  aide = "JPEG, PNG ou WebP, 8 Mo au plus. Elle est redimensionnée à l’envoi.",
+  ratio = "aspect-[16/9]",
+  rond = false,
+}: {
+  /** Nom du champ fichier. */
+  name: string;
+  /** Nom du champ qui demande le retrait de la photo actuelle. */
+  retirer?: string;
+  apercu?: string | null;
+  libelle?: string;
+  aide?: string;
+  ratio?: string;
+  /** Un portrait se juge dans le cadre où il sera vu : rond. */
+  rond?: boolean;
+}) {
+  const [choisie, setChoisie] = useState<string | null>(null);
+  const [retiree, setRetiree] = useState(false);
+  const vue = choisie ?? (retiree ? null : (apercu ?? null));
+
+  return (
+    <div>
+      <span className="block text-[12.3px] font-semibold text-muted mb-1.5">
+        {libelle}
+      </span>
+      <div className="flex gap-4 items-center flex-wrap sm:flex-nowrap">
+        <div
+          className={`shrink-0 border border-line bg-surface-2 overflow-hidden flex items-center justify-center ${
+            rond
+              ? "w-[112px] h-[112px] rounded-full"
+              : `${ratio} w-full sm:w-[220px] rounded-[var(--radius-m)]`
+          }`}
+        >
+          {vue ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={vue} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="flex flex-col items-center gap-1.5 text-faint text-[12px]">
+              <ImagePlus size={22} />
+              Aucune photo
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col gap-2 min-w-0">
+          <label className="btn-contour btn-contour-sm text-ink hover:bg-surface-2 cursor-pointer self-start">
+            <ImagePlus size={14} />
+            {vue ? "Remplacer la photo" : "Ajouter une photo"}
+            <input
+              type="file"
+              name={name}
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                setChoisie(f ? URL.createObjectURL(f) : null);
+                if (f) setRetiree(false);
+              }}
+            />
+          </label>
+          {retirer && apercu && !choisie ? (
+            <label className="flex items-center gap-2 text-[12.8px] text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                name={retirer}
+                value="1"
+                checked={retiree}
+                onChange={(e) => setRetiree(e.target.checked)}
+              />
+              Retirer la photo actuelle
+            </label>
+          ) : null}
+          <span className="text-[11.8px] text-faint">{aide}</span>
+        </div>
+      </div>
+    </div>
+  );
 }

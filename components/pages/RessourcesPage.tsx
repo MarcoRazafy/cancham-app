@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { AlertTriangle, Pencil, Plus } from "lucide-react";
+import { SupprimerRessourceButton } from "@/components/forms/AdminContenuForms";
 import { ResourceCard } from "@/components/domain";
 import { EmptyState, ViewHead } from "@/components/ui";
 import { DownloadResourceButton } from "@/components/forms/ContentForms";
@@ -20,6 +22,7 @@ export async function RessourcesPage({
   space: Space;
   type?: string;
 }) {
+  const admin = space === "admin";
   const actif: Filtre = type === "gratuit" || type === "payant" ? type : "tout";
 
   const [list, counts] = await Promise.all([
@@ -29,7 +32,19 @@ export async function RessourcesPage({
 
   return (
     <>
-      <ViewHead title="Ressources">
+      <ViewHead
+        title="Ressources"
+        action={
+          admin ? (
+            <Link
+              href="/admin/ressources/nouvelle"
+              className="btn-action btn-action-sm no-underline"
+            >
+              <Plus size={15} /> Nouvelle ressource
+            </Link>
+          ) : null
+        }
+      >
         Documents, modèles et formations mis à disposition des membres. Certains
         livrables de fond sont facturés en supplément de la cotisation.
       </ViewHead>
@@ -60,14 +75,49 @@ export async function RessourcesPage({
               key={r.id}
               resource={r}
               footer={
-                <div className="w-full flex flex-col gap-1.5">
-                  <DownloadResourceButton
-                    resourceId={r.id}
-                    space={space}
-                    payant={r.type === "payant"}
-                    video={r.fmt === "Vidéo"}
-                  />
-                </div>
+                admin ? (
+                  <div className="w-full flex items-center gap-1.5">
+                    {r.pret ? (
+                      r.type === "gratuit" ? (
+                        <DownloadResourceButton
+                          resourceId={r.id}
+                          space={space}
+                          payant={false}
+                          video={r.fmt === "Vidéo"}
+                        />
+                      ) : (
+                        <span className="flex-1 text-[12px] text-success-strong font-semibold">
+                          Fichier prêt
+                        </span>
+                      )
+                    ) : (
+                      <span className="flex-1 inline-flex items-center gap-1 text-[12px] text-accent font-semibold">
+                        <AlertTriangle size={13} /> Fichier manquant
+                      </span>
+                    )}
+                    <Link
+                      href={`/admin/ressources/${r.id}/modifier`}
+                      aria-label={`Modifier « ${r.titre} »`}
+                      title="Modifier"
+                      className="w-9 h-9 shrink-0 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center text-muted hover:text-ink hover:border-faint"
+                    >
+                      <Pencil size={15} />
+                    </Link>
+                    <SupprimerRessourceButton
+                      resourceId={r.id}
+                      titre={r.titre}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full flex flex-col gap-1.5">
+                    <DownloadResourceButton
+                      resourceId={r.id}
+                      space={space}
+                      payant={r.type === "payant"}
+                      video={r.fmt === "Vidéo"}
+                    />
+                  </div>
+                )
               }
             />
           ))}

@@ -112,6 +112,7 @@ export const TITLES: Record<string, [string, string]> = {
   "/admin": ["Back-office", "Tableau de bord"],
   "/admin/recherche": ["Back-office", "Recherche"],
   "/admin/journal": ["Back-office", "Journal d’activité"],
+  "/admin/profil": ["Back-office", "Mon profil"],
   "/admin/membres": ["Back-office", "Membres"],
   "/admin/evenements": ["Back-office", "Événements"],
   "/admin/paiements": ["Back-office", "Paiements & factures"],
