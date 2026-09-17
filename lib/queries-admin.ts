@@ -188,3 +188,26 @@ export async function getDemandesAchat(limite = 5): Promise<EntreeJournal[]> {
   });
   return rows.map(versEntree);
 }
+
+export interface Participant {
+  id: string;
+  nom: string;
+  entreprise: string;
+  email: string;
+  statut: "confirme" | "present" | "absent";
+}
+
+/** Liste d'accueil d'un événement, par ordre alphabétique. */
+export async function getParticipants(eventId: string): Promise<Participant[]> {
+  return prisma.attendee.findMany({
+    where: { eventId },
+    orderBy: { nom: "asc" },
+    select: {
+      id: true,
+      nom: true,
+      entreprise: true,
+      email: true,
+      statut: true,
+    },
+  });
+}
