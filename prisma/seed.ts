@@ -11,6 +11,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { EVENTS, REGISTRATIONS } from "./fixtures/events";
 import { INVOICES } from "./fixtures/invoices";
+import { journalDemo } from "./fixtures/journal";
 import { MEMBERS } from "./fixtures/members";
 import { NEWS } from "./fixtures/news";
 import { OFFERS, SERVICES } from "./fixtures/offers";
@@ -427,6 +428,7 @@ async function main() {
       detail: "Chargement initial des données d'exemple.",
     },
   });
+  await prisma.auditLog.createMany({ data: journalDemo(new Date()) });
 }
 
 main()
