@@ -290,14 +290,16 @@ h3 {
 }
 
 /* ============================================================
-   Espace membre — habillage sombre aux couleurs de la chambre.
+   Espaces membre et back-office — habillage aux couleurs de la chambre.
 
    Le bloc redéfinit les tokens applicatifs plutôt que d'introduire une
    palette parallèle : toutes les primitives de components/ui.tsx s'y
-   conforment sans qu'aucune page n'ait à changer.
+   conforment sans qu'aucune page n'ait à changer. Les deux espaces
+   partagent la charte ; seule la barre latérale les distingue.
    ============================================================ */
 
-.espace-membre {
+.espace-membre,
+.espace-admin {
   --bg: #f5f7f9;
   --surface: #ffffff;
   --surface-2: #f1f4f7;
@@ -369,6 +371,17 @@ h3 {
 }
 
 /*
+ * Back-office : barre latérale en bleu nuit de la charte.
+ *
+ * L'équipe passe d'un espace à l'autre pour vérifier ce que voit un membre.
+ * Le rouge et le vert de l'espace membre y restent ; ici la nuit dit, au
+ * premier coup d'œil, « vous administrez ».
+ */
+.espace-admin {
+  --laterale: linear-gradient(180deg, #172b40 0%, #0f1d2c 48%, #0a1520 100%);
+}
+
+/*
  * Titres en gras.
  *
  * Hammersmith One n'existe qu'en graisse 400 : l'appeler en gras produirait un
@@ -379,14 +392,19 @@ h3 {
 .espace-membre h1,
 .espace-membre h2,
 .espace-membre h3,
-.espace-membre .titre {
+.espace-membre .titre,
+.espace-admin h1,
+.espace-admin h2,
+.espace-admin h3,
+.espace-admin .titre {
   font-family: var(--font-texte);
   font-weight: 700;
   letter-spacing: -0.018em;
   text-wrap: balance;
 }
 
-.espace-membre .surtitre {
+.espace-membre .surtitre,
+.espace-admin .surtitre {
   font-family: var(--font-texte);
   font-size: 11px;
   font-weight: 600;
@@ -395,7 +413,8 @@ h3 {
 }
 
 /* Le menu déroulant natif hérite sinon du texte clair du formulaire. */
-.espace-membre select option {
+.espace-membre select option,
+.espace-admin select option {
   color: #0f1d2c;
   background-color: #ffffff;
 }
@@ -491,6 +510,7 @@ h3 {
 }
 
 .espace-membre .bg-accent:hover,
+.espace-admin .bg-accent:hover,
 .marque .bg-marque-rouge:hover,
 .bouton-degrade:hover {
   background-image: var(
@@ -501,7 +521,9 @@ h3 {
 
 /* Les pastilles et petits repères gardent un aplat : un dégradé y serait illisible. */
 .espace-membre .pastille.bg-accent,
-.espace-membre [class*="rounded-full"].bg-accent {
+.espace-membre [class*="rounded-full"].bg-accent,
+.espace-admin .pastille.bg-accent,
+.espace-admin [class*="rounded-full"].bg-accent {
   background-image: none;
 }
 
