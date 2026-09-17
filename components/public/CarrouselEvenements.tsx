@@ -66,7 +66,7 @@ export function CarrouselEvenements({
   };
 
   const flecheClasses =
-    "w-10 h-10 rounded-full border border-white/20 bg-white/[0.06] text-white flex items-center justify-center cursor-pointer transition-colors hover:bg-white/15 disabled:opacity-25 disabled:cursor-default";
+    "w-10 h-10 rounded-full border border-line bg-surface text-ink flex items-center justify-center cursor-pointer transition-colors hover:bg-surface-2 hover:border-faint disabled:opacity-35 disabled:cursor-default";
 
   return (
     <div className="relative">

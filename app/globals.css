@@ -172,29 +172,32 @@ h3 {
    vitrine, son apparence ne doit pas dépendre des réglages du navigateur. */
 .marque {
   /*
-   * L'espace public redéfinit aussi les tokens applicatifs : les primitives
-   * de components/ui.tsx qui y sont employées doivent rester sombres, alors
-   * que le reste de l'application est passé en clair.
+   * Fond blanc, texte bleu nuit : la version « fond pâle » de la charte, où
+   * le rouge et le vert se lisent tels quels. Seule la bannière d'accueil
+   * reste sombre (`.sur-sombre`). Les tokens applicatifs sont redéfinis pour
+   * que les primitives de components/ui.tsx suivent.
    */
-  --bg: var(--marque-nuit);
-  --surface: #16283c;
-  --surface-2: #1d3450;
-  --surface-3: #24405f;
-  --border: #23384f;
-  --text: #ffffff;
-  --text-muted: rgb(255 255 255 / 0.72);
-  --text-faint: rgb(255 255 255 / 0.5);
-  --accent: #d81f3a;
-  --accent-strong: #ef3350;
-  --accent-soft: #2d0d15;
-  --success: #2fae6a;
-  --success-strong: #56d18c;
-  --success-soft: #0f2a1f;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f6f9;
+  --surface-3: #e8edf2;
+  --border: #e1e7ee;
+  --text: var(--marque-nuit);
+  --text-muted: #4f6072;
+  --text-faint: #7d8c9b;
+  --accent: var(--marque-rouge);
+  --accent-strong: #8b0512;
+  --accent-soft: #fdeaed;
+  --success: var(--marque-vert);
+  --success-strong: #005c34;
+  --success-soft: #e3f3ea;
+  --shadow:
+    0 1px 2px rgb(15 29 44 / 0.05), 0 14px 32px -20px rgb(15 29 44 / 0.25);
 
-  background: var(--marque-nuit);
-  color: #ffffff;
+  background: #ffffff;
+  color: var(--marque-nuit);
   font-family: var(--font-texte);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /*
@@ -232,8 +235,18 @@ h3 {
 }
 
 .marque :focus-visible {
-  outline: 2px solid #ffffff;
+  outline: 2px solid var(--marque-rouge);
   outline-offset: 3px;
+}
+
+/* Bannière d'accueil : le seul bloc sombre de l'espace public. */
+.marque .sur-sombre {
+  color: #ffffff;
+  color-scheme: dark;
+}
+
+.marque .sur-sombre :focus-visible {
+  outline-color: #ffffff;
 }
 
 /* ---------- Animations de l'espace public ---------- */
@@ -668,8 +681,7 @@ h3 {
 }
 
 /* Sur fond sombre — menu latéral, espace public — le pouce passe au blanc. */
-.defilement-sombre,
-.marque {
+.defilement-sombre {
   --pouce: rgb(255 255 255 / 0.26);
   --pouce-survol: rgb(255 255 255 / 0.46);
 }
@@ -782,22 +794,25 @@ h3 {
 }
 
 /*
- * Espace public, sur fond de nuit.
+ * Espace public.
  *
  * Hammersmith One n'existe qu'en romain : l'italique y serait synthétique et
  * jurerait avec le reste du titre. La couleur suffit.
  *
- * Et les teintes de la charte, calculées pour du texte sur blanc, s'éteignent
- * sur le bleu nuit — le vert #007140 y passe pour du gris foncé. On prend donc
- * leurs déclinaisons claires, qui gardent l'identité en restant lisibles.
+ * Sur le fond blanc, les teintes de la charte se lisent telles quelles. Sur la
+ * bannière sombre, elles s'éteindraient — le vert #007140 y passe pour du gris
+ * foncé : on y prend leurs déclinaisons claires.
  */
 .marque .saillant {
   font-style: normal;
-  color: var(--ton-saillant, var(--marque-rouge-clair));
 }
 
-.marque .saillant-vert {
-  --ton-saillant: #3fc98a;
+.marque .sur-sombre .saillant {
+  color: var(--ton-saillant-sombre, var(--marque-rouge-clair));
+}
+
+.marque .sur-sombre .saillant-vert {
+  --ton-saillant-sombre: #3fc98a;
 }
 
 @media (prefers-contrast: more) {

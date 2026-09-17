@@ -6,7 +6,6 @@ import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
 import { FormulaireAdhesion } from "@/components/public/FormulaireAdhesion";
-import { EnTetePublique } from "@/components/public/Marque";
 import {
   fmtCotisation,
   libelleFormule,
@@ -56,7 +55,7 @@ export default async function PublicHome() {
   return (
     <>
       {/* ==================== Bannière ==================== */}
-      <section className="relative overflow-hidden">
+      <section className="sur-sombre relative overflow-hidden bg-[var(--marque-nuit)]">
         {/* Toronto à gauche, les baobabs à droite : les deux pays encadrent la
             bannière. Entre eux, le dégradé linéaire 90° de la charte, posé
             franchement — le rouge et le vert doivent se lire, pas se deviner. */}
@@ -110,11 +109,7 @@ export default async function PublicHome() {
           <div className="absolute inset-0 bg-[var(--marque-nuit)]/22" />
         </div>
 
-        <div className="relative apparition">
-          <EnTetePublique surBanniere />
-        </div>
-
-        <div className="relative max-w-[1120px] mx-auto px-5 pt-2 md:pt-4 pb-0">
+        <div className="relative max-w-[1120px] mx-auto px-5 pt-10 md:pt-14 pb-0">
           <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center">
             <div>
               <span
@@ -219,21 +214,23 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== Événements ==================== */}
-      <section id="evenements" className="scroll-mt-6">
+      <section id="evenements" className="scroll-mt-24">
         <div className="max-w-[1120px] mx-auto px-5 pt-14 pb-8">
-          <div className="apparition-defilement overflow-hidden rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-5 md:p-10">
+          <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
             <div className="flex items-end justify-between gap-6 flex-wrap">
               <div>
-                <span className="surtitre text-white/45">Rencontrons-nous</span>
+                <span className="surtitre text-marque-rouge">
+                  Rencontrons-nous
+                </span>
                 <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
                   Les prochains <Saillant>rendez-vous</Saillant>
                 </h2>
-                <p className="text-[15px] text-white/65 m-0 mt-2.5">
+                <p className="text-[15px] text-muted m-0 mt-2.5">
                   Des rencontres pour apprendre, échanger et créer des liens.
                 </p>
               </div>
               {evenements.length ? (
-                <span className="text-[13px] text-white/45">
+                <span className="text-[13px] text-faint">
                   {evenements.length} à venir
                 </span>
               ) : null}
@@ -248,7 +245,7 @@ export default async function PublicHome() {
                 </CarrouselEvenements>
               </div>
             ) : (
-              <p className="text-white/60 mt-8 mb-0">
+              <p className="text-muted mt-8 mb-0">
                 Aucun rendez-vous programmé pour le moment.
               </p>
             )}
@@ -257,22 +254,22 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== Adhésion ==================== */}
-      <section id="adhesion" className="scroll-mt-6">
+      <section id="adhesion" className="scroll-mt-24">
         <div className="max-w-[1120px] mx-auto px-5 pb-16">
-          <div className="apparition-defilement rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-5 md:p-10">
+          <div className="apparition-defilement rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
             {/* `minmax(0, 1fr)` : sans cela, la liste des formules — un menu
                 déroulant à libellés longs — élargit la colonne au-delà du
                 cadre sur téléphone. */}
             <div className="grid gap-10 grid-cols-[minmax(0,1fr)] lg:grid-cols-2 items-start">
               <div className="min-w-0 lg:sticky lg:top-8">
-                <span className="surtitre text-white/45">
+                <span className="surtitre text-marque-vert">
                   Rejoignez CanCham
                 </span>
                 <h2 className="titre text-[clamp(26px,3.6vw,38px)] m-0 mt-2.5 max-w-[16ch]">
                   Votre prochain <Saillant ton="vert">partenariat</Saillant>{" "}
                   commence ici.
                 </h2>
-                <p className="text-[15px] text-white/70 m-0 mt-3.5 max-w-[44ch]">
+                <p className="text-[15px] text-muted m-0 mt-3.5 max-w-[44ch]">
                   Présentez votre entreprise et faites le premier pas vers le
                   réseau.
                 </p>
@@ -282,32 +279,30 @@ export default async function PublicHome() {
                     const Icone = a.icone;
                     return (
                       <li key={a.texte} className="flex items-center gap-4">
-                        <span className="shrink-0 w-11 h-11 rounded-full border border-[#3fc98a]/40 bg-[#3fc98a]/10 text-[#3fc98a] flex items-center justify-center">
+                        <span className="shrink-0 w-11 h-11 rounded-full bg-success-soft text-marque-vert flex items-center justify-center">
                           <Icone size={19} />
                         </span>
-                        <span className="text-[15px] text-white/90">
-                          {a.texte}
-                        </span>
+                        <span className="text-[15px] text-ink">{a.texte}</span>
                       </li>
                     );
                   })}
                 </ul>
 
                 {/* Les tarifs, sous les yeux pendant qu'on remplit le formulaire. */}
-                <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
-                  <div className="surtitre text-white/45 mb-2">
+                <div className="mt-8 rounded-xl border border-line bg-surface-2 px-5 py-4">
+                  <div className="surtitre text-faint mb-2">
                     Cotisation annuelle
                   </div>
                   <ul className="list-none m-0 p-0">
                     {ORDRE_FORMULES.map((f) => (
                       <li
                         key={f}
-                        className="flex items-baseline justify-between gap-4 py-2 border-b border-white/[0.07] last:border-b-0 text-[13.5px]"
+                        className="flex items-baseline justify-between gap-4 py-2 border-b border-line last:border-b-0 text-[13.5px]"
                       >
-                        <span className="text-white/80 min-w-0">
+                        <span className="text-muted min-w-0">
                           {libelleFormule(f)}
                         </span>
-                        <span className="text-white font-semibold whitespace-nowrap tabular-nums">
+                        <span className="text-ink font-semibold whitespace-nowrap tabular-nums">
                           {fmtCotisation(f)}
                         </span>
                       </li>
@@ -315,12 +310,12 @@ export default async function PublicHome() {
                   </ul>
                 </div>
 
-                <p className="text-[13px] text-white/55 mt-6 mb-0">
+                <p className="text-[13px] text-muted mt-6 mb-0">
                   Votre candidature sera examinée par l’équipe CanCham. Besoin
                   d’un dossier complet ?{" "}
                   <Link
                     href="/public/adhesion"
-                    className="text-white/80 underline underline-offset-2"
+                    className="text-marque-vert font-semibold underline underline-offset-2"
                   >
                     Formulaire détaillé
                   </Link>

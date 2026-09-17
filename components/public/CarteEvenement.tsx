@@ -40,9 +40,9 @@ export function CarteEvenement({
       href={`/public/evenements/${evenement.id}`}
       // Trois cartes pleines sur ordinateur, deux sur tablette : aucune ne se
       // coupe au bord. Sur téléphone, la suivante dépasse, pour inviter à glisser.
-      className="group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-[var(--marque-nuit)] border border-white/10 transition-colors hover:border-white/25"
+      className="group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-surface border border-line shadow-[var(--shadow)] transition-[border-color,box-shadow] hover:border-faint hover:shadow-[0_18px_40px_-22px_rgb(15_29_44/0.45)]"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-[var(--marque-nuit-2)]">
+      <div className="relative aspect-[16/10] overflow-hidden bg-surface-3">
         {visuel ? (
           <Image
             src={visuel.url}
@@ -52,7 +52,6 @@ export function CarteEvenement({
             className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : null}
-        <div className="absolute inset-0 bg-linear-to-t from-[var(--marque-nuit)]/85 to-transparent" />
       </div>
 
       <div className="p-5 flex-1 flex flex-col">
@@ -60,14 +59,14 @@ export function CarteEvenement({
           <span className="font-[family-name:var(--font-titre)] text-[11.5px] font-bold px-2.5 py-1 rounded-md bg-marque-rouge text-white tracking-wide">
             {jour} {mois}
           </span>
-          <span className="surtitre text-white/50">{categorie(evenement)}</span>
+          <span className="surtitre text-faint">{categorie(evenement)}</span>
         </div>
 
-        <h3 className="titre text-[19px] m-0 mb-2.5 text-white">
+        <h3 className="titre text-[19px] m-0 mb-2.5 text-ink">
           {evenement.titre}
         </h3>
 
-        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-[13px] text-white/65 mb-4">
+        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-[13px] text-muted mb-4">
           <span className="inline-flex items-center gap-1.5">
             <MapPin size={14} />
             {evenement.lieu}
@@ -80,7 +79,7 @@ export function CarteEvenement({
           ) : null}
         </div>
 
-        <span className="mt-auto inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#3fc98a]">
+        <span className="mt-auto inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-marque-vert">
           Découvrir
           <ArrowRight
             size={15}

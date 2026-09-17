@@ -5,24 +5,32 @@ import Link from "next/link";
  * Éléments de marque, conformes à la charte CanCham.
  *
  * Règle de la charte : la version couleur sur fond pâle, la version renversée
- * sur fond foncé. L'espace public étant sombre, c'est la renversée qui sert
- * partout ici. Le sigle seul ne remplace jamais le logo — il est réservé aux
- * usages listés par la charte (avatar social, objet promotionnel, élément
- * graphique), d'où son emploi ici en simple ornement de fond.
+ * sur fond foncé. L'espace public est blanc : c'est la version couleur qui
+ * sert, la renversée restant disponible pour un fond sombre. Le sigle seul ne
+ * remplace jamais le logo — il est réservé aux usages listés par la charte
+ * (avatar social, objet promotionnel, élément graphique), d'où son emploi ici
+ * en simple ornement de fond.
  */
+
+const LOGOS = {
+  couleur: { src: "/marque/logo-couleur.png", width: 2536 },
+  blanc: { src: "/marque/logo-blanc.png", width: 2383 },
+} as const;
 
 export function LogoOfficiel({
   className = "",
   priority = false,
+  version = "couleur",
 }: {
   className?: string;
   priority?: boolean;
+  version?: keyof typeof LOGOS;
 }) {
   return (
     <Image
-      src="/marque/logo-blanc.png"
+      src={LOGOS[version].src}
       alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar"
-      width={2383}
+      width={LOGOS[version].width}
       height={711}
       priority={priority}
       className={className}
@@ -52,30 +60,26 @@ export function Sigle({
 }
 
 /**
- * En-tête de l'espace public, sur toutes les pages.
+ * En-tête de l'espace public, commun à toutes les pages.
  *
- * Sur la page d'accueil, il se pose sur la bannière, sans filet ; ailleurs,
- * un filet le sépare du contenu. Sur téléphone, il tient sur une ligne : le
- * logo rétrécit et seul le bouton « Espace membre » reste, les autres liens
- * étant dans la page et dans le pied.
+ * Blanc, et collé en haut au défilement : le chemin vers l'espace membre reste
+ * à portée. Sur téléphone, il tient sur une ligne : le logo rétrécit et seul le
+ * bouton « Espace membre » reste, les autres liens étant dans la page et dans
+ * le pied.
  */
-export function EnTetePublique({
-  surBanniere = false,
-}: {
-  surBanniere?: boolean;
-}) {
+export function EnTetePublique() {
   const lien =
-    "hidden text-[13px] font-semibold px-3.5 py-2.5 rounded-[5px] text-white/80 hover:text-white no-underline whitespace-nowrap";
+    "hidden text-[13px] font-semibold px-3.5 py-2.5 rounded-[5px] text-muted hover:text-ink hover:bg-surface-2 no-underline whitespace-nowrap";
   return (
-    <header className={surBanniere ? "" : "border-b border-white/10"}>
-      <div className="max-w-[1120px] mx-auto px-5 py-4 md:py-5 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-line">
+      <div className="max-w-[1120px] mx-auto px-5 py-3 md:py-4 flex items-center justify-between gap-4">
         <Link
           href="/public"
           aria-label="Accueil CanCham Connect"
           className="shrink-0"
         >
           <LogoOfficiel
-            className="w-[168px] sm:w-[220px] md:w-[260px] h-auto"
+            className="w-[168px] sm:w-[210px] md:w-[240px] h-auto"
             priority
           />
         </Link>
@@ -91,7 +95,7 @@ export function EnTetePublique({
           </Link>
           <Link
             href="/membre"
-            className="btn-contour btn-contour-sm text-white hover:bg-white/10 ml-1"
+            className="btn-contour btn-contour-sm text-marque-nuit hover:bg-surface-2 ml-1"
           >
             Espace membre
           </Link>
@@ -103,15 +107,15 @@ export function EnTetePublique({
 
 /** Pied de page commun à l'espace public. */
 export function PiedPublique() {
-  const lien = "text-white/60 hover:text-white no-underline";
+  const lien = "text-muted hover:text-ink no-underline";
   return (
-    <footer className="border-t border-white/10 mt-auto">
+    <footer className="border-t border-line bg-surface-2 mt-auto">
       <div className="max-w-[1120px] mx-auto px-5 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col gap-3">
           <Link href="/public" aria-label="Accueil CanCham Connect">
             <LogoOfficiel className="w-[180px] h-auto" />
           </Link>
-          <span className="text-[12.5px] text-white/50">
+          <span className="text-[12.5px] text-faint">
             © {new Date().getFullYear()} CanCham · Le réseau Canada–Madagascar
           </span>
         </div>
