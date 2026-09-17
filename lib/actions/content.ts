@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithFlash } from "@/lib/flash";
@@ -424,33 +425,88 @@ export async function deleteOffer(formData: FormData) {
 export async function saveService(formData: FormData) {
   const id = texte(formData, "serviceId");
   const type = texte(formData, "type") === "payant" ? "payant" : "gratuit";
-  const data = {
-    titre: texte(formData, "titre") || "Nouveau service",
-    desc: texte(formData, "desc") || "Détails à venir.",
-    type,
-    prix: type === "payant" ? Number(formData.get("prix")) || 0 : 0,
-  } as const;
+  const titre = texte(formData, "titre");
+  const desc = texte(formData, "desc");
+  const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
+  const retour = "/admin/offres-cancham";
 
-  if (id) {
-    await prisma.canchamService.update({ where: { id }, data });
-  } else {
-    const n = await prisma.canchamService.count();
-    await prisma.canchamService.create({
-      data: { ...data, icon: "award", ordre: n },
-    });
+  if (!titre || !desc) {
+    redirectWithFlash(retour, "Le titre et la description sont requis.");
+  }
+  if (type === "payant" && (!Number.isFinite(prix) || prix <= 0)) {
+    redirectWithFlash(retour, "Indiquez le tarif d’un service payant.");
   }
 
+  const data = { titre, desc, type, prix } as const;
+  const service = id
+    ? await prisma.canchamService.update({ where: { id }, data })
+    : await prisma.canchamService.create({
+        data: {
+          ...data,
+          icon: "award",
+          // En fin de liste : il ne passe pas devant ceux déjà présentés.
+          ordre:
+            ((await prisma.canchamService.aggregate({ _max: { ordre: true } }))
+              ._max.ordre ?? -1) + 1,
+        },
+      });
+
+  await journal(
+    id ? "service_modifie" : "service_ajoute",
+    "CanchamService",
+    service.id,
+    `« ${titre} » · ${type === "payant" ? `${prix.toLocaleString("fr-FR")} Ar` : "inclus"}.`,
+  );
   revalideTout();
   redirectWithFlash(
-    "/admin/offres-cancham",
+    retour,
     id ? "Service mis à jour" : "Service publié auprès des membres",
   );
 }
 
 export async function deleteService(formData: FormData) {
-  await prisma.canchamService.delete({
-    where: { id: texte(formData, "serviceId") },
+  const id = texte(formData, "serviceId");
+  const s = await prisma.canchamService.findUnique({
+    where: { id },
+    select: { titre: true },
   });
+  if (!s) redirectWithFlash("/admin/offres-cancham", "Service introuvable.");
+
+  await journal("service_supprime", "CanchamService", id, `« ${s.titre} ».`);
+  await prisma.canchamService.delete({ where: { id } });
   revalideTout();
-  redirectWithFlash("/admin/offres-cancham", "Service retiré");
+  redirectWithFlash("/admin/offres-cancham", `« ${s.titre} » retiré`);
+}
+
+/**
+ * Déplace un service d'un rang dans sa liste — gratuits ou payants —, pour
+ * choisir ce que les membres voient en premier.
+ */
+export async function deplacerService(formData: FormData) {
+  const id = texte(formData, "serviceId");
+  const sens = texte(formData, "sens") === "haut" ? -1 : 1;
+  const retour = "/admin/offres-cancham";
+
+  const courant = await prisma.canchamService.findUnique({ where: { id } });
+  if (!courant) redirectWithFlash(retour, "Service introuvable.");
+
+  const liste = await prisma.canchamService.findMany({
+    where: { type: courant.type },
+    orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
+    select: { id: true },
+  });
+  const i = liste.findIndex((x) => x.id === id);
+  const j = i + sens;
+  if (j < 0 || j >= liste.length) redirect(retour);
+
+  [liste[i], liste[j]] = [liste[j], liste[i]];
+  // Renuméroter toute la liste : deux services au même rang rendraient
+  // l'échange sans effet.
+  await prisma.$transaction(
+    liste.map((x, ordre) =>
+      prisma.canchamService.update({ where: { id: x.id }, data: { ordre } }),
+    ),
+  );
+  revalideTout();
+  redirect(retour);
 }
