@@ -7,6 +7,7 @@ import {
   Search,
 } from "lucide-react";
 import { Card, EmptyState, Pill, ViewHead } from "@/components/ui";
+import { TexteLie } from "@/components/TexteLie";
 import { rechercher, type ResultatRecherche } from "@/lib/queries";
 import type { Space } from "@/lib/types";
 
@@ -72,7 +73,9 @@ export async function RecherchePage({ space, q }: { space: Space; q: string }) {
                       <div className="text-[13.6px] font-semibold text-ink">
                         {r.titre}
                       </div>
-                      <div className="text-[12px] text-muted">{r.detail}</div>
+                      <div className="text-[12px] text-muted">
+                        <TexteLie texte={r.detail} dansUnLien />
+                      </div>
                     </Link>
                   ))}
                 </Card>

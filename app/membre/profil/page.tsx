@@ -14,6 +14,7 @@ import {
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { TexteLie } from "@/components/TexteLie";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import {
@@ -181,9 +182,11 @@ export default async function ProfilPage() {
             </div>
           </div>
 
-          <p className="mt-[18px] font-semibold text-[14.5px]">{m.activite}</p>
-          <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch]">
-            {m.desc}
+          <p className="mt-[18px] font-semibold text-[14.5px]">
+            <TexteLie texte={m.activite} />
+          </p>
+          <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch] whitespace-pre-line">
+            <TexteLie texte={m.desc} />
           </p>
 
           <NeedsAndInterests member={m} />
@@ -198,8 +201,8 @@ export default async function ProfilPage() {
               </div>
               {/* Réponse donnée à l'inscription, telle quelle : c'est une
                   déclaration d'intention, pas une fiche à retoucher. */}
-              <p className="m-0 text-[14px] text-muted leading-relaxed max-w-[70ch]">
-                {m.motivation}
+              <p className="m-0 text-[14px] text-muted leading-relaxed max-w-[70ch] whitespace-pre-line">
+                <TexteLie texte={m.motivation} />
               </p>
             </>
           ) : null}

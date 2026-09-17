@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ImageIcon, X } from "lucide-react";
 import type { Produit } from "@/lib/types";
+import { TexteLie } from "@/components/TexteLie";
 
 /**
  * Carte d'une offre du catalogue, et sa fiche de détail.
@@ -174,7 +175,7 @@ export function CarteService({
                 {produit.description ? (
                   produit.description.split("\n\n").map((para, i) => (
                     <p key={i} className="m-0 mb-3 last:mb-0">
-                      {para}
+                      <TexteLie texte={para} />
                     </p>
                   ))
                 ) : (

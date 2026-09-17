@@ -13,6 +13,7 @@ import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { EnTetePublique } from "@/components/public/Marque";
 import { visuelEvenement } from "@/lib/images-publiques";
 import { Agrandir } from "@/components/Agrandir";
+import { TexteLie } from "@/components/TexteLie";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
 
@@ -110,7 +111,10 @@ export default async function EvenementPublic({
                   key={i}
                   className="m-0 text-[16px] leading-[1.75] text-white/80"
                 >
-                  {para}
+                  <TexteLie
+                    texte={para}
+                    classeLien="text-white underline underline-offset-2 decoration-white/40 hover:decoration-white [overflow-wrap:anywhere]"
+                  />
                 </p>
               ))}
             </div>
