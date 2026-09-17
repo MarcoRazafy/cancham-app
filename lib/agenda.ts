@@ -31,6 +31,23 @@ export const TYPES_ELEMENT: { cle: TypeElement; libelle: string }[] = [
   { cle: "rappel", libelle: "Rappels" },
 ];
 
+/** Les deux espaces qui ont un agenda. */
+export type EspaceAgenda = "membre" | "admin";
+
+/** Les types d'un espace : l'équipe ne s'inscrit pas aux événements. */
+export const typesElement = (espace: EspaceAgenda) =>
+  espace === "admin"
+    ? TYPES_ELEMENT.filter((t) => t.cle !== "inscription")
+    : TYPES_ELEMENT;
+
+/** L'espace d'une adresse interne : « /admin/… » ou « /membre/… ». */
+export const espaceDe = (chemin: string): EspaceAgenda =>
+  chemin === "/admin" ||
+  chemin.startsWith("/admin/") ||
+  chemin.startsWith("/admin?")
+    ? "admin"
+    : "membre";
+
 export interface ElementAgenda {
   /** Unique dans l'agenda : préfixé par le type. */
   id: string;

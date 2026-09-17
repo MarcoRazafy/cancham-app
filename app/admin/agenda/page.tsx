@@ -8,5 +8,5 @@ export default function Page({
 }: {
   searchParams: Promise<ParametresAgenda>;
 }) {
-  return <AgendaPage espace="membre" searchParams={searchParams} />;
+  return <AgendaPage espace="admin" searchParams={searchParams} />;
 }

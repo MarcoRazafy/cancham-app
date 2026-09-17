@@ -33,12 +33,15 @@ export function NouveauRappel({
   retour,
   libelle = "Nouveau rappel",
   discret = false,
+  apresEnvoi,
 }: {
   jour: string;
   retour: string;
   libelle?: string;
   /** Lien texte plutôt que bouton plein, pour le détail d'un jour. */
   discret?: boolean;
+  /** Appelé une fois l'enregistrement terminé : la bulle recharge sa liste. */
+  apresEnvoi?: () => void;
 }) {
   return (
     <Modal
@@ -58,7 +61,12 @@ export function NouveauRappel({
       )}
     >
       {(fermer) => (
-        <FormulaireRappel jour={jour} retour={retour} fermer={fermer} />
+        <FormulaireRappel
+          jour={jour}
+          retour={retour}
+          fermer={fermer}
+          apresEnvoi={apresEnvoi}
+        />
       )}
     </Modal>
   );
@@ -68,16 +76,27 @@ export function NouveauRappel({
 export function ActionsRappel({
   element,
   retour,
+  apresEnvoi,
 }: {
   element: ElementAgenda;
   retour: string;
+  apresEnvoi?: () => void;
 }) {
   const [ouvert, setOuvert] = useState(false);
   if (!element.rappel) return null;
 
   return (
     <div className="flex items-center gap-1.5 shrink-0">
-      <form action={basculerRappelFait}>
+      <form
+        action={
+          apresEnvoi
+            ? async (fd: FormData) => {
+                await basculerRappelFait(fd);
+                apresEnvoi();
+              }
+            : basculerRappelFait
+        }
+      >
         <input type="hidden" name="rappelId" value={element.rappel.id} />
         <input type="hidden" name="retour" value={retour} />
         <CaseFait fait={Boolean(element.fait)} />
@@ -96,6 +115,7 @@ export function ActionsRappel({
         retour={retour}
         ouvert={ouvert}
         onFermer={() => setOuvert(false)}
+        apresEnvoi={apresEnvoi}
       />
     </div>
   );
@@ -163,11 +183,13 @@ function ModifierRappel({
   retour,
   ouvert,
   onFermer,
+  apresEnvoi,
 }: {
   element: ElementAgenda;
   retour: string;
   ouvert: boolean;
   onFermer: () => void;
+  apresEnvoi?: () => void;
 }) {
   return (
     <Modal title="Modifier le rappel" ouvert={ouvert} onFermer={onFermer}>
@@ -177,6 +199,7 @@ function ModifierRappel({
           jour={element.jour}
           retour={retour}
           fermer={fermer}
+          apresEnvoi={apresEnvoi}
         />
       )}
     </Modal>
@@ -188,22 +211,28 @@ function FormulaireRappel({
   jour,
   retour,
   fermer,
+  apresEnvoi,
 }: {
   element?: ElementAgenda;
   jour: string;
   retour: string;
   fermer: () => void;
+  apresEnvoi?: () => void;
 }) {
   const [journee, setJournee] = useState(element ? !element.debut : true);
   const [confirmer, setConfirmer] = useState(false);
   const rappelId = element?.rappel?.id;
+  const termine = () => {
+    fermer();
+    apresEnvoi?.();
+  };
 
   if (confirmer && rappelId) {
     return (
       <form action={supprimerRappel}>
         <input type="hidden" name="rappelId" value={rappelId} />
         <input type="hidden" name="retour" value={retour} />
-        <FermerApresEnvoi fermer={fermer} />
+        <FermerApresEnvoi fermer={termine} />
         <ModalBody>
           <p className="m-0 text-[14px]">
             Supprimer le rappel <strong>« {element.titre} »</strong> ? Il
@@ -226,7 +255,7 @@ function FormulaireRappel({
         <input type="hidden" name="rappelId" value={rappelId} />
       ) : null}
       <input type="hidden" name="retour" value={retour} />
-      <FermerApresEnvoi fermer={fermer} />
+      <FermerApresEnvoi fermer={termine} />
       <ModalBody>
         <Field label="Titre">
           <input
