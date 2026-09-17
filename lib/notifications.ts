@@ -47,7 +47,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
     prisma.event.findFirst({
       where: { date: { gte: new Date() } },
       orderBy: { date: "asc" },
-      select: { titre: true, date: true },
+      select: { id: true, titre: true, date: true },
     }),
   ]);
 
@@ -62,7 +62,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       id: "candidatures",
       titre: `${candidatures} demande${candidatures > 1 ? "s" : ""} d’adhésion à examiner`,
       temps: "À traiter",
-      href: "/admin/membres?tab=candidature",
+      href: "/admin/membres?statut=candidature",
       ton: "warn",
     });
 
@@ -72,7 +72,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       id: "retard",
       titre: `${enRetard} cotisation${enRetard > 1 ? "s" : ""} en retard`,
       temps: "À relancer",
-      href: "/admin/membres?tab=en_retard",
+      href: "/admin/membres?statut=en_retard",
       ton: "bad",
     });
 
@@ -82,7 +82,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       id: "attente",
       titre: `${enAttente} adhésion${enAttente > 1 ? "s" : ""} en attente de paiement`,
       temps: "À encaisser",
-      href: "/admin/membres?tab=en_attente",
+      href: "/admin/membres?statut=en_attente",
       ton: "warn",
     });
 
@@ -104,7 +104,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
         day: "numeric",
         month: "short",
       }),
-      href: "/admin/evenements",
+      href: `/admin/evenements/${prochain.id}`,
       ton: "info",
     });
 
