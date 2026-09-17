@@ -526,8 +526,13 @@ export async function ouvrirConversation(formData: FormData) {
   });
   if (existant) redirect(lienFil(space, existant.id));
 
+  // L'équipe écrit aussi aux candidats et aux adhésions en attente, que la
+  // messagerie des membres ne propose pas encore.
   const referent = await prisma.user.findFirst({
-    where: { AND: [critereJoignable(user.id), { memberId }] },
+    where:
+      space === "admin"
+        ? { memberId, role: "membre" }
+        : { AND: [critereJoignable(user.id), { memberId }] },
     orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
     select: { id: true },
   });

@@ -7,7 +7,8 @@ import { redirectWithFlash } from "@/lib/flash";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
-import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
+import { ORDRE_FORMULES, PHOTOS_PAR_PRODUIT } from "@/lib/membership";
+import { getCurrentUser } from "@/lib/session";
 import type { MemberStatus, MemberType } from "@/lib/types";
 
 /**
@@ -43,6 +44,29 @@ async function journal(
 
 function revalideTout() {
   revalidatePath("/", "layout");
+}
+
+/** La personne de l'équipe qui agit, nommée dans le journal. */
+async function acteurEquipe(): Promise<string> {
+  return (await getCurrentUser("admin")).nom;
+}
+
+/**
+ * Page de retour d'un formulaire partagé entre les espaces.
+ *
+ * Seul un chemin interne est accepté : une adresse complète glissée dans le
+ * champ ferait de l'action un tremplin vers un site tiers.
+ */
+function retourInterne(fd: FormData, defaut: string): string {
+  const r = texte(fd, "retour");
+  return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
+}
+
+/** Qui agit sur un contact : l'équipe depuis le back-office, le membre sinon. */
+async function acteurDepuis(retour: string): Promise<string> {
+  return (
+    await getCurrentUser(retour.startsWith("/admin") ? "admin" : "membre")
+  ).nom;
 }
 
 /* ============================ Candidatures ============================ */
@@ -134,7 +158,13 @@ export async function approveCandidature(formData: FormData) {
     where: { id },
     data: { statut: "en_attente" },
   });
-  await journal("candidature_approuvee", "Member", id, "Équipe CanCham");
+  await journal(
+    "candidature_approuvee",
+    "Member",
+    id,
+    await acteurEquipe(),
+    `${m.nom} · en attente du paiement de la cotisation.`,
+  );
   revalideTout();
   redirectWithFlash(
     `/admin/membres/${id}`,
@@ -152,7 +182,7 @@ export async function rejectCandidature(formData: FormData) {
     "candidature_refusee",
     "Member",
     id,
-    "Équipe CanCham",
+    await acteurEquipe(),
     `Demande de ${m?.nom ?? id} refusée.`,
   );
   await prisma.member.delete({ where: { id } });
@@ -216,7 +246,7 @@ export async function registerPayment(formData: FormData) {
         action: "paiement_enregistre",
         entite: "Invoice",
         entiteId: numero,
-        acteur: "Équipe CanCham",
+        acteur: await acteurEquipe(),
         detail: `${fmtMontant(montant, devise)} par ${mode} pour ${avant.nom}.`,
       },
     }),
@@ -241,7 +271,7 @@ export async function sendReminder(formData: FormData) {
     "relance_envoyee",
     "Member",
     id,
-    "Équipe CanCham",
+    await acteurEquipe(),
     `Relance de cotisation pour ${m?.nom}.`,
   );
   revalideTout();
@@ -295,7 +325,7 @@ export async function createMember(formData: FormData) {
     "membre_cree",
     "Member",
     m.id,
-    "Équipe CanCham",
+    await acteurEquipe(),
     `Ajout manuel de ${nom}.`,
   );
   revalideTout();
@@ -366,6 +396,125 @@ export async function updateMemberProfile(formData: FormData) {
 
   revalideTout();
   redirectWithFlash("/membre/profil", "Fiche mise à jour");
+}
+
+/** Libellés des champs, pour dire dans le journal ce qui a changé. */
+const CHAMPS_FICHE: Record<string, string> = {
+  nom: "nom",
+  type: "type",
+  secteur: "secteur",
+  ville: "ville",
+  pays: "pays",
+  statutJuridique: "statut juridique",
+  siteweb: "site web",
+  formule: "formule",
+  activite: "activité",
+  desc: "description",
+  besoins: "besoins",
+  interets: "intérêts",
+  cover: "couverture",
+  logo: "logo",
+  photo: "photo",
+};
+
+/**
+ * Modification complète d'une fiche par l'équipe.
+ *
+ * Le membre ne retouche que sa présentation ; l'équipe corrige aussi
+ * l'identité et la formule — une erreur de saisie à l'inscription, un
+ * changement de raison sociale. La formule fixe le montant des prochaines
+ * cotisations : elle ne touche pas aux factures déjà émises.
+ */
+export async function modifierMembreAdmin(formData: FormData) {
+  const id = texte(formData, "memberId");
+  const retour = `/admin/membres/${id}`;
+
+  const actuel = await prisma.member.findUnique({ where: { id } });
+  if (!actuel) redirectWithFlash("/admin/membres", "Membre introuvable.");
+
+  const nom = texte(formData, "nom");
+  if (!nom) redirectWithFlash(retour, "Le nom est obligatoire.");
+
+  const formule = texte(formData, "formule");
+  if (!(ORDRE_FORMULES as string[]).includes(formule)) {
+    redirectWithFlash(retour, "Formule d’adhésion inconnue.");
+  }
+
+  const siteSaisi = texte(formData, "siteweb");
+  const siteweb = normaliserSite(siteSaisi);
+  if (siteSaisi && !siteweb) {
+    redirectWithFlash(
+      retour,
+      `« ${siteSaisi} » n’est pas une adresse de site valide.`,
+    );
+  }
+
+  let images: {
+    cover: string | null;
+    logo: string | null;
+    photo: string | null;
+  };
+  try {
+    images = {
+      cover: await enregistrerImage(formData.get("cover"), {
+        prefixe: `couverture-${id}`,
+        largeur: 1600,
+      }),
+      logo: await enregistrerImage(formData.get("logo"), {
+        prefixe: `logo-${id}`,
+        largeur: 600,
+        transparence: true,
+      }),
+      photo: await enregistrerImage(formData.get("photo"), {
+        prefixe: `photo-${id}`,
+        largeur: 800,
+      }),
+    };
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    throw e;
+  }
+
+  const data = {
+    nom,
+    type: (texte(formData, "type") === "physique"
+      ? "physique"
+      : "morale") as MemberType,
+    secteur: texte(formData, "secteur") || actuel.secteur,
+    ville: texte(formData, "ville") || actuel.ville,
+    pays: texte(formData, "pays") || null,
+    statutJuridique: texte(formData, "statutJuridique") || null,
+    siteweb,
+    formule: formule as (typeof ORDRE_FORMULES)[number],
+    activite: texte(formData, "activite") || actuel.activite,
+    desc: texte(formData, "desc") || actuel.desc,
+    besoins: texte(formData, "besoins") || null,
+    interets: texte(formData, "interets") || null,
+    cover: images.cover ?? actuel.cover,
+    logo: images.logo ?? actuel.logo,
+    photo: images.photo ?? actuel.photo,
+  };
+
+  const modifies = Object.keys(data).filter(
+    (k) =>
+      (data as Record<string, unknown>)[k] !==
+      (actuel as Record<string, unknown>)[k],
+  );
+  if (modifies.length === 0) {
+    redirectWithFlash(retour, "Aucune modification à enregistrer.");
+  }
+
+  await prisma.member.update({ where: { id }, data });
+  await journal(
+    "membre_modifie",
+    "Member",
+    id,
+    await acteurEquipe(),
+    `${nom} · ${modifies.map((k) => CHAMPS_FICHE[k] ?? k).join(", ")}.`,
+  );
+
+  revalideTout();
+  redirectWithFlash(retour, "Fiche mise à jour");
 }
 
 /* ============================ Produits & services ============================ */
@@ -493,21 +642,31 @@ export async function deleteMember(formData: FormData) {
   const id = texte(formData, "memberId");
   const m = await prisma.member.findUnique({
     where: { id },
-    select: { nom: true },
+    select: { nom: true, _count: { select: { factures: true } } },
   });
+  if (!m) redirectWithFlash("/admin/membres", "Membre introuvable.");
+
+  // Les factures sont des pièces comptables : la base refuse de les perdre
+  // avec le membre. On le dit avant d'essayer, et avant d'écrire au journal
+  // une suppression qui n'aurait pas lieu.
+  const n = m._count.factures;
+  if (n > 0) {
+    redirectWithFlash(
+      `/admin/membres/${id}`,
+      `${m.nom} a ${n} facture${n > 1 ? "s" : ""} : un membre qui a des pièces comptables ne se supprime pas.`,
+    );
+  }
+
   await journal(
     "membre_supprime",
     "Member",
     id,
-    "Équipe CanCham",
-    `Suppression de ${m?.nom ?? id} et de ses accès.`,
+    await acteurEquipe(),
+    `Suppression de ${m.nom} et de ses accès.`,
   );
   await prisma.member.delete({ where: { id } });
   revalideTout();
-  redirectWithFlash(
-    "/admin/membres",
-    `${m?.nom ?? "Le membre"} a été retiré de l’annuaire`,
-  );
+  redirectWithFlash("/admin/membres", `${m.nom} a été retiré de l’annuaire`);
 }
 
 /* ============================ Contacts ============================ */
@@ -523,7 +682,7 @@ export async function addContact(formData: FormData) {
   const memberId = texte(formData, "memberId");
   const nom = texte(formData, "nom");
   const email = texte(formData, "email").toLowerCase();
-  const retour = texte(formData, "retour") || "/membre/profil";
+  const retour = retourInterne(formData, "/membre/profil");
 
   if (!nom || !email) {
     redirectWithFlash(retour, "Nom et courriel sont obligatoires.");
@@ -576,7 +735,7 @@ export async function addContact(formData: FormData) {
     "contact_ajoute",
     "Member",
     memberId,
-    nom,
+    await acteurDepuis(retour),
     `Ajout du contact ${nom} (${email}).`,
   );
   revalideTout();
@@ -586,7 +745,7 @@ export async function addContact(formData: FormData) {
 /** Retrait d'un contact. Le dernier de la liste ne peut pas être retiré. */
 export async function removeContact(formData: FormData) {
   const id = texte(formData, "contactId");
-  const retour = texte(formData, "retour") || "/membre/profil";
+  const retour = retourInterne(formData, "/membre/profil");
 
   const contact = await prisma.user.findUnique({ where: { id } });
   if (!contact?.memberId) redirectWithFlash(retour, "Contact introuvable.");
@@ -621,7 +780,7 @@ export async function removeContact(formData: FormData) {
     "contact_retire",
     "Member",
     contact.memberId,
-    contact.nom,
+    await acteurDepuis(retour),
     `Retrait du contact ${contact.nom} (${contact.email}).`,
   );
   revalideTout();
@@ -638,7 +797,7 @@ export async function updateContact(formData: FormData) {
   const id = texte(formData, "contactId");
   const email = texte(formData, "email").toLowerCase();
   const nom = texte(formData, "nom");
-  const retour = texte(formData, "retour") || "/membre/profil";
+  const retour = retourInterne(formData, "/membre/profil");
 
   const actuel = await prisma.user.findUnique({ where: { id } });
   if (!actuel) redirectWithFlash(retour, "Contact introuvable.");

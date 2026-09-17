@@ -620,7 +620,7 @@ export function RemoveContactButton({
  * d'image » ou « il y en a une, je n'y touche pas ». Le nom du fichier choisi
  * remplace l'aperçu dès la sélection, pour confirmer que le clic a pris.
  */
-function ChampImage({
+export function ChampImage({
   name,
   label,
   hint,
