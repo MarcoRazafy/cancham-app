@@ -1,7 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Check, FileUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  FileUp,
+  ImagePlus,
+  Pencil,
+  Plus,
+  Star,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -20,7 +31,6 @@ import {
   enregistrerActualite,
   enregistrerOffre,
   enregistrerRessource,
-  supprimerCommentaire,
 } from "@/lib/actions/content";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
 
@@ -46,12 +56,7 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
       {news ? <input type="hidden" name="newsId" value={news.id} /> : null}
 
       <Card className="p-6 flex flex-col gap-4 min-w-0">
-        <ChampPhoto
-          name="image"
-          retirer="retirerImage"
-          apercu={news?.image}
-          aide="Sans photo, un bandeau aux couleurs de la chambre la remplace dans le fil."
-        />
+        <ChampPhotosActualite actuelles={news?.images ?? []} />
         <Field label="Titre">
           <input
             name="titre"
@@ -163,53 +168,6 @@ export function SupprimerActualiteButton({
             <CancelButton onClick={fermer} />
             <SubmitButton variant="danger" pendingLabel="Suppression…">
               <Trash2 size={14} /> Supprimer
-            </SubmitButton>
-          </ModalFooter>
-        </form>
-      )}
-    </Modal>
-  );
-}
-
-/** Retrait d'un commentaire par l'équipe. */
-export function SupprimerCommentaireButton({
-  commentId,
-  auteur,
-  retour,
-}: {
-  commentId: string;
-  auteur: string;
-  retour: string;
-}) {
-  return (
-    <Modal
-      title="Retirer le commentaire"
-      trigger={(ouvrir) => (
-        <button
-          type="button"
-          onClick={ouvrir}
-          aria-label={`Retirer le commentaire de ${auteur}`}
-          title="Retirer le commentaire"
-          className="w-7 h-7 rounded-md border border-transparent bg-transparent text-faint flex items-center justify-center cursor-pointer hover:text-accent hover:border-line"
-        >
-          <Trash2 size={13} />
-        </button>
-      )}
-    >
-      {(fermer) => (
-        <form action={supprimerCommentaire}>
-          <input type="hidden" name="commentId" value={commentId} />
-          <input type="hidden" name="retour" value={retour} />
-          <ModalBody>
-            <p className="m-0 text-[13.6px] text-muted">
-              Retirer le commentaire de <b className="text-ink">{auteur}</b> ?
-              Son texte reste consultable au journal d’activité.
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <CancelButton onClick={fermer} />
-            <SubmitButton variant="danger" pendingLabel="Retrait…">
-              <Trash2 size={14} /> Retirer
             </SubmitButton>
           </ModalFooter>
         </form>
@@ -554,5 +512,219 @@ export function SupprimerRessourceButton({
         </form>
       )}
     </Modal>
+  );
+}
+
+/* ============================ Photos d'une actualité ============================ */
+
+const MAX_PHOTOS = 10;
+/** La requête entière est bornée à 40 Mo : on prévient avant l'envoi. */
+const POIDS_MAX_ENVOI = 38 * 1024 * 1024;
+
+type PhotoEditee =
+  | { cle: string; type: "existante"; url: string }
+  | { cle: string; type: "nouvelle"; fichier: File; apercu: string };
+
+/**
+ * Plusieurs photos pour une publication : ajout en lot, retrait, ordre.
+ *
+ * La première est la couverture du fil ; « Mettre en couverture » l'y place.
+ * Les fichiers ajoutés partent par un champ caché reconstruit à chaque
+ * changement — un `FileList` ne se modifie pas —, et `ordre` dit au serveur
+ * où ranger chacun parmi les photos gardées.
+ */
+function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
+  const [photos, setPhotos] = useState<PhotoEditee[]>(() =>
+    actuelles.map((url) => ({ cle: `e:${url}`, type: "existante", url })),
+  );
+  const [erreur, setErreur] = useState<string | null>(null);
+  const champ = useRef<HTMLInputElement>(null);
+
+  // Mémorisée : l'effet ci-dessous ne reconstruit le champ fichier que si
+  // la liste des nouvelles photos a vraiment changé.
+  const nouvelles = useMemo(
+    () =>
+      photos.filter(
+        (p): p is Extract<PhotoEditee, { type: "nouvelle" }> =>
+          p.type === "nouvelle",
+      ),
+    [photos],
+  );
+  const poids = nouvelles.reduce((n, p) => n + p.fichier.size, 0);
+
+  useEffect(() => {
+    if (!champ.current) return;
+    const dt = new DataTransfer();
+    nouvelles.forEach((p) => dt.items.add(p.fichier));
+    champ.current.files = dt.files;
+  }, [nouvelles]);
+
+  const ordre = photos.map((p) =>
+    p.type === "existante" ? `e:${p.url}` : `n:${nouvelles.indexOf(p)}`,
+  );
+
+  const ajouter = (liste: FileList | null) => {
+    if (!liste) return;
+    setErreur(null);
+    const images = Array.from(liste).filter((f) => f.type.startsWith("image/"));
+    if (images.length < liste.length)
+      setErreur("Seules les images sont acceptées.");
+    setPhotos((avant) => {
+      const place = MAX_PHOTOS - avant.length;
+      if (images.length > place)
+        setErreur(`${MAX_PHOTOS} photos au plus par publication.`);
+      return [
+        ...avant,
+        ...images.slice(0, Math.max(0, place)).map((fichier, i) => ({
+          cle: `n:${Date.now()}-${i}-${fichier.name}`,
+          type: "nouvelle" as const,
+          fichier,
+          apercu: URL.createObjectURL(fichier),
+        })),
+      ];
+    });
+  };
+
+  const deplacer = (i: number, vers: number) =>
+    setPhotos((l) => {
+      if (vers < 0 || vers >= l.length) return l;
+      const copie = [...l];
+      const [p] = copie.splice(i, 1);
+      copie.splice(vers, 0, p);
+      return copie;
+    });
+
+  return (
+    <div>
+      <input type="hidden" name="ordre" value={JSON.stringify(ordre)} />
+      <input
+        ref={champ}
+        type="file"
+        name="images"
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+
+      <div className="flex items-baseline justify-between gap-3 mb-1.5">
+        <span className="text-[12.3px] font-semibold text-muted">Photos</span>
+        <span className="text-[11.8px] text-faint tabular-nums">
+          {photos.length} / {MAX_PHOTOS}
+        </span>
+      </div>
+
+      <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+        {photos.map((p, i) => (
+          <div
+            key={p.cle}
+            className="relative aspect-[4/3] rounded-[var(--radius-s)] overflow-hidden border border-line bg-surface-2 group"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={p.type === "existante" ? p.url : p.apercu}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            {i === 0 ? (
+              <span className="absolute top-1.5 left-1.5 rounded-full bg-accent text-white text-[10.5px] font-bold px-2 py-0.5">
+                Couverture
+              </span>
+            ) : null}
+            <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 p-1.5 bg-gradient-to-t from-[#0f1d2c]/80 to-transparent">
+              <span className="flex gap-1">
+                <BoutonPhoto
+                  libelle="Vers la gauche"
+                  onClick={() => deplacer(i, i - 1)}
+                  desactive={i === 0}
+                >
+                  <ChevronLeft size={14} />
+                </BoutonPhoto>
+                <BoutonPhoto
+                  libelle="Vers la droite"
+                  onClick={() => deplacer(i, i + 1)}
+                  desactive={i === photos.length - 1}
+                >
+                  <ChevronRight size={14} />
+                </BoutonPhoto>
+              </span>
+              <span className="flex gap-1">
+                {i > 0 ? (
+                  <BoutonPhoto
+                    libelle="Mettre en couverture"
+                    onClick={() => deplacer(i, 0)}
+                  >
+                    <Star size={13} />
+                  </BoutonPhoto>
+                ) : null}
+                <BoutonPhoto
+                  libelle="Retirer la photo"
+                  onClick={() =>
+                    setPhotos((l) => l.filter((x) => x.cle !== p.cle))
+                  }
+                >
+                  <X size={14} />
+                </BoutonPhoto>
+              </span>
+            </span>
+          </div>
+        ))}
+
+        {photos.length < MAX_PHOTOS ? (
+          <label className="aspect-[4/3] rounded-[var(--radius-s)] border-2 border-dashed border-line bg-surface-2 flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer text-muted hover:border-faint hover:text-ink">
+            <ImagePlus size={22} />
+            <span className="text-[12.5px] font-semibold">
+              {photos.length
+                ? "Ajouter des photos"
+                : "Ajouter une ou plusieurs photos"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                ajouter(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        ) : null}
+      </div>
+
+      <p
+        className={`m-0 mt-1.5 text-[11.8px] ${erreur || poids > POIDS_MAX_ENVOI ? "text-accent font-semibold" : "text-faint"}`}
+      >
+        {poids > POIDS_MAX_ENVOI
+          ? "Les nouvelles photos dépassent 38 Mo à elles toutes : envoyez-en moins à la fois."
+          : (erreur ??
+            "La première photo sert de couverture dans le fil. Sans photo, un bandeau aux couleurs de la chambre la remplace.")}
+      </p>
+    </div>
+  );
+}
+
+function BoutonPhoto({
+  libelle,
+  onClick,
+  desactive = false,
+  children,
+}: {
+  libelle: string;
+  onClick: () => void;
+  desactive?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={desactive}
+      aria-label={libelle}
+      title={libelle}
+      className="w-7 h-7 rounded-full bg-white/90 text-[#0f1d2c] flex items-center justify-center cursor-pointer border-0 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      {children}
+    </button>
   );
 }

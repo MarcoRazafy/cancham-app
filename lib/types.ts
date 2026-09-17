@@ -163,7 +163,19 @@ export interface Comment {
   entreprise: string;
   texte: string;
   date: string;
+  /** Écrit par l'utilisateur courant : lui seul le modifie ou le supprime. */
+  moi: boolean;
+  /** Texte retouché par son auteur après publication. */
+  modifie: boolean;
+  jaimes: number;
+  jaimeParMoi: boolean;
 }
+
+/** Commentaire tel que le décrivent les données d'exemple. */
+export type CommentaireFixture = Pick<
+  Comment,
+  "id" | "auteur" | "entreprise" | "texte" | "date"
+>;
 
 export interface NewsItem {
   id: string;
@@ -173,8 +185,8 @@ export interface NewsItem {
   media: NewsMedia;
   extrait: string;
   corps: string;
-  /** Illustration de l'article, par URL. */
-  image?: string | null;
+  /** Photos de l'article, dans l'ordre ; la première sert de couverture. */
+  images: string[];
   commentaires: Comment[];
   /** Nombre de « j'aime ». */
   jaimes: number;

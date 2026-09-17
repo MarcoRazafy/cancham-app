@@ -185,8 +185,10 @@ model User {
   /// Contact principal de l'entreprise — un seul par membre.
   contactPrincipal Boolean @default(false)
 
-  jaimes         NewsLike[]
-  participations ParticipantFil[]
+  jaimes             NewsLike[]
+  participations     ParticipantFil[]
+  commentaires       Comment[]
+  jaimesCommentaires CommentLike[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -319,8 +321,9 @@ model News {
 
   mediaType     MediaType
   mediaTheme    MediaTheme
-  /// Illustration de l'article, par URL. `null` = dégradé décoratif.
-  image         String?
+  /// Photos de l'article, dans l'ordre d'affichage : la première sert de
+  /// couverture dans le fil. Vide = dégradé décoratif.
+  images        String[]   @default([])
   /// Durée de la vidéo, au format mm:ss. `null` pour une photo.
   mediaDuration String?
 
@@ -399,11 +402,37 @@ model Comment {
   resourceId String?
   resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 
+  /// Auteur du commentaire : lui seul peut le modifier ou le supprimer. Le
+  /// nom et l'entreprise restent copiés à côté, pour qu'un compte supprimé
+  /// ne rende pas le commentaire anonyme.
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// Dernière modification par son auteur.
+  modifieLe DateTime?
+
+  jaimes CommentLike[]
+
   createdAt DateTime @default(now())
 
   @@index([newsId])
   @@index([resourceId])
   @@map("comments")
+}
+
+/// Un « j'aime » posé sur un commentaire. Une ligne par personne.
+model CommentLike {
+  id String @id @default(cuid())
+
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@map("comment_likes")
 }
 
 /// Promotion publiée PAR un membre, à destination des autres membres.

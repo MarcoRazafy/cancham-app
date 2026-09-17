@@ -1,19 +1,26 @@
-import type { NewsItem } from "../../lib/types";
+import type { CommentaireFixture, NewsItem } from "../../lib/types";
 
 /** Fil d'actualité de la chambre. Contenus d'exemple. */
 /**
  * Les « j'aime » sont des lignes rattachées à des utilisateurs, posées au
  * chargement : la fixture ne décrit que la publication elle-même.
  */
-export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
+export const NEWS: (Omit<
+  NewsItem,
+  "jaimes" | "jaimeParMoi" | "commentaires"
+> & { commentaires: CommentaireFixture[] })[] = [
   {
     id: "n1",
-    titre: "Lancement de la 9ᵉ édition de la MECC : cap sur le tourisme et l’éducation",
+    titre:
+      "Lancement de la 9ᵉ édition de la MECC : cap sur le tourisme et l’éducation",
     date: "2026-09-02",
     cat: "Programmation",
     media: { type: "image", theme: "navy" },
-    image:
+    images: [
       "/photos/cancham-18.jpg",
+      "/photos/cancham-17.jpg",
+      "/photos/cancham-20.jpg",
+    ],
     extrait:
       "La prochaine Mission Économique et Commerciale au Canada s’articule autour de deux filières prioritaires, portées par une délégation de 10 à 12 entreprises. Le lancement officiel est fixé au 1er octobre, avec un ancrage fort autour du SITV Montréal.",
     corps:
@@ -21,9 +28,10 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
     commentaires: [
       {
         id: "c1",
-        auteur: "Hery Rakotomalala",
+        auteur: "Lova Andrianjafy",
         entreprise: "Tsara Voyages",
-        texte: "Notre équipe est très intéressée par une place dans la délégation Tourisme.",
+        texte:
+          "Notre équipe est très intéressée par une place dans la délégation Tourisme.",
         date: "2026-09-03",
       },
     ],
@@ -34,8 +42,13 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
     date: "2026-08-29",
     cat: "Vie de la chambre",
     media: { type: "image", theme: "navy" },
-    image:
+    images: [
       "/photos/cancham-16.jpg",
+      "/photos/cancham-24.jpg",
+      "/photos/cancham-02.jpg",
+      "/photos/cancham-26.jpg",
+      "/photos/cancham-11.jpg",
+    ],
     extrait:
       "Le premier 5 à 7 de la rentrée a rassemblé un nombre record de membres, avec plusieurs nouvelles entreprises venues découvrir la chambre. Retour en images sur une soirée particulièrement animée.",
     corps:
@@ -48,8 +61,7 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
     date: "2026-08-20",
     cat: "Programmation",
     media: { type: "image", theme: "green" },
-    image:
-      "/photos/cancham-19.jpg",
+    images: ["/photos/cancham-19.jpg"],
     extrait:
       "Après Antananarivo, Canada Expo poursuit sa tournée régionale sur la côte Est. L’objectif : rapprocher les opportunités de coopération canadienne des entreprises situées en dehors de la capitale, avec une programmation adaptée aux réalités du port de Tamatave.",
     corps:
@@ -62,8 +74,7 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
     date: "2026-08-01",
     cat: "Événement passé",
     media: { type: "video", theme: "green", duration: "3:42" },
-    image:
-      "/photos/cancham-23.jpg",
+    images: ["/photos/cancham-23.jpg"],
     extrait:
       "Plus de 200 personnes réunies au Radisson Blu pour célébrer une décennie de coopération Canada-Madagascar, dans un format de réseautage pensé pour créer de vraies rencontres d’affaires. Un moment fort de la vie de la chambre, immortalisé dans ce court récapitulatif vidéo.",
     corps:
@@ -84,8 +95,7 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
     date: "2026-07-10",
     cat: "Vie de la chambre",
     media: { type: "image", theme: "navy" },
-    image:
-      "/photos/cancham-12.jpg",
+    images: ["/photos/cancham-12.jpg"],
     extrait:
       "La chambre inaugure de nouveaux locaux à Antananarivo, avec un programme d’accueil renforcé pour les entreprises membres. Un espace pensé dès le départ pour favoriser les rencontres entre membres, partenaires et délégations de passage.",
     corps:
@@ -94,12 +104,12 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
   },
   {
     id: "n5",
-    titre: "Mission Pilote 2026 : des investisseurs canadiens à la rencontre de Madagascar",
+    titre:
+      "Mission Pilote 2026 : des investisseurs canadiens à la rencontre de Madagascar",
     date: "2026-06-15",
     cat: "Programmation",
     media: { type: "video", theme: "navy", duration: "5:18" },
-    image:
-      "/photos/cancham-14.jpg",
+    images: ["/photos/cancham-14.jpg"],
     extrait:
       "Une première mission inverse a permis à des investisseurs canadiens de rencontrer l’écosystème malgache sur le terrain, du 20 au 31 juillet. Un programme entièrement sur mesure, construit autour des secteurs d’intérêt confirmés par chaque investisseur.",
     corps:
@@ -108,12 +118,12 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
   },
   {
     id: "n6",
-    titre: "Replay : atelier en ligne sur la mobilité francophone vers le Canada",
+    titre:
+      "Replay : atelier en ligne sur la mobilité francophone vers le Canada",
     date: "2026-05-22",
     cat: "Formation",
     media: { type: "video", theme: "green", duration: "52:00" },
-    image:
-      "/photos/cancham-13.jpg",
+    images: ["/photos/cancham-13.jpg"],
     extrait:
       "L’enregistrement complet de notre atelier en ligne sur les programmes de mobilité francophone est maintenant disponible dans l’espace Ressources. Une séance pratique, animée avec nos partenaires institutionnels, pour comprendre les différentes voies d’entrée au Canada.",
     corps:
@@ -122,12 +132,12 @@ export const NEWS: Omit<NewsItem, "jaimes" | "jaimeParMoi">[] = [
   },
   {
     id: "n8",
-    titre: "Femmes Malagasy en Agribusiness : où en est le partenariat avec TFO Canada",
+    titre:
+      "Femmes Malagasy en Agribusiness : où en est le partenariat avec TFO Canada",
     date: "2026-04-18",
     cat: "Programmation",
     media: { type: "image", theme: "green" },
-    image:
-      "/photos/cancham-06.jpg",
+    images: ["/photos/cancham-06.jpg"],
     extrait:
       "Lancé lors de la MECC 8 et du salon SIAL 2024, l’accord de mise en œuvre entre TFO Canada et CanCham autour du projet WEF avance selon le calendrier prévu. Un point d’étape sur les prochaines actions destinées aux entreprises dirigées par des femmes.",
     corps:

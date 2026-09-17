@@ -1,14 +1,13 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
-import Image from "next/image";
 import { MediaBanner, OfferCard } from "@/components/domain";
 import { BtnLink, Card, EmptyState, Kicker } from "@/components/ui";
-import { Agrandir } from "@/components/Agrandir";
+import { GaleriePhotos } from "@/components/GaleriePhotos";
+import { SupprimerActualiteButton } from "@/components/forms/AdminContenuForms";
 import {
-  SupprimerActualiteButton,
-  SupprimerCommentaireButton,
-} from "@/components/forms/AdminContenuForms";
-import { CommentForm } from "@/components/forms/ContentForms";
+  CarteCommentaire,
+  FormulaireCommentaire,
+} from "@/components/forms/Commentaires";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
 import { getNewsItem, getOffers } from "@/lib/queries";
@@ -57,19 +56,8 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
           <h1 className="mt-2 mb-1.5 text-[24px]">{n.titre}</h1>
           <div className="text-[12.5px] text-faint mb-4">{fmtDate(n.date)}</div>
 
-          {n.image ? (
-            <Agrandir src={n.image} alt={n.titre} legende={n.titre}>
-              <div className="relative w-full aspect-[16/7] rounded-[var(--radius-m)] overflow-hidden">
-                <Image
-                  src={n.image}
-                  alt={n.titre}
-                  fill
-                  priority
-                  sizes="(max-width: 768px) 100vw, 760px"
-                  className="object-cover"
-                />
-              </div>
-            </Agrandir>
+          {n.images.length ? (
+            <GaleriePhotos images={n.images} alt={n.titre} />
           ) : (
             <MediaBanner media={n.media} lg />
           )}
@@ -103,29 +91,12 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
           {n.commentaires.length ? (
             <div className="flex flex-col gap-2.5">
               {n.commentaires.map((c) => (
-                <Card key={c.id} className="p-4">
-                  <div className="flex justify-between gap-2.5">
-                    <div className="font-semibold text-[13px]">
-                      {c.auteur}{" "}
-                      <span className="font-normal text-muted">
-                        · {c.entreprise}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[11.5px] text-faint whitespace-nowrap">
-                      {fmtDate(c.date, { day: "numeric", month: "short" })}
-                      {admin ? (
-                        <SupprimerCommentaireButton
-                          commentId={c.id}
-                          auteur={c.auteur}
-                          retour={`/admin/actualites/${n.id}`}
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="text-[13.4px] mt-1.5 leading-relaxed whitespace-pre-line">
-                    <TexteLie texte={c.texte} />
-                  </div>
-                </Card>
+                <CarteCommentaire
+                  key={c.id}
+                  commentaire={c}
+                  space={space}
+                  retour={`/${space}/actualites/${n.id}`}
+                />
               ))}
             </div>
           ) : (
@@ -135,7 +106,7 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
           )}
 
           <div id="commentaire" className="mt-4 scroll-mt-24">
-            <CommentForm
+            <FormulaireCommentaire
               space={space}
               retour={`/${space}/actualites/${n.id}`}
               newsId={n.id}

@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { SubmitButton } from "@/components/form-bits";
+import { EMOJIS } from "@/components/SelecteurEmojis";
 import { sendMessage } from "@/lib/actions/messages";
 import type { Space } from "@/lib/types";
 import { poids } from "./outils";
@@ -19,46 +20,6 @@ import { poids } from "./outils";
 const PLAFONDS = { image: 8, video: 25, pdf: 10 } as const;
 const MAX_PIECES = 5;
 const ACCEPTE = "image/*,video/mp4,video/webm,video/quicktime,application/pdf";
-
-/**
- * Émojis proposés. Une sélection plutôt qu'une bibliothèque de plusieurs
- * centaines de kilo-octets : les réactions d'une conversation professionnelle
- * tiennent en quelques dizaines de symboles.
- */
-const EMOJIS = [
-  "😀",
-  "😊",
-  "🙂",
-  "😉",
-  "😄",
-  "😅",
-  "🤝",
-  "👍",
-  "👏",
-  "🙏",
-  "💪",
-  "🎉",
-  "✅",
-  "❌",
-  "⚠️",
-  "📌",
-  "📎",
-  "📄",
-  "📅",
-  "⏰",
-  "📞",
-  "✉️",
-  "💼",
-  "📊",
-  "💡",
-  "🚀",
-  "🌍",
-  "🇨🇦",
-  "🇲🇬",
-  "❤️",
-  "😂",
-  "🤔",
-];
 
 function typeDe(f: File): keyof typeof PLAFONDS | null {
   if (f.type.startsWith("image/")) return "image";

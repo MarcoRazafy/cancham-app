@@ -226,21 +226,43 @@ export async function getRegistration(
 
 /* ============================ Contenus ============================ */
 
+/**
+ * Ce qu'on charge avec un commentaire : ses « j'aime » comptés, et celui de
+ * l'utilisateur courant s'il en a posé un.
+ */
+function commentairesInclude(userId?: string) {
+  return {
+    orderBy: { createdAt: "asc" as const },
+    include: {
+      _count: { select: { jaimes: true } },
+      jaimes: { where: { userId: userId ?? "" }, select: { id: true } },
+    },
+  };
+}
+
 type CommentRow = {
   id: string;
   auteur: string;
   entreprise: string;
   texte: string;
   date: Date;
+  userId: string | null;
+  modifieLe: Date | null;
+  _count: { jaimes: number };
+  jaimes: { id: string }[];
 };
 
-const versCommentaires = (cs: CommentRow[]): Comment[] =>
+const versCommentaires = (cs: CommentRow[], userId?: string): Comment[] =>
   cs.map((c) => ({
     id: c.id,
     auteur: c.auteur,
     entreprise: c.entreprise,
     texte: c.texte,
     date: toISODate(c.date),
+    moi: Boolean(userId) && c.userId === userId,
+    modifie: Boolean(c.modifieLe),
+    jaimes: c._count.jaimes,
+    jaimeParMoi: c.jaimes.length > 0,
   }));
 
 /**
@@ -253,7 +275,7 @@ const versCommentaires = (cs: CommentRow[]): Comment[] =>
  */
 function newsInclude(userId?: string) {
   return {
-    commentaires: { orderBy: { date: "asc" as const } },
+    commentaires: commentairesInclude(userId),
     _count: { select: { jaimes: true } },
     jaimes: { where: { userId: userId ?? "" }, select: { id: true } },
   };
@@ -265,7 +287,7 @@ type NewsRow = Awaited<
   >
 >[number];
 
-function versNews(n: NewsRow): NewsItem {
+function versNews(n: NewsRow, userId?: string): NewsItem {
   return {
     id: n.id,
     titre: n.titre,
@@ -278,8 +300,8 @@ function versNews(n: NewsRow): NewsItem {
     },
     extrait: n.extrait,
     corps: n.corps,
-    image: n.image,
-    commentaires: versCommentaires(n.commentaires),
+    images: n.images,
+    commentaires: versCommentaires(n.commentaires, userId),
     jaimes: n._count.jaimes,
     jaimeParMoi: n.jaimes.length > 0,
   };
@@ -291,7 +313,7 @@ export async function getNews(userId?: string): Promise<NewsItem[]> {
     include: newsInclude(userId),
     orderBy: { date: "desc" },
   });
-  return rows.map(versNews);
+  return rows.map((n) => versNews(n, userId));
 }
 
 export async function getNewsItem(
@@ -302,7 +324,7 @@ export async function getNewsItem(
     where: { id },
     include: newsInclude(userId),
   });
-  return n ? versNews(n) : null;
+  return n ? versNews(n, userId) : null;
 }
 
 export async function getResources(
@@ -310,7 +332,7 @@ export async function getResources(
 ): Promise<Resource[]> {
   const rows = await prisma.resource.findMany({
     where: type ? { type } : undefined,
-    include: { commentaires: { orderBy: { date: "asc" } } },
+    include: { commentaires: commentairesInclude() },
     orderBy: { date: "desc" },
   });
   return rows.map((r) => ({

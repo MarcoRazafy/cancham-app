@@ -251,6 +251,11 @@ async function main() {
   }
 
   console.log("Actualités…");
+  // Un commentaire d'exemple est rattaché au compte de son auteur, quand il
+  // existe : c'est ce qui lui permet de le modifier ou de le supprimer.
+  const auteurs = new Map(
+    [...Object.values(USERS), ...CONTACTS].map((u) => [u.nom, u.id]),
+  );
   for (const n of NEWS) {
     await prisma.news.create({
       data: {
@@ -263,13 +268,14 @@ async function main() {
         mediaType: n.media.type,
         mediaTheme: n.media.theme,
         mediaDuration: n.media.duration ?? null,
-        image: n.image ?? null,
+        images: n.images,
         commentaires: {
           create: n.commentaires.map((c) => ({
             auteur: c.auteur,
             entreprise: c.entreprise,
             texte: c.texte,
             date: d(c.date),
+            userId: auteurs.get(c.auteur) ?? null,
           })),
         },
       },
@@ -320,6 +326,7 @@ async function main() {
             entreprise: c.entreprise,
             texte: c.texte,
             date: d(c.date),
+            userId: auteurs.get(c.auteur) ?? null,
           })),
         },
       },

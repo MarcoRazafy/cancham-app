@@ -9,7 +9,6 @@ import {
   Check,
   PlayCircle,
   Plus,
-  Send,
   ShoppingCart,
   Trash2,
 } from "lucide-react";
@@ -26,43 +25,9 @@ import {
   deleteService,
   deplacerService,
   downloadResource,
-  postComment,
   saveService,
 } from "@/lib/actions/content";
 import type { CanchamService, Space } from "@/lib/types";
-
-export function CommentForm({
-  space,
-  retour,
-  newsId,
-  resourceId,
-}: {
-  space: Space;
-  retour: string;
-  newsId?: string;
-  resourceId?: string;
-}) {
-  return (
-    <form action={postComment} className="flex flex-col gap-2.5">
-      <input type="hidden" name="space" value={space} />
-      <input type="hidden" name="retour" value={retour} />
-      {newsId ? <input type="hidden" name="newsId" value={newsId} /> : null}
-      {resourceId ? (
-        <input type="hidden" name="resourceId" value={resourceId} />
-      ) : null}
-      <textarea
-        name="texte"
-        rows={3}
-        required
-        placeholder="Ajouter un commentaire…"
-        className={INPUT}
-      />
-      <SubmitButton sm pendingLabel="Publication…" className="self-start">
-        <Send size={13} /> Publier le commentaire
-      </SubmitButton>
-    </form>
-  );
-}
 
 /* ============================ Ressources ============================ */
 
