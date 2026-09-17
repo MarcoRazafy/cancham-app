@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Card, Pill, StatusPill } from "@/components/ui";
 import { Reactions } from "@/components/forms/Reactions";
+import { TexteLie } from "@/components/TexteLie";
 import { filetDe } from "@/lib/filets";
 import { initialesDe } from "@/lib/avatars";
 import {
@@ -315,7 +316,8 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           <StatusPill status={member.statut} />
         </div>
         <p className="px-4 text-[12.8px] text-muted flex-1 m-0">
-          {member.activite}
+          {/* La carte entière est un lien : pas de `<a>` dans le `<a>`. */}
+          <TexteLie texte={member.activite} dansUnLien />
         </p>
         <div
           className={`px-4 pt-3 pb-4 ${
@@ -367,8 +369,8 @@ export function NeedsAndInterests({ member }: { member: Member }) {
             <div className="text-[12.3px] font-semibold text-muted mb-1.5">
               Recherche actuellement
             </div>
-            <div className="text-[13.4px] text-muted leading-relaxed">
-              {member.besoins}
+            <div className="text-[13.4px] text-muted leading-relaxed whitespace-pre-line">
+              <TexteLie texte={member.besoins} />
             </div>
           </div>
         ) : null}
@@ -377,8 +379,8 @@ export function NeedsAndInterests({ member }: { member: Member }) {
             <div className="text-[12.3px] font-semibold text-muted mb-1.5">
               Intérêts &amp; synergies recherchées
             </div>
-            <div className="text-[13.4px] text-muted leading-relaxed">
-              {member.interets}
+            <div className="text-[13.4px] text-muted leading-relaxed whitespace-pre-line">
+              <TexteLie texte={member.interets} />
             </div>
           </div>
         ) : null}
@@ -603,7 +605,7 @@ export function NewsFeedItem({
       </div>
       <div className="text-[13.6px] leading-relaxed">
         <b className="block text-[14.6px] mb-1">{news.titre}</b>
-        {news.extrait}
+        <TexteLie texte={news.extrait} />
       </div>
       {news.image ? (
         <Link
@@ -666,7 +668,7 @@ export function OfferCard({ offer, href }: { offer: Offer; href?: string }) {
           {offer.titre}
         </div>
         <div className="text-[12.4px] text-muted leading-relaxed">
-          {offer.desc}
+          <TexteLie texte={offer.desc} dansUnLien={Boolean(href)} />
         </div>
       </div>
     </Card>
@@ -709,7 +711,7 @@ export function ServiceCard({
       </div>
       <div className="font-bold text-[14.5px] mb-1.5">{service.titre}</div>
       <p className="text-[12.8px] text-muted leading-relaxed m-0 mb-3 flex-1">
-        {service.desc}
+        <TexteLie texte={service.desc} />
       </p>
       <div>
         <Pill tone={gratuit ? "ok" : "muted"}>

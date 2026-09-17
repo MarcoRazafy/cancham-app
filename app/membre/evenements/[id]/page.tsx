@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { EventCard, Visuel } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { TexteLie } from "@/components/TexteLie";
 import { Banner, BtnLink, Card, Kicker, Saillant, Stat } from "@/components/ui";
 import {
   CancelRegistrationButton,
@@ -118,7 +119,7 @@ export default async function EvenementDetailPage({
             <div className="mt-2.5 flex flex-col gap-3.5 text-muted text-[14.3px] leading-[1.75]">
               {e.desc.split("\n\n").map((para, i) => (
                 <p key={i} className="m-0">
-                  {para}
+                  <TexteLie texte={para} />
                 </p>
               ))}
             </div>
@@ -148,7 +149,7 @@ export default async function EvenementDetailPage({
                       </div>
                       {etape.detail ? (
                         <p className="m-0 mt-1 text-[13px] text-muted leading-relaxed">
-                          {etape.detail}
+                          <TexteLie texte={etape.detail} />
                         </p>
                       ) : null}
                     </div>
@@ -165,7 +166,7 @@ export default async function EvenementDetailPage({
                 À qui s’adresse ce {<Saillant ton="vert">rendez-vous</Saillant>}
               </h2>
               <p className="m-0 text-muted text-[14px] leading-relaxed">
-                {e.pourQui}
+                <TexteLie texte={e.pourQui} />
               </p>
             </Card>
           ) : null}

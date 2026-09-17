@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, ChevronDown, Search, X } from "lucide-react";
 import type { Question, Theme } from "@/lib/aide";
+import { TexteLie } from "@/components/TexteLie";
 
 /**
  * Centre d'aide : recherche, thèmes et questions dépliables.
@@ -146,14 +147,16 @@ function Reponse({
             return (
               <ul key={i} className="m-0 mb-3 pl-5 flex flex-col gap-1">
                 {lignes.map((l) => (
-                  <li key={l}>{l.slice(2)}</li>
+                  <li key={l}>
+                    <TexteLie texte={l.slice(2)} />
+                  </li>
                 ))}
               </ul>
             );
           }
           return (
             <p key={i} className="m-0 mb-3 last:mb-0">
-              {bloc}
+              <TexteLie texte={bloc} />
             </p>
           );
         })}

@@ -7,6 +7,7 @@ import {
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { TexteLie } from "@/components/TexteLie";
 import { BtnLink, Card, Pill, SectionTitle, StatusPill } from "@/components/ui";
 import {
   ApproveButton,
@@ -83,9 +84,11 @@ export default async function AdminMembreDetail({
               </div>
             </div>
 
-            <p className="mt-5 font-semibold text-[14.5px]">{m.activite}</p>
-            <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch]">
-              {m.desc}
+            <p className="mt-5 font-semibold text-[14.5px]">
+              <TexteLie texte={m.activite} />
+            </p>
+            <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch] whitespace-pre-line">
+              <TexteLie texte={m.desc} />
             </p>
 
             {m.motivation ? (
@@ -105,8 +108,8 @@ export default async function AdminMembreDetail({
                   <div className="text-[12.3px] font-semibold text-muted mb-1.5">
                     Motivation à rejoindre CanCham
                   </div>
-                  <div className="text-[13.4px] text-muted leading-relaxed">
-                    {m.motivation}
+                  <div className="text-[13.4px] text-muted leading-relaxed whitespace-pre-line">
+                    <TexteLie texte={m.motivation} />
                   </div>
                 </div>
               </>

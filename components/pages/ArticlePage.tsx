@@ -6,6 +6,7 @@ import { BtnLink, Card, EmptyState, Kicker } from "@/components/ui";
 import { Agrandir } from "@/components/Agrandir";
 import { CommentForm } from "@/components/forms/ContentForms";
 import { Reactions } from "@/components/forms/Reactions";
+import { TexteLie } from "@/components/TexteLie";
 import { getNewsItem, getOffers } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { fmtDate } from "@/lib/format";
@@ -56,7 +57,9 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
             <MediaBanner media={n.media} lg />
           )}
 
-          <p className="text-[14.6px] leading-[1.75] mt-[18px]">{n.corps}</p>
+          <p className="text-[14.6px] leading-[1.75] mt-[18px] whitespace-pre-line">
+            <TexteLie texte={n.corps} />
+          </p>
 
           <div className="mt-5 pt-4 border-t border-line">
             <Reactions
@@ -95,8 +98,8 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
                       {fmtDate(c.date, { day: "numeric", month: "short" })}
                     </div>
                   </div>
-                  <div className="text-[13.4px] mt-1.5 leading-relaxed">
-                    {c.texte}
+                  <div className="text-[13.4px] mt-1.5 leading-relaxed whitespace-pre-line">
+                    <TexteLie texte={c.texte} />
                   </div>
                 </Card>
               ))}
