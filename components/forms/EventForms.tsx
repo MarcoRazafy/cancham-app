@@ -15,15 +15,13 @@ import {
   cancelRegistration,
   deleteEvent,
   registerForEvent,
-  saveEvent,
+  retirerParticipant,
   toggleAttendance,
 } from "@/lib/actions/events";
 import { fmtMoney } from "@/lib/format";
 import type { CanchamEvent } from "@/lib/types";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
-const BTN_LINE =
-  "inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-line bg-transparent text-ink hover:bg-surface-2";
 
 /* ============================ Côté membre ============================ */
 
@@ -129,134 +127,6 @@ export function CancelRegistrationButton({ eventId }: { eventId: string }) {
 
 /* ============================ Côté admin ============================ */
 
-export function EventFormButton({ event }: { event?: CanchamEvent }) {
-  const edition = !!event;
-  return (
-    <Modal
-      wide
-      title={edition ? "Modifier l’événement" : "Créer un événement"}
-      trigger={(ouvrir) =>
-        edition ? (
-          <button
-            onClick={ouvrir}
-            className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
-          >
-            Modifier
-          </button>
-        ) : (
-          <button
-            onClick={ouvrir}
-            className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
-          >
-            <Plus size={15} /> Créer un événement
-          </button>
-        )
-      }
-    >
-      {(fermer) => (
-        <form action={saveEvent}>
-          {event ? (
-            <input type="hidden" name="eventId" value={event.id} />
-          ) : null}
-          <ModalBody>
-            <Field label="Titre">
-              <input
-                type="text"
-                name="titre"
-                required
-                defaultValue={event?.titre}
-                placeholder="Ex. Atelier Doing Business in Canada"
-                className={INPUT}
-              />
-            </Field>
-            <div className="grid gap-3.5 md:grid-cols-2">
-              <Field label="Date">
-                <input
-                  type="date"
-                  name="date"
-                  defaultValue={event?.date ?? "2026-12-01"}
-                  className={INPUT}
-                />
-              </Field>
-              <Field label="Format">
-                <select
-                  name="format"
-                  className={INPUT}
-                  defaultValue={event?.format ?? "Présentiel"}
-                >
-                  <option>Présentiel</option>
-                  <option>Webinaire</option>
-                  <option>Hybride</option>
-                </select>
-              </Field>
-            </div>
-            <div className="grid gap-3.5 md:grid-cols-2">
-              <Field label="Lieu">
-                <input
-                  type="text"
-                  name="lieu"
-                  defaultValue={event?.lieu}
-                  placeholder="Antananarivo"
-                  className={INPUT}
-                />
-              </Field>
-              <Field label="Capacité">
-                <input
-                  type="number"
-                  name="cap"
-                  min={1}
-                  defaultValue={event?.cap ?? 80}
-                  className={INPUT}
-                />
-              </Field>
-            </div>
-            <div className="grid gap-3.5 md:grid-cols-2">
-              <Field label="Type">
-                <select
-                  name="type"
-                  className={INPUT}
-                  defaultValue={event?.payant ? "payant" : "gratuit"}
-                >
-                  <option value="gratuit">Gratuit</option>
-                  <option value="payant">Payant</option>
-                </select>
-              </Field>
-              <Field
-                label="Tarif (Ariary)"
-                hint="Ignoré si l’événement est gratuit."
-              >
-                <input
-                  type="number"
-                  name="prix"
-                  min={0}
-                  defaultValue={event?.prix || 50000}
-                  className={INPUT}
-                />
-              </Field>
-            </div>
-            <Field label="Description">
-              <textarea
-                name="desc"
-                rows={4}
-                defaultValue={event?.desc}
-                placeholder="Présentation courte pour les membres…"
-                className={INPUT}
-              />
-            </Field>
-          </ModalBody>
-          <ModalFooter>
-            <CancelButton onClick={fermer} />
-            <SubmitButton pendingLabel="Enregistrement…">
-              <Check size={14} />{" "}
-              {edition ? "Enregistrer" : "Publier l’événement"}
-            </SubmitButton>
-          </ModalFooter>
-        </form>
-      )}
-    </Modal>
-  );
-}
-
 export function DeleteEventButton({
   eventId,
   titre,
@@ -303,25 +173,87 @@ export function AttendanceButton({
   attendeeId,
   eventId,
   statut,
+  onglet,
 }: {
   attendeeId: string;
   eventId: string;
-  statut: string;
+  statut: "confirme" | "present" | "absent";
+  /** Onglet de la liste où revenir après le pointage. */
+  onglet?: string;
 }) {
-  const label =
-    statut === "présent"
-      ? "Marquer absent"
-      : statut === "absent"
-        ? "Marquer présent"
-        : "Enregistrer l’arrivée";
+  const present = statut === "present";
   return (
     <form action={toggleAttendance}>
       <input type="hidden" name="attendeeId" value={attendeeId} />
       <input type="hidden" name="eventId" value={eventId} />
-      <SubmitButton sm variant="ghost" pendingLabel="…">
-        {label}
+      {onglet ? <input type="hidden" name="onglet" value={onglet} /> : null}
+      <SubmitButton
+        sm
+        variant={present ? "ghost" : "line"}
+        pendingLabel="…"
+        className="whitespace-nowrap"
+      >
+        {present ? (
+          "Marquer absent"
+        ) : (
+          <>
+            <Check size={13} />{" "}
+            {statut === "absent" ? "Marquer présent" : "Arrivée"}
+          </>
+        )}
       </SubmitButton>
     </form>
+  );
+}
+
+/** Retrait d'une personne de la liste d'accueil, après confirmation. */
+export function RetirerParticipantButton({
+  attendeeId,
+  eventId,
+  nom,
+  onglet,
+}: {
+  attendeeId: string;
+  eventId: string;
+  nom: string;
+  onglet?: string;
+}) {
+  return (
+    <Modal
+      title="Retirer de la liste"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Retirer ${nom}`}
+          title="Retirer de la liste"
+          className="w-8 h-8 rounded-[var(--radius-s)] border border-transparent bg-transparent text-faint flex items-center justify-center cursor-pointer hover:text-accent hover:border-line"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={retirerParticipant}>
+          <input type="hidden" name="attendeeId" value={attendeeId} />
+          <input type="hidden" name="eventId" value={eventId} />
+          {onglet ? <input type="hidden" name="onglet" value={onglet} /> : null}
+          <ModalBody>
+            <p className="text-[13.6px] text-muted m-0">
+              Retirer <b className="text-ink">{nom}</b> de la liste d’accueil ?
+              Une inscription faite depuis l’espace membre reste enregistrée
+              côté membre.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton variant="danger" pendingLabel="Retrait…">
+              <Trash2 size={14} /> Retirer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
   );
 }
 
