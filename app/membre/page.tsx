@@ -13,6 +13,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { AvatarRond, OfferCard } from "@/components/domain";
+import { TexteLie } from "@/components/TexteLie";
 import { RegisterButton } from "@/components/forms/EventForms";
 import { Card, Saillant } from "@/components/ui";
 import { fmtMoney, isPast, parseISO } from "@/lib/format";
@@ -48,7 +49,7 @@ export default async function VueDEnsemble() {
       getEvents(),
       getMembresAnnuaire(),
       getRegistrations(me.id),
-      getUnreadTotal(),
+      getUnreadTotal(user.id),
       getDernieresOffres(3),
       getResources(),
       getServices(),
@@ -436,7 +437,7 @@ function Raccourci({
         </div>
         {detail ? (
           <p className="text-[12.5px] text-muted mt-1.5 mb-0 line-clamp-2">
-            {detail}
+            <TexteLie texte={detail} />
           </p>
         ) : null}
         <Link

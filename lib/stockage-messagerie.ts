@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
@@ -133,6 +133,24 @@ export function cheminPiece(fichier: string): string {
     throw new Error("Nom de pièce jointe invalide.");
   }
   return path.join(RACINE_MESSAGERIE, fichier);
+}
+
+/**
+ * Copie physique d'une pièce, pour un message transféré.
+ *
+ * Chaque message garde ses propres fichiers : supprimer l'original ne doit pas
+ * vider la copie envoyée ailleurs, ni l'inverse.
+ */
+export async function copierPiece(fichier: string): Promise<string> {
+  const extension = fichier.split(".").pop();
+  const copie = `${randomUUID()}.${extension}`;
+  await copyFile(cheminPiece(fichier), cheminPiece(copie));
+  return copie;
+}
+
+/** Efface le fichier d'une pièce. Un fichier déjà absent n'est pas une erreur. */
+export async function effacerPiece(fichier: string): Promise<void> {
+  await rm(cheminPiece(fichier), { force: true });
 }
 
 /** Type MIME servi pour un nom de fichier stocké. */

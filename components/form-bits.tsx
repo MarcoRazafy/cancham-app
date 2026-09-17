@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import type { ComponentProps, ReactNode } from "react";
+import { useEffect, useRef, type ComponentProps, type ReactNode } from "react";
 
 /** Champs de formulaire, accordés aux tokens de l'application. */
 export const INPUT =
@@ -106,4 +106,25 @@ export function CancelButton({ onClick }: { onClick: () => void }) {
       Annuler
     </button>
   );
+}
+
+/**
+ * Referme ce qui contient le formulaire — boîte de dialogue, édition en place
+ * — une fois l'envoi terminé.
+ *
+ * Refermer au clic démonterait le formulaire en plein envoi et ferait perdre
+ * l'état « en cours » du bouton. On attend donc la fin : l'action serveur a
+ * redirigé et la page affiche déjà le résultat.
+ */
+export function FermerApresEnvoi({ fermer }: { fermer: () => void }) {
+  const { pending } = useFormStatus();
+  const enCours = useRef(false);
+  useEffect(() => {
+    if (pending) enCours.current = true;
+    else if (enCours.current) {
+      enCours.current = false;
+      fermer();
+    }
+  }, [pending, fermer]);
+  return null;
 }

@@ -15,7 +15,11 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { initialesDe } from "@/lib/avatars";
 import { affichageSite } from "@/lib/liens";
+import type { Personne, Space } from "@/lib/types";
+import { AjouterParticipants, QuitterGroupe } from "./Groupe";
+import type { ElementACocher } from "./ListeACocher";
 import { Pastille, normaliser, poids, urlPiece } from "./outils";
 
 export interface MessageRecherche {
@@ -55,25 +59,37 @@ export interface InfoConversation {
  * En-tête d'une conversation et son panneau d'information.
  *
  * Un clic sur le portrait ou le nom mène au profil de l'entreprise. Le bouton
- * « i » ouvre un panneau : la personne, son entreprise, ses coordonnées, la
- * recherche dans la conversation et les fichiers échangés.
+ * « i » ouvre un panneau : la personne, son entreprise, ses coordonnées — ou,
+ * pour un groupe, ses participants —, la recherche dans la conversation et les
+ * fichiers échangés.
  *
  * Le parent doit être positionné (`relative`) : le panneau vient se poser sur
  * la droite de la conversation.
  */
 export function EnTeteConversation({
+  threadId,
+  space,
+  moiId,
   nom,
   sousTitre,
   avatar,
   init,
   info,
+  participants,
+  ajoutables,
   messages,
 }: {
+  threadId: string;
+  space: Space;
+  moiId: string;
   nom: string;
   sousTitre: string;
   avatar: string | null;
   init: string;
   info: InfoConversation;
+  participants: Personne[];
+  /** Personnes qu'on peut encore ajouter, pour un groupe. */
+  ajoutables: ElementACocher[];
   messages: MessageRecherche[];
 }) {
   const [ouvert, setOuvert] = useState(false);
@@ -193,7 +209,11 @@ export function EnTeteConversation({
                 alt={info.contact?.nom ?? nom}
                 initiales={init}
                 taille={72}
-                className="bg-accent-soft text-accent-strong"
+                className={
+                  info.type === "groupe"
+                    ? "bg-navy-soft text-navy"
+                    : "bg-accent-soft text-accent-strong"
+                }
               />
               <div className="mt-2.5 font-semibold text-[16px]">
                 {info.contact?.nom ?? nom}
@@ -260,6 +280,52 @@ export function EnTeteConversation({
               </Link>
             ) : null}
 
+            {/* ---------- Participants d'un groupe ---------- */}
+            {info.type === "groupe" ? (
+              <div>
+                <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-faint mb-2">
+                  Participants ({participants.length})
+                </div>
+                <ul className="list-none m-0 p-0 flex flex-col gap-2 mb-3">
+                  {participants.map((p) => (
+                    <li key={p.id} className="flex items-center gap-2.5">
+                      <Pastille
+                        src={p.photo}
+                        alt={p.nom}
+                        initiales={initialesDe(p.nom)}
+                        taille={32}
+                        className="bg-accent-soft text-accent-strong"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[13px] font-semibold text-ink truncate">
+                          {p.nom}
+                          {p.id === moiId ? (
+                            <span className="font-normal text-faint">
+                              {" "}
+                              · vous
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="block text-[11.4px] text-faint truncate">
+                          {[p.fonction, p.entreprise]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex flex-col gap-2">
+                  <AjouterParticipants
+                    threadId={threadId}
+                    space={space}
+                    personnes={ajoutables}
+                  />
+                  <QuitterGroupe threadId={threadId} nom={nom} space={space} />
+                </div>
+              </div>
+            ) : null}
+
             {/* ---------- Recherche dans la conversation ---------- */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-faint mb-2">
@@ -322,7 +388,7 @@ export function EnTeteConversation({
                   {fichiers.map((f) => (
                     <li key={f.id}>
                       <a
-                        href={urlPiece(f.id)}
+                        href={urlPiece(f.id, space)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2.5 rounded-[var(--radius-s)] px-2 py-1.5 no-underline hover:bg-surface-2"

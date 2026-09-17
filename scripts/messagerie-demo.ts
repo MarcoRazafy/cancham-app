@@ -134,6 +134,8 @@ async function main() {
     include: { messages: { orderBy: { sentAt: "asc" } } },
   });
   const avantDernier = t2.messages.at(-1)!;
+  // Posté par la personne de l'équipe qui a ouvert l'échange.
+  const premierT2 = t2.messages[0];
   const replay = await recevoirPiece(
     fichier(video, "extrait-atelier-mobilite.mp4", "video/mp4"),
   );
@@ -141,7 +143,8 @@ async function main() {
   await prisma.message.create({
     data: {
       threadId: t2.id,
-      auteur: "Équipe CanCham",
+      auteur: premierT2.auteur,
+      userId: premierT2.userId,
       sentAt: new Date(avantDernier.sentAt.getTime() - 60_000),
       texte: "Comme promis, un extrait de l’atelier mobilité francophone.",
       piecesJointes: { create: replay ? [replay] : [] },

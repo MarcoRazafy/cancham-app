@@ -28,7 +28,7 @@ const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
 /* ---- Correspondances entre les libellés du jeu de données et les enums ---- */
 
 const EVENT_FORMAT = {
-  "Présentiel": "presentiel",
+  Présentiel: "presentiel",
   Webinaire: "webinaire",
   Hybride: "hybride",
 } as const;
@@ -42,24 +42,35 @@ const NEWS_CAT = {
 
 const RES_CAT = {
   Guide: "guide",
-  "Modèle": "modele",
+  Modèle: "modele",
   Formation: "formation",
   Rapport: "rapport",
 } as const;
 
-const RES_FMT = { PDF: "pdf", DOCX: "docx", "Vidéo": "video" } as const;
+const RES_FMT = { PDF: "pdf", DOCX: "docx", Vidéo: "video" } as const;
 
 /* ---- Participants aux événements ---- */
 
 const NOMS_PARTICIPANTS = [
-  "Rado Andriamihaja", "Nantenaina Rasolofo", "Volatiana Ramamonjisoa",
-  "Tiana Rakotoson", "Faniry Andriamanjato", "Zo Ravaoarimalala",
-  "Miora Rasoamampionona", "Njaka Randrianasolo", "Lova Andrianirina",
-  "Baholy Ratsimbazafy", "Fenitra Rakotondrabe", "Herimanana Razafindrakoto",
+  "Rado Andriamihaja",
+  "Nantenaina Rasolofo",
+  "Volatiana Ramamonjisoa",
+  "Tiana Rakotoson",
+  "Faniry Andriamanjato",
+  "Zo Ravaoarimalala",
+  "Miora Rasoamampionona",
+  "Njaka Randrianasolo",
+  "Lova Andrianirina",
+  "Baholy Ratsimbazafy",
+  "Fenitra Rakotondrabe",
+  "Herimanana Razafindrakoto",
 ];
 
 const slug = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z]+/g, ".");
 
 /**
@@ -286,7 +297,9 @@ async function main() {
     });
     jaimes += choisis.length;
   }
-  console.log(`  ${jaimes} « j'aime » répartis sur ${NEWS.length} publications`);
+  console.log(
+    `  ${jaimes} « j'aime » répartis sur ${NEWS.length} publications`,
+  );
 
   console.log("Ressources…");
   for (const r of RESOURCES) {
@@ -349,33 +362,55 @@ async function main() {
   }
 
   console.log("Messagerie…");
-  // Le jeu de données porte des heures d'affichage (« Hier », « Lundi ») ; on
-  // les convertit en horodatages décroissants, plus récents en dernier. Les
-  // deux premiers messages d'un fil sont reculés d'un à deux jours, pour que
-  // les séparateurs de date de la messagerie aient quelque chose à séparer.
-  for (const t of THREADS) {
+  // Horodatages décroissants, plus récents en dernier. Les premiers messages
+  // d'un fil sont reculés d'un à deux jours, pour que les séparateurs de date
+  // de la messagerie aient quelque chose à séparer.
+  const noms = new Map(
+    [...Object.values(USERS), ...CONTACTS].map((u) => [u.id, u.nom]),
+  );
+  for (const [rang, t] of THREADS.entries()) {
+    const dates = t.messages.map(
+      (_, i) =>
+        new Date(
+          aujourdhui.getTime() -
+            (t.messages.length - i) * 36e5 -
+            rang * 24 * 36e5 -
+            Math.max(0, t.messages.length - 1 - i) * 24 * 36e5,
+        ),
+    );
+
+    // Le membre de démonstration a lu le fil jusqu'au message qui précède ses
+    // `nonLus` derniers messages reçus.
+    let restants = t.nonLus;
+    let lu = t.messages.length - 1;
+    while (restants > 0 && lu >= 0) {
+      if (t.messages[lu].de !== USERS.membre.id) restants--;
+      lu--;
+    }
+
     await prisma.messageThread.create({
       data: {
         id: t.id,
         type: t.type,
-        nom: t.nom,
-        sousTitre: t.sousTitre,
-        init: t.init,
+        nom: t.nom ?? null,
         avatar: t.avatar ?? null,
-        memberId: t.memberId ?? null,
-        contactId: t.contactId ?? null,
-        unread: t.unread,
+        equipe: t.equipe ?? false,
+        participants: {
+          create: t.participants.map((userId) => ({
+            userId,
+            luLe:
+              userId === USERS.membre.id
+                ? (dates[lu] ?? null)
+                : dates[dates.length - 1],
+          })),
+        },
         messages: {
           create: t.messages.map((m, i) => ({
-            auteur: m.moi ? USERS.membre.nom : m.de,
+            id: m.id,
+            auteur: noms.get(m.de) ?? m.de,
+            userId: m.de,
             texte: m.texte,
-            sentAt: new Date(
-              aujourdhui.getTime() -
-                (t.messages.length - i) * 36e5 -
-                THREADS.indexOf(t) * 24 * 36e5 -
-                Math.max(0, t.messages.length - 1 - i) * 24 * 36e5,
-            ),
-            userId: m.moi ? USERS.membre.id : null,
+            sentAt: dates[i],
           })),
         },
       },

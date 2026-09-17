@@ -63,6 +63,9 @@ export function poids(octets: number): string {
   return `${(octets / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`;
 }
 
-/** URL d'une pièce jointe, servie par la route contrôlée. */
-export const urlPiece = (id: string, telecharger = false) =>
-  `/api/messagerie/pieces/${id}${telecharger ? "?telecharger=1" : ""}`;
+/**
+ * URL d'une pièce jointe, servie par la route contrôlée. L'espace indique au
+ * serveur quel utilisateur vérifier parmi les participants du fil.
+ */
+export const urlPiece = (id: string, espace: string, telecharger = false) =>
+  `/api/messagerie/pieces/${id}?espace=${espace}${telecharger ? "&telecharger=1" : ""}`;

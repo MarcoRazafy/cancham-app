@@ -17,15 +17,31 @@ export function Modal({
   title,
   children,
   wide = false,
+  ouvert: ouvertImpose,
+  onFermer,
 }: {
-  trigger: (ouvrir: () => void) => ReactNode;
+  /** Absent quand l'ouverture est pilotée par le parent (`ouvert`). */
+  trigger?: (ouvrir: () => void) => ReactNode;
   title: string;
   /** Reçoit la fonction de fermeture, à passer au formulaire. */
   children: (fermer: () => void) => ReactNode;
   wide?: boolean;
+  /**
+   * Ouverture pilotée par le parent. Utile quand le bouton déclencheur
+   * disparaît au clic — l'entrée d'un menu, par exemple — et emporterait la
+   * boîte avec lui.
+   */
+  ouvert?: boolean;
+  onFermer?: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  const [ouvert, setOuvert] = useState(false);
+  const [ouvertInterne, setOuvertInterne] = useState(false);
+  const pilote = ouvertImpose !== undefined;
+  const ouvert = pilote ? ouvertImpose : ouvertInterne;
+  const setOuvert = (o: boolean) => {
+    if (!pilote) setOuvertInterne(o);
+    else if (!o) onFermer?.();
+  };
 
   useEffect(() => {
     const el = ref.current;
@@ -36,7 +52,7 @@ export function Modal({
 
   return (
     <>
-      {trigger(() => setOuvert(true))}
+      {trigger?.(() => setOuvert(true))}
       <dialog
         ref={ref}
         onClose={() => setOuvert(false)}

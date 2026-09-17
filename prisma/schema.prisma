@@ -51,10 +51,10 @@ enum AttendeeStatus {
 }
 
 enum NewsCategory {
-  programmation      @map("Programmation")
-  evenement_passe    @map("Événement passé")
-  vie_de_la_chambre  @map("Vie de la chambre")
-  formation          @map("Formation")
+  programmation     @map("Programmation")
+  evenement_passe   @map("Événement passé")
+  vie_de_la_chambre @map("Vie de la chambre")
+  formation         @map("Formation")
 }
 
 enum MediaType {
@@ -158,11 +158,11 @@ model Member {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         User[]
-  produits      Produit[]
-  offres        Offer[]
-  factures      Invoice[]
-  inscriptions  Registration[]
+  users        User[]
+  produits     Produit[]
+  offres       Offer[]
+  factures     Invoice[]
+  inscriptions Registration[]
 
   @@index([statut])
   @@map("members")
@@ -185,8 +185,8 @@ model User {
   /// Contact principal de l'entreprise — un seul par membre.
   contactPrincipal Boolean @default(false)
 
-  jaimes NewsLike[]
-  fils   MessageThread[]
+  jaimes         NewsLike[]
+  participations ParticipantFil[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -202,21 +202,21 @@ enum ProduitType {
 }
 
 model Produit {
-  id    String  @id @default(cuid())
+  id          String      @id @default(cuid())
   /// Titre de l'offre.
-  label  String
-  type   ProduitType @default(service)
+  label       String
+  type        ProduitType @default(service)
   /// Ce que l'offre comprend, pour qui, à quelles conditions.
   description String?
   /// Prix indicatif, en clair : « 25 000 Ar le flacon », « Sur devis ».
   /// Un champ libre plutôt qu'un montant : la plupart des services se chiffrent
   /// au cas par cas, et un nombre obligatoire pousserait à inventer.
-  prix   String?
+  prix        String?
   /// Galerie du produit, dans l'ordre d'affichage. La première photo sert de
   /// vignette partout où une seule image tient ; vide = dégradé décoratif.
-  photos String[] @default([])
+  photos      String[]    @default([])
   /// Ordre d'affichage sur la fiche membre.
-  ordre Int     @default(0)
+  ordre       Int         @default(0)
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -258,7 +258,7 @@ model Event {
 
 /// Inscription d'un membre à un événement.
 model Registration {
-  id String @id @default(cuid())
+  id   String @id @default(cuid())
   /// Code présenté à l'accueil.
   code String @unique
 
@@ -461,33 +461,48 @@ model Invoice {
 
 // ============================ Messagerie ============================
 
+/// Un fil de discussion : un échange entre deux personnes, un groupe, ou
+/// l'assistance d'un membre par l'équipe CanCham.
+///
+/// Ce qui s'affiche en tête d'un échange individuel dépend de qui regarde :
+/// chacun voit l'autre. Le nom et le visuel ne sont donc stockés que pour un
+/// groupe — ou pour l'assistance, que le membre voit sous le nom de la chambre.
 model MessageThread {
-  id        String     @id @default(cuid())
-  type      ThreadType
-  nom       String
-  sousTitre String
-  /// Initiales affichées sur l'avatar du fil, en repli de `avatar`.
-  init      String
-  /// Visuel du fil : portrait pour un échange individuel, photo de l'événement
-  /// pour un groupe. `null` = initiales.
-  avatar    String?
-  /// Messages non lus. Provisoire : un vrai accusé de lecture par utilisateur
-  /// remplacera ce compteur global quand l'authentification sera en place.
-  unread    Int        @default(0)
-  /// Entreprise en face, pour un échange individuel. Sert à retrouver le fil
-  /// existant plutôt qu'à en ouvrir un second depuis la fiche d'annuaire.
-  memberId  String?
-  /// Personne en face, pour un échange individuel : c'est elle que montre le
-  /// panneau d'information — nom, fonction, téléphone, courriel.
-  contactId String?
-  contact   User?   @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  id     String     @id @default(cuid())
+  type   ThreadType
+  /// Nom du groupe, ou « Équipe CanCham ». `null` pour un échange individuel.
+  nom    String?
+  /// Photo du groupe. `null` = initiales.
+  avatar String?
+  /// Fil d'assistance : le membre y parle à la chambre, pas à une personne.
+  /// Toute l'équipe y participe, et chacun de ses membres y voit le membre.
+  equipe Boolean    @default(false)
 
   createdAt DateTime @default(now())
 
-  messages Message[]
+  messages     Message[]
+  participants ParticipantFil[]
 
-  @@index([memberId])
   @@map("message_threads")
+}
+
+/// Participation d'un utilisateur à un fil. C'est elle qui ouvre l'accès :
+/// un fil n'est visible, et ses pièces jointes lisibles, que par ses
+/// participants.
+model ParticipantFil {
+  threadId String
+  thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Dernière ouverture du fil. Les messages postérieurs écrits par les autres
+  /// sont non lus ; `null` = jamais ouvert.
+  luLe     DateTime?
+  ajouteLe DateTime  @default(now())
+
+  @@id([threadId, userId])
+  @@index([userId])
+  @@map("participants_fils")
 }
 
 model Message {
@@ -501,6 +516,15 @@ model Message {
 
   /// Auteur du message, quand il s'agit d'un utilisateur connu.
   userId String?
+
+  /// Dernière modification du texte par son auteur.
+  modifieLe  DateTime?
+  /// Suppression par son auteur. La ligne reste, vidée de son texte et de ses
+  /// pièces : la conversation garde la trace qu'un message a existé à cet
+  /// endroit, sans en conserver le contenu.
+  supprimeLe DateTime?
+  /// Copie d'un message transféré depuis une autre conversation.
+  transfere  Boolean   @default(false)
 
   piecesJointes PieceJointe[]
 
@@ -544,15 +568,15 @@ model PieceJointe {
 /// Une opération financière ne doit jamais disparaître silencieusement : une
 /// suppression de membre ou une validation de paiement laisse une trace ici.
 model AuditLog {
-  id       String   @id @default(cuid())
-  action   String
+  id        String   @id @default(cuid())
+  action    String
   /// Modèle concerné, ex. « Member » ou « Invoice ».
-  entite   String
-  entiteId String
+  entite    String
+  entiteId  String
   /// Qui a agi.
-  acteur   String
+  acteur    String
   /// Détail libre de l'opération.
-  detail   String?
+  detail    String?
   createdAt DateTime @default(now())
 
   @@index([entite, entiteId])
