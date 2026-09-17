@@ -5,6 +5,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { EVENT_FORMAT_DB } from "@/lib/enums";
 import { redirectWithFlash } from "@/lib/flash";
+import { numeroFacture } from "@/lib/factures";
 import { getCurrentUser } from "@/lib/session";
 import type { EventFormat } from "@/lib/types";
 
@@ -14,14 +15,6 @@ const revalideTout = () => revalidatePath("/", "layout");
 /** Code d'accès présenté à l'entrée, ex. CC-E2-4718. */
 function codeAcces(eventId: string): string {
   return `CC-${eventId.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-}
-
-async function numeroFacture(date: Date): Promise<string> {
-  const annee = date.getFullYear();
-  const n = await prisma.invoice.count({
-    where: { numero: { startsWith: `CC-${annee}-` } },
-  });
-  return `CC-${annee}-${String(n + 1).padStart(4, "0")}`;
 }
 
 /* ============================ Côté membre ============================ */

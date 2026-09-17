@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
+import { numeroFacture } from "@/lib/factures";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
@@ -20,15 +21,6 @@ import type { MemberStatus, MemberType } from "@/lib/types";
  */
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
-
-/** Numéro de facture séquentiel par année, ex. CC-2026-0008. */
-async function numeroFacture(date: Date): Promise<string> {
-  const annee = date.getFullYear();
-  const n = await prisma.invoice.count({
-    where: { numero: { startsWith: `CC-${annee}-` } },
-  });
-  return `CC-${annee}-${String(n + 1).padStart(4, "0")}`;
-}
 
 async function journal(
   action: string,

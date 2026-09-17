@@ -1,80 +1,328 @@
+import Link from "next/link";
 import {
-  Saillant,
-  Stat,
-  StatusPill,
-  TableWrap,
-  Td,
-  Th,
-  ViewHead,
-} from "@/components/ui";
-import { getEncaisse, getInvoices, getMemberStats } from "@/lib/queries";
-import { fmtMontant } from "@/lib/membership";
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Download,
+  FileText,
+  Search,
+  Wallet,
+} from "lucide-react";
+import { Compteur, EnTeteAdmin, Onglets, Vide } from "@/components/admin/ui";
+import { NouvelleFactureButton } from "@/components/forms/FactureForms";
+import { Card, Saillant, StatusPill } from "@/components/ui";
+import {
+  filtrerFacturesHorsStatut,
+  lireFiltresFactures,
+  parametresFactures,
+} from "@/lib/filtres-factures";
+import { fmtDate } from "@/lib/format";
+import { FORMULES, fmtMontant } from "@/lib/membership";
+import { getInvoices, getMemberStats, getMembers } from "@/lib/queries";
+import { getAnneesFactures, getFinancesAnnee } from "@/lib/queries-admin";
 
-export default async function AdminPaiements() {
-  const [factures, encaisse, stats] = await Promise.all([
+export default async function AdminPaiements({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    statut?: string;
+    devise?: string;
+    annee?: string;
+    q?: string;
+  }>;
+}) {
+  const filtres = lireFiltresFactures(await searchParams);
+  const [factures, annees, finances, stats, membres] = await Promise.all([
     getInvoices(),
-    getEncaisse(),
+    getAnneesFactures(),
+    getFinancesAnnee(filtres.annee),
     getMemberStats(),
+    getMembers(),
   ]);
+
+  const retenues = filtrerFacturesHorsStatut(factures, filtres);
+  const liste = retenues.filter(
+    (f) => filtres.statut === "toutes" || f.statut === filtres.statut,
+  );
+  const lien = (changes: Parameters<typeof parametresFactures>[1]) =>
+    `/admin/paiements${parametresFactures(filtres, changes)}`;
+  const periode = filtres.annee ? `en ${filtres.annee}` : "au total";
+
+  const montants = (m: { MGA: number; CAD: number }) =>
+    m.CAD ? (
+      <span className="flex flex-col leading-tight">
+        <span className="text-[22px]">{fmtMontant(m.MGA, "MGA")}</span>
+        <span className="text-[14px] text-muted">
+          + {fmtMontant(m.CAD, "CAD")}
+        </span>
+      </span>
+    ) : (
+      <span className="text-[22px]">{fmtMontant(m.MGA, "MGA")}</span>
+    );
 
   return (
     <>
-      <ViewHead title={<>Paiements &amp; {<Saillant>factures</Saillant>}</>}>
-        Suivi des cotisations et des facturations liées aux événements.
-      </ViewHead>
+      <EnTeteAdmin
+        surtitre="Adhérents"
+        titre={
+          <>
+            Paiements &amp; <Saillant>factures</Saillant>
+          </>
+        }
+        actions={
+          <>
+            <a
+              href={`/admin/paiements/export${parametresFactures(filtres)}`}
+              className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
+            >
+              <Download size={14} /> Exporter
+            </a>
+            <NouvelleFactureButton
+              membres={membres
+                .filter((m) => m.statut !== "candidature")
+                .map((m) => ({
+                  id: m.id,
+                  nom: m.nom,
+                  devise: FORMULES[m.formule].devise,
+                }))}
+            />
+          </>
+        }
+      >
+        Cotisations, participations et prestations. Chaque règlement enregistré
+        génère sa facture et remet le membre à jour quand c’est une cotisation.
+      </EnTeteAdmin>
 
-      <div className="grid gap-4 mb-5 md:grid-cols-3">
-        <Stat
-          k="Encaissé"
-          v={
-            <span className="text-[21px] flex flex-col leading-tight">
-              <span>{fmtMontant(encaisse.MGA, "MGA")}</span>
-              {/* Le total en dollars n'apparaît que s'il existe : une ligne
-                  « 0 $ » sur une chambre sans membre canadien serait du bruit. */}
-              {encaisse.CAD ? (
-                <span className="text-[15px] text-muted">
-                  + {fmtMontant(encaisse.CAD, "CAD")}
-                </span>
-              ) : null}
-            </span>
-          }
+      <div className="grid gap-4 mb-6 sm:grid-cols-2 xl:grid-cols-4">
+        <Compteur
+          icone={<CheckCircle2 size={22} />}
+          teinte="vert"
+          libelle={`Encaissé ${periode}`}
+          valeur={montants(finances.encaisse)}
+          href={lien({ statut: "payee" })}
         />
-        <Stat k="Factures émises" v={factures.length} />
-        <Stat k="Membres en retard" v={stats.enRetard} vClassName="text-bad" />
+        <Compteur
+          icone={<Clock size={22} />}
+          teinte="rouge"
+          libelle={`À encaisser ${periode}`}
+          valeur={montants(finances.aEncaisser)}
+          detail={`${finances.enAttente} facture${finances.enAttente > 1 ? "s" : ""} en attente`}
+          href={lien({ statut: "envoyee" })}
+        />
+        <Compteur
+          icone={<FileText size={22} />}
+          teinte="bleu"
+          libelle={`Factures émises ${periode}`}
+          valeur={finances.factures}
+        />
+        <Compteur
+          icone={<Wallet size={22} />}
+          teinte="rouge"
+          libelle="Cotisations en retard"
+          valeur={stats.enRetard}
+          detail={`${stats.enAttente} adhésion${stats.enAttente > 1 ? "s" : ""} en attente de paiement`}
+          href="/admin/membres?statut=en_retard"
+        />
       </div>
 
-      <TableWrap>
-        <thead>
-          <tr>
-            <Th>Facture</Th>
-            <Th>Membre</Th>
-            <Th>Objet</Th>
-            <Th>Montant</Th>
-            <Th>Statut</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {factures.map((f) => (
-            <tr key={f.id} className="hover:bg-surface-2">
-              <Td className="font-[family-name:var(--font-mono)]">
-                {f.numero}
-              </Td>
-              <Td>{f.membre}</Td>
-              <Td>{f.objet}</Td>
-              <Td className="font-[family-name:var(--font-mono)]">
-                {fmtMontant(f.montant, f.devise)}
-              </Td>
-              <Td>
-                <StatusPill status={f.statut} />
-              </Td>
-            </tr>
-          ))}
-        </tbody>
-      </TableWrap>
+      <Onglets
+        actif={filtres.statut}
+        onglets={[
+          {
+            cle: "toutes",
+            libelle: "Toutes",
+            href: lien({ statut: null }),
+            compte: retenues.length,
+          },
+          {
+            cle: "envoyee",
+            libelle: "À régler",
+            href: lien({ statut: "envoyee" }),
+            compte: retenues.filter((f) => f.statut === "envoyee").length,
+          },
+          {
+            cle: "payee",
+            libelle: "Payées",
+            href: lien({ statut: "payee" }),
+            compte: retenues.filter((f) => f.statut === "payee").length,
+          },
+        ]}
+      />
 
-      <p className="text-[11.5px] text-faint mt-4">
-        Les montants sont en Ariary. Les dates de facture antérieures à 2026
-        sont conservées pour l’historique.
+      <form
+        action="/admin/paiements"
+        className="flex gap-2.5 flex-wrap items-center mb-4"
+      >
+        {filtres.statut !== "toutes" ? (
+          <input type="hidden" name="statut" value={filtres.statut} />
+        ) : null}
+        <div className="relative flex-1 min-w-[220px] max-w-[380px]">
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
+          />
+          <input
+            type="search"
+            name="q"
+            defaultValue={filtres.recherche}
+            placeholder="Numéro, membre, objet…"
+            aria-label="Rechercher une facture"
+            className="w-full rounded-[var(--radius-s)] border border-line bg-surface text-ink pl-9 pr-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
+          />
+        </div>
+        <select
+          name="annee"
+          defaultValue={filtres.annee ?? ""}
+          aria-label="Année"
+          className="rounded-[var(--radius-s)] border border-line bg-surface text-ink px-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
+        >
+          <option value="">Toutes les années</option>
+          {annees.map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
+        <select
+          name="devise"
+          defaultValue={filtres.devise ?? ""}
+          aria-label="Devise"
+          className="rounded-[var(--radius-s)] border border-line bg-surface text-ink px-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
+        >
+          <option value="">Toutes devises</option>
+          <option value="MGA">Ariary</option>
+          <option value="CAD">Dollars canadiens</option>
+        </select>
+        <button
+          type="submit"
+          className="btn-contour btn-contour-sm text-ink hover:bg-surface-2"
+        >
+          Filtrer
+        </button>
+        {filtres.recherche || filtres.annee || filtres.devise ? (
+          <Link
+            href={lien({ q: null, annee: null, devise: null })}
+            className="text-[13px] font-semibold text-muted no-underline hover:text-accent"
+          >
+            Effacer les filtres
+          </Link>
+        ) : null}
+      </form>
+
+      {liste.length === 0 ? (
+        <Card>
+          <Vide icone={<FileText size={26} />}>
+            Aucune facture ne correspond à ces critères.
+          </Vide>
+        </Card>
+      ) : (
+        <>
+          <Card className="hidden md:block p-0 overflow-hidden">
+            <table className="w-full border-collapse text-[13.4px]">
+              <thead>
+                <tr className="bg-surface-2">
+                  {["Facture", "Membre", "Objet", "Montant", "Statut", ""].map(
+                    (t, i) => (
+                      <th
+                        key={t || i}
+                        className={`surtitre text-faint font-semibold px-5 py-3 border-b border-line ${t === "Montant" ? "text-right" : "text-left"}`}
+                      >
+                        {t}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {liste.map((f) => (
+                  <tr
+                    key={f.id}
+                    className="border-b border-line last:border-b-0 hover:bg-surface-2"
+                  >
+                    <td className="px-5 py-3.5">
+                      <Link
+                        href={`/admin/paiements/${f.id}`}
+                        className="block font-[family-name:var(--font-mono)] font-semibold text-ink no-underline hover:text-accent"
+                      >
+                        {f.numero}
+                      </Link>
+                      <span className="block text-[12px] text-muted">
+                        {fmtDate(f.date, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <Link
+                        href={`/admin/membres/${f.membreId}`}
+                        className="text-ink font-medium no-underline hover:text-accent"
+                      >
+                        {f.membre}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3.5 text-muted">{f.objet}</td>
+                    <td className="px-5 py-3.5 text-right font-semibold tabular-nums whitespace-nowrap">
+                      {fmtMontant(f.montant, f.devise)}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <StatusPill status={f.statut} />
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <Link
+                        href={`/admin/paiements/${f.id}`}
+                        className="inline-flex items-center gap-1 text-[13px] font-semibold text-accent no-underline hover:underline whitespace-nowrap"
+                      >
+                        {f.statut === "envoyee" ? "Encaisser" : "Voir"}
+                        <ChevronRight size={15} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+
+          <ul className="md:hidden list-none m-0 p-0 flex flex-col gap-3">
+            {liste.map((f) => (
+              <li key={f.id}>
+                <Link
+                  href={`/admin/paiements/${f.id}`}
+                  className="block no-underline"
+                >
+                  <Card className="carte-filet filet-bleu p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-[14.5px] text-ink truncate">
+                          {f.membre}
+                        </span>
+                        <span className="block text-[12.5px] text-muted">
+                          {f.objet}
+                        </span>
+                      </span>
+                      <span className="text-[14.5px] font-bold tabular-nums text-ink whitespace-nowrap">
+                        {fmtMontant(f.montant, f.devise)}
+                      </span>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between gap-2">
+                      <span className="text-[12px] text-muted font-[family-name:var(--font-mono)]">
+                        {f.numero} ·{" "}
+                        {fmtDate(f.date, { day: "numeric", month: "short" })}
+                      </span>
+                      <StatusPill status={f.statut} />
+                    </div>
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      <p className="text-[12px] text-faint mt-4">
+        Les totaux sont tenus par devise : additionner Ariary et dollars
+        canadiens n’aurait pas de sens.
       </p>
     </>
   );
