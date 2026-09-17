@@ -20,8 +20,6 @@ import {
   SubmitButton,
 } from "@/components/form-bits";
 import {
-  createResource,
-  deleteResource,
   deleteService,
   downloadResource,
   postComment,
@@ -68,94 +66,6 @@ export function CommentForm({
 
 /* ============================ Ressources ============================ */
 
-export function NewResourceButton() {
-  return (
-    <Modal
-      title="Ajouter une ressource"
-      trigger={(ouvrir) => (
-        <button
-          onClick={ouvrir}
-          className={`${BTN_PRIMARY} text-[13.4px] px-[15px] py-[9px]`}
-        >
-          <Plus size={15} /> Ajouter une ressource
-        </button>
-      )}
-    >
-      {(fermer) => (
-        <form action={createResource}>
-          <ModalBody>
-            <Field label="Titre">
-              <input
-                type="text"
-                name="titre"
-                required
-                placeholder="Ex. Guide export 2027"
-                className={INPUT}
-              />
-            </Field>
-            <div className="grid gap-3.5 md:grid-cols-2">
-              <Field label="Catégorie">
-                <select name="cat" className={INPUT} defaultValue="Guide">
-                  <option>Guide</option>
-                  <option>Modèle</option>
-                  <option>Formation</option>
-                  <option>Rapport</option>
-                </select>
-              </Field>
-              <Field label="Format">
-                <select name="fmt" className={INPUT} defaultValue="PDF">
-                  <option>PDF</option>
-                  <option>DOCX</option>
-                  <option>Vidéo</option>
-                </select>
-              </Field>
-            </div>
-            <div className="grid gap-3.5 md:grid-cols-2">
-              <Field
-                label="Taille ou durée"
-                hint="Ex. 1,2 Mo — ou 48 min pour une vidéo."
-              >
-                <input
-                  type="text"
-                  name="taille"
-                  placeholder="Ex. 1,2 Mo"
-                  className={INPUT}
-                />
-              </Field>
-              <Field
-                label="Tarif (Ariary)"
-                hint="Laissez à 0 pour une ressource gratuite."
-              >
-                <input
-                  type="number"
-                  name="prix"
-                  defaultValue={0}
-                  min={0}
-                  className={INPUT}
-                />
-              </Field>
-            </div>
-            <Field label="Accès">
-              <select name="type" className={INPUT} defaultValue="gratuit">
-                <option value="gratuit">
-                  Gratuit — inclus dans l’adhésion
-                </option>
-                <option value="payant">Payant — facturé en supplément</option>
-              </select>
-            </Field>
-          </ModalBody>
-          <ModalFooter>
-            <CancelButton onClick={fermer} />
-            <SubmitButton pendingLabel="Ajout…">
-              <Check size={14} /> Ajouter la ressource
-            </SubmitButton>
-          </ModalFooter>
-        </form>
-      )}
-    </Modal>
-  );
-}
-
 /**
  * Accès à une ressource depuis sa carte.
  *
@@ -198,17 +108,6 @@ export function DownloadResourceButton({
         className="w-full justify-center"
       >
         <ShoppingCart size={13} /> Acheter
-      </SubmitButton>
-    </form>
-  );
-}
-
-export function DeleteResourceButton({ resourceId }: { resourceId: string }) {
-  return (
-    <form action={deleteResource}>
-      <input type="hidden" name="resourceId" value={resourceId} />
-      <SubmitButton sm variant="ghost" pendingLabel="…" className="text-bad">
-        <Trash2 size={13} /> Retirer
       </SubmitButton>
     </form>
   );

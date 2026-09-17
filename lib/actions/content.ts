@@ -5,6 +5,11 @@ import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithFlash } from "@/lib/flash";
 import { getCurrentUser } from "@/lib/session";
+import {
+  FichierRefuse,
+  effacerRessource,
+  recevoirRessource,
+} from "@/lib/stockage-ressources";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
 
@@ -230,30 +235,95 @@ export async function postComment(formData: FormData) {
 
 /* ============================ Ressources ============================ */
 
-export async function createResource(formData: FormData) {
+/**
+ * Ajout ou modification d'une ressource de la bibliothèque.
+ *
+ * Le fichier est obligatoire à la création, facultatif ensuite : sans
+ * nouveau fichier, la ressource garde le sien. Il est converti sur place
+ * pour la lecture protégée — les pages d'un document en images — avant que
+ * la ressource ne soit annoncée prête.
+ */
+export async function enregistrerRessource(formData: FormData) {
+  const id = texte(formData, "resourceId");
+  const retour = id
+    ? `/admin/ressources/${id}/modifier`
+    : "/admin/ressources/nouvelle";
+
+  const titre = texte(formData, "titre");
+  const cat = RESOURCE_CAT_DB[texte(formData, "cat") as ResourceCategory];
   const type = texte(formData, "type") === "payant" ? "payant" : "gratuit";
-  const r = await prisma.resource.create({
+  const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
+  const entree = formData.get("fichier");
+  const fichier = entree instanceof File && entree.size > 0 ? entree : null;
+
+  if (!titre) redirectWithFlash(retour, "Le titre est obligatoire.");
+  if (!cat) redirectWithFlash(retour, "Catégorie inconnue.");
+  if (type === "payant" && (!Number.isFinite(prix) || prix <= 0)) {
+    redirectWithFlash(retour, "Indiquez le prix d’une ressource payante.");
+  }
+  if (!id && !fichier) {
+    redirectWithFlash(retour, "Joignez le fichier de la ressource.");
+  }
+
+  // La ligne d'abord : son identifiant nomme le dossier du fichier.
+  const r = id
+    ? await prisma.resource.update({
+        where: { id },
+        data: { titre, cat, type, prix },
+      })
+    : await prisma.resource.create({
+        data: {
+          titre,
+          cat,
+          type,
+          prix,
+          fmt: "pdf",
+          taille: "—",
+          date: new Date(),
+        },
+      });
+
+  if (fichier) {
+    try {
+      const recu = await recevoirRessource(r.id, fichier);
+      await prisma.resource.update({
+        where: { id: r.id },
+        data: {
+          fmt: recu.fmt,
+          fichier: recu.fichier,
+          pages: recu.pages,
+          taille: recu.taille,
+        },
+      });
+    } catch (e) {
+      if (!(e instanceof FichierRefuse)) throw e;
+      // Une ressource neuve sans fichier lisible n'a pas lieu d'exister.
+      if (!id) {
+        await prisma.resource.delete({ where: { id: r.id } });
+        redirectWithFlash("/admin/ressources/nouvelle", e.message);
+      }
+      await prisma.resource.update({
+        where: { id: r.id },
+        data: { fichier: null, pages: null },
+      });
+      redirectWithFlash(retour, e.message);
+    }
+  }
+
+  await prisma.auditLog.create({
     data: {
-      titre: texte(formData, "titre") || "Nouvelle ressource",
-      cat: RESOURCE_CAT_DB[
-        (texte(formData, "cat") || "Guide") as ResourceCategory
-      ],
-      fmt:
-        texte(formData, "fmt") === "Vidéo"
-          ? "video"
-          : texte(formData, "fmt") === "DOCX"
-            ? "docx"
-            : "pdf",
-      taille: texte(formData, "taille") || "—",
-      date: new Date(),
-      type,
-      prix: type === "payant" ? Number(formData.get("prix")) || 0 : 0,
+      action: id ? "ressource_modifiee" : "ressource_ajoutee",
+      entite: "Resource",
+      entiteId: r.id,
+      acteur: await acteurEquipe(),
+      detail: `« ${titre} »${fichier ? ` · fichier ${fichier.name}` : ""}.`,
     },
   });
+
   revalideTout();
   redirectWithFlash(
     "/admin/ressources",
-    `« ${r.titre} » ajoutée à la bibliothèque`,
+    id ? `« ${titre} » mise à jour` : `« ${titre} » ajoutée à la bibliothèque`,
   );
 }
 
@@ -263,9 +333,21 @@ export async function deleteResource(formData: FormData) {
     where: { id },
     select: { titre: true },
   });
+  if (!r) redirectWithFlash("/admin/ressources", "Ressource introuvable.");
+
+  await prisma.auditLog.create({
+    data: {
+      action: "ressource_supprimee",
+      entite: "Resource",
+      entiteId: id,
+      acteur: await acteurEquipe(),
+      detail: `« ${r.titre} » et ses fichiers.`,
+    },
+  });
   await prisma.resource.delete({ where: { id } });
+  await effacerRessource(id);
   revalideTout();
-  redirectWithFlash("/admin/ressources", `« ${r?.titre} » retirée`);
+  redirectWithFlash("/admin/ressources", `« ${r.titre} » retirée`);
 }
 
 /**
