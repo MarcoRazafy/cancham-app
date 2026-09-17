@@ -160,7 +160,7 @@ export function Onglets({
   actif: string;
 }) {
   return (
-    <div className="flex gap-1 border-b border-line mb-5 overflow-x-auto overflow-y-hidden">
+    <div className="flex gap-1 border-b border-line mb-5 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {onglets.map((o) => {
         const courant = o.cle === actif;
         return (
