@@ -13,7 +13,7 @@ export default async function ConfirmationPage({
     <>
       <EnTetePublique />
       <main className="max-w-[560px] mx-auto px-5 py-16 w-full text-center">
-        <div className="w-16 h-16 rounded-full border border-marque-vert/50 text-marque-vert flex items-center justify-center mx-auto mb-5">
+        <div className="w-16 h-16 rounded-full border border-[#3fc98a]/40 bg-[#3fc98a]/10 text-[#3fc98a] flex items-center justify-center mx-auto mb-5">
           <Check size={30} />
         </div>
         <h1 className="titre text-[clamp(26px,4vw,34px)] font-extrabold m-0 mb-3">
@@ -27,7 +27,7 @@ export default async function ConfirmationPage({
         </p>
         <Link
           href="/public"
-          className="inline-flex items-center font-[family-name:var(--font-titre)] font-bold text-[14px] px-6 py-3.5 rounded-lg border border-white/30 text-white no-underline hover:bg-white/10"
+          className="btn-contour text-white hover:bg-white/10"
         >
           Retour à l’accueil
         </Link>

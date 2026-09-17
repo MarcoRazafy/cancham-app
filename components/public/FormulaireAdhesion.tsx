@@ -4,7 +4,7 @@ import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
 import { submitAdhesion } from "@/lib/actions/members";
 
 const CHAMP =
-  "w-full rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/35 px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-marque-vert focus:bg-white/[0.07]";
+  "w-full min-w-0 rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/45 px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-[#3fc98a] focus:bg-white/[0.07]";
 
 const ETIQUETTE = "block text-[12.5px] font-semibold text-white/70 mb-1.5";
 
@@ -17,7 +17,7 @@ const ETIQUETTE = "block text-[12.5px] font-semibold text-white/70 mb-1.5";
  */
 export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
   return (
-    <div className="rounded-2xl border border-white/12 bg-white/[0.03] p-6 md:p-7">
+    <div className="rounded-2xl border border-white/12 bg-white/[0.03] p-5 md:p-7">
       <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
 
       <form action={submitAdhesion} className="flex flex-col gap-4">
@@ -206,7 +206,7 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
           Déjà membre ?{" "}
           <Link
             href="/membre"
-            className="text-marque-vert font-semibold underline underline-offset-2"
+            className="text-[#3fc98a] font-semibold underline underline-offset-2"
           >
             Se connecter
           </Link>

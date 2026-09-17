@@ -7,7 +7,7 @@ export default function AdhesionPage() {
   return (
     <>
       <EnTetePublique />
-      <main className="max-w-[660px] mx-auto px-5 py-12 w-full">
+      <main className="max-w-[720px] mx-auto px-5 py-10 md:py-12 w-full">
         <span className="surtitre text-white/45">Formulaire public</span>
         <h1 className="titre text-[clamp(26px,4vw,36px)] font-extrabold mt-2.5 mb-3">
           Devenir membre de CanCham Madagascar
@@ -19,7 +19,11 @@ export default function AdhesionPage() {
           paiement de la cotisation.
         </p>
 
-        <form action={submitAdhesion} className="flex flex-col gap-3.5">
+        <form
+          action={submitAdhesion}
+          className="rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-5 md:p-8 flex flex-col gap-3.5"
+        >
+          <Rubrique titre="Votre formule" premiere />
           <Field label="Formule d’adhésion">
             <ChoixFormule id="adh-formule" className={INPUT} />
           </Field>
@@ -31,6 +35,7 @@ export default function AdhesionPage() {
             </select>
           </Field>
 
+          <Rubrique titre="L’entreprise" />
           <Field label="Nom de l’entreprise">
             <input
               type="text"
@@ -86,6 +91,7 @@ export default function AdhesionPage() {
             />
           </Field>
 
+          <Rubrique titre="Le représentant" />
           <div className="grid gap-3.5 md:grid-cols-2">
             <Field label="Nom du représentant">
               <input
@@ -109,16 +115,14 @@ export default function AdhesionPage() {
             </Field>
           </div>
 
-          <div className="grid gap-3.5 md:grid-cols-2">
-            <Field label="Fonction">
-              <input
-                type="text"
-                name="repTitre"
-                placeholder="Ex. Directrice Générale"
-                className={INPUT}
-              />
-            </Field>
-          </div>
+          <Field label="Fonction">
+            <input
+              type="text"
+              name="repTitre"
+              placeholder="Ex. Directrice Générale"
+              className={INPUT}
+            />
+          </Field>
 
           <div className="grid gap-3.5 md:grid-cols-2">
             <Field label="Courriel">
@@ -139,6 +143,7 @@ export default function AdhesionPage() {
             </Field>
           </div>
 
+          <Rubrique titre="Votre projet" />
           <Field label="Décrivez brièvement votre activité">
             <textarea
               name="desc"
@@ -157,12 +162,14 @@ export default function AdhesionPage() {
             />
           </Field>
 
-          <BoutonEnvoi enCours="Envoi de la demande…">
-            Envoyer ma demande d’adhésion
-          </BoutonEnvoi>
+          <div className="mt-3">
+            <BoutonEnvoi enCours="Envoi de la demande…">
+              Envoyer ma demande d’adhésion
+            </BoutonEnvoi>
+          </div>
         </form>
 
-        <p className="text-[12px] text-white/50 mt-5 text-center">
+        <p className="text-[12.5px] text-white/55 mt-5 text-center">
           Votre candidature est enregistrée et apparaît immédiatement dans le
           back-office de l’équipe CanCham.
         </p>
@@ -172,7 +179,32 @@ export default function AdhesionPage() {
 }
 
 const INPUT =
-  "w-full rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/35 px-3.5 py-3 text-[13.8px] outline-none focus:border-marque-vert focus:bg-white/[0.07]";
+  "w-full min-w-0 rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/45 px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-[#3fc98a] focus:bg-white/[0.07]";
+
+/**
+ * Intertitre d'un groupe de champs : le formulaire se lit par étapes.
+ *
+ * `premiere` plutôt que `first:` — une action serveur glisse des champs
+ * cachés en tête du formulaire, et le premier intertitre n'est plus le
+ * premier enfant.
+ */
+function Rubrique({
+  titre,
+  premiere = false,
+}: {
+  titre: string;
+  premiere?: boolean;
+}) {
+  return (
+    <div
+      className={`surtitre text-white/50 ${
+        premiere ? "" : "pt-5 mt-1.5 border-t border-white/10"
+      }`}
+    >
+      {titre}
+    </div>
+  );
+}
 
 function Field({
   label,

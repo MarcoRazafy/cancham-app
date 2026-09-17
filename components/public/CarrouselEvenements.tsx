@@ -16,7 +16,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  * molette et au clavier sans une ligne de JavaScript. Les flèches ne sont
  * qu'une commodité en plus, et disparaissent quand tout tient à l'écran.
  */
-export function CarrouselEvenements({ children }: { children: ReactNode }) {
+export function CarrouselEvenements({
+  children,
+  debord = "-mx-1 px-1",
+}: {
+  children: ReactNode;
+  /**
+   * Marges négatives et marge intérieure égales au retrait du cadre qui porte
+   * le carrousel : la piste court jusqu'à son bord, et une carte à demi
+   * visible s'y coupe net plutôt qu'au milieu de la marge.
+   */
+  debord?: string;
+}) {
   const piste = useRef<HTMLDivElement>(null);
   const [peutReculer, setPeutReculer] = useState(false);
   const [peutAvancer, setPeutAvancer] = useState(false);
@@ -61,7 +72,7 @@ export function CarrouselEvenements({ children }: { children: ReactNode }) {
     <div className="relative">
       <div
         ref={piste}
-        className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${debord}`}
       >
         {children}
       </div>

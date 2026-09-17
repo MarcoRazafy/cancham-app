@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, Clock, MapPin } from "lucide-react";
+import { plageHoraire } from "@/lib/agenda";
 import { parseISO } from "@/lib/format";
 import { visuelEvenement } from "@/lib/images-publiques";
 import type { CanchamEvent } from "@/lib/types";
@@ -28,6 +29,7 @@ export function CarteEvenement({
     .toLocaleDateString("fr-FR", { month: "short" })
     .replace(".", "")
     .toUpperCase();
+  const horaire = plageHoraire(evenement.debut, evenement.fin);
   // La photo enregistrée en base prime sur le visuel générique.
   const visuel = evenement.photo
     ? { url: evenement.photo, alt: "" }
@@ -36,7 +38,9 @@ export function CarteEvenement({
   return (
     <Link
       href={`/public/evenements/${evenement.id}`}
-      className="group snap-start shrink-0 w-[min(84vw,330px)] block no-underline rounded-xl overflow-hidden bg-[var(--marque-nuit)] border border-white/10 transition-colors hover:border-white/25"
+      // Trois cartes pleines sur ordinateur, deux sur tablette : aucune ne se
+      // coupe au bord. Sur téléphone, la suivante dépasse, pour inviter à glisser.
+      className="group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-[var(--marque-nuit)] border border-white/10 transition-colors hover:border-white/25"
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[var(--marque-nuit-2)]">
         {visuel ? (
@@ -51,7 +55,7 @@ export function CarteEvenement({
         <div className="absolute inset-0 bg-linear-to-t from-[var(--marque-nuit)]/85 to-transparent" />
       </div>
 
-      <div className="p-5">
+      <div className="p-5 flex-1 flex flex-col">
         <div className="flex items-center gap-3 mb-3 flex-wrap">
           <span className="font-[family-name:var(--font-titre)] text-[11.5px] font-bold px-2.5 py-1 rounded-md bg-marque-rouge text-white tracking-wide">
             {jour} {mois}
@@ -63,12 +67,20 @@ export function CarteEvenement({
           {evenement.titre}
         </h3>
 
-        <div className="flex items-center gap-1.5 text-[13px] text-white/60 mb-4">
-          <MapPin size={14} />
-          {evenement.lieu}
+        <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-[13px] text-white/65 mb-4">
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin size={14} />
+            {evenement.lieu}
+          </span>
+          {horaire ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Clock size={14} />
+              {horaire}
+            </span>
+          ) : null}
         </div>
 
-        <span className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-marque-vert">
+        <span className="mt-auto inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#3fc98a]">
           Découvrir
           <ArrowRight
             size={15}
