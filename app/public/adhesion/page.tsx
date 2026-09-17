@@ -1,4 +1,3 @@
-import { EnTetePublique } from "@/components/public/Marque";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { submitAdhesion } from "@/lib/actions/members";
 import { ChoixFormule } from "@/components/public/ChoixFormule";
@@ -6,13 +5,12 @@ import { ChoixFormule } from "@/components/public/ChoixFormule";
 export default function AdhesionPage() {
   return (
     <>
-      <EnTetePublique />
       <main className="max-w-[720px] mx-auto px-5 py-10 md:py-12 w-full">
-        <span className="surtitre text-white/45">Formulaire public</span>
+        <span className="surtitre text-marque-rouge">Formulaire public</span>
         <h1 className="titre text-[clamp(26px,4vw,36px)] font-extrabold mt-2.5 mb-3">
           Devenir membre de CanCham Madagascar
         </h1>
-        <p className="text-[15px] leading-relaxed text-white/70 m-0 mb-8 max-w-[56ch]">
+        <p className="text-[15px] leading-relaxed text-muted m-0 mb-8 max-w-[56ch]">
           Complétez ce formulaire pour soumettre votre candidature. Un profil
           est créé immédiatement : vous pourrez le compléter, mais l’accès aux
           autres services ne sera activé qu’après validation par l’équipe et
@@ -21,7 +19,7 @@ export default function AdhesionPage() {
 
         <form
           action={submitAdhesion}
-          className="rounded-2xl border border-white/12 bg-[var(--marque-nuit-2)] p-5 md:p-8 flex flex-col gap-3.5"
+          className="rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-8 flex flex-col gap-3.5"
         >
           <Rubrique titre="Votre formule" premiere />
           <Field label="Formule d’adhésion">
@@ -169,7 +167,7 @@ export default function AdhesionPage() {
           </div>
         </form>
 
-        <p className="text-[12.5px] text-white/55 mt-5 text-center">
+        <p className="text-[12.5px] text-muted mt-5 text-center">
           Votre candidature est enregistrée et apparaît immédiatement dans le
           back-office de l’équipe CanCham.
         </p>
@@ -179,7 +177,7 @@ export default function AdhesionPage() {
 }
 
 const INPUT =
-  "w-full min-w-0 rounded-lg border border-white/15 bg-white/[0.04] text-white placeholder:text-white/45 px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-[#3fc98a] focus:bg-white/[0.07]";
+  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
 
 /**
  * Intertitre d'un groupe de champs : le formulaire se lit par étapes.
@@ -197,8 +195,8 @@ function Rubrique({
 }) {
   return (
     <div
-      className={`surtitre text-white/50 ${
-        premiere ? "" : "pt-5 mt-1.5 border-t border-white/10"
+      className={`surtitre text-marque-vert ${
+        premiere ? "" : "pt-5 mt-1.5 border-t border-line"
       }`}
     >
       {titre}
@@ -215,7 +213,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-[12.5px] font-semibold text-white/70 mb-1.5">
+      <span className="block text-[12.5px] font-semibold text-ink mb-1.5">
         {label}
       </span>
       {children}

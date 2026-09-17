@@ -1,4 +1,4 @@
-import { PiedPublique } from "@/components/public/Marque";
+import { EnTetePublique, PiedPublique } from "@/components/public/Marque";
 
 /**
  * Coquille de l'espace public.
@@ -7,8 +7,8 @@ import { PiedPublique } from "@/components/public/Marque";
  * Montserrat et Open Sans — indépendamment du thème du visiteur : une vitrine
  * ne doit pas changer d'apparence selon les réglages du navigateur.
  *
- * L'en-tête n'est pas ici : la page d'accueil intègre le logo dans sa bannière,
- * les pages secondaires utilisent `EnTetePublique`.
+ * En-tête et pied sont communs à toutes les pages : l'en-tête blanc précède la
+ * bannière d'accueil au lieu de s'y superposer.
  */
 export default function PublicLayout({
   children,
@@ -17,6 +17,7 @@ export default function PublicLayout({
 }) {
   return (
     <div className="marque min-h-screen flex flex-col">
+      <EnTetePublique />
       {children}
       <PiedPublique />
     </div>
