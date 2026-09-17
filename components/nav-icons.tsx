@@ -8,6 +8,7 @@ import {
   Gauge,
   Headset,
   HelpCircle,
+  History,
   Home,
   Lock,
   MessageSquare,
@@ -33,6 +34,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   card: CreditCard,
   briefcase: Briefcase,
   help: HelpCircle,
+  history: History,
   support: Headset,
   lock: Lock,
 };
