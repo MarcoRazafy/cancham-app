@@ -401,8 +401,8 @@ export default async function TableauDeBord() {
               <ul className="list-none m-0 p-0 flex flex-col gap-3">
                 {achats.map((a) => (
                   <li key={a.id} className="flex gap-3 items-start">
-                    <span className="w-8 h-8 rounded-lg bg-accent-soft text-accent-strong flex items-center justify-center shrink-0">
-                      <ShoppingBag size={15} />
+                    <span className="w-9 h-9 rounded-lg bg-[#14263a] text-white flex items-center justify-center shrink-0">
+                      <ShoppingBag size={16} />
                     </span>
                     <span className="min-w-0">
                       <span className="block text-[13px] font-semibold text-ink">
