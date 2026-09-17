@@ -371,17 +371,6 @@ h3 {
 }
 
 /*
- * Back-office : barre latérale en bleu nuit de la charte.
- *
- * L'équipe passe d'un espace à l'autre pour vérifier ce que voit un membre.
- * Le rouge et le vert de l'espace membre y restent ; ici la nuit dit, au
- * premier coup d'œil, « vous administrez ».
- */
-.espace-admin {
-  --laterale: linear-gradient(180deg, #172b40 0%, #0f1d2c 48%, #0a1520 100%);
-}
-
-/*
  * Titres en gras.
  *
  * Hammersmith One n'existe qu'en graisse 400 : l'appeler en gras produirait un

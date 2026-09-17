@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
-import { Bell, ChevronDown, Menu, Search } from "lucide-react";
+import { ChevronDown, Menu, Search } from "lucide-react";
+import { MenuNotifications } from "@/components/MenuNotifications";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { titrePour, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
@@ -192,20 +193,7 @@ export function Coquille({
           </Suspense>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/membre#notifications"
-              aria-label={`Notifications (${notifications.length})`}
-              className="relative w-9 h-9 rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 no-underline"
-            >
-              <Bell size={17} />
-              {notifications.length ? (
-                <span className="pastille absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent border-2 border-[#0f1d2c]" />
-              ) : null}
-            </Link>
-
-            <span className="hidden md:flex items-center gap-1 text-[13px] font-semibold text-white/75 px-2">
-              FR <ChevronDown size={14} />
-            </span>
+            <MenuNotifications notifications={notifications} />
 
             <Link
               href="/membre/profil"

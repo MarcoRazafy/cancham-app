@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { Bell, Menu, Search } from "lucide-react";
+import { Suspense, useState, type ReactNode } from "react";
+import { Menu, Search } from "lucide-react";
+import { MenuNotifications } from "@/components/MenuNotifications";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { titrePour, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
@@ -13,10 +14,10 @@ import type { Space, User } from "@/lib/types";
 /**
  * Coquille du back-office.
  *
- * Même charte que l'espace membre — polices, rouge et vert de la chambre,
- * barre supérieure bleue — pour que l'équipe travaille dans l'outil que voient
- * les membres. La barre latérale passe au bleu nuit : on sait, sans lire, que
- * l'on administre.
+ * Même charte que l'espace membre — polices, barre latérale en dégradé rouge
+ * vers vert, barre supérieure bleue — pour que l'équipe travaille dans l'outil
+ * que voient les membres. La mention « Back-office » sous le logo dit où l'on
+ * est.
  */
 export function CoquilleAdmin({
   user,
@@ -69,13 +70,11 @@ export function CoquilleAdmin({
               className="w-full h-auto"
             />
           </Link>
-          {/* Le filet de la charte, du rouge au vert, sous la mention de l'espace. */}
+          {/* La mention de l'espace, soulignée d'un filet clair : sur le
+              dégradé, un trait rouge et vert se perdrait dans le fond. */}
           <div className="mt-5 flex items-center gap-2.5">
-            <span className="surtitre text-white/55">Back-office</span>
-            <span
-              className="h-[2px] flex-1 rounded-full"
-              style={{ background: "var(--marque-degrade)" }}
-            />
+            <span className="surtitre text-white/70">Back-office</span>
+            <span className="h-px flex-1 bg-white/25" />
           </div>
         </div>
 
@@ -132,7 +131,7 @@ export function CoquilleAdmin({
 
         <ChoixEspace />
 
-        <div className="mx-3.5 mb-5 mt-2 px-3 pt-4 pb-1 flex items-center gap-3 border-t-2 border-accent">
+        <div className="mx-3.5 mb-5 mt-2 px-3 pt-4 pb-1 flex items-center gap-3 border-t-2 border-success">
           <Portrait user={user} taille={40} />
           <span className="min-w-0 flex-1">
             <span className="block text-[13.5px] font-semibold text-white truncate">
@@ -169,7 +168,7 @@ export function CoquilleAdmin({
           </Suspense>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Notifications notifications={notifications} />
+            <MenuNotifications notifications={notifications} />
             <Portrait user={user} taille={36} />
           </div>
         </header>
@@ -233,93 +232,6 @@ function Recherche() {
         />
       </div>
     </form>
-  );
-}
-
-const TONS: Record<Notification["ton"], string> = {
-  info: "bg-navy",
-  warn: "bg-warn",
-  bad: "bg-accent",
-};
-
-/**
- * Notifications, calculées côté serveur à partir de l'état de la base.
- *
- * Sur `<details>` : ouverture, fermeture et clavier sont gérés par le
- * navigateur. On le referme seulement au clic extérieur et au changement de
- * page, ce que `<details>` ne fait pas seul.
- */
-function Notifications({ notifications }: { notifications: Notification[] }) {
-  const ref = useRef<HTMLDetailsElement>(null);
-  const pathname = usePathname();
-  const urgentes = notifications.filter((n) => n.ton !== "info").length;
-
-  useEffect(() => {
-    ref.current?.removeAttribute("open");
-  }, [pathname]);
-
-  useEffect(() => {
-    const fermer = (e: PointerEvent) => {
-      if (ref.current?.open && !ref.current.contains(e.target as Node))
-        ref.current.removeAttribute("open");
-    };
-    document.addEventListener("pointerdown", fermer);
-    return () => document.removeEventListener("pointerdown", fermer);
-  }, []);
-
-  return (
-    <details ref={ref} className="relative">
-      <summary
-        aria-label={`Notifications (${notifications.length})`}
-        className="list-none relative w-9 h-9 rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 cursor-pointer [&::-webkit-details-marker]:hidden"
-      >
-        <Bell size={17} />
-        {notifications.length ? (
-          <span
-            className={`pastille absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-[#0f1d2c] ${
-              urgentes ? "bg-accent" : "bg-white/70"
-            }`}
-          />
-        ) : null}
-      </summary>
-
-      <div className="absolute right-0 top-11 z-50 w-[340px] max-w-[calc(100vw-32px)] bg-surface text-ink border border-line rounded-[var(--radius-m)] shadow-[var(--shadow)] overflow-hidden">
-        <div className="px-4 py-3 border-b border-line flex items-center justify-between">
-          <span className="surtitre text-faint">À suivre</span>
-          <span className="text-[11.5px] text-faint">
-            {notifications.length}
-          </span>
-        </div>
-
-        {notifications.length ? (
-          <div className="max-h-[60vh] overflow-y-auto">
-            {notifications.map((n) => (
-              <Link
-                key={n.id}
-                href={n.href}
-                className="flex gap-3 px-4 py-3 no-underline border-b border-line last:border-b-0 hover:bg-surface-2"
-              >
-                <span
-                  className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${TONS[n.ton]}`}
-                />
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-medium text-ink">
-                    {n.titre}
-                  </span>
-                  <span className="block text-[11.5px] text-faint">
-                    {n.temps}
-                  </span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="px-4 py-7 text-center text-[13px] text-muted">
-            Rien à traiter pour l’instant.
-          </div>
-        )}
-      </div>
-    </details>
   );
 }
 
