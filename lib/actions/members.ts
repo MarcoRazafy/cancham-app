@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
+import { jourBase, jourSaisi } from "@/lib/format";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
@@ -104,7 +105,7 @@ export async function submitAdhesion(formData: FormData) {
       ville: texte(formData, "ville") || "Antananarivo",
       statut: "candidature",
       formule,
-      adhesion: new Date(),
+      adhesion: jourBase(),
       activite: texte(formData, "desc").slice(0, 120) || "Activité à préciser.",
       desc: texte(formData, "desc") || "Description à compléter.",
       statutJuridique: texte(formData, "statutJuridique") || null,
@@ -192,7 +193,7 @@ export async function registerPayment(formData: FormData) {
   const id = texte(formData, "memberId");
   const mode = texte(formData, "mode") || "Espèces";
   const dateSaisie = texte(formData, "date");
-  const date = dateSaisie ? new Date(`${dateSaisie}T00:00:00`) : new Date();
+  const date = jourBase(jourSaisi(dateSaisie) ?? undefined);
   const note = texte(formData, "note");
 
   const avant = await prisma.member.findUnique({
@@ -217,7 +218,7 @@ export async function registerPayment(formData: FormData) {
         statut: "a_jour",
         retardDepuis: null,
         ...(premier ? { adhesion: date } : {}),
-        paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMontant(montant, devise)} · le ${date.toLocaleDateString("fr-FR")}${note ? ` · ${note}` : ""}`,
+        paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMontant(montant, devise)} · le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })}${note ? ` · ${note}` : ""}`,
       },
     }),
     prisma.invoice.create({
@@ -292,7 +293,7 @@ export async function createMember(formData: FormData) {
       secteur: texte(formData, "secteur") || "Secteur à préciser",
       ville: texte(formData, "ville") || "Antananarivo",
       statut: (texte(formData, "statut") || "en_attente") as MemberStatus,
-      adhesion: new Date(),
+      adhesion: jourBase(),
       activite: texte(formData, "desc").slice(0, 120) || "Activité à préciser.",
       desc: texte(formData, "desc") || "Description à compléter.",
     },

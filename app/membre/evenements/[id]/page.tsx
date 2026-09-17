@@ -27,6 +27,7 @@ import {
   getRegistration,
 } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
+import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney, isPast } from "@/lib/format";
 
 export default async function EvenementDetailPage({
@@ -37,6 +38,7 @@ export default async function EvenementDetailPage({
   const { id } = await params;
   const e = await getEvent(id);
   if (!e) notFound();
+  const horaire = plageHoraire(e.debut, e.fin);
 
   const user = await getCurrentUser("membre");
   const [reg, entreprises, tous] = await Promise.all([
@@ -99,9 +101,9 @@ export default async function EvenementDetailPage({
             <span className="inline-flex items-center gap-1.5">
               <CalendarDays size={15} /> {fmtDate(e.date)}
             </span>
-            {e.heure ? (
+            {horaire ? (
               <span className="inline-flex items-center gap-1.5">
-                <Clock size={15} /> {e.heure}
+                <Clock size={15} /> {horaire}
               </span>
             ) : null}
             <span className="inline-flex items-center gap-1.5">
@@ -286,9 +288,9 @@ export default async function EvenementDetailPage({
               <Pratique icone={<CalendarDays size={15} />} cle="Date">
                 {fmtDate(e.date)}
               </Pratique>
-              {e.heure ? (
+              {horaire ? (
                 <Pratique icone={<Clock size={15} />} cle="Horaire">
-                  {e.heure}
+                  {horaire}
                 </Pratique>
               ) : null}
               <Pratique icone={<MapPin size={15} />} cle="Lieu">
@@ -337,7 +339,7 @@ export default async function EvenementDetailPage({
               </h2>
             </div>
             <Link
-              href="/membre/evenements"
+              href="/membre/agenda?vue=liste"
               className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent no-underline hover:underline"
             >
               Tout l’agenda <ArrowRight size={14} />

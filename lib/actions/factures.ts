@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { numeroFacture } from "@/lib/factures";
 import { redirectWithFlash } from "@/lib/flash";
 import { fmtMontant, type Devise } from "@/lib/membership";
+import { jourBase, jourSaisi } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -14,8 +15,7 @@ const MODES = ["Espèces", "Virement bancaire", "Mobile Money", "Chèque"];
 
 /** Une date saisie (AAAA-MM-JJ), sinon aujourd'hui. */
 function dateSaisie(fd: FormData, k: string): Date {
-  const v = texte(fd, k);
-  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00`) : new Date();
+  return jourBase(jourSaisi(texte(fd, k)) ?? undefined);
 }
 
 /**
@@ -74,7 +74,7 @@ export async function creerFacture(formData: FormData) {
         data: {
           statut: "a_jour",
           retardDepuis: null,
-          paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMontant(montant, devise)} · le ${date.toLocaleDateString("fr-FR")}`,
+          paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMontant(montant, devise)} · le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })}`,
         },
       });
     }
@@ -134,7 +134,7 @@ export async function marquerFacturePayee(formData: FormData) {
             data: {
               statut: "a_jour",
               retardDepuis: null,
-              paiementNote: `Payé par ${mode.toLowerCase()} · ${montant} · le ${date.toLocaleDateString("fr-FR")}`,
+              paiementNote: `Payé par ${mode.toLowerCase()} · ${montant} · le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })}`,
             },
           }),
         ]
@@ -145,7 +145,7 @@ export async function marquerFacturePayee(formData: FormData) {
         entite: "Invoice",
         entiteId: f.numero,
         acteur,
-        detail: `${montant} par ${mode.toLowerCase()} le ${date.toLocaleDateString("fr-FR")} pour ${f.member.nom}.`,
+        detail: `${montant} par ${mode.toLowerCase()} le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })} pour ${f.member.nom}.`,
       },
     }),
   ]);

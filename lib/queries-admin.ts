@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_LABEL } from "@/lib/enums";
+import { jourBase } from "@/lib/format";
 import { codesDeFamille, type FamilleJournal } from "@/lib/journal";
 import type { Devise, FormuleId } from "@/lib/membership";
 
@@ -134,8 +135,8 @@ export async function getFinancesAnnee(annee: number | null): Promise<{
         ? undefined
         : {
             date: {
-              gte: new Date(`${annee}-01-01T00:00:00`),
-              lt: new Date(`${annee + 1}-01-01T00:00:00`),
+              gte: jourBase(`${annee}-01-01`),
+              lt: jourBase(`${annee + 1}-01-01`),
             },
           },
     _sum: { montant: true },

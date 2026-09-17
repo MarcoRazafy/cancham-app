@@ -16,7 +16,8 @@
     "db:studio": "prisma studio",
     "ressources:demo": "tsx --env-file=.env scripts/ressources-demo.ts",
     "messagerie:demo": "tsx --env-file=.env scripts/messagerie-demo.ts",
-    "journal:demo": "tsx --env-file=.env scripts/journal-demo.ts"
+    "journal:demo": "tsx --env-file=.env scripts/journal-demo.ts",
+    "agenda:demo": "tsx --env-file=.env scripts/agenda-demo.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

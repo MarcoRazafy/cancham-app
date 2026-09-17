@@ -3,9 +3,11 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { getUnreadTotal } from "@/lib/queries";
 import { toISODate } from "@/lib/enums";
-import { fmtDate } from "@/lib/format";
+import { ajouterJours, echeanceFacture, fmtHeure } from "@/lib/agenda";
+import { aujourdhuiISO, fmtDate, jourBase } from "@/lib/format";
 import {
   ADHESION_PENDING,
+  DELAI_REGLEMENT_JOURS,
   joursDeRetard,
   retardBloque,
   RETARD_BLOCAGE_JOURS,
@@ -28,7 +30,8 @@ export interface Notification {
     | "evenement"
     | "actualite"
     | "offre"
-    | "ressource";
+    | "ressource"
+    | "rappel";
 }
 
 /**
@@ -82,7 +85,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
     getUnreadTotal(userId),
     filNonLu(userId),
     prisma.event.findFirst({
-      where: { date: { gte: new Date() } },
+      where: { date: { gte: jourBase() } },
       orderBy: { date: "asc" },
       select: { id: true, titre: true, date: true },
     }),
@@ -209,35 +212,101 @@ async function notificationsMembre(
 ): Promise<Notification[]> {
   if (!memberId) return [];
 
-  const [membre, nonLus, fil, inscription, offre, actualite] =
-    await Promise.all([
-      prisma.member.findUnique({
-        where: { id: memberId },
-        select: { statut: true, retardDepuis: true },
-      }),
-      getUnreadTotal(userId),
-      filNonLu(userId),
-      prisma.registration.findFirst({
-        where: { memberId, event: { date: { gte: new Date() } } },
-        orderBy: { event: { date: "asc" } },
-        select: { event: { select: { id: true, titre: true, date: true } } },
-      }),
-      prisma.offer.findFirst({
-        where: { memberId: { not: memberId } },
-        orderBy: { createdAt: "desc" },
-        select: {
-          titre: true,
-          memberId: true,
-          member: { select: { nom: true } },
+  const aujourdhui = aujourdhuiISO();
+  const demain = ajouterJours(aujourdhui, 1);
+
+  const [
+    membre,
+    nonLus,
+    fil,
+    inscription,
+    offre,
+    actualite,
+    rappels,
+    factures,
+  ] = await Promise.all([
+    prisma.member.findUnique({
+      where: { id: memberId },
+      select: { statut: true, retardDepuis: true },
+    }),
+    getUnreadTotal(userId),
+    filNonLu(userId),
+    prisma.registration.findFirst({
+      where: { memberId, event: { date: { gte: jourBase() } } },
+      orderBy: { event: { date: "asc" } },
+      select: { event: { select: { id: true, titre: true, date: true } } },
+    }),
+    prisma.offer.findFirst({
+      where: { memberId: { not: memberId } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        titre: true,
+        memberId: true,
+        member: { select: { nom: true } },
+      },
+    }),
+    prisma.news.findFirst({
+      orderBy: { date: "desc" },
+      select: { id: true, titre: true, date: true },
+    }),
+    // Rappels d'aujourd'hui et de demain pas encore cochés.
+    prisma.rappel.findMany({
+      where: {
+        userId,
+        fait: false,
+        jour: { gte: jourBase(aujourdhui), lte: jourBase(demain) },
+      },
+      orderBy: [{ jour: "asc" }, { heure: "asc" }],
+      select: { id: true, titre: true, jour: true, heure: true },
+      take: 3,
+    }),
+    // Factures dont l'échéance tombe dans la semaine, ou est dépassée.
+    prisma.invoice.findMany({
+      where: {
+        memberId,
+        statut: "envoyee",
+        date: {
+          lte: jourBase(ajouterJours(aujourdhui, 7 - DELAI_REGLEMENT_JOURS)),
         },
-      }),
-      prisma.news.findFirst({
-        orderBy: { date: "desc" },
-        select: { id: true, titre: true, date: true },
-      }),
-    ]);
+      },
+      orderBy: { date: "asc" },
+      select: { id: true, numero: true, date: true },
+      take: 3,
+    }),
+  ]);
 
   const liste: Notification[] = [];
+
+  for (const r of rappels) {
+    const jour = toISODate(r.jour);
+    liste.push({
+      id: `rappel-${r.id}`,
+      titre: `Rappel : ${r.titre}`,
+      temps: `${jour === aujourdhui ? "Aujourd’hui" : "Demain"}${
+        r.heure ? ` · ${fmtHeure(r.heure)}` : ""
+      }`,
+      href: `/membre/agenda?date=${jour}&jour=${jour}`,
+      ton: jour === aujourdhui ? "warn" : "info",
+      categorie: "rappel",
+    });
+  }
+
+  for (const f of factures) {
+    const echeance = echeanceFacture(toISODate(f.date));
+    const depassee = echeance < aujourdhui;
+    liste.push({
+      id: `echeance-${f.id}-${echeance}`,
+      titre: depassee
+        ? `Facture ${f.numero} : échéance dépassée`
+        : `Facture ${f.numero} à régler avant le ${fmtDate(echeance, { day: "numeric", month: "long" })}`,
+      temps: depassee
+        ? `Depuis le ${fmtDate(echeance, { day: "numeric", month: "short" })}`
+        : "Échéance proche",
+      href: `/membre/cotisations/${f.id}`,
+      ton: depassee ? "bad" : "warn",
+      categorie: "paiement",
+    });
+  }
 
   if (membre) {
     const vue = {

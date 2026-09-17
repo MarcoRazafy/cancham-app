@@ -1,9 +1,24 @@
 import "server-only";
 
-import type { FormuleId } from "@/lib/membership";
+import {
+  ADHESION_PENDING,
+  DELAI_REGLEMENT_JOURS,
+  fmtMontant,
+  RETARD_BLOCAGE_JOURS,
+  type FormuleId,
+} from "@/lib/membership";
+import {
+  ajouterJours,
+  dateRestriction,
+  echeanceCotisation,
+  echeanceFacture,
+  trierElements,
+  type ElementAgenda,
+} from "@/lib/agenda";
 
 import { initialesDe } from "@/lib/avatars";
 import { prisma } from "@/lib/db";
+import { aujourdhuiISO, jourBase } from "@/lib/format";
 import { critereJoignable } from "@/lib/messagerie";
 import {
   EVENT_FORMAT_LABEL,
@@ -157,6 +172,8 @@ export async function getEvents(): Promise<CanchamEvent[]> {
     prix: e.prix,
     desc: e.desc,
     photo: e.photo,
+    debut: e.debut,
+    fin: e.fin,
   }));
 }
 
@@ -181,7 +198,8 @@ export async function getEvent(id: string): Promise<CanchamEvent | null> {
     prix: e.prix,
     desc: e.desc,
     photo: e.photo,
-    heure: e.heure,
+    debut: e.debut,
+    fin: e.fin,
     pourQui: e.pourQui,
     programme: e.programme.map((etape) => ({
       heure: etape.heure,
@@ -453,6 +471,195 @@ export async function getEncaisse(): Promise<Record<"MGA" | "CAD", number>> {
   const total = (d: "MGA" | "CAD") =>
     rows.find((r) => r.devise === d)?._sum.montant ?? 0;
   return { MGA: total("MGA"), CAD: total("CAD") };
+}
+
+/* ============================ Agenda ============================ */
+
+/** Une facture de cotisation, reconnue à son objet — comme au règlement. */
+const OBJET_COTISATION = {
+  startsWith: "Cotisation",
+  mode: "insensitive",
+} as const;
+
+/** Années dont la cotisation est réglée : une facture de cotisation payée. */
+export async function getAnneesCotisationReglees(
+  memberId: string,
+): Promise<number[]> {
+  const rows = await prisma.invoice.findMany({
+    where: { memberId, statut: "payee", objet: OBJET_COTISATION },
+    select: { date: true },
+  });
+  return [...new Set(rows.map((f) => f.date.getUTCFullYear()))];
+}
+
+/**
+ * Tout ce qui tombe entre deux jours dans l'agenda d'un membre.
+ *
+ * Seuls les rappels sont stockés pour l'agenda : les événements se lisent dans
+ * leur table, et les échéances se calculent — factures à régler, renouvellement
+ * annuel, fin du délai de grâce d'un retard. Rien à tenir à jour, donc rien qui
+ * puisse diverger de la réalité.
+ */
+export async function getAgenda(
+  { userId, memberId }: { userId: string; memberId: string | null },
+  du: string,
+  au: string,
+): Promise<ElementAgenda[]> {
+  const aujourdhui = aujourdhuiISO();
+  const periode = { gte: jourBase(du), lte: jourBase(au) };
+
+  const [evenements, factures, membre, reglees, rappels] = await Promise.all([
+    prisma.event.findMany({
+      where: { date: periode },
+      select: {
+        id: true,
+        titre: true,
+        date: true,
+        debut: true,
+        fin: true,
+        lieu: true,
+        format: true,
+        inscriptions: memberId
+          ? { where: { memberId }, select: { id: true } }
+          : false,
+      },
+    }),
+    memberId
+      ? prisma.invoice.findMany({
+          where: {
+            memberId,
+            statut: "envoyee",
+            // L'échéance tombe dans la période : la facture a été émise
+            // `DELAI_REGLEMENT_JOURS` jours plus tôt.
+            date: {
+              gte: jourBase(ajouterJours(du, -DELAI_REGLEMENT_JOURS)),
+              lte: jourBase(ajouterJours(au, -DELAI_REGLEMENT_JOURS)),
+            },
+          },
+          select: {
+            id: true,
+            numero: true,
+            date: true,
+            objet: true,
+            montant: true,
+            devise: true,
+          },
+        })
+      : [],
+    memberId
+      ? prisma.member.findUnique({
+          where: { id: memberId },
+          select: { statut: true, adhesion: true, retardDepuis: true },
+        })
+      : null,
+    memberId ? getAnneesCotisationReglees(memberId) : ([] as number[]),
+    prisma.rappel.findMany({
+      where: { userId, jour: periode },
+      select: {
+        id: true,
+        titre: true,
+        note: true,
+        jour: true,
+        heure: true,
+        fait: true,
+      },
+    }),
+  ]);
+
+  const elements: ElementAgenda[] = [];
+
+  for (const e of evenements) {
+    const inscrit = Array.isArray(e.inscriptions) && e.inscriptions.length > 0;
+    elements.push({
+      id: `evenement-${e.id}`,
+      type: inscrit ? "inscription" : "evenement",
+      titre: e.titre,
+      jour: toISODate(e.date),
+      debut: e.debut,
+      fin: e.fin,
+      lieu: e.lieu,
+      detail: EVENT_FORMAT_LABEL[e.format],
+      href: `/membre/evenements/${e.id}`,
+    });
+  }
+
+  for (const f of factures) {
+    const jour = echeanceFacture(toISODate(f.date));
+    elements.push({
+      id: `facture-${f.id}`,
+      type: "echeance",
+      titre: `Facture ${f.numero} à régler`,
+      jour,
+      debut: null,
+      fin: null,
+      detail: `${f.objet} · ${fmtMontant(f.montant, f.devise)}`,
+      href: `/membre/cotisations/${f.id}`,
+      urgent: jour < aujourdhui,
+    });
+  }
+
+  if (membre && !ADHESION_PENDING.includes(membre.statut)) {
+    const premiere = membre.adhesion.getUTCFullYear() + 1;
+    for (
+      let annee = Math.max(Number(du.slice(0, 4)), premiere);
+      annee <= Number(au.slice(0, 4));
+      annee++
+    ) {
+      const jour = echeanceCotisation(annee);
+      if (jour < du || jour > au) continue;
+      // Une échéance passée d'un membre à jour est réglée, même sans facture
+      // enregistrée ici : le statut fait foi.
+      const reglee =
+        reglees.includes(annee) ||
+        (jour < aujourdhui && membre.statut === "a_jour");
+      elements.push({
+        id: `cotisation-${annee}`,
+        type: "echeance",
+        titre: `Renouvellement de la cotisation ${annee}`,
+        jour,
+        debut: null,
+        fin: null,
+        detail: reglee ? "Réglée" : "Cotisation annuelle",
+        href: "/membre/cotisations",
+        fait: reglee,
+        urgent: !reglee && jour < aujourdhui,
+      });
+    }
+  }
+
+  if (membre?.statut === "en_retard" && membre.retardDepuis) {
+    const jour = dateRestriction(toISODate(membre.retardDepuis));
+    if (jour >= du && jour <= au) {
+      elements.push({
+        id: "restriction",
+        type: "echeance",
+        titre: "Accès restreint si la cotisation n’est pas réglée",
+        jour,
+        debut: null,
+        fin: null,
+        detail: `Au-delà de ${RETARD_BLOCAGE_JOURS} jours de retard`,
+        href: "/membre/cotisations",
+        urgent: true,
+      });
+    }
+  }
+
+  for (const r of rappels) {
+    elements.push({
+      id: `rappel-${r.id}`,
+      type: "rappel",
+      titre: r.titre,
+      jour: toISODate(r.jour),
+      debut: r.heure,
+      fin: null,
+      detail: r.note,
+      href: null,
+      fait: r.fait,
+      rappel: { id: r.id, note: r.note },
+    });
+  }
+
+  return trierElements(elements);
 }
 
 /* ============================ Messagerie ============================ */
@@ -835,7 +1042,7 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
       where: { statut: { not: "candidature" } },
       select: { secteur: true, ville: true },
     }),
-    prisma.event.count({ where: { date: { gte: new Date() } } }),
+    prisma.event.count({ where: { date: { gte: jourBase() } } }),
   ]);
 
   return {
@@ -860,7 +1067,7 @@ export async function getSecteurs(): Promise<string[]> {
 /** Les prochains rendez-vous mis en avant sur la page publique. */
 export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
   const rows = await prisma.event.findMany({
-    where: { date: { gte: new Date() } },
+    where: { date: { gte: jourBase() } },
     include: { _count: { select: { participants: true } } },
     orderBy: { date: "asc" },
     take: n,
@@ -877,6 +1084,8 @@ export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
     prix: e.prix,
     desc: e.desc,
     photo: e.photo,
+    debut: e.debut,
+    fin: e.fin,
   }));
 }
 

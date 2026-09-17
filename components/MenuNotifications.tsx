@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import {
+  AlarmClock,
   Bell,
   BellOff,
   CalendarDays,
@@ -32,6 +33,7 @@ const ICONES: Record<Notification["categorie"], LucideIcon> = {
   actualite: Newspaper,
   offre: Tag,
   ressource: FileText,
+  rappel: AlarmClock,
 };
 
 /** Rouge pour ce qui presse, ocre pour ce qui attend, bleu nuit pour ce qui informe. */

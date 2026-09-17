@@ -12,7 +12,8 @@ import type { Invoice } from "@/lib/types";
  * suite — importée, ou émise ailleurs.
  */
 export async function numeroFacture(date: Date): Promise<string> {
-  const annee = date.getFullYear();
+  // Année UTC : une date de facture est un minuit UTC (voir `jourBase`).
+  const annee = date.getUTCFullYear();
   const prefixe = `CC-${annee}-`;
   const derniere = await prisma.invoice.findFirst({
     where: { numero: { startsWith: prefixe } },

@@ -81,7 +81,7 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
                 className={INPUT}
               />
             </Field>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
               <Field label="Date">
                 <input
                   type="date"
@@ -91,10 +91,19 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
                   className={INPUT}
                 />
               </Field>
-              <Field label="Horaires" hint="Ex. 17 h 30 – 20 h 00">
+              <Field label="Début" hint="Vide : toute la journée.">
                 <input
-                  name="heure"
-                  defaultValue={event?.heure ?? ""}
+                  type="time"
+                  name="debut"
+                  defaultValue={event?.debut ?? ""}
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Fin">
+                <input
+                  type="time"
+                  name="fin"
+                  defaultValue={event?.fin ?? ""}
                   className={INPUT}
                 />
               </Field>

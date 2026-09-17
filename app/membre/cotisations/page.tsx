@@ -10,7 +10,12 @@ import {
   Th,
   ViewHead,
 } from "@/components/ui";
-import { fmtDate, fmtDateShort } from "@/lib/format";
+import {
+  anneesCotisationReglees,
+  fmtJour,
+  prochaineEcheanceCotisation,
+} from "@/lib/agenda";
+import { aujourdhuiISO, fmtDate, fmtDateShort } from "@/lib/format";
 import {
   ADHESION_PENDING,
   FORMULES,
@@ -101,10 +106,19 @@ export default async function CotisationsPage() {
               mono
             />
             <Donnee
-              libelle={
-                m.paiementNote ? "Dernier règlement" : "Prochain renouvellement"
+              libelle="Prochain renouvellement"
+              valeur={
+                enAttente
+                  ? "Au premier règlement"
+                  : fmtJour(
+                      prochaineEcheanceCotisation({
+                        aujourdhui: aujourdhuiISO(),
+                        adhesion: m.adhesion,
+                        anneesReglees: anneesCotisationReglees(factures),
+                        aJour: m.statut === "a_jour",
+                      }),
+                    )
               }
-              valeur={m.paiementNote ? "Enregistré" : "10 janvier 2027"}
             />
           </div>
 

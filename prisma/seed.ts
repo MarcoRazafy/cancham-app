@@ -223,7 +223,8 @@ async function main() {
         prix: e.prix,
         desc: e.desc,
         photo: e.photo,
-        heure: e.heure ?? null,
+        debut: e.debut ?? null,
+        fin: e.fin ?? null,
         pourQui: e.pourQui ?? null,
         programme: {
           create: (e.programme ?? []).map((etape, i) => ({

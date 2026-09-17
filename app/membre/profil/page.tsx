@@ -43,7 +43,12 @@ import {
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { affichageSite } from "@/lib/liens";
-import { fmtDate, fmtDateShort } from "@/lib/format";
+import {
+  anneesCotisationReglees,
+  fmtJour,
+  prochaineEcheanceCotisation,
+} from "@/lib/agenda";
+import { aujourdhuiISO, fmtDate, fmtDateShort } from "@/lib/format";
 import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
 import {
   ADHESION_PENDING,
@@ -296,7 +301,17 @@ export default async function ProfilPage() {
           k={m.paiementNote ? "Dernier paiement" : "Prochain renouvellement"}
           v={
             <span className="text-[14px] font-semibold leading-snug">
-              {m.paiementNote ?? "10 janvier 2027"}
+              {m.paiementNote ??
+                (pending
+                  ? "Au premier règlement"
+                  : fmtJour(
+                      prochaineEcheanceCotisation({
+                        aujourdhui: aujourdhuiISO(),
+                        adhesion: m.adhesion,
+                        anneesReglees: anneesCotisationReglees(myInvoices),
+                        aJour: m.statut === "a_jour",
+                      }),
+                    ))}
             </span>
           }
         />

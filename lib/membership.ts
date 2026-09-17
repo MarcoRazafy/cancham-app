@@ -25,6 +25,15 @@ export const PHOTOS_PAR_PRODUIT = 5;
 export const RETARD_BLOCAGE_JOURS = 30;
 
 /**
+ * Échéance du renouvellement annuel. La cotisation suit l'année civile : les
+ * factures « Cotisation annuelle » sont émises en janvier, pour tous.
+ */
+export const ECHEANCE_COTISATION = { mois: 1, jour: 31 };
+
+/** Délai de règlement d'une facture émise, en jours. */
+export const DELAI_REGLEMENT_JOURS = 30;
+
+/**
  * Formules d'adhésion, recopiées de la fiche d'inscription de la chambre.
  *
  * Elles remplacent une cotisation unique de 450 000 Ar, marquée « à confirmer »,

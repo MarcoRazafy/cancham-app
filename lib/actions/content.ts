@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithFlash } from "@/lib/flash";
+import { jourBase, jourSaisi } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 import {
   FichierRefuse,
@@ -77,9 +78,7 @@ export async function enregistrerActualite(formData: FormData) {
   if (!cat) redirectWithFlash(retour, "Catégorie inconnue.");
 
   const jour = texte(formData, "date");
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(jour)
-    ? new Date(`${jour}T00:00:00`)
-    : new Date();
+  const date = jourBase(jourSaisi(jour) ?? undefined);
 
   // Les photos, dans l'ordre choisi : `ordre` liste les photos gardées
   // (`e:<url>`) et les nouvelles (`n:<rang dans le champ fichier>`).
@@ -271,7 +270,7 @@ export async function postComment(formData: FormData) {
       auteur: user.nom,
       entreprise,
       texte: texteCommentaire,
-      date: new Date(),
+      date: jourBase(),
       newsId: texte(formData, "newsId") || null,
       resourceId: texte(formData, "resourceId") || null,
       userId: user.id,
@@ -396,7 +395,7 @@ export async function enregistrerRessource(formData: FormData) {
           cover,
           fmt: "pdf",
           taille: "—",
-          date: new Date(),
+          date: jourBase(),
         },
       });
 
