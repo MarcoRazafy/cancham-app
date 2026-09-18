@@ -113,20 +113,22 @@ export function CadreAuth({
         />
 
         <div className="relative flex flex-col min-h-full px-4 py-8 sm:px-8 lg:px-10">
-          <Link
-            href="/public"
-            aria-label="CanCham Connect"
-            className="lg:hidden mb-6 self-center"
-          >
-            <LogoOfficiel className="w-[190px] h-auto" priority />
-          </Link>
-
           <main
             className={`apparition flex-1 flex flex-col justify-center w-full mx-auto ${
               large ? "max-w-[560px]" : "max-w-[440px]"
             }`}
           >
-            <div className="rounded-[var(--radius-l)] border border-line bg-surface shadow-[0_18px_44px_-24px_rgb(15_29_44/0.35)] px-6 py-7 sm:px-8 sm:py-9">
+            {/* Filet dégradé en tête, comme les cartes des espaces membre et
+                back-office. Le logo n'apparaît que sous 1024 px : au-dessus,
+                il est déjà sur la photo, et le répéter ferait doublon. */}
+            <div className="carte-filet filet-fixe filet-degrade rounded-[var(--radius-l)] border border-line bg-surface shadow-[0_18px_44px_-24px_rgb(15_29_44/0.35)] px-6 py-7 sm:px-8 sm:py-9">
+              <Link
+                href="/public"
+                aria-label="CanCham Connect"
+                className="lg:hidden block mb-6"
+              >
+                <LogoOfficiel className="w-[178px] h-auto" priority />
+              </Link>
               {children}
             </div>
           </main>
