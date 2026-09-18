@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
 import { submitAdhesion } from "@/lib/actions/members";
+import { MOT_DE_PASSE_MIN } from "@/lib/mots-de-passe";
 
 const CHAMP =
   "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
@@ -21,6 +22,7 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
       <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
 
       <form action={submitAdhesion} className="flex flex-col gap-4">
+        <input type="hidden" name="retour" value="/public/vitrine" />
         {/*
           Mêmes champs, dans le même ordre, que la fiche d'inscription de la
           chambre : un candidat qui a déjà rempli l'une retrouve l'autre.
@@ -89,6 +91,39 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
               type="tel"
               autoComplete="tel"
               placeholder="+261 34 00 000 00"
+              className={CHAMP}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="ad-motdepasse" className={ETIQUETTE}>
+              Mot de passe
+            </label>
+            <input
+              id="ad-motdepasse"
+              name="motDePasse"
+              type="password"
+              required
+              minLength={MOT_DE_PASSE_MIN}
+              autoComplete="new-password"
+              placeholder="••••••••"
+              className={CHAMP}
+            />
+          </div>
+          <div>
+            <label htmlFor="ad-confirmation" className={ETIQUETTE}>
+              Confirmation
+            </label>
+            <input
+              id="ad-confirmation"
+              name="confirmation"
+              type="password"
+              required
+              minLength={MOT_DE_PASSE_MIN}
+              autoComplete="new-password"
+              placeholder="••••••••"
               className={CHAMP}
             />
           </div>

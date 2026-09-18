@@ -1,15 +1,17 @@
+import "server-only";
+
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { fermerSession, sessionCourante } from "@/lib/auth";
 import type { Space, User, UserRole } from "@/lib/types";
 
 /**
- * Utilisateur courant.
+ * Utilisateur courant, d'après le cookie de session.
  *
- * Il n'y a pas encore d'authentification : l'espace est déterminé par l'URL, et
- * l'utilisateur est celui que la base porte pour le rôle correspondant.
- *
- * C'est le seul point à réécrire le jour où les sessions arriveront — il lira
- * alors le cookie de session plutôt que le rôle. Rien d'autre dans
- * l'application ne dépend de la façon dont l'utilisateur est résolu.
+ * Chaque espace attend un rôle : une personne connectée comme membre n'entre
+ * pas dans le back-office, et l'inverse non plus. Sans session valable, on
+ * repart vers la page de connexion — c'est le seul endroit de l'application
+ * qui sait comment l'utilisateur est résolu.
  */
 
 const ROLE_PAR_ESPACE: Record<Space, UserRole> = {
@@ -18,18 +20,46 @@ const ROLE_PAR_ESPACE: Record<Space, UserRole> = {
   admin: "admin",
 };
 
-export async function getCurrentUser(space: Space): Promise<User> {
-  const role = ROLE_PAR_ESPACE[space];
-  const u = await prisma.user.findFirst({
-    where: { role },
-    orderBy: { createdAt: "asc" },
-  });
+/** Page d'accueil de chaque rôle, pour renvoyer chacun chez lui. */
+const ACCUEIL: Record<UserRole, string> = {
+  membre: "/membre",
+  admin: "/admin",
+  visiteur: "/public",
+};
 
+export const CONNEXION = "/public";
+
+/** La personne connectée, sans exiger d'espace. `null` si personne. */
+export async function utilisateurConnecte(): Promise<{
+  id: string;
+  role: UserRole;
+  memberId: string | null;
+  nom: string;
+} | null> {
+  const id = await sessionCourante();
+  if (!id) return null;
+  const u = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, role: true, memberId: true, nom: true },
+  });
   if (!u) {
-    throw new Error(
-      `Aucun utilisateur de rôle « ${role} » en base. Lancez « npm run db:seed ».`,
-    );
+    // Compte supprimé depuis l'ouverture de la session.
+    await fermerSession();
+    return null;
   }
+  return u;
+}
+
+export async function getCurrentUser(space: Space): Promise<User> {
+  const id = await sessionCourante();
+  if (!id) redirect(CONNEXION);
+
+  const u = await prisma.user.findUnique({ where: { id } });
+  if (!u) {
+    await fermerSession();
+    redirect(CONNEXION);
+  }
+  if (u.role !== ROLE_PAR_ESPACE[space]) redirect(ACCUEIL[u.role]);
 
   return {
     id: u.id,

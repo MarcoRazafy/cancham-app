@@ -178,6 +178,10 @@ model User {
   /// Portrait de l'utilisateur, par URL. `null` = initiales.
   photo    String?
 
+  /// Empreinte du mot de passe (scrypt), jamais le mot de passe lui-même.
+  /// `null` pour un compte créé par l'équipe qui ne s'est pas encore connecté.
+  motDePasse String?
+
   /// `null` pour l'équipe CanCham et les visiteurs.
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)

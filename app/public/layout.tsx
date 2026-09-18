@@ -1,5 +1,3 @@
-import { EnTetePublique, PiedPublique } from "@/components/public/Marque";
-
 /**
  * Coquille de l'espace public.
  *
@@ -7,19 +5,14 @@ import { EnTetePublique, PiedPublique } from "@/components/public/Marque";
  * Montserrat et Open Sans — indépendamment du thème du visiteur : une vitrine
  * ne doit pas changer d'apparence selon les réglages du navigateur.
  *
- * En-tête et pied sont communs à toutes les pages : l'en-tête blanc précède la
- * bannière d'accueil au lieu de s'y superposer.
+ * L'en-tête et le pied ne sont pas ici : les écrans de connexion et
+ * d'inscription occupent l'écran entier, les pages vitrine ont leur propre
+ * coquille.
  */
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="marque min-h-screen flex flex-col">
-      <EnTetePublique />
-      {children}
-      <PiedPublique />
-    </div>
-  );
+  return <div className="marque min-h-screen flex flex-col">{children}</div>;
 }

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
+import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
@@ -22,6 +22,12 @@ import type { MemberStatus, MemberType } from "@/lib/types";
  */
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+
+/** Page de retour d'un formulaire public : un chemin interne, jamais ailleurs. */
+function cheminRetour(fd: FormData, defaut: string): string {
+  const r = texte(fd, "retour");
+  return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
+}
 
 async function journal(
   action: string,
@@ -88,14 +94,39 @@ export async function submitAdhesion(formData: FormData) {
     formuleSaisie in FORMULES ? formuleSaisie : "mg_entreprise"
   ) as keyof typeof FORMULES;
 
+  const retourInscription = cheminRetour(formData, "/public/inscription");
   if (!nom) {
     redirectWithFlash(
-      "/public/adhesion",
+      retourInscription,
       "Merci d’indiquer le nom de votre entreprise ou votre nom.",
     );
   }
 
-  const email = texte(formData, "email") || "contact@entreprise.mg";
+  const email = texte(formData, "email").toLowerCase();
+  const motDePasse = String(formData.get("motDePasse") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "");
+
+  if (!email) {
+    redirectWithFlash(retourInscription, "Indiquez votre adresse courriel.");
+  }
+  if (motDePasse.length < MOT_DE_PASSE_MIN) {
+    redirectWithFlash(
+      retourInscription,
+      `Le mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`,
+    );
+  }
+  if (motDePasse !== confirmation) {
+    redirectWithFlash(
+      retourInscription,
+      "Les deux mots de passe ne correspondent pas.",
+    );
+  }
+  if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) {
+    redirectWithFlash(
+      retourInscription,
+      "Cette adresse a déjà un compte : connectez-vous.",
+    );
+  }
 
   const membre = await prisma.member.create({
     data: {
@@ -115,23 +146,23 @@ export async function submitAdhesion(formData: FormData) {
     },
   });
 
-  // Le représentant devient le contact principal de l'entreprise.
-  const dejaPris = await prisma.user.findUnique({ where: { email } });
-  if (!dejaPris) {
-    await prisma.user.create({
-      data: {
-        role: "visiteur",
-        nom: rep,
-        fonction:
-          texte(formData, "repTitre") ||
-          (type === "physique" ? "Indépendant(e)" : "Représentant(e)"),
-        email,
-        tel: texte(formData, "tel") || null,
-        memberId: membre.id,
-        contactPrincipal: true,
-      },
-    });
-  }
+  // Le représentant devient le contact principal de l'entreprise, et le
+  // compte avec lequel il se connectera : son accès restera limité à sa fiche
+  // et à ses cotisations tant que la candidature n'est pas validée et réglée.
+  const compte = await prisma.user.create({
+    data: {
+      role: "membre",
+      nom: rep,
+      fonction:
+        texte(formData, "repTitre") ||
+        (type === "physique" ? "Indépendant(e)" : "Représentant(e)"),
+      email,
+      motDePasse: hacher(motDePasse),
+      tel: texte(formData, "tel") || null,
+      memberId: membre.id,
+      contactPrincipal: true,
+    },
+  });
 
   await journal(
     "candidature_deposee",
@@ -141,7 +172,13 @@ export async function submitAdhesion(formData: FormData) {
     `Demande de ${nom}.`,
   );
   revalideTout();
-  redirect(`/public/adhesion/confirmation?nom=${encodeURIComponent(nom)}`);
+  // La session s'ouvre dans la foulée : on arrive sur sa fiche, avec le
+  // bandeau qui explique ce qu'il reste à faire.
+  await ouvrirSession(compte.id);
+  redirectWithFlash(
+    "/membre/profil",
+    `Bienvenue ${rep.split(" ")[0]} · votre demande est enregistrée`,
+  );
 }
 
 /** Approbation : la demande devient une adhésion en attente de règlement. */
