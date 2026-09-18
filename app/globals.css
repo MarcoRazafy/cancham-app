@@ -331,8 +331,8 @@ h3 {
   }
   to {
     background-position:
-      44px 44px,
-      44px 44px;
+      68px 68px,
+      68px 68px;
   }
 }
 
@@ -341,8 +341,8 @@ h3 {
     linear-gradient(to right, rgb(15 29 44 / 0.055) 1px, transparent 1px),
     linear-gradient(to bottom, rgb(15 29 44 / 0.055) 1px, transparent 1px);
   background-size:
-    44px 44px,
-    44px 44px;
+    68px 68px,
+    68px 68px;
   animation: marque-grille 38s linear infinite;
 }
 
