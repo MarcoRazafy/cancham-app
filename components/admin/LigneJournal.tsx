@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  CalendarCheck,
   BadgeCheck,
   Banknote,
   BellRing,
@@ -49,6 +50,7 @@ const ICONES: Record<string, LucideIcon> = {
   facture_payee: BadgeCheck,
   relance_envoyee: BellRing,
   ressource_achetee: ShoppingBag,
+  service_reserve: CalendarCheck,
   evenement_cree: CalendarPlus,
   evenement_modifie: CalendarCog,
   evenement_supprime: CalendarX2,

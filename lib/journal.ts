@@ -73,6 +73,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "info",
   },
+  service_reserve: {
+    libelle: "Réservation d’un service payant",
+    famille: "finance",
+    ton: "info",
+  },
   evenement_cree: {
     libelle: "Événement créé",
     famille: "programme",
@@ -192,6 +197,8 @@ export function lienJournal(
       return "/admin/ressources";
     case "CanchamService":
       return "/admin/offres-cancham";
+    case "MessageThread":
+      return `/admin/messagerie?t=${entiteId}`;
     default:
       return null;
   }

@@ -208,7 +208,7 @@ export function Coquille({
           </div>
         </header>
 
-        <main className="px-4 md:px-7 pt-7 pb-16 max-w-[1240px] w-full mx-auto print:p-0">
+        <main className="px-4 md:px-6 pt-6 pb-12 max-w-[1600px] w-full mx-auto print:p-0">
           {children}
         </main>
       </div>

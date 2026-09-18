@@ -17,6 +17,7 @@ export function Modal({
   title,
   children,
   wide = false,
+  largeur,
   ouvert: ouvertImpose,
   onFermer,
 }: {
@@ -26,6 +27,8 @@ export function Modal({
   /** Reçoit la fonction de fermeture, à passer au formulaire. */
   children: (fermer: () => void) => ReactNode;
   wide?: boolean;
+  /** Largeur maximale sur mesure — une classe Tailwind écrite en entier. */
+  largeur?: string;
   /**
    * Ouverture pilotée par le parent. Utile quand le bouton déclencheur
    * disparaît au clic — l'entrée d'un menu, par exemple — et emporterait la
@@ -62,7 +65,7 @@ export function Modal({
           if (e.target === e.currentTarget) setOuvert(false);
         }}
         className={`m-auto w-[calc(100vw-32px)] ${
-          wide ? "max-w-[680px]" : "max-w-[560px]"
+          largeur ?? (wide ? "max-w-[680px]" : "max-w-[560px]")
         } rounded-[var(--radius-l)] border border-line bg-surface text-ink p-0 backdrop:bg-black/55 backdrop:backdrop-blur-[2px]`}
       >
         {ouvert ? (
