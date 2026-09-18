@@ -31,16 +31,10 @@ export function CadreAuth({
   children: React.ReactNode;
 }) {
   return (
+    // Deux moitiés égales : l'image et le formulaire pèsent le même poids.
     // `dvh` plutôt que `vh` : sur téléphone, la barre d'adresse mange une
-    // partie de `vh`. Classes écrites en entier : Tailwind ne voit pas un nom
-    // composé à l'exécution.
-    <div
-      className={`h-dvh overflow-hidden grid ${
-        large
-          ? "lg:grid-cols-[1fr_minmax(0,620px)]"
-          : "lg:grid-cols-[1.05fr_minmax(0,520px)]"
-      }`}
-    >
+    // partie de `vh`.
+    <div className="h-dvh overflow-hidden grid lg:grid-cols-2">
       {/* ==================== Image ==================== */}
       <div className="relative hidden lg:block h-full overflow-hidden bg-marque-nuit">
         <Image
