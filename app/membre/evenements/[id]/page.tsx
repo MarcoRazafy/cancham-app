@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { EventCard, Visuel } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { CodeAccueil } from "@/components/CodeAccueil";
 import { TexteLie } from "@/components/TexteLie";
 import { Banner, BtnLink, Card, Kicker, Saillant, Stat } from "@/components/ui";
 import {
@@ -24,8 +25,10 @@ import {
   getEntreprisesInscrites,
   getEvent,
   getEvents,
+  getMember,
   getRegistration,
 } from "@/lib/queries";
+import { matriceQr } from "@/lib/qr";
 import { getCurrentUser } from "@/lib/session";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney, isPast } from "@/lib/format";
@@ -46,6 +49,10 @@ export default async function EvenementDetailPage({
     getEntreprisesInscrites(e.id),
     getEvents(),
   ]);
+
+  // Le billet téléchargé porte le nom de l'entreprise inscrite.
+  const entreprise =
+    reg && user.memberId ? (await getMember(user.memberId))?.nom : null;
 
   const past = isPast(e.date);
   const restantes = e.cap - e.inscrits;
@@ -236,17 +243,16 @@ export default async function EvenementDetailPage({
                 <div className="mt-3.5">
                   <CancelRegistrationButton eventId={e.id} />
                 </div>
-                <div className="mt-3.5 p-4 bg-surface-2 rounded-[var(--radius-m)] flex flex-col items-center gap-2.5">
-                  <div className="bg-white p-2.5 rounded-lg border border-line">
-                    <QrPlaceholder code={reg.code} />
-                  </div>
-                  <div className="font-[family-name:var(--font-mono)] text-[13px] font-bold tracking-wide">
-                    {reg.code}
-                  </div>
-                  <div className="text-[11.5px] text-faint text-center">
-                    Présentez ce code à l’accueil pour l’enregistrement
-                  </div>
-                </div>
+                <CodeAccueil
+                  code={reg.code}
+                  {...matriceQr(reg.code)}
+                  billet={{
+                    titre: e.titre,
+                    quand: [fmtDate(e.date), horaire].filter(Boolean).join(" · "),
+                    lieu: e.lieu,
+                    participant: [user.nom, entreprise].filter(Boolean).join(" · "),
+                  }}
+                />
               </>
             ) : (
               <>
@@ -377,45 +383,6 @@ function Pratique({
       <dd className="m-0 text-[13.2px] font-semibold text-ink min-w-0">
         {children}
       </dd>
-    </div>
-  );
-}
-
-/**
- * Aperçu de QR non fonctionnel.
- *
- * Le prototype dessinait un motif aléatoire en canvas, qui n'encodait rien. On
- * garde ici la même honnêteté visuelle : c'est un placeholder, pas un vrai code.
- * Le passage à `qrcode.react` viendra avec le check-in réel.
- */
-function QrPlaceholder({ code }: { code: string }) {
-  const size = 21;
-  let h = 0;
-  for (let i = 0; i < code.length; i++) h = (h * 31 + code.charCodeAt(i)) >>> 0;
-  const next = () => {
-    h = (h * 1664525 + 1013904223) >>> 0;
-    return h / 4294967295;
-  };
-  const cells: boolean[] = [];
-  for (let i = 0; i < size * size; i++) {
-    const x = i % size;
-    const y = Math.floor(i / size);
-    const finder =
-      (x < 7 && y < 7) || (x > size - 8 && y < 7) || (x < 7 && y > size - 8);
-    cells.push(finder ? false : next() > 0.56);
-  }
-  return (
-    <div
-      className="grid"
-      style={{ gridTemplateColumns: `repeat(${size}, 6px)`, width: size * 6 }}
-      aria-label={`Aperçu du code ${code}`}
-    >
-      {cells.map((on, i) => (
-        <div
-          key={i}
-          style={{ width: 6, height: 6, background: on ? "#0F1D2C" : "#fff" }}
-        />
-      ))}
     </div>
   );
 }

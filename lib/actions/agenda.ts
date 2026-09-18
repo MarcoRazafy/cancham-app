@@ -21,8 +21,8 @@ const TITRE_MAX = 120;
 const NOTE_MAX = 500;
 
 /**
- * Page de retour : celle où le rappel a été saisi — l'agenda, ou n'importe
- * quelle page quand on passe par la bulle. Jamais une adresse tierce.
+ * Page de retour : celle où le rappel a été saisi — l'agenda, ou toute autre
+ * page qui propose d'en ajouter. Jamais une adresse tierce.
  */
 function retour(fd: FormData): string {
   const r = texte(fd, "retour");

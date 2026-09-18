@@ -1,7 +1,5 @@
-import { Suspense } from "react";
 import { CoquilleAdmin } from "@/components/admin/CoquilleAdmin";
-import { BulleAgenda } from "@/components/agenda/BulleAgenda";
-import { aujourdhuiISO } from "@/lib/format";
+import { BulleSupport } from "@/components/support/BulleSupport";
 import { getMemberStats, getUnreadTotal } from "@/lib/queries";
 import { getNotifications } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/session";
@@ -30,9 +28,7 @@ export default async function AdminLayout({
       notifications={notifications}
     >
       {children}
-      <Suspense fallback={null}>
-        <BulleAgenda espace="admin" aujourdhui={aujourdhuiISO()} />
-      </Suspense>
+      <BulleSupport espace="admin" prenom={user.nom.split(" ")[0]} />
     </CoquilleAdmin>
   );
 }

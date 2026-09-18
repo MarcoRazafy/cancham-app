@@ -19,6 +19,7 @@ export const NAV_MEMBRE: NavGroup[] = [
       { href: "/membre", label: "Vue d’ensemble", icon: "home" },
       { href: "/membre/annuaire", label: "Annuaire", icon: "users" },
       { href: "/membre/evenements", label: "Événements", icon: "calendar" },
+      { href: "/membre/agenda", label: "Agenda", icon: "agenda" },
       { href: "/membre/actualites", label: "Actualités", icon: "news" },
       { href: "/membre/messagerie", label: "Messagerie", icon: "chat" },
       { href: "/membre/ressources", label: "Ressources", icon: "folder" },
@@ -76,6 +77,7 @@ export const NAV_ADMIN: NavGroup[] = [
     label: "Programme",
     items: [
       { href: "/admin/evenements", label: "Événements", icon: "calendar" },
+      { href: "/admin/agenda", label: "Agenda", icon: "agenda" },
       { href: "/admin/actualites", label: "Actualités", icon: "news" },
       { href: "/admin/ressources", label: "Ressources", icon: "folder" },
       {
