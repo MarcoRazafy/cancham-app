@@ -651,3 +651,60 @@ export async function reserverService(formData: FormData) {
     `Demande envoyée à l’équipe CanCham · réponse dans votre messagerie`,
   );
 }
+
+/**
+ * Message écrit depuis la bulle de support.
+ *
+ * Le membre écrit toujours dans son fil d'assistance, créé au premier
+ * message ; l'équipe répond dans le fil qu'elle a ouvert, à condition d'y
+ * participer. Pas de redirection : la bulle reste ouverte sur la page en
+ * cours, et relit la conversation une fois le message enregistré.
+ */
+export async function ecrireAuSupport(
+  espaceDemande: string,
+  threadId: string | null,
+  contenuBrut: string,
+): Promise<{ ok: true; threadId: string } | { ok: false; erreur: string }> {
+  const contenu = String(contenuBrut ?? "").trim();
+  if (!contenu) return { ok: false, erreur: "Le message est vide." };
+
+  if (espaceDemande !== "admin") {
+    const user = await getCurrentUser("membre");
+    const fil = await ecrireAEquipe(user, contenu);
+    revalidatePath("/", "layout");
+    return { ok: true, threadId: fil };
+  }
+
+  const user = await getCurrentUser("admin");
+  const fil = threadId
+    ? await prisma.messageThread.findFirst({
+        where: {
+          id: threadId,
+          equipe: true,
+          participants: { some: { userId: user.id } },
+        },
+        select: { id: true },
+      })
+    : null;
+  if (!fil) {
+    return { ok: false, erreur: "Cette conversation n’est plus disponible." };
+  }
+
+  const maintenant = new Date();
+  await prisma.message.create({
+    data: {
+      threadId: fil.id,
+      auteur: user.nom,
+      userId: user.id,
+      sentAt: maintenant,
+      texte: contenu,
+    },
+  });
+  await prisma.participantFil.update({
+    where: { threadId_userId: { threadId: fil.id, userId: user.id } },
+    data: { luLe: maintenant },
+  });
+
+  revalidatePath("/", "layout");
+  return { ok: true, threadId: fil.id };
+}

@@ -40,7 +40,7 @@ export function NouveauRappel({
   libelle?: string;
   /** Lien texte plutôt que bouton plein, pour le détail d'un jour. */
   discret?: boolean;
-  /** Appelé une fois l'enregistrement terminé : la bulle recharge sa liste. */
+  /** Appelé une fois l'enregistrement terminé : une liste chargée côté client se relit. */
   apresEnvoi?: () => void;
 }) {
   return (

@@ -131,7 +131,7 @@ export const THEMES: Theme[] = [
         id: "reponse-equipe",
         question: "Où arrive la réponse de l’équipe CanCham ?",
         reponse:
-          "Dans votre messagerie, fil « Équipe CanCham ». C’est là qu’arrivent aussi les messages envoyés depuis la page de contact : la question et la réponse restent dans la même conversation.",
+          "Dans la bulle ronde qui flotte en bas de l’écran : elle ouvre la conversation avec l’équipe, sur n’importe quelle page, et la réponse y arrive sans recharger. Une pastille rouge signale un message non lu. Glissez la bulle où elle vous gêne le moins, elle garde sa place.\n\nC’est la même conversation que le fil « Équipe CanCham » de votre messagerie, où arrivent aussi les messages envoyés depuis la page de contact.",
         liens: [{ href: "/membre/messagerie", libelle: "Ma messagerie" }],
       },
     ],
@@ -154,7 +154,7 @@ export const THEMES: Theme[] = [
         id: "agenda",
         question: "À quoi sert l’agenda ?",
         reponse:
-          "L’agenda s’ouvre depuis la bulle ronde qui flotte sur l’écran : glissez-la où elle vous gêne le moins, elle garde sa place. Elle montre le mois, votre journée et ce qui vient ensuite ; « Voir l’agenda complet » ouvre les vues mois, semaine et liste.\n\nL’agenda réunit les événements de la chambre — ceux où vous êtes inscrit en vert —, vos échéances et vos rappels personnels.\n\nLes échéances se calculent seules : le renouvellement de la cotisation au 31 janvier, et chaque facture à régler dans les 30 jours suivant son émission. Vos rappels ne sont visibles que par vous ; ceux du jour et du lendemain s’affichent aussi dans la cloche de notifications.",
+          "L’agenda s’ouvre depuis le menu, sous « Événements ». Il se consulte par mois, par semaine ou en liste.\n\nIl réunit les événements de la chambre — ceux où vous êtes inscrit en vert —, vos échéances et vos rappels personnels.\n\nLes échéances se calculent seules : le renouvellement de la cotisation au 31 janvier, et chaque facture à régler dans les 30 jours suivant son émission. Vos rappels ne sont visibles que par vous ; ceux du jour et du lendemain s’affichent aussi dans la cloche de notifications.",
         liens: [{ href: "/membre/agenda", libelle: "Ouvrir l’agenda" }],
       },
       {
