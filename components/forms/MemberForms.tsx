@@ -431,25 +431,17 @@ export function EditProfileButton({
                 className={INPUT}
               />
             </Field>
+            {/* Un seul champ : besoins et intérêts se lisent en une liste
+                unique sur la fiche. Les intérêts déjà saisis y sont repris à la
+                suite, pour que rien ne se perde à l'enregistrement. */}
             <Field
               label="Besoins actuels"
               hint="Ce que vous recherchez : partenaires, distributeurs, financement… Une ligne par besoin : chacune devient un tiret sur votre fiche."
             >
               <textarea
                 name="besoins"
-                rows={2}
-                defaultValue={besoins ?? ""}
-                className={INPUT}
-              />
-            </Field>
-            <Field
-              label="Intérêts & synergies recherchées"
-              hint="S’affichent à la suite de vos besoins, un tiret par ligne."
-            >
-              <textarea
-                name="interets"
-                rows={2}
-                defaultValue={interets ?? ""}
+                rows={4}
+                defaultValue={[besoins, interets].filter(Boolean).join("\n")}
                 className={INPUT}
               />
             </Field>
@@ -978,7 +970,7 @@ export function AjouterServiceButton({ memberId }: { memberId: string }) {
           onClick={ouvrir}
           className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
         >
-          <Plus size={14} /> Ajouter un service
+          <Plus size={14} /> Ajouter
         </button>
       )}
     >

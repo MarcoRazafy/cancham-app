@@ -121,7 +121,9 @@ export async function submitAdhesion(formData: FormData) {
       "Les deux mots de passe ne correspondent pas.",
     );
   }
-  if (await prisma.user.findUnique({ where: { email }, select: { id: true } })) {
+  if (
+    await prisma.user.findUnique({ where: { email }, select: { id: true } })
+  ) {
     redirectWithFlash(
       retourInscription,
       "Cette adresse a déjà un compte : connectez-vous.",
@@ -416,8 +418,10 @@ export async function updateMemberProfile(formData: FormData) {
     data: {
       activite: texte(formData, "activite") || undefined,
       desc: texte(formData, "desc") || undefined,
+      // Besoins et intérêts ne font plus qu'un champ : le formulaire reprend
+      // les intérêts à la suite des besoins, ils sont donc enregistrés là.
       besoins: texte(formData, "besoins") || null,
-      interets: texte(formData, "interets") || null,
+      interets: null,
       siteweb,
       cover: couverture ?? actuel.cover,
       logo: logo ?? actuel.logo,

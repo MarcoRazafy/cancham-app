@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FiltresAuto } from "@/components/FiltresAuto";
 import {
   CheckCircle2,
   ChevronRight,
@@ -149,7 +150,7 @@ export default async function AdminPaiements({
         ]}
       />
 
-      <form
+      <FiltresAuto
         action="/admin/paiements"
         className="flex gap-2.5 flex-wrap items-center mb-4"
       >
@@ -193,12 +194,6 @@ export default async function AdminPaiements({
           <option value="MGA">Ariary</option>
           <option value="CAD">Dollars canadiens</option>
         </select>
-        <button
-          type="submit"
-          className="btn-contour btn-contour-sm text-ink hover:bg-surface-2"
-        >
-          Filtrer
-        </button>
         {filtres.recherche || filtres.annee || filtres.devise ? (
           <Link
             href={lien({ q: null, annee: null, devise: null })}
@@ -207,7 +202,7 @@ export default async function AdminPaiements({
             Effacer les filtres
           </Link>
         ) : null}
-      </form>
+      </FiltresAuto>
 
       {liste.length === 0 ? (
         <Card>
