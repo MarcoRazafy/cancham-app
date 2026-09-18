@@ -13,7 +13,7 @@ import { Eye, EyeOff } from "lucide-react";
  */
 
 const CADRE =
-  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint py-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
+  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint py-3.5 text-[14.5px] outline-none transition-[border-color,box-shadow] focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
 
 export function ChampAuth({
   label,
@@ -28,7 +28,7 @@ export function ChampAuth({
 }) {
   return (
     <label className="block group">
-      <span className="block text-[12.5px] font-semibold text-ink mb-1.5">
+      <span className="block text-[13px] font-semibold text-ink mb-1.5">
         {label}
       </span>
       <span className="relative block">
