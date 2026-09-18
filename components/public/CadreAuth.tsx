@@ -93,20 +93,30 @@ export function CadreAuth({
       </div>
 
       {/* ==================== Formulaire ==================== */}
-      {/* Seule colonne qui défile. */}
-      <div className="relative h-full overflow-y-auto bg-surface-2">
-        {/* Trame très légère, pour que le blanc de la carte se détache. */}
+      {/* Le décor reste immobile : c'est la colonne intérieure qui défile. */}
+      <div className="relative h-full overflow-hidden bg-[#fbfcfe]">
+        <div aria-hidden className="grille-fine absolute inset-0" />
+        {/* Halos de la charte, très diffus : la couleur vient du fond, pas
+            d'un aplat. */}
         <div
           aria-hidden
-          className="absolute inset-0 opacity-[0.55] pointer-events-none"
+          className="halo-marque absolute -top-32 -left-24 w-[460px] h-[460px] rounded-full blur-3xl"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, rgba(15,29,44,0.13) 1px, transparent 0)",
-            backgroundSize: "22px 22px",
+            background:
+              "radial-gradient(circle, rgb(173 7 7 / 0.18), transparent 70%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="halo-marque absolute -bottom-32 -right-24 w-[520px] h-[520px] rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgb(0 113 64 / 0.18), transparent 70%)",
+            animationDelay: "-7s",
           }}
         />
 
-        <div className="relative flex flex-col min-h-full px-4 py-8 sm:px-8 lg:px-10">
+        <div className="relative h-full overflow-y-auto flex flex-col px-4 py-8 sm:px-8 lg:px-10">
           <main
             className={`apparition flex-1 flex flex-col justify-center w-full mx-auto ${
               large ? "max-w-[560px]" : "max-w-[440px]"
