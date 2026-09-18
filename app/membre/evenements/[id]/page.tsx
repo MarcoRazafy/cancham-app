@@ -179,37 +179,6 @@ export default async function EvenementDetailPage({
               </p>
             </Card>
           ) : null}
-
-          {entreprises.noms.length > 0 ? (
-            <Card className="carte-filet filet-fixe filet-bleu p-[22px]">
-              <Kicker>Déjà inscrits</Kicker>
-              <h2 className="mt-1.5 mb-1 text-[19px]">
-                {past ? "Qui était dans la salle" : "Qui sera dans la salle"}
-              </h2>
-              <p className="m-0 mb-4 text-[13.3px] text-muted">
-                {entreprises.total} entreprise{entreprises.total > 1 ? "s" : ""}{" "}
-                représentée{entreprises.total > 1 ? "s" : ""}, pour {e.inscrits}{" "}
-                participant{e.inscrits > 1 ? "s" : ""} inscrit
-                {e.inscrits > 1 ? "s" : ""}.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {entreprises.noms.map((nom) => (
-                  <span
-                    key={nom}
-                    className="inline-flex items-center gap-1.5 text-[12.6px] font-medium px-3 py-1.5 rounded-full bg-surface-2 text-ink border border-line"
-                  >
-                    <Building2 size={13} className="text-faint shrink-0" />
-                    {nom}
-                  </span>
-                ))}
-                {entreprises.total > entreprises.noms.length ? (
-                  <span className="inline-flex items-center text-[12.6px] font-semibold px-3 py-1.5 rounded-full bg-accent-soft text-accent-strong">
-                    + {entreprises.total - entreprises.noms.length} autres
-                  </span>
-                ) : null}
-              </div>
-            </Card>
-          ) : null}
         </div>
 
         {/* ==================== Colonne latérale ==================== */}
