@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { BoutonCertificat } from "@/components/BoutonCertificat";
+import { CertificatAdhesion } from "@/components/Certificat";
 import {
   Building2,
   Globe,
@@ -30,7 +32,6 @@ import {
 } from "@/components/forms/MemberForms";
 import {
   Banner,
-  BtnLink,
   Card,
   Pill,
   Saillant,
@@ -90,9 +91,9 @@ export default async function ProfilPage() {
               logo={m.logo}
             />
             {!pending ? (
-              <BtnLink href="/membre/profil/certificat" variant="primary">
-                Mon certificat
-              </BtnLink>
+              <BoutonCertificat>
+                <CertificatAdhesion membre={m} />
+              </BoutonCertificat>
             ) : null}
           </div>
         }

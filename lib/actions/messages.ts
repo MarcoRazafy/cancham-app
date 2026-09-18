@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MOTIFS_CONTACT } from "@/lib/coordonnees";
 import { prisma } from "@/lib/db";
+import { ecrireAEquipe } from "@/lib/fil-equipe";
 import { redirectWithFlash } from "@/lib/flash";
+import { fmtMoney } from "@/lib/format";
 import {
   LONGUEUR_NOM_GROUPE,
   MAX_CIBLES_TRANSFERT,
@@ -575,60 +577,77 @@ export async function envoyerDemandeContact(formData: FormData) {
 
   const user = await getCurrentUser("membre");
 
-  let fil = await prisma.messageThread.findFirst({
-    where: { equipe: true, participants: { some: { userId: user.id } } },
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!fil) {
-    // Toute l'équipe y participe : la demande ne dépend pas de la personne
-    // de permanence.
-    const equipe = await prisma.user.findMany({
-      where: { role: "admin" },
-      select: { id: true },
-    });
-    fil = await prisma.messageThread.create({
-      data: {
-        type: "individuel",
-        equipe: true,
-        nom: "Équipe CanCham",
-        avatar: "/photos/cancham-13.jpg",
-        participants: {
-          create: [
-            { userId: user.id, luLe: new Date() },
-            ...equipe.map((a) => ({ userId: a.id })),
-          ],
-        },
-      },
-      select: { id: true },
-    });
-  }
-
   const motifRetenu = (MOTIFS_CONTACT as readonly string[]).includes(motif)
     ? motif
     : "Autre demande";
 
-  const maintenant = new Date();
-  await prisma.message.create({
-    data: {
-      threadId: fil.id,
-      auteur: user.nom,
-      userId: user.id,
-      sentAt: maintenant,
-      texte: [
-        `${motifRetenu} — ${sujet}`,
-        contenu,
-        rappel ? `Rappel souhaité au ${rappel}.` : null,
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-    },
+  const fil = await ecrireAEquipe(
+    user,
+    [
+      `${motifRetenu} — ${sujet}`,
+      contenu,
+      rappel ? `Rappel souhaité au ${rappel}.` : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  );
+
+  revalidatePath("/", "layout");
+  redirect(`/membre/contact?envoye=${fil}`);
+}
+
+/**
+ * Réservation d'un service payant de la chambre.
+ *
+ * Un clic suffit : le message part tout rédigé dans le fil de l'équipe, qui
+ * répond avec les modalités de règlement. Le paiement en ligne n'étant pas
+ * branché, c'est l'équipe qui encaisse et émet la facture. La demande laisse
+ * aussi une trace au journal, pour qu'aucune ne se perde entre deux
+ * permanences.
+ */
+export async function reserverService(formData: FormData) {
+  const retour = "/membre/offres-cancham";
+  const service = await prisma.canchamService.findUnique({
+    where: { id: texte(formData, "serviceId") },
+    select: { id: true, titre: true, type: true, prix: true },
   });
-  await prisma.participantFil.updateMany({
-    where: { threadId: fil.id, userId: user.id },
-    data: { luLe: maintenant },
+  if (!service || service.type !== "payant") {
+    redirectWithFlash(retour, "Ce service n’est plus proposé.");
+  }
+
+  const user = await getCurrentUser("membre");
+  const entreprise = user.memberId
+    ? (
+        await prisma.member.findUnique({
+          where: { id: user.memberId },
+          select: { nom: true },
+        })
+      )?.nom
+    : null;
+  const prix = fmtMoney(service.prix);
+
+  const fil = await ecrireAEquipe(
+    user,
+    [
+      `Réservation et paiement — ${service.titre}`,
+      `Bonjour, je souhaite réserver « ${service.titre} » (${prix}). Pouvez-vous m’indiquer les modalités de règlement et la suite à donner ?`,
+      [user.nom, entreprise].filter(Boolean).join(" · "),
+    ].join("\n\n"),
+  );
+
+  await prisma.auditLog.create({
+    data: {
+      action: "service_reserve",
+      entite: "MessageThread",
+      entiteId: fil,
+      acteur: user.nom,
+      detail: `« ${service.titre} » · ${prix}${entreprise ? ` · ${entreprise}` : ""}.`,
+    },
   });
 
   revalidatePath("/", "layout");
-  redirect(`/membre/contact?envoye=${fil.id}`);
+  redirectWithFlash(
+    retour,
+    `Demande envoyée à l’équipe CanCham · réponse dans votre messagerie`,
+  );
 }

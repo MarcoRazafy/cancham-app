@@ -1,4 +1,5 @@
 import { ServiceCard } from "@/components/domain";
+import { BoutonReservation } from "@/components/forms/BoutonReservation";
 import { EmptyState, Saillant, SectionTitle, ViewHead } from "@/components/ui";
 import { getServices } from "@/lib/queries";
 
@@ -32,7 +33,13 @@ export async function OffresCanchamPage() {
       <SectionTitle>Services payants</SectionTitle>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {payants.length ? (
-          payants.map((s) => <ServiceCard key={s.id} service={s} />)
+          payants.map((s) => (
+            <ServiceCard
+              key={s.id}
+              service={s}
+              action={<BoutonReservation serviceId={s.id} />}
+            />
+          ))
         ) : (
           <EmptyState>Aucun service payant pour le moment.</EmptyState>
         )}
