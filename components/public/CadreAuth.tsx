@@ -48,20 +48,22 @@ export function CadreAuth({
           fill
           priority
           sizes="55vw"
-          className="zoom-lent object-cover saturate-[0.4] brightness-[1.35] contrast-[0.95]"
+          className="zoom-lent object-cover saturate-[0.65] brightness-[1.12]"
         />
 
-        {/* Le dégradé de la charte, en multiply : il colore la photo au lieu
-            de la voiler, et le rouge comme le vert restent reconnaissables. */}
+        {/* Le dégradé de la charte, en multiply et en demi-teinte : il colore
+            la photo sans la recouvrir — on doit reconnaître le rouge et le
+            vert, et voir la scène. */}
         <div
-          className="degrade-anime absolute inset-0 mix-blend-multiply"
+          className="degrade-anime absolute inset-0 mix-blend-multiply opacity-[0.62]"
           style={{
             background:
               "linear-gradient(135deg, #c41414 0%, #a3122a 26%, #1b3a6b 52%, #0a7a49 76%, #00a05b 100%)",
           }}
         />
-        {/* Assombrissement du bas, sous le texte. */}
-        <div className="absolute inset-0 bg-linear-to-t from-marque-nuit/70 via-transparent to-marque-nuit/15" />
+        {/* Voile du bas : le dégradé étant en demi-teinte, c'est lui qui
+            garantit la lisibilité du titre sur une photo claire. */}
+        <div className="absolute inset-0 bg-linear-to-t from-marque-nuit/85 from-5% via-marque-nuit/20 via-55% to-marque-nuit/10" />
 
         <div className="sur-sombre relative h-full flex flex-col justify-between p-10 xl:p-14">
           <Link
