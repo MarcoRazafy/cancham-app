@@ -44,8 +44,17 @@ function cle(): string {
 const signer = (charge: string) =>
   createHmac("sha256", cle()).update(charge).digest("base64url");
 
-/** Ouvre une session : dépose le cookie signé. */
-export async function ouvrirSession(userId: string): Promise<void> {
+/**
+ * Ouvre une session : dépose le cookie signé.
+ *
+ * Sans « se souvenir de moi », le cookie n'a pas de date d'expiration : il
+ * disparaît à la fermeture du navigateur. Sur un poste partagé, c'est ce qu'on
+ * attend.
+ */
+export async function ouvrirSession(
+  userId: string,
+  souvenir = true,
+): Promise<void> {
   const expire = Date.now() + DUREE_JOURS * 86_400_000;
   const charge = `${userId}.${expire}`;
   (await cookies()).set(COOKIE, `${charge}.${signer(charge)}`, {
@@ -53,7 +62,7 @@ export async function ouvrirSession(userId: string): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: DUREE_JOURS * 86_400,
+    ...(souvenir ? { maxAge: DUREE_JOURS * 86_400 } : {}),
   });
 }
 

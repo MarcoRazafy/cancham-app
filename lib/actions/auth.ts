@@ -44,7 +44,7 @@ export async function connexion(formData: FormData) {
     echec("Adresse ou mot de passe incorrect.", email);
   }
 
-  await ouvrirSession(u.id);
+  await ouvrirSession(u.id, texte(formData, "souvenir") === "1");
 
   // Retour à la page demandée avant la connexion, si elle appartient bien à
   // l'espace de la personne : sinon, son accueil.

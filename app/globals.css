@@ -284,6 +284,72 @@ h3 {
   }
 }
 
+/*
+ * Zoom très lent sur la photo des écrans d'identification : l'image respire
+ * sans jamais attirer l'œil hors du formulaire.
+ */
+@keyframes marque-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.09);
+  }
+}
+
+.marque .zoom-lent {
+  animation: marque-zoom 26s ease-in-out infinite alternate;
+}
+
+/* Le dégradé de la charte glisse lentement d'un bord à l'autre. */
+@keyframes marque-glisse {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+.marque .degrade-anime {
+  background-size: 200% 200%;
+  animation: marque-glisse 18s ease-in-out infinite alternate;
+}
+
+/*
+ * Boutons de l'espace public : ils se soulèvent d'un pixel au survol et
+ * reposent au clic. Rien de plus — le geste doit se sentir, pas se regarder.
+ */
+.marque .btn-action,
+.marque .btn-contour {
+  transition:
+    background-image 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.marque .btn-action:hover:not(:disabled),
+.marque .btn-contour:hover {
+  transform: translateY(-1px);
+}
+
+.marque .btn-action:hover:not(:disabled) {
+  box-shadow: 0 12px 24px -14px rgb(173 7 7 / 0.85);
+}
+
+.marque .btn-action:active:not(:disabled),
+.marque .btn-contour:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marque .zoom-lent,
+  .marque .degrade-anime {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .marque .apparition,
   .marque .apparition-defilement {
