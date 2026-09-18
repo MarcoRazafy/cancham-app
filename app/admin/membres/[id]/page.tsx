@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Globe,
   User as UserIcon,
+  MapPin,
 } from "lucide-react";
 import { Jauge, LienFleche, Panneau, Vide } from "@/components/admin/ui";
 import { LigneJournal } from "@/components/admin/LigneJournal";
@@ -17,6 +18,7 @@ import {
   LogoMark,
   NeedsAndInterests,
   Visuel,
+  PuceSecteur,
 } from "@/components/domain";
 import {
   ApproveButton,
@@ -94,10 +96,15 @@ export default async function AdminMembreDetail({
           <div className="flex gap-4 min-w-0">
             <LogoMark member={m} size={64} />
             <div className="min-w-0">
-              <h1 className="m-0 text-[clamp(22px,2.6vw,28px)]">{m.nom}</h1>
-              <div className="text-muted text-[13.8px] mt-0.5">
-                {m.secteur} · {m.ville}
-                {m.pays ? ` · ${m.pays}` : ""}
+              <h1 className="m-0 mb-2 text-[clamp(22px,2.6vw,28px)]">
+                {m.nom}
+              </h1>
+              <div className="flex gap-1.5 flex-wrap items-center">
+                <PuceSecteur secteur={m.secteur} grand />
+                <span className="inline-flex items-center gap-1 text-muted text-[13.4px]">
+                  <MapPin size={13} /> {m.ville}
+                  {m.pays ? ` · ${m.pays}` : ""}
+                </span>
               </div>
               {m.siteweb ? (
                 <a

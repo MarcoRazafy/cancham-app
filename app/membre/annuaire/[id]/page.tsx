@@ -1,9 +1,16 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, Globe, User as UserIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  Globe,
+  MapPin,
+  User as UserIcon,
+} from "lucide-react";
 import {
   ListeContacts,
   LogoMark,
   NeedsAndInterests,
+  PuceSecteur,
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
@@ -57,9 +64,12 @@ export default async function FicheMembrePage({
             <div className="flex gap-4">
               <LogoMark member={m} size={64} />
               <div>
-                <h1 className="m-0 mb-1 text-[22px]">{m.nom}</h1>
-                <div className="text-muted text-[13.6px]">
-                  {m.secteur} · {m.ville}
+                <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
+                <div className="flex gap-1.5 flex-wrap items-center">
+                  <PuceSecteur secteur={m.secteur} grand />
+                  <span className="inline-flex items-center gap-1 text-muted text-[13.4px]">
+                    <MapPin size={13} /> {m.ville}
+                  </span>
                 </div>
                 {m.siteweb ? (
                   <a

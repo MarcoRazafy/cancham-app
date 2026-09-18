@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import {
+  Briefcase,
   Building2,
   CalendarDays,
   CheckCheck,
@@ -269,6 +270,31 @@ export function Visuel({
 
 /* ==================== Membres ==================== */
 
+/**
+ * Secteur d'activité, en étiquette. En simple ligne grise sous le nom, on ne
+ * le reconnaissait pas pour ce qu'il est : c'est pourtant le premier filtre
+ * de l'annuaire.
+ */
+export function PuceSecteur({
+  secteur,
+  grand = false,
+}: {
+  secteur: string;
+  grand?: boolean;
+}) {
+  return (
+    <span
+      title="Secteur d’activité"
+      className={`inline-flex items-center gap-1.5 max-w-full font-semibold rounded-full bg-navy-soft text-navy ${
+        grand ? "text-[12.5px] px-3 py-1" : "text-[11.3px] px-2.5 py-[3px]"
+      }`}
+    >
+      <Briefcase size={grand ? 13 : 11} className="shrink-0" />
+      <span className="truncate">{secteur}</span>
+    </span>
+  );
+}
+
 export function MemberCard({ member, href }: { member: Member; href: string }) {
   // Trois fonds sobres : le bleu marine sur bleu marine du jeu précédent
   // rendait le libellé illisible sur fond sombre.
@@ -304,8 +330,8 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
             <LogoMark member={member} />
           </div>
           <div className="min-w-0">
-            <h3 className="m-0 mb-0.5 text-[15px]">{member.nom}</h3>
-            <div className="text-xs text-muted">{member.secteur}</div>
+            <h3 className="m-0 mb-1.5 text-[15px]">{member.nom}</h3>
+            <PuceSecteur secteur={member.secteur} />
           </div>
         </div>
         <div className="flex gap-1.5 flex-wrap px-4 pb-3">

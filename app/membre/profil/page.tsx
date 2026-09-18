@@ -6,12 +6,14 @@ import {
   CreditCard,
   Lock,
   User as UserIcon,
+  MapPin,
 } from "lucide-react";
 import {
   ListeContacts,
   LogoMark,
   NeedsAndInterests,
   Visuel,
+  PuceSecteur,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
 import { TexteLie } from "@/components/TexteLie";
@@ -157,10 +159,13 @@ export default async function ProfilPage() {
           <div className="flex gap-4">
             <LogoMark member={m} size={64} />
             <div>
-              <h1 className="m-0 mb-1 text-[22px]">{m.nom}</h1>
-              <div className="text-muted text-[13.6px]">
-                {m.secteur} · {m.ville}
-                {m.pays ? ` · ${m.pays}` : ""}
+              <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
+              <div className="flex gap-1.5 flex-wrap items-center">
+                <PuceSecteur secteur={m.secteur} grand />
+                <span className="inline-flex items-center gap-1 text-muted text-[13.4px]">
+                  <MapPin size={13} /> {m.ville}
+                  {m.pays ? ` · ${m.pays}` : ""}
+                </span>
               </div>
               {m.siteweb ? (
                 <a
