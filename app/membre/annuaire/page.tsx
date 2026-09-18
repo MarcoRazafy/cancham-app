@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { FiltresAuto } from "@/components/FiltresAuto";
 import { MemberCard } from "@/components/domain";
 import { EmptyState, Saillant, ViewHead } from "@/components/ui";
 import { getMembresAnnuaire } from "@/lib/queries";
@@ -38,7 +39,7 @@ export default async function AnnuairePage({
         Logo, contact et produits phares pour faciliter la mise en relation.
       </ViewHead>
 
-      <form className="flex gap-3 flex-wrap mb-[18px]">
+      <FiltresAuto className="flex gap-3 flex-wrap mb-[18px]">
         <div className="relative max-w-[340px] flex-1 min-w-[240px]">
           <Search
             size={15}
@@ -64,13 +65,7 @@ export default async function AnnuairePage({
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="text-[13.4px] font-semibold px-[15px] py-[9px] rounded-[var(--radius-s)] bg-accent text-white border border-transparent cursor-pointer hover:bg-accent-strong"
-        >
-          Filtrer
-        </button>
-      </form>
+      </FiltresAuto>
 
       {list.length ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

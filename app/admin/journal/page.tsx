@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FiltresAuto } from "@/components/FiltresAuto";
 import { ChevronLeft, ChevronRight, History, Search } from "lucide-react";
 import { EnTeteAdmin, Onglets, Vide } from "@/components/admin/ui";
 import { LigneJournal } from "@/components/admin/LigneJournal";
@@ -70,7 +71,10 @@ export default async function Journal({
         ]}
       />
 
-      <form action="/admin/journal" className="mb-4 flex gap-2 max-w-[460px]">
+      <FiltresAuto
+        action="/admin/journal"
+        className="mb-4 flex gap-2 max-w-[460px]"
+      >
         {famille ? (
           <input type="hidden" name="famille" value={famille} />
         ) : null}
@@ -88,13 +92,7 @@ export default async function Journal({
             className="w-full rounded-[var(--radius-s)] border border-line bg-surface text-ink pl-9 pr-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
           />
         </div>
-        <button
-          type="submit"
-          className="btn-contour btn-contour-sm text-ink hover:bg-surface-2"
-        >
-          Filtrer
-        </button>
-      </form>
+      </FiltresAuto>
 
       <Card className="px-6 py-2">
         {entrees.length ? (

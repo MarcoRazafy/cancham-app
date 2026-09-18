@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FiltresAuto } from "@/components/FiltresAuto";
 import { ChevronRight, Download, Search, Users } from "lucide-react";
 import { EnTeteAdmin, Onglets, Vide } from "@/components/admin/ui";
 import { LogoMark } from "@/components/domain";
@@ -77,7 +78,7 @@ export default async function AdminMembres({
         }))}
       />
 
-      <form
+      <FiltresAuto
         action="/admin/membres"
         className="flex gap-2.5 flex-wrap items-center mb-4"
       >
@@ -111,12 +112,6 @@ export default async function AdminMembres({
             </option>
           ))}
         </select>
-        <button
-          type="submit"
-          className="btn-contour btn-contour-sm text-ink hover:bg-surface-2"
-        >
-          Filtrer
-        </button>
         {recherche || formule ? (
           <Link
             href={lien({ q: null, formule: null })}
@@ -125,7 +120,7 @@ export default async function AdminMembres({
             Effacer les filtres
           </Link>
         ) : null}
-      </form>
+      </FiltresAuto>
 
       {liste.length === 0 ? (
         <Card>

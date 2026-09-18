@@ -97,19 +97,19 @@ export function CarteService({
           if (e.target === boite.current) setOuverte(false);
         }}
         aria-label={produit.label}
-        className="m-auto w-[min(1080px,95vw)] max-h-[92vh] p-0 rounded-[var(--radius-l)] border-0 bg-surface text-ink shadow-2xl backdrop:bg-[#0f1d2c]/70 backdrop:backdrop-blur-sm"
+        className="m-auto w-[min(1280px,95vw)] max-h-[94vh] p-0 rounded-[var(--radius-l)] border-0 bg-surface text-ink shadow-2xl backdrop:bg-[#0f1d2c]/70 backdrop:backdrop-blur-sm"
       >
         {ouverte ? (
-          <div className="grid md:grid-cols-[1.25fr_1fr]">
+          <div className="grid md:grid-cols-[1.35fr_1fr]">
             {/* ---------- Galerie ---------- */}
-            <div className="bg-surface-2 p-5 flex flex-col gap-3">
+            <div className="bg-surface-2 p-6 flex flex-col gap-3.5">
               <div className="relative aspect-[4/3] rounded-[var(--radius-m)] overflow-hidden">
                 {photos[courante] ? (
                   <Image
                     src={photos[courante]}
                     alt={`${produit.label} — photo ${courante + 1}`}
                     fill
-                    sizes="(max-width: 768px) 95vw, 620px"
+                    sizes="(max-width: 768px) 95vw, 760px"
                     className="object-cover"
                   />
                 ) : (
@@ -126,7 +126,7 @@ export function CarteService({
                       onClick={() => setCourante(i)}
                       aria-label={`Photo ${i + 1} sur ${photos.length}`}
                       aria-current={i === courante}
-                      className={`relative w-20 h-[60px] shrink-0 rounded-md overflow-hidden cursor-pointer p-0 border-2 transition-colors ${
+                      className={`relative w-24 h-[72px] shrink-0 rounded-md overflow-hidden cursor-pointer p-0 border-2 transition-colors ${
                         i === courante
                           ? "border-accent"
                           : "border-transparent opacity-70 hover:opacity-100"
@@ -136,7 +136,7 @@ export function CarteService({
                         src={src}
                         alt=""
                         fill
-                        sizes="80px"
+                        sizes="96px"
                         className="object-cover"
                       />
                     </button>
@@ -146,7 +146,7 @@ export function CarteService({
             </div>
 
             {/* ---------- Détail ---------- */}
-            <div className="p-7 md:p-8 flex flex-col min-h-0">
+            <div className="p-8 md:p-10 flex flex-col min-h-0">
               <div className="flex items-start justify-between gap-3">
                 <span className="text-[11.5px] font-bold uppercase tracking-[0.08em] text-accent">
                   {nature}
@@ -161,17 +161,17 @@ export function CarteService({
                 </button>
               </div>
 
-              <h3 className="m-0 mt-1.5 text-[25px] leading-snug">
+              <h3 className="m-0 mt-2 text-[28px] leading-snug">
                 {produit.label}
               </h3>
 
               {produit.prix ? (
-                <div className="mt-2 text-[16.5px] font-semibold text-accent-strong">
+                <div className="mt-2.5 text-[18px] font-semibold text-accent-strong">
                   {produit.prix}
                 </div>
               ) : null}
 
-              <div className="mt-5 text-[15px] leading-relaxed text-muted overflow-y-auto flex-1">
+              <div className="mt-6 text-[15.5px] leading-relaxed text-muted overflow-y-auto flex-1">
                 {produit.description ? (
                   produit.description.split("\n\n").map((para, i) => (
                     <p key={i} className="m-0 mb-3 last:mb-0">
