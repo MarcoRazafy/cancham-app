@@ -869,8 +869,18 @@ h3 {
  * bannière sombre, elles s'éteindraient — le vert #007140 y passe pour du gris
  * foncé : on y prend leurs déclinaisons claires.
  */
+/*
+ * Le mot saillant passe à l'italique d'Inter — un vrai italique, dessiné.
+ * Hammersmith One n'ayant que le romain, l'italique y serait une simple
+ * inclinaison ; on change donc de police pour ces quelques mots, et la
+ * différence de dessin sert l'accent au lieu de le trahir.
+ */
 .marque .saillant {
-  font-style: normal;
+  font-family: var(--font-texte);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.94em;
+  letter-spacing: -0.01em;
 }
 
 .marque .sur-sombre .saillant {
