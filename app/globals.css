@@ -317,6 +317,59 @@ h3 {
 }
 
 /*
+ * Grille fine des écrans d'identification.
+ *
+ * Deux dégradés linéaires suffisent — un pour les verticales, un pour les
+ * horizontales —, et le motif dérive d'une case en continu. Pas d'image, donc
+ * rien à charger, et la grille reste nette à toute densité d'écran.
+ */
+@keyframes marque-grille {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+  to {
+    background-position:
+      44px 44px,
+      44px 44px;
+  }
+}
+
+.marque .grille-fine {
+  background-image:
+    linear-gradient(to right, rgb(15 29 44 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(15 29 44 / 0.055) 1px, transparent 1px);
+  background-size:
+    44px 44px,
+    44px 44px;
+  animation: marque-grille 38s linear infinite;
+}
+
+/* Halos de couleur, qui respirent lentement derrière la grille. */
+@keyframes marque-halo {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: translate3d(0, -22px, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+.marque .halo-marque {
+  animation: marque-halo 15s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marque .grille-fine,
+  .marque .halo-marque {
+    animation: none !important;
+  }
+}
+
+/*
  * Boutons de l'espace public : ils se soulèvent d'un pixel au survol et
  * reposent au clic. Rien de plus — le geste doit se sentir, pas se regarder.
  */
