@@ -29,7 +29,7 @@ const prisma = new PrismaClient({
  * Mot de passe commun aux comptes de démonstration — l'empreinte est calculée
  * une seule fois : scrypt est volontairement lent.
  */
-const MOT_DE_PASSE = hacher(process.env.MOT_DE_PASSE_DEMO ?? "cancham2026");
+const MOT_DE_PASSE = hacher(process.env.MOT_DE_PASSE_DEMO ?? "12345678");
 
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
