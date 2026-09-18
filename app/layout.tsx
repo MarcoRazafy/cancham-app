@@ -60,6 +60,9 @@ const hammersmith = Hammersmith_One({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  // L'italique sert aux mots saillants des titres publics : Hammersmith One
+  // n'existe qu'en romain, et une inclinaison synthétique s'y verrait.
+  style: ["normal", "italic"],
   display: "swap",
 });
 
