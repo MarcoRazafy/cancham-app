@@ -10,7 +10,7 @@
 import { prisma } from "../lib/db";
 import { hacher } from "../lib/mots-de-passe";
 
-const MOT_DE_PASSE = process.env.MOT_DE_PASSE_DEMO ?? "cancham2026";
+const MOT_DE_PASSE = process.env.MOT_DE_PASSE_DEMO ?? "12345678";
 
 async function main() {
   const sansMotDePasse = await prisma.user.findMany({

@@ -39,7 +39,7 @@ export const USERS: Record<Space, User> = {
     memberId: "m1",
     nom: "Voninkazo Andriamampianina",
     fonction: "Directrice Générale",
-    email: "contact@biosudessences.mg",
+    email: "membre@gmail.com",
     tel: "+261 34 12 345 67",
     initiales: "VA",
     photo:
@@ -54,7 +54,7 @@ export const USERS: Record<Space, User> = {
     memberId: null,
     nom: "Ando Ratovomanana",
     fonction: "Direction exécutive",
-    email: "ando.ratovomanana@cancham.mg",
+    email: "admin@gmail.com",
     tel: "+261 32 00 112 23",
     initiales: "AR",
     photo:
