@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Lock, Mail } from "lucide-react";
 import {
   CadreAuth,
   ChampAuth,
+  ChampMotDePasse,
   CHAMP_AUTH,
+  Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { ChoixFormule } from "@/components/public/ChoixFormule";
@@ -44,43 +47,37 @@ export default async function InscriptionPage() {
         <input type="hidden" name="retour" value="/public/inscription" />
 
         <Rubrique titre="Vos identifiants" premiere />
-        <Field label="Adresse courriel">
-          <input
+        <Field label="Adresse courriel" icone={<Mail size={16} />}>
+          <Saisie
+            avecIcone
             type="email"
             name="email"
             required
             autoComplete="email"
             placeholder="vous@entreprise.mg"
-            className={INPUT}
           />
         </Field>
 
         <div className="grid gap-3.5 sm:grid-cols-2">
-          <Field
+          <ChampMotDePasse
             label="Mot de passe"
             hint={`${MOT_DE_PASSE_MIN} caractères au moins.`}
-          >
-            <input
-              type="password"
-              name="motDePasse"
-              required
-              minLength={MOT_DE_PASSE_MIN}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              className={INPUT}
-            />
-          </Field>
-          <Field label="Confirmation">
-            <input
-              type="password"
-              name="confirmation"
-              required
-              minLength={MOT_DE_PASSE_MIN}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              className={INPUT}
-            />
-          </Field>
+            icone={<Lock size={16} />}
+            name="motDePasse"
+            required
+            minLength={MOT_DE_PASSE_MIN}
+            autoComplete="new-password"
+            placeholder="••••••••"
+          />
+          <ChampMotDePasse
+            label="Confirmation"
+            icone={<Lock size={16} />}
+            name="confirmation"
+            required
+            minLength={MOT_DE_PASSE_MIN}
+            autoComplete="new-password"
+            placeholder="••••••••"
+          />
         </div>
 
         <Rubrique titre="Votre formule" premiere />

@@ -4,11 +4,14 @@ import { LogoOfficiel } from "@/components/public/Marque";
 
 /**
  * Cadre des écrans d'identification : une image à gauche, le formulaire à
- * droite.
+ * droite, le tout dans une hauteur de fenêtre — seule la colonne du
+ * formulaire défile.
  *
- * L'image porte la marque — photo d'une rencontre, dégradé de la charte,
- * logo renversé — et disparaît sous 1024 px, où l'écran revient au
- * formulaire seul, avec le logo couleur au-dessus.
+ * Sur la photo, le dégradé rouge → vert de la charte est posé en `multiply`
+ * sur une image désaturée : les deux couleurs de la chambre sortent
+ * franchement au lieu de se perdre dans les teintes de la photo. L'image
+ * respire par un zoom très lent, le dégradé glisse, et les blocs arrivent en
+ * fondu — assez pour donner vie, jamais assez pour distraire du formulaire.
  */
 export function CadreAuth({
   photo,
@@ -27,11 +30,9 @@ export function CadreAuth({
   children: React.ReactNode;
 }) {
   return (
-    // L'écran tient en une hauteur de fenêtre : rien ne défile, sauf la
-    // colonne du formulaire. `dvh` plutôt que `vh` : sur téléphone, la barre
-    // d'adresse mange une partie de `vh`.
-    // Classes écrites en entier : Tailwind ne voit pas un nom composé à
-    // l'exécution.
+    // `dvh` plutôt que `vh` : sur téléphone, la barre d'adresse mange une
+    // partie de `vh`. Classes écrites en entier : Tailwind ne voit pas un nom
+    // composé à l'exécution.
     <div
       className={`h-dvh overflow-hidden grid ${
         large
@@ -39,65 +40,108 @@ export function CadreAuth({
           : "lg:grid-cols-[1.05fr_minmax(0,520px)]"
       }`}
     >
-      {/* ==================== Image ====================
-          Elle occupe toute la hauteur : l'accroche reste visible pendant qu'on
-          remplit les champs, même sur un formulaire long. */}
-      <div className="relative hidden lg:block h-full overflow-hidden">
+      {/* ==================== Image ==================== */}
+      <div className="relative hidden lg:block h-full overflow-hidden bg-marque-nuit">
         <Image
           src={photo}
           alt={alt}
           fill
           priority
           sizes="55vw"
-          className="object-cover"
+          className="zoom-lent object-cover saturate-[0.4] brightness-[1.35] contrast-[0.95]"
         />
-        {/* Le dégradé de la charte, posé sur la photo : la marque d'abord,
-            la lisibilité du texte ensuite. */}
+
+        {/* Le dégradé de la charte, en multiply : il colore la photo au lieu
+            de la voiler, et le rouge comme le vert restent reconnaissables. */}
         <div
-          className="absolute inset-0"
+          className="degrade-anime absolute inset-0 mix-blend-multiply"
           style={{
             background:
-              "linear-gradient(150deg, rgba(173,7,7,0.82) 0%, rgba(15,29,44,0.78) 45%, rgba(0,113,64,0.82) 100%)",
+              "linear-gradient(135deg, #c41414 0%, #a3122a 26%, #1b3a6b 52%, #0a7a49 76%, #00a05b 100%)",
           }}
         />
+        {/* Assombrissement du bas, sous le texte. */}
+        <div className="absolute inset-0 bg-linear-to-t from-marque-nuit/70 via-transparent to-marque-nuit/15" />
+
         <div className="sur-sombre relative h-full flex flex-col justify-between p-10 xl:p-14">
-          <Link href="/public" aria-label="CanCham Connect">
+          <Link
+            href="/public"
+            aria-label="CanCham Connect"
+            className="apparition inline-block"
+          >
             <LogoOfficiel version="blanc" className="w-[250px] h-auto" />
           </Link>
+
           <div>
-            <h2 className="titre text-[clamp(28px,2.6vw,40px)] leading-[1.15] m-0 max-w-[16ch] text-white">
+            <span
+              className="apparition surtitre inline-block px-3.5 py-1.5 rounded-full border border-white/30 text-white/85"
+              style={{ animationDelay: "0.1s" }}
+            >
+              Le réseau Canada–Madagascar
+            </span>
+            <h2
+              className="apparition titre text-[clamp(28px,2.6vw,40px)] leading-[1.15] m-0 mt-5 max-w-[16ch] text-white"
+              style={{ animationDelay: "0.2s" }}
+            >
               {accroche}
             </h2>
-            <p className="text-[15px] leading-relaxed text-white/80 mt-4 mb-0 max-w-[42ch]">
+            <p
+              className="apparition text-[15px] leading-relaxed text-white/85 mt-4 mb-0 max-w-[42ch]"
+              style={{ animationDelay: "0.32s" }}
+            >
               {sous}
             </p>
+            {/* Filet aux deux couleurs, signature discrète de la charte. */}
+            <span
+              aria-hidden
+              className="apparition block h-1 w-24 rounded-full mt-7"
+              style={{
+                animationDelay: "0.42s",
+                background: "linear-gradient(90deg, #d32020, #3fc98a)",
+              }}
+            />
           </div>
         </div>
       </div>
 
       {/* ==================== Formulaire ==================== */}
       {/* Seule colonne qui défile. */}
-      <div className="h-full overflow-y-auto flex flex-col px-5 py-8 sm:px-10 lg:px-12 xl:px-16">
-        <Link
-          href="/public"
-          aria-label="CanCham Connect"
-          className="lg:hidden mb-8"
-        >
-          <LogoOfficiel className="w-[190px] h-auto" priority />
-        </Link>
+      <div className="relative h-full overflow-y-auto bg-surface-2">
+        {/* Trame très légère, pour que le blanc de la carte se détache. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.55] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(15,29,44,0.13) 1px, transparent 0)",
+            backgroundSize: "22px 22px",
+          }}
+        />
 
-        <main
-          className={`flex-1 flex flex-col justify-center w-full mx-auto lg:mx-0 py-4 ${
-            large ? "max-w-[540px]" : "max-w-[460px]"
-          }`}
-        >
-          {children}
-        </main>
+        <div className="relative flex flex-col min-h-full px-4 py-8 sm:px-8 lg:px-10">
+          <Link
+            href="/public"
+            aria-label="CanCham Connect"
+            className="lg:hidden mb-6 self-center"
+          >
+            <LogoOfficiel className="w-[190px] h-auto" priority />
+          </Link>
 
-        <p className="text-[12px] text-faint m-0 mt-8">
-          © {new Date().getFullYear()} CanCham · Chambre de Commerce et de
-          Coopération Canada–Madagascar
-        </p>
+          <main
+            className={`apparition flex-1 flex flex-col justify-center w-full mx-auto ${
+              large ? "max-w-[560px]" : "max-w-[440px]"
+            }`}
+          >
+            <div className="rounded-[var(--radius-l)] border border-line bg-surface shadow-[0_18px_44px_-24px_rgb(15_29_44/0.35)] px-6 py-7 sm:px-8 sm:py-9">
+              {children}
+            </div>
+          </main>
+
+          <p className="text-[12px] text-faint text-center m-0 mt-8">
+            © {new Date().getFullYear()} CanCham · Chambre de Commerce et de
+            Coopération Canada–Madagascar
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -108,35 +152,16 @@ export function Alerte({ children }: { children: React.ReactNode }) {
   return (
     <p
       role="alert"
-      className="m-0 mb-5 rounded-lg border border-accent/30 bg-accent-soft px-4 py-3 text-[13.5px] text-accent-strong"
+      className="apparition m-0 mb-5 rounded-lg border border-accent/30 bg-accent-soft px-4 py-3 text-[13.5px] text-accent-strong"
     >
       {children}
     </p>
   );
 }
 
-/** Champs des formulaires d'identification. */
-export const CHAMP_AUTH =
-  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint px-3.5 py-3 text-[14px] outline-none transition-colors focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
-
-export function ChampAuth({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="block text-[12.5px] font-semibold text-ink mb-1.5">
-        {label}
-      </span>
-      {children}
-      {hint ? (
-        <span className="block text-[11.5px] text-faint mt-1">{hint}</span>
-      ) : null}
-    </label>
-  );
-}
+export {
+  CHAMP_AUTH,
+  ChampAuth,
+  ChampMotDePasse,
+  Saisie,
+} from "@/components/public/ChampsAuth";

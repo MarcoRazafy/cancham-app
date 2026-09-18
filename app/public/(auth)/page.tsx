@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
 import {
   Alerte,
   CadreAuth,
   ChampAuth,
-  CHAMP_AUTH,
+  ChampMotDePasse,
+  Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { connexion } from "@/lib/actions/auth";
@@ -38,10 +39,10 @@ export default async function ConnexionPage({
       sous="Retrouvez l’annuaire des membres, les rendez-vous de la chambre et vos échanges."
     >
       <span className="surtitre text-marque-rouge">Espace membre</span>
-      <h1 className="titre text-[clamp(26px,3.4vw,34px)] m-0 mt-2.5 mb-2">
+      <h1 className="titre text-[clamp(25px,3vw,32px)] m-0 mt-2.5 mb-2">
         Connexion
       </h1>
-      <p className="text-[14.5px] text-muted m-0 mb-7">
+      <p className="text-[14.5px] text-muted m-0 mb-6">
         Entrez vos identifiants pour accéder à votre espace.
       </p>
 
@@ -52,8 +53,9 @@ export default async function ConnexionPage({
           <input type="hidden" name="suite" value={suite} />
         ) : null}
 
-        <ChampAuth label="Adresse courriel">
-          <input
+        <ChampAuth label="Adresse courriel" icone={<Mail size={16} />}>
+          <Saisie
+            avecIcone
             type="email"
             name="email"
             required
@@ -61,27 +63,35 @@ export default async function ConnexionPage({
             autoFocus
             defaultValue={email ?? ""}
             placeholder="vous@entreprise.mg"
-            className={CHAMP_AUTH}
           />
         </ChampAuth>
 
-        <ChampAuth label="Mot de passe">
+        <ChampMotDePasse
+          label="Mot de passe"
+          icone={<Lock size={16} />}
+          name="motDePasse"
+          required
+          autoComplete="current-password"
+          placeholder="Votre mot de passe"
+        />
+
+        <label className="flex items-center gap-2.5 text-[13.5px] text-muted cursor-pointer w-fit">
           <input
-            type="password"
-            name="motDePasse"
-            required
-            autoComplete="current-password"
-            placeholder="••••••••"
-            className={CHAMP_AUTH}
+            type="checkbox"
+            name="souvenir"
+            value="1"
+            defaultChecked
+            className="w-4 h-4 accent-[var(--marque-vert)] cursor-pointer"
           />
-        </ChampAuth>
+          Se souvenir de moi
+        </label>
 
-        <div className="mt-2">
+        <div className="mt-1">
           <BoutonEnvoi enCours="Connexion…">Se connecter</BoutonEnvoi>
         </div>
       </form>
 
-      <p className="text-[13.5px] text-muted mt-7 mb-0">
+      <p className="text-[13.5px] text-muted mt-6 mb-0 pt-5 border-t border-line">
         Pas encore membre ?{" "}
         <Link
           href="/public/inscription"
@@ -90,7 +100,7 @@ export default async function ConnexionPage({
           Demander une adhésion <ArrowRight size={14} />
         </Link>
       </p>
-      <p className="text-[12.5px] text-faint mt-3 mb-0">
+      <p className="text-[12.5px] text-faint mt-2.5 mb-0">
         Mot de passe oublié ? L’équipe CanCham peut le réinitialiser.
       </p>
     </CadreAuth>
