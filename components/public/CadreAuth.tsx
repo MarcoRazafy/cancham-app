@@ -27,20 +27,22 @@ export function CadreAuth({
   children: React.ReactNode;
 }) {
   return (
+    // L'écran tient en une hauteur de fenêtre : rien ne défile, sauf la
+    // colonne du formulaire. `dvh` plutôt que `vh` : sur téléphone, la barre
+    // d'adresse mange une partie de `vh`.
     // Classes écrites en entier : Tailwind ne voit pas un nom composé à
     // l'exécution.
     <div
-      className={`min-h-screen grid ${
+      className={`h-dvh overflow-hidden grid ${
         large
           ? "lg:grid-cols-[1fr_minmax(0,620px)]"
           : "lg:grid-cols-[1.05fr_minmax(0,520px)]"
       }`}
     >
       {/* ==================== Image ====================
-          Collée en haut et haute d'un écran : sur une page longue — le
-          formulaire d'inscription —, l'accroche reste visible pendant qu'on
-          remplit les champs. */}
-      <div className="relative hidden lg:block lg:sticky lg:top-0 lg:h-screen">
+          Elle occupe toute la hauteur : l'accroche reste visible pendant qu'on
+          remplit les champs, même sur un formulaire long. */}
+      <div className="relative hidden lg:block h-full overflow-hidden">
         <Image
           src={photo}
           alt={alt}
@@ -74,7 +76,8 @@ export function CadreAuth({
       </div>
 
       {/* ==================== Formulaire ==================== */}
-      <div className="flex flex-col px-5 py-8 sm:px-10 lg:px-12 xl:px-16">
+      {/* Seule colonne qui défile. */}
+      <div className="h-full overflow-y-auto flex flex-col px-5 py-8 sm:px-10 lg:px-12 xl:px-16">
         <Link
           href="/public"
           aria-label="CanCham Connect"
