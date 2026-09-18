@@ -9,6 +9,7 @@ import {
   Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
+import { Saillant } from "@/components/ui";
 import { ChoixFormule } from "@/components/public/ChoixFormule";
 import { MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { submitAdhesion } from "@/lib/actions/members";
@@ -31,7 +32,12 @@ export default async function InscriptionPage() {
       large
       photo="/photos/cancham-25.jpg"
       alt="Entrepreneurs réunis lors d’un rendez-vous de la chambre"
-      accroche="Votre prochain partenariat commence ici."
+      accroche={
+        <>
+          Votre prochain <Saillant>partenariat</Saillant> commence{" "}
+          <Saillant ton="vert">ici</Saillant>.
+        </>
+      }
       sous="Présentez votre entreprise : l’équipe CanCham examine votre demande, et votre espace s’ouvre dès la cotisation réglée."
     >
       <span className="surtitre text-marque-vert">Demande d’adhésion</span>

@@ -7,6 +7,7 @@ import { LogoOfficiel } from "@/components/public/Marque";
  * droite, le tout dans une hauteur de fenêtre — seule la colonne du
  * formulaire défile.
  *
+ * L'accroche porte les couleurs de la chambre sur ses mots saillants.
  * Sur la photo, le dégradé rouge → vert de la charte est posé en `multiply`
  * sur une image désaturée : les deux couleurs de la chambre sortent
  * franchement au lieu de se perdre dans les teintes de la photo. L'image
@@ -93,15 +94,6 @@ export function CadreAuth({
             >
               {sous}
             </p>
-            {/* Filet aux deux couleurs, signature discrète de la charte. */}
-            <span
-              aria-hidden
-              className="apparition block h-1 w-24 rounded-full mt-7"
-              style={{
-                animationDelay: "0.42s",
-                background: "linear-gradient(90deg, #d32020, #3fc98a)",
-              }}
-            />
           </div>
         </div>
       </div>
