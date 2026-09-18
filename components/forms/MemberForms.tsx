@@ -433,7 +433,7 @@ export function EditProfileButton({
             </Field>
             <Field
               label="Besoins actuels"
-              hint="Ce que vous recherchez : partenaires, distributeurs, financement…"
+              hint="Ce que vous recherchez : partenaires, distributeurs, financement… Une ligne par besoin : chacune devient un tiret sur votre fiche."
             >
               <textarea
                 name="besoins"
@@ -442,7 +442,10 @@ export function EditProfileButton({
                 className={INPUT}
               />
             </Field>
-            <Field label="Intérêts & synergies recherchées">
+            <Field
+              label="Intérêts & synergies recherchées"
+              hint="S’affichent à la suite de vos besoins, un tiret par ligne."
+            >
               <textarea
                 name="interets"
                 rows={2}
