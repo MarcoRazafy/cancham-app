@@ -352,9 +352,22 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   );
 }
 
-/** Bloc « Besoins & intérêts » — le moteur de la mise en relation entre membres. */
+/**
+ * Bloc « Besoins & intérêts » — le moteur de la mise en relation entre membres.
+ *
+ * Besoins et intérêts se lisent en une seule liste à tirets, sous « Recherche
+ * actuellement » : deux colonnes de prose disaient deux fois la même chose, là
+ * où un lecteur cherche d'un coup d'œil s'il peut répondre. Chaque ligne saisie
+ * devient un tiret ; un tiret tapé en tête de ligne est retiré, pour ne pas
+ * s'afficher en double.
+ */
 export function NeedsAndInterests({ member }: { member: Member }) {
-  if (!member.besoins && !member.interets) return null;
+  const lignes = [member.besoins, member.interets]
+    .flatMap((texte) => (texte ?? "").split("\n"))
+    .map((ligne) => ligne.replace(/^\s*[-–—•*]\s*/, "").trim())
+    .filter(Boolean);
+  if (!lignes.length) return null;
+
   return (
     <>
       <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
@@ -363,28 +376,24 @@ export function NeedsAndInterests({ member }: { member: Member }) {
           Besoins &amp; intérêts
         </h2>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {member.besoins ? (
-          <div>
-            <div className="text-[12.3px] font-semibold text-muted mb-1.5">
-              Recherche actuellement
-            </div>
-            <div className="text-[13.4px] text-muted leading-relaxed whitespace-pre-line">
-              <TexteLie texte={member.besoins} />
-            </div>
-          </div>
-        ) : null}
-        {member.interets ? (
-          <div>
-            <div className="text-[12.3px] font-semibold text-muted mb-1.5">
-              Intérêts &amp; synergies recherchées
-            </div>
-            <div className="text-[13.4px] text-muted leading-relaxed whitespace-pre-line">
-              <TexteLie texte={member.interets} />
-            </div>
-          </div>
-        ) : null}
+      <div className="text-[12.3px] font-semibold text-muted mb-2">
+        Recherche actuellement
       </div>
+      <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
+        {lignes.map((ligne, i) => (
+          <li
+            key={i}
+            className="flex gap-2.5 text-[13.4px] text-muted leading-relaxed"
+          >
+            <span aria-hidden className="text-accent font-bold shrink-0">
+              –
+            </span>
+            <span className="min-w-0">
+              <TexteLie texte={ligne} />
+            </span>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }
