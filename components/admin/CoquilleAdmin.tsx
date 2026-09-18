@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { ChevronRight, Menu, Search } from "lucide-react";
+import { BoutonDeconnexion } from "@/components/BoutonDeconnexion";
 import { MenuNotifications } from "@/components/MenuNotifications";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { titrePour, type NavGroup } from "@/lib/nav";
@@ -133,7 +134,7 @@ export function CoquilleAdmin({
           href="/admin/profil"
           onClick={() => setMenuOuvert(false)}
           title="Mon profil"
-          className="mx-3.5 mb-5 mt-2 px-3 pt-4 pb-3 flex items-center gap-3 border-t-2 border-success rounded-b-lg no-underline hover:bg-white/[0.06]"
+          className="mx-3.5 mb-1 mt-2 px-3 pt-4 pb-3 flex items-center gap-3 border-t-2 border-success rounded-b-lg no-underline hover:bg-white/[0.06]"
         >
           <Portrait user={user} taille={40} />
           <span className="min-w-0 flex-1">
@@ -146,6 +147,8 @@ export function CoquilleAdmin({
           </span>
           <ChevronRight size={16} className="text-white/45 shrink-0" />
         </Link>
+
+        <BoutonDeconnexion />
       </aside>
 
       {/* ==================== Contenu ==================== */}

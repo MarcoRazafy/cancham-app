@@ -18,12 +18,19 @@ import { OFFERS, SERVICES } from "./fixtures/offers";
 import { RESOURCES } from "./fixtures/resources";
 import { THREADS } from "./fixtures/threads";
 import { CONTACTS, USERS } from "./fixtures/users";
+import { hacher } from "../lib/mots-de-passe";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
 /** Les dates du jeu de données sont des ISO courtes (YYYY-MM-DD). */
+/**
+ * Mot de passe commun aux comptes de démonstration — l'empreinte est calculée
+ * une seule fois : scrypt est volontairement lent.
+ */
+const MOT_DE_PASSE = hacher(process.env.MOT_DE_PASSE_DEMO ?? "cancham2026");
+
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
 /* ---- Correspondances entre les libellés du jeu de données et les enums ---- */
@@ -187,6 +194,7 @@ async function main() {
         tel: u.tel ?? null,
         photo: u.photo ?? null,
         memberId: u.memberId,
+        motDePasse: MOT_DE_PASSE,
         contactPrincipal: u.role === "membre" || u.role === "visiteur",
       },
     });
@@ -202,6 +210,7 @@ async function main() {
         tel: c.tel,
         photo: c.photo,
         role: "membre",
+        motDePasse: MOT_DE_PASSE,
         contactPrincipal: c.principal,
       },
     });
