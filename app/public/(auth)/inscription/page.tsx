@@ -30,8 +30,8 @@ export default async function InscriptionPage() {
   return (
     <CadreAuth
       large
-      photo="/photos/cancham-25.jpg"
-      alt="Entrepreneurs réunis lors d’un rendez-vous de la chambre"
+      photo="/photos/auth.jpg"
+      alt="Entrepreneurs réunis autour de la table avec l’équipe CanCham"
       accroche={
         <>
           Votre prochain <Saillant>partenariat</Saillant> commence{" "}
