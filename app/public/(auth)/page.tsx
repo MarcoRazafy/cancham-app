@@ -9,6 +9,7 @@ import {
   Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
+import { Saillant } from "@/components/ui";
 import { connexion } from "@/lib/actions/auth";
 import { utilisateurConnecte } from "@/lib/session";
 
@@ -33,7 +34,9 @@ export default async function ConnexionPage({
       alt="Rencontre du réseau CanCham à Antananarivo"
       accroche={
         <>
-          Deux pays. Un réseau. Des opportunités<span aria-hidden>.</span>
+          Deux pays. Un <Saillant>réseau</Saillant>. Des{" "}
+          <Saillant ton="vert">opportunités</Saillant>
+          <span aria-hidden>.</span>
         </>
       }
       sous="Retrouvez l’annuaire des membres, les rendez-vous de la chambre et vos échanges."
