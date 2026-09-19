@@ -33,12 +33,13 @@ export async function ActualitesPage({ space }: { space: Space }) {
   return (
     <>
       {/*
-          Le titre et le fil à gauche, à une largeur de lecture ; le rail des
-          offres prend tout le reste, en deux colonnes, et monte jusqu'en haut
-          de la page : plus de vide à côté du titre ni à droite.
+          Deux moitiés : le titre et le fil à gauche, les offres à droite, en
+          deux colonnes de cartes carrées, dès le haut de la page. Le rail ne
+          suit plus le défilement : plus haut que l'écran, sa dernière rangée
+          serait restée hors de vue jusqu'au bas du fil.
         */}
-      <div className="flex gap-7 items-start flex-col xl:flex-row">
-        <div className="w-full min-w-0 xl:w-[600px] 2xl:w-[660px] xl:shrink-0">
+      <div className="grid gap-7 items-start xl:grid-cols-2">
+        <div className="min-w-0">
           <ViewHead
             title="Actualités"
             action={
@@ -85,7 +86,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
           ))}
         </div>
 
-        <aside className="w-full min-w-0 xl:flex-1 xl:sticky xl:top-[84px]">
+        <aside className="min-w-0">
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
@@ -99,6 +100,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
                   <OfferCard
                     key={o.id}
                     offer={o}
+                    carre
                     href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
                   />
                 );
