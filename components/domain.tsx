@@ -742,6 +742,7 @@ export function OfferCard({
   offer,
   href,
   carre = false,
+  className = "",
 }: {
   offer: Offer;
   href?: string;
@@ -751,12 +752,18 @@ export function OfferCard({
    * laissait des cartes plates et étirées.
    */
   carre?: boolean;
+  /**
+   * Pour borner la carte depuis la page — sa hauteur, par exemple. Une carte
+   * carrée garde toute la largeur de sa colonne : bornée en hauteur, elle
+   * s'aplatit au lieu de rétrécir et de laisser un vide à côté.
+   */
+  className?: string;
 }) {
   const corps = (
     <Card
       className={`carte-filet filet-bas filet-degrade ${
         href ? "" : "filet-fixe"
-      } p-0 ${carre ? "aspect-square" : "h-full"} flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
+      } p-0 ${carre ? "w-full aspect-square" : "h-full"} flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] ${className}`}
     >
       <div className={`overflow-hidden ${carre ? "flex-1 min-h-0" : ""}`}>
         <Visuel
