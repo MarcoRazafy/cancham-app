@@ -311,6 +311,10 @@ model Attendee {
   entreprise String
   email      String
   statut     AttendeeStatus @default(confirme)
+  /// Code d'accueil de l'inscription d'un membre — celui de son QR code. Le
+  /// scanner le lit à l'entrée et pointe la personne présente. `null` pour
+  /// une personne inscrite par l'équipe.
+  code       String?        @unique
 
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
