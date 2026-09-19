@@ -597,13 +597,15 @@ export async function envoyerDemandeContact(formData: FormData) {
 }
 
 /**
- * Réservation d'un service payant de la chambre.
+ * Demande sur un service de la chambre : « Réserver » pour un service
+ * gratuit, « Payer » pour un service payant.
  *
- * Un clic suffit : le message part tout rédigé dans le fil de l'équipe, qui
- * répond avec les modalités de règlement. Le paiement en ligne n'étant pas
- * branché, c'est l'équipe qui encaisse et émet la facture. La demande laisse
- * aussi une trace au journal, pour qu'aucune ne se perde entre deux
- * permanences.
+ * Un clic suffit : le message part tout rédigé dans le fil de l'équipe. Pour
+ * un service gratuit, l'équipe répond avec les disponibilités ; pour un
+ * service payant, avec les modalités de règlement — le paiement en ligne
+ * n'étant pas branché, c'est elle qui encaisse et émet la facture. La
+ * demande laisse aussi une trace au journal, pour qu'aucune ne se perde entre
+ * deux permanences.
  */
 export async function reserverService(formData: FormData) {
   const retour = "/membre/offres-cancham";
@@ -611,7 +613,7 @@ export async function reserverService(formData: FormData) {
     where: { id: texte(formData, "serviceId") },
     select: { id: true, titre: true, type: true, prix: true },
   });
-  if (!service || service.type !== "payant") {
+  if (!service) {
     redirectWithFlash(retour, "Ce service n’est plus proposé.");
   }
 
@@ -624,31 +626,40 @@ export async function reserverService(formData: FormData) {
         })
       )?.nom
     : null;
+  const signature = [user.nom, entreprise].filter(Boolean).join(" · ");
+  const payant = service.type === "payant";
   const prix = fmtMoney(service.prix);
 
   const fil = await ecrireAEquipe(
     user,
-    [
-      `Réservation et paiement — ${service.titre}`,
-      `Bonjour, je souhaite réserver « ${service.titre} » (${prix}). Pouvez-vous m’indiquer les modalités de règlement et la suite à donner ?`,
-      [user.nom, entreprise].filter(Boolean).join(" · "),
-    ].join("\n\n"),
+    (payant
+      ? [
+          `Paiement — ${service.titre}`,
+          `Bonjour, je souhaite régler « ${service.titre} » (${prix}). Pouvez-vous m’indiquer les modalités de paiement et la suite à donner ?`,
+          signature,
+        ]
+      : [
+          `Réservation — ${service.titre}`,
+          `Bonjour, je souhaite réserver « ${service.titre} », inclus dans mon adhésion. Pouvez-vous m’indiquer les disponibilités et la suite à donner ?`,
+          signature,
+        ]
+    ).join("\n\n"),
   );
 
   await prisma.auditLog.create({
     data: {
-      action: "service_reserve",
+      action: payant ? "service_reserve" : "service_gratuit_reserve",
       entite: "MessageThread",
       entiteId: fil,
       acteur: user.nom,
-      detail: `« ${service.titre} » · ${prix}${entreprise ? ` · ${entreprise}` : ""}.`,
+      detail: `« ${service.titre} »${payant ? ` · ${prix}` : ""}${entreprise ? ` · ${entreprise}` : ""}.`,
     },
   });
 
   revalidatePath("/", "layout");
   redirectWithFlash(
     retour,
-    `Demande envoyée à l’équipe CanCham · réponse dans votre messagerie`,
+    `${payant ? "Demande de paiement" : "Demande de réservation"} envoyée à l’équipe CanCham · réponse dans votre messagerie`,
   );
 }
 

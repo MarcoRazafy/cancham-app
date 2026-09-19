@@ -24,7 +24,13 @@ export async function OffresCanchamPage() {
       <SectionTitle>Services gratuits</SectionTitle>
       <div className="grid gap-4 mb-7 md:grid-cols-2 lg:grid-cols-3">
         {gratuits.length ? (
-          gratuits.map((s) => <ServiceCard key={s.id} service={s} />)
+          gratuits.map((s) => (
+            <ServiceCard
+              key={s.id}
+              service={s}
+              action={<BoutonReservation serviceId={s.id} payant={false} />}
+            />
+          ))
         ) : (
           <EmptyState>Aucun service gratuit pour le moment.</EmptyState>
         )}
@@ -37,7 +43,7 @@ export async function OffresCanchamPage() {
             <ServiceCard
               key={s.id}
               service={s}
-              action={<BoutonReservation serviceId={s.id} />}
+              action={<BoutonReservation serviceId={s.id} payant />}
             />
           ))
         ) : (
