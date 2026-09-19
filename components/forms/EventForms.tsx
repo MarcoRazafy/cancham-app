@@ -173,20 +173,20 @@ export function AttendanceButton({
   attendeeId,
   eventId,
   statut,
-  onglet,
+  retour,
 }: {
   attendeeId: string;
   eventId: string;
   statut: "confirme" | "present" | "absent";
-  /** Onglet de la liste où revenir après le pointage. */
-  onglet?: string;
+  /** La liste où revenir après le pointage : onglet, recherche, page. */
+  retour?: string;
 }) {
   const present = statut === "present";
   return (
     <form action={toggleAttendance}>
       <input type="hidden" name="attendeeId" value={attendeeId} />
       <input type="hidden" name="eventId" value={eventId} />
-      {onglet ? <input type="hidden" name="onglet" value={onglet} /> : null}
+      {retour ? <input type="hidden" name="retour" value={retour} /> : null}
       <SubmitButton
         sm
         variant={present ? "ghost" : "line"}
@@ -211,12 +211,12 @@ export function RetirerParticipantButton({
   attendeeId,
   eventId,
   nom,
-  onglet,
+  retour,
 }: {
   attendeeId: string;
   eventId: string;
   nom: string;
-  onglet?: string;
+  retour?: string;
 }) {
   return (
     <Modal
@@ -237,7 +237,7 @@ export function RetirerParticipantButton({
         <form action={retirerParticipant}>
           <input type="hidden" name="attendeeId" value={attendeeId} />
           <input type="hidden" name="eventId" value={eventId} />
-          {onglet ? <input type="hidden" name="onglet" value={onglet} /> : null}
+          {retour ? <input type="hidden" name="retour" value={retour} /> : null}
           <ModalBody>
             <p className="text-[13.6px] text-muted m-0">
               Retirer <b className="text-ink">{nom}</b> de la liste d’accueil ?
@@ -260,9 +260,12 @@ export function RetirerParticipantButton({
 export function AddAttendeeButton({
   eventId,
   membres,
+  retour,
 }: {
   eventId: string;
   membres: { id: string; nom: string; contact: string; email: string }[];
+  /** La liste où revenir après l'inscription. */
+  retour?: string;
 }) {
   return (
     <Modal
@@ -279,6 +282,7 @@ export function AddAttendeeButton({
       {(fermer) => (
         <form action={addAttendee}>
           <input type="hidden" name="eventId" value={eventId} />
+          {retour ? <input type="hidden" name="retour" value={retour} /> : null}
           <ModalBody>
             <Field label="Nom">
               <input

@@ -65,6 +65,7 @@ export function Compteur({
   detail,
   href,
   teinte = "rouge",
+  actif = false,
 }: {
   icone: ReactNode;
   libelle: string;
@@ -72,10 +73,14 @@ export function Compteur({
   detail?: ReactNode;
   href?: string;
   teinte?: Teinte;
+  /** Carte qui commande la vue affichée dessous, et qui l'affiche. */
+  actif?: boolean;
 }) {
   const corps = (
     <Card
-      className={`tuile-hote carte-filet ${href ? "" : "filet-fixe"} ${TEINTES[teinte].filet} p-5 h-full flex gap-4 items-start`}
+      className={`tuile-hote carte-filet ${href && !actif ? "" : "filet-fixe"} ${TEINTES[teinte].filet} p-5 h-full flex gap-4 items-start ${
+        actif ? "ring-2 ring-accent/60" : ""
+      }`}
     >
       <span className={`tuile tuile-sm ${TEINTES[teinte].tuile}`}>{icone}</span>
       <span className="min-w-0 flex-1">
@@ -90,7 +95,11 @@ export function Compteur({
     </Card>
   );
   return href ? (
-    <Link href={href} className="no-underline block h-full">
+    <Link
+      href={href}
+      aria-current={actif ? "true" : undefined}
+      className="no-underline block h-full"
+    >
       {corps}
     </Link>
   ) : (
