@@ -73,9 +73,15 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "info",
   },
+  // Code historique : c'était « Réserver et payer », devenu « Payer ».
   service_reserve: {
-    libelle: "Réservation d’un service payant",
+    libelle: "Demande de paiement d’un service",
     famille: "finance",
+    ton: "info",
+  },
+  service_gratuit_reserve: {
+    libelle: "Réservation d’un service gratuit",
+    famille: "programme",
     ton: "info",
   },
   evenement_cree: {
