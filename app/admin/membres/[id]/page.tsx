@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   Building2,
+  CheckCircle2,
   ExternalLink,
   Globe,
   User as UserIcon,
@@ -285,6 +286,13 @@ export default async function AdminMembreDetail({
                   <ApproveButton memberId={m.id} />
                   <RejectButton memberId={m.id} nom={m.nom} />
                 </>
+              ) : m.statut === "a_jour" ? (
+                // Cotisation réglée : rien à encaisser. Le bouton revient de
+                // lui-même quand l'adhésion repasse en attente ou en retard.
+                <p className="m-0 flex items-center gap-2 text-[13px] text-success-strong bg-success-soft rounded-[var(--radius-s)] px-3 py-2.5">
+                  <CheckCircle2 size={16} className="shrink-0" />
+                  Cotisation réglée : aucun règlement à enregistrer.
+                </p>
               ) : (
                 <RegisterPaymentButton
                   memberId={m.id}
