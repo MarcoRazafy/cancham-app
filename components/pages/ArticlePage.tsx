@@ -47,11 +47,12 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
 
       {/*
         Même composition que le fil : l'article à gauche, les offres dans un
-        rail qui le suit au défilement. Seul, l'article laissait un grand vide
-        à droite sur tout écran large.
+        rail qui le suit au défilement et prend toute la largeur restante, en
+        deux colonnes. Seul, l'article laissait un grand vide à droite sur tout
+        écran large.
       */}
-      <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
-        <Card className="p-[22px] flex-1 min-w-0 max-w-[760px] w-full">
+      <div className="flex gap-7 items-start flex-col xl:flex-row">
+        <Card className="p-[22px] w-full min-w-0 xl:w-[680px] 2xl:w-[760px] xl:shrink-0">
           <Kicker>{n.cat}</Kicker>
           <h1 className="mt-2 mb-1.5 text-[24px]">{n.titre}</h1>
           <div className="text-[12.5px] text-faint mb-4">{fmtDate(n.date)}</div>
@@ -114,7 +115,7 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
           </div>
         </Card>
 
-        <aside className="w-full xl:w-[500px] xl:shrink-0 xl:sticky xl:top-[84px]">
+        <aside className="w-full min-w-0 xl:flex-1 xl:sticky xl:top-[84px]">
           <h2 className="text-sm m-0 mb-2.5 font-semibold uppercase tracking-[0.04em] text-faint">
             Offres &amp; promotions membres
           </h2>

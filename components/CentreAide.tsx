@@ -139,7 +139,9 @@ function Reponse({
         />
       </summary>
 
-      <div className="px-4 pb-4 -mt-1 text-[13.8px] leading-relaxed text-muted">
+      {/* La question prend toute la largeur ; la réponse garde une longueur
+          de ligne qui se lit. */}
+      <div className="px-4 pb-4 -mt-1 text-[13.8px] leading-relaxed text-muted max-w-[92ch]">
         {question.reponse.split("\n\n").map((bloc, i) => {
           const lignes = bloc.split("\n");
           // Un bloc dont toutes les lignes commencent par « · » est une liste.
