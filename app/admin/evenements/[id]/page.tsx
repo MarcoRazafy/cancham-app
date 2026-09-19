@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { Compteur, Jauge, Onglets, Panneau, Vide } from "@/components/admin/ui";
+import { ScannerQr } from "@/components/admin/ScannerQr";
 import {
   AddAttendeeButton,
   AttendanceButton,
@@ -31,9 +32,10 @@ import {
 import { TexteLie } from "@/components/TexteLie";
 import { Card, Pill } from "@/components/ui";
 import { plageHoraire } from "@/lib/agenda";
-import { fmtDate, fmtMoney, isPast } from "@/lib/format";
+import { fmtDate, fmtMoney } from "@/lib/format";
 import { getEvent, getMembers } from "@/lib/queries";
 import { getParticipants } from "@/lib/queries-admin";
+import { estTermine, marquerAbsentsPasses } from "@/lib/presences";
 import { plat } from "@/lib/texte";
 
 const ONGLETS = [
@@ -79,6 +81,9 @@ export default async function EvenementAdmin({
   const e = await getEvent(id);
   if (!e) notFound();
 
+  // L'événement terminé, les personnes non pointées sont absentes : la liste
+  // est mise à jour avant d'être lue.
+  await marquerAbsentsPasses(id);
   const [participants, membres] = await Promise.all([
     getParticipants(id),
     getMembers(),
@@ -88,7 +93,8 @@ export default async function EvenementAdmin({
     ? (sp.onglet as (typeof ONGLETS)[number]["cle"])
     : "tous";
   const recherche = sp.q?.trim() ?? "";
-  const passe = isPast(e.date);
+  // Terminé à l'heure de fin, pas seulement le lendemain.
+  const passe = estTermine({ date: e.date, fin: e.fin ?? null });
 
   const trouves = recherche
     ? participants.filter((p) =>
@@ -196,9 +202,10 @@ export default async function EvenementAdmin({
               </span>
             </div>
             <div className="flex gap-2.5 flex-wrap mt-auto pt-2">
+              <ScannerQr eventId={e.id} termine={passe} />
               <Link
                 href={`/admin/evenements/${e.id}/modifier`}
-                className="btn-action btn-action-sm no-underline"
+                className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
               >
                 <Pencil size={14} /> Modifier
               </Link>
@@ -286,6 +293,7 @@ export default async function EvenementAdmin({
               </p>
             </div>
             <div className="flex gap-2 flex-wrap items-center">
+              <ScannerQr eventId={e.id} termine={passe} />
               <a
                 href={`/admin/evenements/${e.id}/export`}
                 className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useFormStatus } from "react-dom";
 import { Check, LogIn, Plus, Trash2, UserPlus, X } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
@@ -168,7 +169,10 @@ export function DeleteEventButton({
   );
 }
 
-/** Pointage à l'accueil. */
+/**
+ * Pointage à l'accueil : « Présent » et « Absent », côte à côte. Le bouton
+ * de l'état actuel est allumé et inactif ; l'autre le corrige d'un clic.
+ */
 export function AttendanceButton({
   attendeeId,
   eventId,
@@ -181,28 +185,47 @@ export function AttendanceButton({
   /** La liste où revenir après le pointage : onglet, recherche, page. */
   retour?: string;
 }) {
-  const present = statut === "present";
   return (
-    <form action={toggleAttendance}>
+    <form
+      action={toggleAttendance}
+      className="inline-flex rounded-[var(--radius-s)] border border-line overflow-hidden shrink-0 divide-x divide-line"
+    >
       <input type="hidden" name="attendeeId" value={attendeeId} />
       <input type="hidden" name="eventId" value={eventId} />
       {retour ? <input type="hidden" name="retour" value={retour} /> : null}
-      <SubmitButton
-        sm
-        variant={present ? "ghost" : "line"}
-        pendingLabel="…"
-        className="whitespace-nowrap"
-      >
-        {present ? (
-          "Marquer absent"
-        ) : (
-          <>
-            <Check size={13} />{" "}
-            {statut === "absent" ? "Marquer présent" : "Arrivée"}
-          </>
-        )}
-      </SubmitButton>
+      <BoutonPresence valeur="present" actif={statut === "present"} />
+      <BoutonPresence valeur="absent" actif={statut === "absent"} />
     </form>
+  );
+}
+
+function BoutonPresence({
+  valeur,
+  actif,
+}: {
+  valeur: "present" | "absent";
+  actif: boolean;
+}) {
+  const { pending } = useFormStatus();
+  const present = valeur === "present";
+  return (
+    <button
+      type="submit"
+      name="statut"
+      value={valeur}
+      disabled={pending || actif}
+      aria-pressed={actif}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-[12.6px] font-semibold whitespace-nowrap transition-colors ${
+        actif
+          ? present
+            ? "bg-success-soft text-success-strong"
+            : "bg-bad-soft text-bad"
+          : "bg-surface text-muted cursor-pointer hover:bg-surface-2 hover:text-ink disabled:opacity-60 disabled:cursor-default"
+      }`}
+    >
+      {present ? <Check size={13} /> : <X size={13} />}
+      {present ? "Présent" : "Absent"}
+    </button>
   );
 }
 

@@ -8,6 +8,7 @@ import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { numeroFacture } from "@/lib/factures";
+import { estTermine } from "@/lib/presences";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import type { EventFormat } from "@/lib/types";
@@ -80,8 +81,16 @@ export async function registerForEvent(formData: FormData) {
     prisma.registration.create({
       data: { eventId, memberId: user.memberId, code },
     }),
+    // Même code sur la ligne d'accueil : c'est lui que le scanner lira.
     prisma.attendee.create({
-      data: { eventId, nom, entreprise: membre.nom, email, statut: "confirme" },
+      data: {
+        eventId,
+        nom,
+        entreprise: membre.nom,
+        email,
+        statut: "confirme",
+        code,
+      },
     }),
   ];
 
@@ -120,12 +129,24 @@ export async function cancelRegistration(formData: FormData) {
     select: { nom: true },
   });
 
+  const inscription = await prisma.registration.findUnique({
+    where: { eventId_memberId: { eventId, memberId: user.memberId } },
+    select: { code: true },
+  });
   await prisma.registration.deleteMany({
     where: { eventId, memberId: user.memberId },
   });
-  // On retire aussi la personne de la liste d'accueil.
+  // On retire aussi la personne de la liste d'accueil : la ligne qui porte
+  // le code de l'inscription, ou, pour une inscription plus ancienne que ce
+  // lien, celle de l'entreprise encore en attente.
   await prisma.attendee.deleteMany({
-    where: { eventId, entreprise: membre?.nom, statut: "confirme" },
+    where: {
+      eventId,
+      OR: [
+        ...(inscription ? [{ code: inscription.code }] : []),
+        { entreprise: membre?.nom, statut: "confirme", code: null },
+      ],
+    },
   });
 
   revalideTout();
@@ -309,13 +330,138 @@ export async function toggleAttendance(formData: FormData) {
     redirectWithFlash(retour, "Participant introuvable.");
   }
 
-  const statut = a.statut === "present" ? "absent" : "present";
+  // « Présent » et « Absent » disent ce qu'ils font ; sans précision, le
+  // pointage bascule, comme avant.
+  const demande = texte(formData, "statut");
+  const statut =
+    demande === "present" || demande === "absent"
+      ? demande
+      : a.statut === "present"
+        ? "absent"
+        : "present";
   await prisma.attendee.update({ where: { id: attendeeId }, data: { statut } });
   revalideTout();
   redirectWithFlash(
     retour,
-    `${a.nom} — ${statut === "present" ? "arrivée enregistrée" : "marqué absent"}`,
+    `${a.nom} — ${statut === "present" ? "présent" : "absent"}`,
   );
+}
+
+/** Ce que le scanner affiche après la lecture d'un code. */
+export type ResultatScan =
+  | { etat: "present" | "deja"; code: string; nom: string; entreprise: string }
+  | { etat: "erreur"; code: string; message: string };
+
+/**
+ * Pointage par QR code, depuis le scanner de la page de l'événement.
+ *
+ * Le QR code d'un membre porte son code d'accueil (CC-E1-4040) : la ligne
+ * d'accueil qui le porte passe « présente ». Pas de redirection — le scanner
+ * reste ouvert pour la personne suivante — et un résultat à afficher : qui
+ * vient d'arriver, qui était déjà là, ou pourquoi le code est refusé.
+ */
+export async function pointerParCode(
+  eventId: string,
+  lu: string,
+): Promise<ResultatScan> {
+  await getCurrentUser("admin");
+
+  // Le code seul, même lu au milieu d'un texte plus long.
+  const code = /CC-[A-Z0-9]+-\d{4}/i.exec(lu)?.[0].toUpperCase() ?? lu.trim();
+  if (!code) return { etat: "erreur", code, message: "Aucun code lu." };
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { titre: true, date: true, fin: true },
+  });
+  if (!event) {
+    return { etat: "erreur", code, message: "Événement introuvable." };
+  }
+  if (estTermine(event)) {
+    return {
+      etat: "erreur",
+      code,
+      message:
+        "L’événement est terminé : les personnes non pointées ont été marquées absentes.",
+    };
+  }
+
+  let ligne = await prisma.attendee.findUnique({ where: { code } });
+
+  if (!ligne) {
+    // Code d'une inscription dont la ligne d'accueil n'a pas encore été
+    // rattachée — ou a été retirée : on la retrouve, ou on la recrée.
+    const inscription = await prisma.registration.findUnique({
+      where: { code },
+      select: {
+        eventId: true,
+        member: {
+          select: {
+            id: true,
+            nom: true,
+            users: {
+              orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
+              take: 1,
+              select: { nom: true, email: true },
+            },
+          },
+        },
+      },
+    });
+    if (!inscription) {
+      return { etat: "erreur", code, message: `Code inconnu : ${code}.` };
+    }
+    if (inscription.eventId !== eventId) {
+      const autre = await prisma.event.findUnique({
+        where: { id: inscription.eventId },
+        select: { titre: true },
+      });
+      return {
+        etat: "erreur",
+        code,
+        message: `Ce code est celui d’un autre événement : « ${autre?.titre ?? "?"} ».`,
+      };
+    }
+    const libre = await prisma.attendee.findFirst({
+      where: { eventId, entreprise: inscription.member.nom, code: null },
+      orderBy: { createdAt: "asc" },
+    });
+    const contact = inscription.member.users[0];
+    ligne = libre
+      ? await prisma.attendee.update({ where: { id: libre.id }, data: { code } })
+      : await prisma.attendee.create({
+          data: {
+            eventId,
+            nom: contact?.nom ?? inscription.member.nom,
+            entreprise: inscription.member.nom,
+            email: contact?.email ?? "—",
+            statut: "confirme",
+            code,
+          },
+        });
+  }
+
+  if (ligne.eventId !== eventId) {
+    const autre = await prisma.event.findUnique({
+      where: { id: ligne.eventId },
+      select: { titre: true },
+    });
+    return {
+      etat: "erreur",
+      code,
+      message: `Ce code est celui d’un autre événement : « ${autre?.titre ?? "?"} ».`,
+    };
+  }
+
+  const qui = { code, nom: ligne.nom, entreprise: ligne.entreprise };
+  if (ligne.statut === "present") return { etat: "deja", ...qui };
+
+  await prisma.attendee.update({
+    where: { id: ligne.id },
+    data: { statut: "present" },
+  });
+  revalideTout();
+  return { etat: "present", ...qui };
 }
 
 /** Inscription manuelle à l'accueil, y compris pour une arrivée sans inscription. */

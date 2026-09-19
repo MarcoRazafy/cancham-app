@@ -1,4 +1,5 @@
 import { reponseCsv, versCsv } from "@/lib/csv";
+import { marquerAbsentsPasses } from "@/lib/presences";
 import { getParticipants } from "@/lib/queries-admin";
 
 const STATUTS = { confirme: "Inscrit", present: "Présent", absent: "Absent" };
@@ -9,6 +10,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  // Un export après l'événement doit déjà compter les absents.
+  await marquerAbsentsPasses(id);
   const participants = await getParticipants(id);
   const csv = versCsv(
     ["Nom", "Entreprise", "E-mail", "Statut"],

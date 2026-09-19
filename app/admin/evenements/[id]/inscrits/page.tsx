@@ -10,6 +10,6 @@ export default async function AncienneListe({
 }) {
   const [{ id }, { onglet }] = await Promise.all([params, searchParams]);
   redirect(
-    `/admin/evenements/${id}${onglet === "presents" ? "?onglet=presents" : ""}`,
+    `/admin/evenements/${id}?vue=inscrits${onglet === "presents" ? "&onglet=presents" : ""}`,
   );
 }
