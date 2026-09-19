@@ -139,8 +139,22 @@ async function acteurEquipe(): Promise<string> {
   return (await getCurrentUser("admin")).nom;
 }
 
-const pageEvenement = (id: string, onglet?: string) =>
-  `/admin/evenements/${id}${onglet && onglet !== "tous" ? `?onglet=${onglet}` : ""}`;
+const pageEvenement = (id: string) => `/admin/evenements/${id}`;
+
+/**
+ * La liste d'accueil telle qu'on l'a quittée : onglet, recherche, taille et
+ * numéro de page. Pointer une arrivée ne doit ni refermer la liste ni
+ * renvoyer en première page. Seule une adresse de cet événement est
+ * acceptée ; à défaut, la liste s'ouvre sur l'onglet demandé.
+ */
+function retourListe(fd: FormData, eventId: string, onglet?: string): string {
+  const base = pageEvenement(eventId);
+  const r = texte(fd, "retour");
+  if (r === base || r.startsWith(`${base}?`)) return r;
+  const q = new URLSearchParams({ vue: "inscrits" });
+  if (onglet && onglet !== "tous") q.set("onglet", onglet);
+  return `${base}?${q}`;
+}
 
 /**
  * Création ou modification d'un événement, programme compris.
@@ -289,20 +303,17 @@ export async function deleteEvent(formData: FormData) {
 export async function toggleAttendance(formData: FormData) {
   const attendeeId = texte(formData, "attendeeId");
   const eventId = texte(formData, "eventId");
-  const onglet = texte(formData, "onglet");
+  const retour = retourListe(formData, eventId);
   const a = await prisma.attendee.findUnique({ where: { id: attendeeId } });
   if (!a || a.eventId !== eventId) {
-    redirectWithFlash(
-      pageEvenement(eventId, onglet),
-      "Participant introuvable.",
-    );
+    redirectWithFlash(retour, "Participant introuvable.");
   }
 
   const statut = a.statut === "present" ? "absent" : "present";
   await prisma.attendee.update({ where: { id: attendeeId }, data: { statut } });
   revalideTout();
   redirectWithFlash(
-    pageEvenement(eventId, onglet),
+    retour,
     `${a.nom} — ${statut === "present" ? "arrivée enregistrée" : "marqué absent"}`,
   );
 }
@@ -313,7 +324,7 @@ export async function addAttendee(formData: FormData) {
   const nom = texte(formData, "nom");
   if (!nom) {
     redirectWithFlash(
-      pageEvenement(eventId),
+      retourListe(formData, eventId),
       "Le nom de la personne est requis.",
     );
   }
@@ -331,7 +342,7 @@ export async function addAttendee(formData: FormData) {
 
   revalideTout();
   redirectWithFlash(
-    pageEvenement(eventId, direct ? "presents" : undefined),
+    retourListe(formData, eventId, direct ? "presents" : undefined),
     direct
       ? `${nom} enregistré comme présent (arrivée directe)`
       : `${nom} inscrit à l’événement`,
@@ -342,18 +353,15 @@ export async function addAttendee(formData: FormData) {
 export async function retirerParticipant(formData: FormData) {
   const attendeeId = texte(formData, "attendeeId");
   const eventId = texte(formData, "eventId");
-  const onglet = texte(formData, "onglet");
+  const retour = retourListe(formData, eventId);
   const a = await prisma.attendee.findUnique({ where: { id: attendeeId } });
   if (!a || a.eventId !== eventId) {
-    redirectWithFlash(
-      pageEvenement(eventId, onglet),
-      "Participant introuvable.",
-    );
+    redirectWithFlash(retour, "Participant introuvable.");
   }
   await prisma.attendee.delete({ where: { id: attendeeId } });
   revalideTout();
   redirectWithFlash(
-    pageEvenement(eventId, onglet),
+    retour,
     `${a.nom} retiré de la liste`,
   );
 }

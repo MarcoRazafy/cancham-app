@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
   Clock,
   Download,
   ExternalLink,
@@ -15,6 +19,7 @@ import {
   UserRound,
   UserX,
   Users,
+  X,
 } from "lucide-react";
 import { Compteur, Jauge, Onglets, Panneau, Vide } from "@/components/admin/ui";
 import {
@@ -44,6 +49,13 @@ const STATUT_ONGLET = {
   absents: "absent",
 } as const;
 
+/** Lignes par page de la liste d'accueil. */
+const TAILLES = [
+  { cle: "10", libelle: "10" },
+  { cle: "50", libelle: "50" },
+  { cle: "tout", libelle: "Tout" },
+] as const;
+
 const PASTILLES = {
   confirme: { ton: "warn", libelle: "Inscrit" },
   present: { ton: "ok", libelle: "Présent" },
@@ -55,7 +67,13 @@ export default async function EvenementAdmin({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ onglet?: string; q?: string }>;
+  searchParams: Promise<{
+    onglet?: string;
+    q?: string;
+    vue?: string;
+    par?: string;
+    page?: string;
+  }>;
 }) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const e = await getEvent(id);
@@ -87,13 +105,38 @@ export default async function EvenementAdmin({
   const presents = compte("present");
   const restantes = Math.max(0, e.cap - participants.length);
 
-  const lien = (o: string) => {
-    const p = new URLSearchParams();
-    if (o !== "tous") p.set("onglet", o);
-    if (recherche) p.set("q", recherche);
-    const qs = p.toString();
-    return `/admin/evenements/${id}${qs ? `?${qs}` : ""}`;
+  // La liste d'accueil ne s'ouvre qu'à la demande, depuis les chiffres : par
+  // défaut, la page présente l'événement.
+  const vueListe = sp.vue === "inscrits";
+  const par = TAILLES.some((t) => t.cle === sp.par)
+    ? (sp.par as (typeof TAILLES)[number]["cle"])
+    : "10";
+  const taille = par === "tout" ? Math.max(liste.length, 1) : Number(par);
+  const pages = Math.max(1, Math.ceil(liste.length / taille));
+  const page = Math.min(Math.max(1, Number(sp.page) || 1), pages);
+  const visibles = liste.slice((page - 1) * taille, page * taille);
+
+  const base = `/admin/evenements/${id}`;
+  /** Adresse de la liste ouverte ; ce qui n'est pas précisé est conservé, sauf la page. */
+  const adresse = (
+    change: { onglet?: string; par?: string; page?: number } = {},
+  ) => {
+    const o = change.onglet ?? onglet;
+    const t = change.par ?? par;
+    const n = change.page ?? 1;
+    const q = new URLSearchParams({ vue: "inscrits" });
+    if (o !== "tous") q.set("onglet", o);
+    if (recherche) q.set("q", recherche);
+    if (t !== "10") q.set("par", t);
+    if (n > 1) q.set("page", String(n));
+    return `${base}?${q}`;
   };
+  /** Où revenir après un pointage : exactement la liste affichée. */
+  const ici = adresse({ page });
+  const lien = (o: string) => adresse({ onglet: o });
+  /** Une carte de chiffres ouvre la liste sur son onglet, ou la referme. */
+  const bascule = (o: string) =>
+    vueListe && onglet === o ? base : adresse({ onglet: o, par });
 
   return (
     <>
@@ -177,6 +220,8 @@ export default async function EvenementAdmin({
           icone={<Users size={22} />}
           teinte="bleu"
           libelle="Inscrits"
+          href={bascule("tous")}
+          actif={vueListe && onglet === "tous"}
           valeur={
             <span>
               {participants.length}
@@ -184,13 +229,28 @@ export default async function EvenementAdmin({
             </span>
           }
           detail={
-            <Jauge valeur={participants.length} max={e.cap} teinte="vert" />
+            <>
+              <Jauge valeur={participants.length} max={e.cap} teinte="vert" />
+              <span className="flex items-center gap-1 mt-2 text-[12.5px] font-semibold text-accent">
+                {vueListe && onglet === "tous" ? (
+                  <>
+                    <ChevronUp size={14} /> Masquer la liste d’accueil
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={14} /> Voir la liste d’accueil
+                  </>
+                )}
+              </span>
+            </>
           }
         />
         <Compteur
           icone={<UserCheck size={22} />}
           teinte="vert"
           libelle="Présents"
+          href={bascule("presents")}
+          actif={vueListe && onglet === "presents"}
           valeur={presents}
           detail={
             participants.length
@@ -202,6 +262,8 @@ export default async function EvenementAdmin({
           icone={passe ? <UserX size={22} /> : <UserRound size={22} />}
           teinte="rouge"
           libelle={passe ? "Absents" : "À accueillir"}
+          href={bascule(passe ? "absents" : "attendus")}
+          actif={vueListe && onglet === (passe ? "absents" : "attendus")}
           valeur={passe ? compte("absent") : compte("confirme")}
         />
         <Compteur
@@ -213,8 +275,8 @@ export default async function EvenementAdmin({
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px] items-start">
-        {/* ==================== Liste d'accueil ==================== */}
+      {vueListe ? (
+        /* ==================== Liste d'accueil ==================== */
         <Card className="p-0 min-w-0">
           <div className="px-6 pt-5 flex items-end justify-between gap-4 flex-wrap">
             <div>
@@ -223,7 +285,7 @@ export default async function EvenementAdmin({
                 Pointez les arrivées le jour J, inscrivez les arrivées directes.
               </p>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap items-center">
               <a
                 href={`/admin/evenements/${e.id}/export`}
                 className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
@@ -232,6 +294,7 @@ export default async function EvenementAdmin({
               </a>
               <AddAttendeeButton
                 eventId={e.id}
+                retour={ici}
                 membres={membres.map((m) => ({
                   id: m.id,
                   nom: m.nom,
@@ -239,6 +302,14 @@ export default async function EvenementAdmin({
                   email: "",
                 }))}
               />
+              <Link
+                href={base}
+                aria-label="Fermer la liste d’accueil"
+                title="Revenir à la présentation"
+                className="w-9 h-9 rounded-[var(--radius-s)] border border-line text-muted flex items-center justify-center no-underline hover:text-ink hover:bg-surface-2"
+              >
+                <X size={16} />
+              </Link>
             </div>
           </div>
 
@@ -255,12 +326,13 @@ export default async function EvenementAdmin({
                     : compte(STATUT_ONGLET[o.cle]),
               }))}
             />
-            <form
-              action={`/admin/evenements/${e.id}`}
-              className="relative max-w-[360px] mb-4"
-            >
+            <form action={base} className="relative max-w-[360px] mb-4">
+              <input type="hidden" name="vue" value="inscrits" />
               {onglet !== "tous" ? (
                 <input type="hidden" name="onglet" value={onglet} />
+              ) : null}
+              {par !== "10" ? (
+                <input type="hidden" name="par" value={par} />
               ) : null}
               <Search
                 size={15}
@@ -277,9 +349,9 @@ export default async function EvenementAdmin({
             </form>
           </div>
 
-          {liste.length ? (
+          {visibles.length ? (
             <ul className="list-none m-0 p-0 border-t border-line">
-              {liste.map((p) => (
+              {visibles.map((p) => (
                 <li
                   key={p.id}
                   className="flex items-center gap-3 px-6 py-3 border-b border-line last:border-b-0 flex-wrap sm:flex-nowrap"
@@ -301,13 +373,13 @@ export default async function EvenementAdmin({
                       attendeeId={p.id}
                       eventId={e.id}
                       statut={p.statut}
-                      onglet={onglet}
+                      retour={ici}
                     />
                     <RetirerParticipantButton
                       attendeeId={p.id}
                       eventId={e.id}
                       nom={p.nom}
-                      onglet={onglet}
+                      retour={ici}
                     />
                   </span>
                 </li>
@@ -322,10 +394,38 @@ export default async function EvenementAdmin({
                   : "Aucun participant dans cette liste."}
             </Vide>
           )}
-        </Card>
 
-        {/* ==================== Contenu publié ==================== */}
-        <div className="flex flex-col gap-4">
+          {liste.length ? (
+            <Pagination
+              total={liste.length}
+              page={page}
+              pages={pages}
+              taille={taille}
+              par={par}
+              versPage={(n) => adresse({ page: n })}
+              versTaille={(t) => adresse({ par: t })}
+            />
+          ) : null}
+        </Card>
+      ) : (
+        /* ==================== Présentation et programme ==================== */
+        <div className="grid gap-4 lg:grid-cols-[1fr_400px] items-start">
+          <Panneau titre="Présentation" teinte="vert">
+            <p className="m-0 text-[14.3px] text-muted leading-[1.75] whitespace-pre-line">
+              <TexteLie texte={e.desc} />
+            </p>
+            {e.pourQui ? (
+              <>
+                <div className="surtitre text-faint mt-5 mb-1.5">
+                  Public visé
+                </div>
+                <p className="m-0 text-[14px] text-ink leading-relaxed">
+                  {e.pourQui}
+                </p>
+              </>
+            ) : null}
+          </Panneau>
+
           <Panneau titre="Programme" teinte="rouge">
             {e.programme?.length ? (
               <ol className="list-none m-0 p-0 flex flex-col gap-3">
@@ -359,24 +459,121 @@ export default async function EvenementAdmin({
               </p>
             )}
           </Panneau>
-
-          <Panneau titre="Présentation" teinte="vert">
-            <p className="m-0 text-[13.4px] text-muted leading-relaxed whitespace-pre-line line-clamp-[12]">
-              <TexteLie texte={e.desc} />
-            </p>
-            {e.pourQui ? (
-              <>
-                <div className="surtitre text-faint mt-4 mb-1.5">
-                  Public visé
-                </div>
-                <p className="m-0 text-[13.4px] text-ink leading-relaxed">
-                  {e.pourQui}
-                </p>
-              </>
-            ) : null}
-          </Panneau>
         </div>
-      </div>
+      )}
     </>
+  );
+}
+
+/* ============================ Pagination ============================ */
+
+/**
+ * Pied de la liste d'accueil : combien de lignes par page — 10, 50 ou tout
+ * —, où l'on en est, et les pages.
+ */
+function Pagination({
+  total,
+  page,
+  pages,
+  taille,
+  par,
+  versPage,
+  versTaille,
+}: {
+  total: number;
+  page: number;
+  pages: number;
+  taille: number;
+  par: string;
+  versPage: (n: number) => string;
+  versTaille: (t: string) => string;
+}) {
+  const debut = (page - 1) * taille + 1;
+  const fin = Math.min(page * taille, total);
+
+  // Toutes les pages quand elles sont peu nombreuses ; sinon la première, la
+  // dernière et les voisines de la page courante, séparées par « … ».
+  const numeros: (number | "…")[] = [];
+  for (let n = 1; n <= pages; n++) {
+    if (pages <= 7 || n === 1 || n === pages || Math.abs(n - page) <= 1) {
+      numeros.push(n);
+    } else if (numeros.at(-1) !== "…") {
+      numeros.push("…");
+    }
+  }
+
+  const bouton =
+    "min-w-9 h-9 px-2.5 rounded-[var(--radius-s)] inline-flex items-center justify-center text-[13px] font-semibold no-underline tabular-nums";
+
+  return (
+    <div className="flex items-center justify-between gap-x-6 gap-y-3 flex-wrap px-6 py-4 border-t border-line">
+      <div className="flex items-center gap-2.5 text-[13px] text-muted">
+        Afficher
+        <div className="inline-flex rounded-[var(--radius-s)] border border-line overflow-hidden">
+          {TAILLES.map((t) => (
+            <Link
+              key={t.cle}
+              href={versTaille(t.cle)}
+              aria-current={t.cle === par ? "true" : undefined}
+              className={`px-3 py-1.5 text-[13px] font-semibold no-underline border-l border-line first:border-l-0 ${
+                t.cle === par
+                  ? "bg-accent text-white"
+                  : "text-ink hover:bg-surface-2"
+              }`}
+            >
+              {t.libelle}
+            </Link>
+          ))}
+        </div>
+        lignes
+      </div>
+
+      <span className="text-[13px] text-muted tabular-nums">
+        {debut}–{fin} sur {total}
+      </span>
+
+      {pages > 1 ? (
+        <nav aria-label="Pages de la liste" className="flex items-center gap-1">
+          {page > 1 ? (
+            <Link
+              href={versPage(page - 1)}
+              aria-label="Page précédente"
+              className={`${bouton} text-ink hover:bg-surface-2`}
+            >
+              <ChevronLeft size={16} />
+            </Link>
+          ) : null}
+          {numeros.map((n, i) =>
+            n === "…" ? (
+              <span key={`e${i}`} className="px-1 text-faint">
+                …
+              </span>
+            ) : (
+              <Link
+                key={n}
+                href={versPage(n)}
+                aria-current={n === page ? "page" : undefined}
+                className={`${bouton} ${
+                  n === page
+                    ? "bg-accent text-white"
+                    : "text-ink hover:bg-surface-2"
+                }`}
+              >
+                {n}
+              </Link>
+            ),
+          )}
+          {page < pages ? (
+            <Link
+              href={versPage(page + 1)}
+              aria-label="Page suivante"
+              className={`${bouton} text-ink hover:bg-surface-2`}
+            >
+              <ChevronRight size={16} />
+            </Link>
+          ) : null}
+        </nav>
+      ) : null}
+    </div>
   );
 }
