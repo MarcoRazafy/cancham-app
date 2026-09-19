@@ -33,10 +33,12 @@ export async function ActualitesPage({ space }: { space: Space }) {
   return (
     <>
       {/*
-          Deux moitiés : le titre et le fil à gauche, les offres à droite, en
-          deux colonnes de cartes carrées, dès le haut de la page. Le rail ne
-          suit plus le défilement : plus haut que l'écran, sa dernière rangée
-          serait restée hors de vue jusqu'au bas du fil.
+          Deux moitiés : le titre et le fil à gauche, les offres à droite, dès
+          le haut de la page. Le rail suit le défilement, et ses six offres
+          tiennent toujours dans la fenêtre : chaque carte est carrée tant que
+          la hauteur de l'écran le permet, et s'aplatit juste ce qu'il faut
+          sinon — trois rangées dans la hauteur visible, sous la barre du haut
+          et le titre du rail (160 px en tout).
         */}
       <div className="grid gap-7 items-start xl:grid-cols-2">
         <div className="min-w-0">
@@ -86,7 +88,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
           ))}
         </div>
 
-        <aside className="min-w-0">
+        <aside className="min-w-0 xl:sticky xl:top-[84px]">
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
@@ -101,6 +103,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
                     key={o.id}
                     offer={o}
                     carre
+                    className="xl:max-h-[max(220px,calc((100dvh-160px)/3))]"
                     href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
                   />
                 );
