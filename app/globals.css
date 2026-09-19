@@ -234,7 +234,13 @@ h3 {
   color: #ffffff;
 }
 
-.marque :focus-visible {
+/*
+ * Contour de focus rouge, sauf sur les champs de saisie : ils ont leur propre
+ * repère — fond teinté, bordure verte —, et un contour rouge par-dessus
+ * faisait un double cadre rouge et vert. Cases à cocher et boutons radio le
+ * gardent : c'est leur seul repère au clavier.
+ */
+.marque :focus-visible:not(input:not([type="checkbox"], [type="radio"]), select, textarea) {
   outline: 2px solid var(--marque-rouge);
   outline-offset: 3px;
 }

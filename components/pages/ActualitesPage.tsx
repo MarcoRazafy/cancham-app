@@ -32,30 +32,30 @@ export async function ActualitesPage({ space }: { space: Space }) {
 
   return (
     <>
-      <ViewHead
-        title="Actualités"
-        action={
-          admin ? (
-            <Link
-              href="/admin/actualites/nouvelle"
-              className="btn-action btn-action-sm no-underline"
-            >
-              <Plus size={15} /> Nouvelle actualité
-            </Link>
-          ) : null
-        }
-      >
-        Le fil d’actualité de la chambre : programmation, retours d’événements
-        et vie institutionnelle, dans l’ordre chronologique.
-      </ViewHead>
-
       {/*
-          Le rail est assez large pour deux colonnes : à six offres, une
-          seule colonne allongeait la page bien au-delà du fil d'actualité
-          qu'elle est censée accompagner.
+          Le titre et le fil à gauche, à une largeur de lecture ; le rail des
+          offres prend tout le reste, en deux colonnes, et monte jusqu'en haut
+          de la page : plus de vide à côté du titre ni à droite.
         */}
-      <div className="flex gap-7 items-start flex-col xl:flex-row max-w-[1160px]">
-        <div className="flex-1 min-w-0 max-w-[620px]">
+      <div className="flex gap-7 items-start flex-col xl:flex-row">
+        <div className="w-full min-w-0 xl:w-[600px] 2xl:w-[660px] xl:shrink-0">
+          <ViewHead
+            title="Actualités"
+            action={
+              admin ? (
+                <Link
+                  href="/admin/actualites/nouvelle"
+                  className="btn-action btn-action-sm no-underline"
+                >
+                  <Plus size={15} /> Nouvelle actualité
+                </Link>
+              ) : null
+            }
+          >
+            Le fil d’actualité de la chambre : programmation, retours d’événements
+            et vie institutionnelle, dans l’ordre chronologique.
+          </ViewHead>
+
           {feed.map((n) => (
             <NewsFeedItem
               key={n.id}
@@ -85,7 +85,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
           ))}
         </div>
 
-        <aside className="w-full xl:w-[500px] xl:shrink-0 xl:sticky xl:top-[84px]">
+        <aside className="w-full min-w-0 xl:flex-1 xl:sticky xl:top-[84px]">
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
