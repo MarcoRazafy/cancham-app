@@ -6,14 +6,18 @@ import { Eye, EyeOff } from "lucide-react";
 /**
  * Champs des écrans d'identification.
  *
- * L'icône vit dans le champ, à gauche, et prend la couleur de la charte au
- * focus : le regard sait tout de suite où il écrit. Le mot de passe se montre
- * d'un clic — sur un téléphone, ressaisir à l'aveugle est la première cause
- * d'abandon.
+ * Le champ où l'on écrit se teinte d'un vert pâle, avec un filet vert à
+ * gauche, et son icône prend la couleur de la charte : le regard sait tout de
+ * suite où il écrit. Un seul repère, donc pas de contour rouge par-dessus. Le
+ * mot de passe se montre d'un clic — sur un téléphone, ressaisir à l'aveugle
+ * est la première cause d'abandon.
  */
 
+// Le filet est une ombre intérieure, pas une bordure : il apparaît sans
+// décaler le texte d'un pixel. Le contour de focus global est retiré avec
+// `!` : sans lui, la règle de `.marque`, hors couche, l'emporterait.
 const CADRE =
-  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint py-3.5 text-[14.5px] outline-none transition-[border-color,box-shadow] focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
+  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint py-3.5 text-[14.5px] outline-none transition-[border-color,background-color,box-shadow] focus:border-marque-vert/25 focus:bg-marque-vert/[0.06] focus:shadow-[inset_3px_0_0_var(--marque-vert)] focus-visible:outline-none!";
 
 export function ChampAuth({
   label,
