@@ -31,3 +31,26 @@ export function BoutonEnvoi({
     </button>
   );
 }
+
+/**
+ * Bouton en pilule de l'accueil pas à pas (« Suivant », « Terminer ») : vert
+ * de la charte, comme la barre de progression qu'il fait avancer.
+ */
+export function BoutonPilule({
+  children,
+  enCours,
+}: {
+  children: React.ReactNode;
+  enCours: string;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="inline-flex items-center gap-2 rounded-full bg-marque-vert text-white text-[15px] font-semibold px-7 py-2.5 border-0 cursor-pointer transition-[background-color,transform] hover:bg-[#005c33] active:translate-y-px disabled:opacity-70 disabled:cursor-default"
+    >
+      {pending ? enCours : children}
+    </button>
+  );
+}

@@ -2,18 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Briefcase, Building2, Phone, User } from "lucide-react";
 import {
-  CadreAuth,
   ChampAuth,
   CHAMP_AUTH,
   Saisie,
 } from "@/components/public/CadreAuth";
-import { BoutonEnvoi } from "@/components/public/BoutonMarque";
+import { BoutonPilule } from "@/components/public/BoutonMarque";
+import { LogoOfficiel } from "@/components/public/Marque";
 import { PAYS } from "@/components/public/ChoixFormule";
-import { Saillant } from "@/components/ui";
 import {
   ETAPES_ACCUEIL,
   NOMBRE_ETAPES,
   PROVISOIRE,
+  nomDepuisCourriel,
   numeroEtape,
   saisi,
   type EtapeAccueil,
@@ -29,62 +29,37 @@ import { getCurrentUser } from "@/lib/session";
 import type { Member, User as Utilisateur } from "@/lib/types";
 
 /**
- * Accueil d'un nouvel inscrit : la présentation, une étape à la fois.
+ * Accueil d'un nouvel inscrit : la présentation, une étape à la fois, à la
+ * manière d'Upwork.
  *
- * Chaque étape se valide (« Suivant ») ou se passe (« Ignorer ») ; « Terminer
- * plus tard » mène à l'espace, où un bandeau propose d'y revenir. Les champs
- * reprennent ce qui est déjà enregistré : revenir sur une étape, c'est la
- * corriger.
+ * Page blanche plein écran : une fine barre de progression en haut, un
+ * grand titre centré, le formulaire au milieu, et une barre d'actions fixée
+ * en bas — « Précédent » à gauche, « Ignorer » et « Suivant » à droite.
+ * Chaque étape se valide ou se passe ; « Terminer plus tard » mène à
+ * l'espace, où un bandeau propose d'y revenir. Les champs reprennent ce qui
+ * est déjà enregistré : revenir sur une étape, c'est la corriger.
  */
 
-const TEXTES: Record<
-  EtapeAccueil,
-  {
-    titre: string;
-    intro: string;
-    accroche: React.ReactNode;
-    sous: string;
-  }
-> = {
+const TEXTES: Record<EtapeAccueil, { titre: string; intro: string }> = {
   vous: {
-    titre: "Présentez-vous",
-    intro: "La personne que l’équipe CanCham contactera pour votre adhésion.",
-    accroche: (
-      <>
-        Faisons <Saillant>connaissance</Saillant>.
-      </>
-    ),
-    sous: "Quelques mots sur vous : l’équipe CanCham saura qui appeler, et les autres membres qui contacter.",
+    titre: "Faisons connaissance",
+    intro:
+      "Qui êtes-vous ? L’équipe CanCham saura qui contacter pour votre adhésion, et les autres membres aussi.",
   },
   entreprise: {
-    titre: "Votre entreprise",
-    intro: "Ces informations composent votre fiche dans l’annuaire des membres.",
-    accroche: (
-      <>
-        Votre entreprise, <Saillant ton="vert">en vitrine</Saillant>.
-      </>
-    ),
-    sous: "Nom, secteur, ville : c’est ce que les membres voient en premier dans l’annuaire.",
+    titre: "Parlez-nous de votre entreprise",
+    intro:
+      "Ces informations composent votre fiche dans l’annuaire : c’est ce que les membres voient en premier.",
   },
   formule: {
-    titre: "Votre formule",
-    intro: "Elle fixe votre cotisation annuelle. L’équipe la confirme avec vous avant tout règlement.",
-    accroche: (
-      <>
-        La formule qui vous <Saillant>ressemble</Saillant>.
-      </>
-    ),
-    sous: "Entreprise, consultant, ONG ou partenaire : chaque formule a sa cotisation, réglée une fois par an.",
+    titre: "Choisissez votre formule",
+    intro:
+      "Elle fixe votre cotisation annuelle. L’équipe la confirme avec vous avant tout règlement.",
   },
   activite: {
-    titre: "Votre activité",
-    intro: "Ce que vous faites et ce que vous cherchez : c’est ce qui déclenche les mises en relation.",
-    accroche: (
-      <>
-        Racontez votre <Saillant ton="vert">activité</Saillant>.
-      </>
-    ),
-    sous: "Une fiche complète attire les bonnes rencontres : acheteurs, partenaires, fournisseurs.",
+    titre: "Présentez votre activité",
+    intro:
+      "Ce que vous faites et ce que vous cherchez : c’est ce qui déclenche les mises en relation.",
   },
 };
 
@@ -103,135 +78,122 @@ export default async function BienvenuePage({
   const derniere = numero === NOMBRE_ETAPES;
 
   return (
-    <CadreAuth
-      photo="/photos/auth-rencontre.jpg"
-      alt="Membres et partenaires réunis lors d’une rencontre CanCham"
-      accroche={texte.accroche}
-      sous={texte.sous}
+    // La clé remonte le formulaire à chaque étape : les champs repartent des
+    // valeurs enregistrées, pas de celles de l'étape précédente.
+    <form
+      key={etape}
+      action={enregistrerEtape}
+      className="min-h-dvh flex flex-col bg-white"
     >
-      <Progression numero={numero} />
+      <input type="hidden" name="etape" value={numero} />
 
-      <span className="surtitre text-marque-vert">
-        Étape {numero} sur {NOMBRE_ETAPES}
-      </span>
-      <h1 className="titre text-[clamp(26px,3.4vw,32px)] m-0 mt-2.5 mb-2">
-        {texte.titre}
-      </h1>
-      <p className="text-[14.5px] text-muted m-0 mb-7">{texte.intro}</p>
+      {/* ---------- En-tête ---------- */}
+      <header className="flex items-center justify-between gap-4 px-5 sm:px-8 h-[72px] shrink-0">
+        <LogoOfficiel className="w-[150px] sm:w-[200px] h-auto" priority />
+        <Link
+          href="/membre/profil"
+          className="text-[14px] font-semibold text-muted no-underline hover:text-ink"
+        >
+          Terminer plus tard
+        </Link>
+      </header>
 
-      {/* La clé remonte le formulaire à chaque étape : les champs repartent
-          des valeurs enregistrées, pas de celles de l'étape précédente. */}
-      <form
-        key={etape}
-        action={enregistrerEtape}
-        className="flex flex-col gap-3.5"
-      >
-        <input type="hidden" name="etape" value={numero} />
+      <main className="flex-1 px-5 sm:px-8 pb-36">
+        <div className="max-w-[1180px] mx-auto">
+          <Progression numero={numero} />
 
-        {etape === "vous" ? <EtapeVous user={user} /> : null}
-        {etape === "entreprise" ? (
-          <EtapeEntreprise membre={membre} />
-        ) : null}
-        {etape === "formule" ? <EtapeFormule membre={membre} /> : null}
-        {etape === "activite" ? <EtapeActivite membre={membre} /> : null}
+          <div className="apparition text-center max-w-[760px] mx-auto">
+            <span className="surtitre text-marque-vert">
+              Étape {numero} sur {NOMBRE_ETAPES}
+            </span>
+            <h1 className="titre text-[clamp(28px,3.4vw,40px)] leading-[1.15] m-0 mt-3">
+              {texte.titre}
+            </h1>
+            <p className="text-[16px] text-muted leading-relaxed m-0 mt-3">
+              {texte.intro}
+            </p>
+          </div>
 
-        {/* ---------- Navigation ---------- */}
-        <div className="flex items-center gap-3 flex-wrap mt-4 pt-5 border-t border-line">
+          <div
+            className="apparition max-w-[680px] mx-auto mt-10 flex flex-col gap-4"
+            style={{ animationDelay: "0.08s" }}
+          >
+            {etape === "vous" ? <EtapeVous user={user} /> : null}
+            {etape === "entreprise" ? <EtapeEntreprise membre={membre} /> : null}
+            {etape === "formule" ? <EtapeFormule membre={membre} /> : null}
+            {etape === "activite" ? <EtapeActivite membre={membre} /> : null}
+          </div>
+        </div>
+      </main>
+
+      {/* ---------- Barre d'actions ---------- */}
+      <footer className="fixed inset-x-0 bottom-0 z-20 bg-white border-t border-line">
+        <div className="flex items-center gap-3 px-5 sm:px-8 h-[76px]">
           {numero > 1 ? (
             <Link
               href={`/bienvenue?etape=${numero - 1}`}
-              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-muted no-underline hover:text-ink"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-[15px] font-semibold text-marque-vert no-underline hover:border-marque-vert/40 hover:bg-marque-vert/[0.05]"
             >
               <ArrowLeft size={16} /> Précédent
             </Link>
           ) : null}
 
-          <div className="ml-auto flex items-center gap-2 flex-wrap justify-end">
+          <div className="ml-auto flex items-center gap-2 sm:gap-4">
             {derniere ? (
               <button
                 type="submit"
                 formAction={terminerAccueil}
                 formNoValidate
-                className="btn-contour"
+                className="bg-transparent border-0 cursor-pointer px-3 py-2.5 text-[15px] font-semibold text-muted hover:text-ink"
               >
                 Ignorer
               </button>
             ) : (
               <Link
                 href={`/bienvenue?etape=${numero + 1}`}
-                className="btn-contour no-underline"
+                className="px-3 py-2.5 text-[15px] font-semibold text-muted no-underline hover:text-ink"
               >
                 Ignorer
               </Link>
             )}
-            <BoutonEnvoi enCours="Enregistrement…" pleineLargeur={false}>
+            <BoutonPilule enCours="Enregistrement…">
               {derniere ? "Terminer" : "Suivant"}
-            </BoutonEnvoi>
+            </BoutonPilule>
           </div>
         </div>
-      </form>
-
-      <p className="text-[13px] text-muted mt-6 mb-0 text-center">
-        <Link
-          href="/membre/profil"
-          className="text-muted font-semibold no-underline hover:text-ink hover:underline"
-        >
-          Terminer plus tard
-        </Link>{" "}
-        · vous retrouverez ces étapes depuis votre fiche.
-      </p>
-    </CadreAuth>
+      </footer>
+    </form>
   );
 }
 
 /* ============================ Progression ============================ */
 
+/** Une fine barre, remplie à mesure des étapes, comme chez Upwork. */
 function Progression({ numero }: { numero: number }) {
   return (
-    <ol
+    <div
+      role="progressbar"
       aria-label="Progression de l’inscription"
-      className="list-none m-0 p-0 mb-7 grid gap-2"
-      style={{ gridTemplateColumns: `repeat(${NOMBRE_ETAPES}, minmax(0, 1fr))` }}
+      aria-valuemin={1}
+      aria-valuemax={NOMBRE_ETAPES}
+      aria-valuenow={numero}
+      className="h-1 rounded-full bg-line overflow-hidden mt-3 mb-10"
     >
-      {ETAPES_ACCUEIL.map((e, i) => {
-        const n = i + 1;
-        const etat = n < numero ? "faite" : n === numero ? "courante" : "a-venir";
-        return (
-          <li key={e.cle} aria-current={etat === "courante" ? "step" : undefined}>
-            <Link
-              href={`/bienvenue?etape=${n}`}
-              className="block no-underline group"
-            >
-              <span
-                className={`block h-1.5 rounded-full transition-colors ${
-                  etat === "a-venir"
-                    ? "bg-line group-hover:bg-faint/40"
-                    : etat === "courante"
-                      ? "bg-marque-rouge"
-                      : "bg-marque-vert"
-                }`}
-              />
-              <span
-                className={`block mt-1.5 text-[11.5px] font-semibold truncate ${
-                  etat === "courante"
-                    ? "text-ink"
-                    : "text-faint group-hover:text-muted"
-                }`}
-              >
-                {e.court}
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ol>
+      <div
+        className="h-full rounded-full bg-marque-vert transition-[width] duration-500"
+        style={{ width: `${(numero / NOMBRE_ETAPES) * 100}%` }}
+      />
+    </div>
   );
 }
 
 /* ============================ Étapes ============================ */
 
 function EtapeVous({ user }: { user: Utilisateur }) {
-  const [prenom, ...reste] = user.nom.split(" ");
+  // Le nom tiré de l'adresse à l'inscription n'est qu'un prête-nom : les
+  // champs partent vides tant que la personne n'a pas donné le sien.
+  const provisoire = user.nom === nomDepuisCourriel(user.email);
+  const [prenom, ...reste] = provisoire ? [""] : user.nom.split(" ");
   return (
     <>
       <div className="grid gap-3.5 sm:grid-cols-2">
@@ -280,23 +242,25 @@ function EtapeEntreprise({ membre }: { membre: Member }) {
   return (
     <>
       <fieldset className="m-0 p-0 border-0">
-        <legend className="block text-[13px] font-semibold text-ink mb-1.5">
+        <legend className="block text-[13px] font-semibold text-ink mb-2">
           Vous adhérez en tant que
         </legend>
-        <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Choix
             name="type"
             value="morale"
             defaultChecked={membre.type !== "physique"}
             titre="Entreprise"
-            detail="Personne morale"
+            detail="Personne morale : société, association, ONG"
+            icone={<Building2 size={26} strokeWidth={1.6} />}
           />
           <Choix
             name="type"
             value="physique"
             defaultChecked={membre.type === "physique"}
             titre="Indépendant"
-            detail="Personne physique"
+            detail="Personne physique : consultant, travailleur autonome"
+            icone={<User size={26} strokeWidth={1.6} />}
           />
         </div>
       </fieldset>
@@ -378,7 +342,7 @@ function EtapeFormule({ membre }: { membre: Member }) {
   return (
     <fieldset className="m-0 p-0 border-0">
       <legend className="sr-only">Formule d’adhésion</legend>
-      <div className="flex flex-col gap-2.5">
+      <div className="grid gap-3 sm:grid-cols-2">
         {ORDRE_FORMULES.map((f) => (
           <Choix
             key={f}
@@ -451,8 +415,9 @@ function EtapeActivite({ membre }: { membre: Member }) {
 /* ============================ Choix en carte ============================ */
 
 /**
- * Bouton radio présenté en carte : fond vert pâle et filet vert à gauche une
- * fois choisi — le même repère que les champs en cours de saisie.
+ * Bouton radio présenté en carte, comme les choix d'Upwork : une icône en
+ * haut à gauche, le rond de sélection en haut à droite. Choisie, la carte
+ * prend une bordure verte et un fond vert pâle.
  */
 function Choix({
   name,
@@ -461,6 +426,7 @@ function Choix({
   titre,
   detail,
   prix,
+  icone,
 }: {
   name: string;
   value: string;
@@ -468,9 +434,10 @@ function Choix({
   titre: string;
   detail?: string;
   prix?: string;
+  icone?: React.ReactNode;
 }) {
   return (
-    <label className="flex items-center justify-between gap-4 rounded-lg border border-line bg-white px-4 py-3.5 cursor-pointer transition-[background-color,border-color,box-shadow] hover:border-faint has-checked:border-marque-vert/25 has-checked:bg-marque-vert/[0.06] has-checked:shadow-[inset_3px_0_0_var(--marque-vert)] has-focus-visible:ring-2 has-focus-visible:ring-marque-vert/30">
+    <label className="group relative flex flex-col gap-3 rounded-2xl border-2 border-line bg-white p-5 cursor-pointer transition-[background-color,border-color] hover:border-faint has-checked:border-marque-vert has-checked:bg-marque-vert/[0.05] has-focus-visible:ring-4 has-focus-visible:ring-marque-vert/20">
       <input
         type="radio"
         name={name}
@@ -478,18 +445,24 @@ function Choix({
         defaultChecked={defaultChecked}
         className="sr-only"
       />
-      <span className="min-w-0">
-        <span className="block text-[14.5px] font-semibold text-ink">
+      {/* Le rond de sélection, dessiné : le bouton natif est masqué. */}
+      <span
+        aria-hidden
+        className="absolute top-4 right-4 w-5 h-5 rounded-full border-2 border-line bg-white transition-colors group-has-checked:border-marque-vert group-has-checked:bg-[radial-gradient(circle,var(--marque-vert)_45%,white_50%)]"
+      />
+      {icone ? <span className="text-ink">{icone}</span> : null}
+      <span className="min-w-0 pr-7">
+        <span className="block text-[16px] font-semibold text-ink leading-snug">
           {titre}
         </span>
         {detail ? (
-          <span className="block text-[12.5px] text-muted">{detail}</span>
+          <span className="block text-[13px] text-muted mt-0.5">{detail}</span>
         ) : null}
       </span>
       {prix ? (
-        <span className="shrink-0 text-[14.5px] font-bold text-marque-vert whitespace-nowrap">
+        <span className="text-[20px] font-bold text-marque-vert whitespace-nowrap mt-auto">
           {prix}{" "}
-          <span className="text-[12px] font-semibold">/ an</span>
+          <span className="text-[13px] font-semibold text-muted">/ an</span>
         </span>
       ) : null}
     </label>
