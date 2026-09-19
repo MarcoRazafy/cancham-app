@@ -171,8 +171,8 @@ export function Alerte({ children }: { children: React.ReactNode }) {
 }
 
 export {
-  CHAMP_AUTH,
   ChampAuth,
   ChampMotDePasse,
   Saisie,
 } from "@/components/public/ChampsAuth";
+export { CHAMP_AUTH } from "@/components/public/style-champs";

@@ -146,6 +146,11 @@ model Member {
   /// Trace du dernier règlement enregistré.
   paiementNote String?
 
+  /// Inscription commencée, présentation pas encore terminée : l'inscription
+  /// ne demande que l'essentiel, le reste se complète étape par étape
+  /// (`/bienvenue`). Les membres créés autrement ne passent pas par là.
+  accueilEnCours Boolean @default(false)
+
   /// Photo de couverture de la fiche, par URL. `null` = dégradé décoratif.
   cover String?
   /// Vignette ronde du membre : portrait pour une personne physique, logo ou

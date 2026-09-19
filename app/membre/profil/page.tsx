@@ -9,6 +9,7 @@ import {
   Lock,
   User as UserIcon,
   MapPin,
+  Sparkles,
 } from "lucide-react";
 import {
   ListeContacts,
@@ -32,6 +33,7 @@ import {
 } from "@/components/forms/MemberForms";
 import {
   Banner,
+  BtnLink,
   Card,
   Pill,
   Saillant,
@@ -101,6 +103,25 @@ export default async function ProfilPage() {
         La fiche de votre organisation telle qu’elle apparaît dans l’annuaire,
         votre statut d’adhésion et l’historique de facturation.
       </ViewHead>
+
+      {m.accueilEnCours ? (
+        <div className="mb-5">
+          <Banner
+            tone="ok"
+            icon={<Sparkles size={18} />}
+            title="Votre inscription n’est pas terminée"
+            action={
+              <BtnLink href="/bienvenue" variant="primary" sm>
+                Reprendre
+              </BtnLink>
+            }
+          >
+            Présentez-vous, votre entreprise, votre formule et votre activité
+            en quatre étapes rapides : votre fiche sera complète dans
+            l’annuaire, et l’équipe pourra examiner votre demande.
+          </Banner>
+        </div>
+      ) : null}
 
       {pending ? (
         <div className="mb-5">
