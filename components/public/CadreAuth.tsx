@@ -31,10 +31,11 @@ export function CadreAuth({
   children: React.ReactNode;
 }) {
   return (
-    // Deux moitiés égales : l'image et le formulaire pèsent le même poids.
+    // L'image prend les deux tiers : c'est elle qui accueille. Le formulaire
+    // garde 440 px au moins, pour ne pas se tasser sur un petit écran.
     // `dvh` plutôt que `vh` : sur téléphone, la barre d'adresse mange une
     // partie de `vh`.
-    <div className="h-dvh overflow-hidden grid lg:grid-cols-2">
+    <div className="h-dvh overflow-hidden grid lg:grid-cols-[minmax(0,65fr)_minmax(440px,35fr)]">
       {/* ==================== Image ==================== */}
       <div className="relative hidden lg:block h-full overflow-hidden bg-marque-nuit">
         <Image
@@ -42,7 +43,7 @@ export function CadreAuth({
           alt={alt}
           fill
           priority
-          sizes="55vw"
+          sizes="65vw"
           className="zoom-lent object-cover saturate-[0.65] brightness-[1.12]"
         />
 
@@ -96,6 +97,16 @@ export function CadreAuth({
       {/* Le décor reste immobile : c'est la colonne intérieure qui défile. */}
       <div className="relative h-full overflow-hidden bg-[#fbfcfe]">
         <div aria-hidden className="grille-fine absolute inset-0" />
+        {/* Voile blanc sur la grille : plus dense au centre, derrière le
+            formulaire, il la laisse à peine deviner sur les bords. */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgb(255 255 255 / 0.82) 0%, rgb(255 255 255 / 0.55) 100%)",
+          }}
+        />
         {/* Halos de la charte, très diffus : la couleur vient du fond, pas
             d'un aplat. */}
         <div
