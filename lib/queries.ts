@@ -979,16 +979,6 @@ export async function getMemberStats() {
   };
 }
 
-/** Membres qui demandent une action de l'équipe. */
-export async function getMembresATraiter(): Promise<Member[]> {
-  const rows = await prisma.member.findMany({
-    where: { statut: { not: "a_jour" } },
-    include: membreInclude,
-    orderBy: { nom: "asc" },
-  });
-  return rows.map(versMembre);
-}
-
 /* ============================ Recherche ============================ */
 
 export interface ResultatRecherche {

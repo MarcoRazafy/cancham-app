@@ -261,3 +261,79 @@ export async function conversationEquipe(
     messages,
   };
 }
+
+/* ============================ Tableau de bord ============================ */
+
+export interface MessageRecu {
+  id: string;
+  threadId: string;
+  auteur: string;
+  entreprise: string;
+  avatar: string | null;
+  init: string;
+  texte: string;
+  pieces: number;
+  /** Envoi, ISO. */
+  le: string;
+  /** Arrivé depuis la dernière ouverture du fil par cette personne de l'équipe. */
+  nonLu: boolean;
+}
+
+/**
+ * Les derniers messages écrits par les membres dans le chat du support, le
+ * plus récent en tête : ce que l'équipe doit lire, message par message. Les
+ * réponses de l'équipe n'y figurent pas.
+ */
+export async function derniersMessagesMembres(
+  userId: string,
+  limite = 6,
+): Promise<MessageRecu[]> {
+  const equipe = (
+    await prisma.user.findMany({
+      where: { role: "admin" },
+      select: { id: true },
+    })
+  ).map((u) => u.id);
+
+  const lignes = await prisma.message.findMany({
+    where: {
+      supprimeLe: null,
+      thread: { equipe: true, participants: { some: { userId } } },
+      OR: [{ userId: null }, { userId: { notIn: equipe } }],
+    },
+    orderBy: { sentAt: "desc" },
+    take: limite,
+    include: { _count: { select: { piecesJointes: true } } },
+  });
+
+  const [auteurs, lectures] = await Promise.all([
+    prisma.user.findMany({
+      where: {
+        id: { in: lignes.map((m) => m.userId).filter((id) => id !== null) },
+      },
+      select: PERSONNE,
+    }),
+    prisma.participantFil.findMany({
+      where: { userId, threadId: { in: lignes.map((m) => m.threadId) } },
+      select: { threadId: true, luLe: true },
+    }),
+  ]);
+
+  return lignes.map((m) => {
+    const u = auteurs.find((a) => a.id === m.userId);
+    const lu = lectures.find((l) => l.threadId === m.threadId)?.luLe;
+    const nom = u?.nom ?? m.auteur;
+    return {
+      id: m.id,
+      threadId: m.threadId,
+      auteur: nom,
+      entreprise: u?.member?.nom ?? "",
+      avatar: u?.photo ?? null,
+      init: initialesDe(nom),
+      texte: m.texte,
+      pieces: m._count.piecesJointes,
+      le: m.sentAt.toISOString(),
+      nonLu: !lu || m.sentAt > lu,
+    };
+  });
+}

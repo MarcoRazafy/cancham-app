@@ -20,8 +20,8 @@ import {
   Vide,
 } from "@/components/admin/ui";
 import { LigneJournal, ilYa } from "@/components/admin/LigneJournal";
-import { LogoMark } from "@/components/domain";
 import { AddMemberButton } from "@/components/forms/MemberForms";
+import { Pastille } from "@/components/messagerie/outils";
 import { Saillant, StatusPill } from "@/components/ui";
 import { fmtDate, isPast, parseISO, today } from "@/lib/format";
 import { FORMULES, fmtMontant, libelleFormule } from "@/lib/membership";
@@ -29,7 +29,6 @@ import {
   getEvents,
   getInvoices,
   getMemberStats,
-  getMembresATraiter,
   getUnreadTotal,
 } from "@/lib/queries";
 import {
@@ -39,10 +38,7 @@ import {
   getRepartitionFormules,
 } from "@/lib/queries-admin";
 import { getCurrentUser } from "@/lib/session";
-import { situation } from "@/lib/situation";
-
-/** Ordre de traitement : ce qui bloque un membre d'abord, les demandes ensuite. */
-const PRIORITE = { en_retard: 0, en_attente: 1, candidature: 2, a_jour: 3 };
+import { derniersMessagesMembres } from "@/lib/support";
 
 export default async function TableauDeBord() {
   const user = await getCurrentUser("admin");
@@ -50,7 +46,7 @@ export default async function TableauDeBord() {
 
   const [
     stats,
-    aTraiter,
+    messages,
     events,
     factures,
     finances,
@@ -60,7 +56,7 @@ export default async function TableauDeBord() {
     achats,
   ] = await Promise.all([
     getMemberStats(),
-    getMembresATraiter(),
+    derniersMessagesMembres(user.id),
     getEvents(),
     getInvoices(),
     getFinancesAnnee(annee),
@@ -72,9 +68,6 @@ export default async function TableauDeBord() {
 
   const aVenir = events.filter((e) => !isPast(e.date)).slice(0, 4);
   const derniers = factures.slice(0, 5);
-  const urgences = [...aTraiter].sort(
-    (a, b) => PRIORITE[a.statut] - PRIORITE[b.statut],
-  );
   const adherents = formules.reduce((n, f) => n + f.n, 0);
 
   const aujourdhui = today().toLocaleDateString("fr-FR", {
@@ -143,58 +136,84 @@ export default async function TableauDeBord() {
         />
       </div>
 
-      {/* ==================== À traiter + répartition ==================== */}
+      {/* ==================== Derniers messages + répartition ==================== */}
       <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
         <Panneau
           titre={
             <>
-              À <Saillant>traiter</Saillant>
+              Derniers <Saillant>messages</Saillant>
             </>
           }
-          sousTitre="Les adhésions qui attendent une décision ou un règlement"
-          lien={{ href: "/admin/membres", libelle: "Tous les membres" }}
+          sousTitre="Ce que les membres ont écrit dans le chat du support"
+          lien={{ href: "/admin/messagerie", libelle: "Toute la messagerie" }}
           teinte="rouge"
           corpsClassName="px-6 pb-3"
         >
-          {urgences.length ? (
+          {messages.length ? (
             <ul className="list-none m-0 p-0">
-              {urgences.slice(0, 6).map((m) => {
-                const s = situation(m);
+              {messages.map((m) => {
+                // La première ligne sert d'objet : « Paiement — … »,
+                // « Réservation — … », ou le début du message.
+                const [objet, ...reste] = m.texte.split("\n").filter(Boolean);
                 return (
                   <li key={m.id} className="border-t border-line">
                     <Link
-                      href={`/admin/membres/${m.id}`}
-                      className="flex items-center gap-4 py-3.5 no-underline group"
+                      href={`/admin/messagerie?t=${m.threadId}#msg-${m.id}`}
+                      className="flex items-start gap-4 py-3.5 no-underline group"
                     >
-                      <span className="hidden sm:block">
-                        <LogoMark member={m} size={40} />
-                      </span>
+                      <Pastille
+                        src={m.avatar}
+                        alt=""
+                        initiales={m.init}
+                        taille={40}
+                        className="bg-accent-soft text-accent-strong"
+                      />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[14.5px] font-semibold text-ink">
-                            {m.nom}
+                          <span className="text-[14px] font-semibold text-ink">
+                            {m.auteur}
                           </span>
-                          <StatusPill status={m.statut} />
+                          {m.entreprise ? (
+                            <span className="text-[12.5px] text-muted">
+                              {m.entreprise}
+                            </span>
+                          ) : null}
+                          {m.nonLu ? (
+                            <span className="text-[10.5px] font-bold uppercase tracking-[0.04em] px-2 py-0.5 rounded-full bg-accent text-white">
+                              Non lu
+                            </span>
+                          ) : null}
+                          <span className="ml-auto text-[12px] text-faint shrink-0">
+                            {ilYa(m.le)}
+                          </span>
                         </span>
                         <span
-                          className={`block text-[12.8px] mt-0.5 ${s.urgent ? "text-accent font-semibold" : "text-muted"}`}
+                          className={`block text-[13.4px] mt-1 truncate ${
+                            m.nonLu ? "text-ink font-semibold" : "text-ink"
+                          }`}
                         >
-                          {s.detail}
+                          {objet ??
+                            (m.pieces
+                              ? `📎 ${m.pieces} pièce${m.pieces > 1 ? "s" : ""} jointe${m.pieces > 1 ? "s" : ""}`
+                              : "")}
                         </span>
+                        {reste.length ? (
+                          <span className="block text-[12.8px] text-muted truncate">
+                            {reste.join(" ")}
+                          </span>
+                        ) : null}
                       </span>
-                      {s.action ? (
-                        <span className="hidden md:inline-flex items-center gap-1 text-[13px] font-semibold text-accent group-hover:underline">
-                          {s.action} <ChevronRight size={15} />
-                        </span>
-                      ) : null}
+                      <span className="hidden md:inline-flex self-center items-center gap-1 text-[13px] font-semibold text-accent group-hover:underline shrink-0">
+                        Répondre <ChevronRight size={15} />
+                      </span>
                     </Link>
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <Vide icone={<CheckCircle2 size={26} />}>
-              Toutes les adhésions sont à jour.
+            <Vide icone={<MessageSquare size={26} />}>
+              Aucun message de membre pour l’instant.
             </Vide>
           )}
         </Panneau>
