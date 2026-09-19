@@ -738,29 +738,50 @@ export function NewsFeedItem({
 
 /* ==================== Offres & services ==================== */
 
-export function OfferCard({ offer, href }: { offer: Offer; href?: string }) {
+export function OfferCard({
+  offer,
+  href,
+  carre = false,
+}: {
+  offer: Offer;
+  href?: string;
+  /**
+   * Carte carrée : la photo prend tout le haut, le texte se resserre dessous
+   * en deux lignes au plus. Pour un rail assez large, où le bandeau de 88 px
+   * laissait des cartes plates et étirées.
+   */
+  carre?: boolean;
+}) {
   const corps = (
     <Card
       className={`carte-filet filet-bas filet-degrade ${
         href ? "" : "filet-fixe"
-      } p-0 h-full flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
+      } p-0 ${carre ? "aspect-square" : "h-full"} flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
     >
-      <div className="overflow-hidden">
+      <div className={`overflow-hidden ${carre ? "flex-1 min-h-0" : ""}`}>
         <Visuel
           src={offer.cover}
           alt={offer.titre}
           seed={offer.id}
-          className="h-[88px] w-full transition-transform duration-500 group-hover:scale-[1.04]"
-          sizes="(max-width: 640px) 100vw, 240px"
-          iconSize={18}
+          className={`${carre ? "h-full" : "h-[88px]"} w-full transition-transform duration-500 group-hover:scale-[1.04]`}
+          sizes={
+            carre
+              ? "(max-width: 640px) 100vw, 460px"
+              : "(max-width: 640px) 100vw, 240px"
+          }
+          iconSize={carre ? 28 : 18}
         />
       </div>
-      <div className="p-4 flex-1 flex flex-col">
+      <div className={`p-4 flex flex-col ${carre ? "shrink-0" : "flex-1"}`}>
         <Pill className="self-start">{offer.membre}</Pill>
-        <div className="font-semibold text-[13.2px] mt-2 mb-1">
+        <div
+          className={`font-semibold text-[13.2px] mt-2 mb-1 ${carre ? "line-clamp-2" : ""}`}
+        >
           {offer.titre}
         </div>
-        <div className="text-[12.4px] text-muted leading-relaxed">
+        <div
+          className={`text-[12.4px] text-muted leading-relaxed ${carre ? "line-clamp-2" : ""}`}
+        >
           <TexteLie texte={offer.desc} dansUnLien={Boolean(href)} />
         </div>
       </div>
