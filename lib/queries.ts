@@ -78,6 +78,7 @@ type MembreRow = {
   cover: string | null;
   photo: string | null;
   logo: string | null;
+  accueilEnCours: boolean;
   produits: {
     id: string;
     label: string;
@@ -111,6 +112,7 @@ function versMembre(m: MembreRow): Member {
     cover: m.cover,
     photo: m.photo,
     logo: m.logo,
+    accueilEnCours: m.accueilEnCours,
     produits: m.produits.map((p) => ({
       id: p.id,
       label: p.label,

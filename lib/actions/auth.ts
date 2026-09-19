@@ -37,7 +37,12 @@ export async function connexion(formData: FormData) {
 
   const u = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, role: true, motDePasse: true },
+    select: {
+      id: true,
+      role: true,
+      motDePasse: true,
+      member: { select: { accueilEnCours: true } },
+    },
   });
 
   if (!u || !verifier(motDePasse, u.motDePasse)) {
@@ -45,6 +50,10 @@ export async function connexion(formData: FormData) {
   }
 
   await ouvrirSession(u.id, texte(formData, "souvenir") === "1");
+
+  // Une inscription pas encore terminée reprend là où elle s'est arrêtée :
+  // la présentation d'abord, l'espace ensuite.
+  if (u.role === "membre" && u.member?.accueilEnCours) redirect("/bienvenue");
 
   // Retour à la page demandée avant la connexion, si elle appartient bien à
   // l'espace de la personne : sinon, son accueil.

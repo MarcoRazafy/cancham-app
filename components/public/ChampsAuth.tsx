@@ -2,6 +2,7 @@
 
 import { useId, useState, type ComponentProps, type ReactNode } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { CHAMP_AUTH } from "@/components/public/style-champs";
 
 /**
  * Champs des écrans d'identification.
@@ -13,11 +14,7 @@ import { Eye, EyeOff } from "lucide-react";
  * est la première cause d'abandon.
  */
 
-// Le filet est une ombre intérieure, pas une bordure : il apparaît sans
-// décaler le texte d'un pixel. Le contour de focus global est retiré avec
-// `!` : sans lui, la règle de `.marque`, hors couche, l'emporterait.
-const CADRE =
-  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint py-3.5 text-[14.5px] outline-none transition-[border-color,background-color,box-shadow] focus:border-marque-vert/25 focus:bg-marque-vert/[0.06] focus:shadow-[inset_3px_0_0_var(--marque-vert)] focus-visible:outline-none!";
+const CADRE = CHAMP_AUTH;
 
 export function ChampAuth({
   label,
@@ -101,5 +98,3 @@ export function ChampMotDePasse({
     </ChampAuth>
   );
 }
-
-export const CHAMP_AUTH = CADRE;

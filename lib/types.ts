@@ -102,6 +102,8 @@ export interface Member {
   photo?: string | null;
   /** Logo de l'organisation. Prime sur `photo` partout où l'on identifie le membre. */
   logo?: string | null;
+  /** Inscription pas encore complétée : l'accueil pas à pas reste à finir. */
+  accueilEnCours?: boolean;
 }
 
 export type EventFormat = "Présentiel" | "Webinaire" | "Hybride";

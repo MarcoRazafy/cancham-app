@@ -12,16 +12,19 @@ import { ArrowRight } from "lucide-react";
 export function BoutonEnvoi({
   children,
   enCours,
+  pleineLargeur = true,
 }: {
   children: React.ReactNode;
   enCours: string;
+  /** Faux dans une rangée de boutons : le bouton prend alors sa largeur. */
+  pleineLargeur?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending}
-      className="btn-action w-full whitespace-normal text-center leading-snug px-4 sm:px-[26px]"
+      className={`btn-action ${pleineLargeur ? "w-full" : ""} whitespace-normal text-center leading-snug px-4 sm:px-[26px]`}
     >
       {pending ? enCours : children}
       {pending ? null : <ArrowRight size={17} className="shrink-0" />}
