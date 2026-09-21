@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { RetoursFormulaire } from "@/components/Mouvement";
 import { Toast } from "@/components/Toast";
 import {
   Fraunces,
@@ -83,6 +84,7 @@ export default function RootLayout({
         {children}
         <Suspense>
           <Toast />
+          <RetoursFormulaire />
         </Suspense>
       </body>
     </html>

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur } from "@/lib/flash";
 import { getCurrentUser } from "@/lib/session";
 import type { User } from "@/lib/types";
 
@@ -46,12 +46,12 @@ export async function exigerFiche(
   const user = await getCurrentUser(equipe ? "admin" : "membre");
 
   if (user.role === "admin") {
-    if (!memberIdDemande) redirectWithFlash(retour, "Fiche introuvable.");
+    if (!memberIdDemande) redirectWithErreur(retour, "Fiche introuvable.");
     return { user, memberId: memberIdDemande, estEquipe: true };
   }
-  if (!user.memberId) redirectWithFlash(retour, REFUS);
+  if (!user.memberId) redirectWithErreur(retour, REFUS);
   if (memberIdDemande && memberIdDemande !== user.memberId) {
-    redirectWithFlash(retour, REFUS);
+    redirectWithErreur(retour, REFUS);
   }
   return { user, memberId: user.memberId, estEquipe: false };
 }
@@ -65,7 +65,7 @@ export async function exigerProduit(
     where: { id: produitId },
     select: { memberId: true },
   });
-  if (!produit) redirectWithFlash(retour, "Offre introuvable.");
+  if (!produit) redirectWithErreur(retour, "Offre introuvable.");
   return exigerFiche(produit.memberId, retour);
 }
 
@@ -78,6 +78,6 @@ export async function exigerContact(
     where: { id: contactId },
     select: { memberId: true },
   });
-  if (!contact?.memberId) redirectWithFlash(retour, "Contact introuvable.");
+  if (!contact?.memberId) redirectWithErreur(retour, "Contact introuvable.");
   return exigerFiche(contact.memberId, retour);
 }

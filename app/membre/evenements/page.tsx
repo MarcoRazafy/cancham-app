@@ -65,7 +65,7 @@ export default async function EvenementsPage({
       </div>
 
       {list.length ? (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="cascade grid gap-4 md:grid-cols-2">
           {list.map((e) => (
             <EventCard
               key={e.id}

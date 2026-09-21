@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { EventCard, Visuel } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { Partage } from "@/components/Partage";
 import { CodeAccueil } from "@/components/CodeAccueil";
 import { TexteLie } from "@/components/TexteLie";
 import { Banner, BtnLink, Card, Kicker, Saillant, Stat } from "@/components/ui";
@@ -79,14 +80,16 @@ export default async function EvenementDetailPage({
           legende={e.titre}
           className="block"
         >
-          <Visuel
-            src={e.photo}
-            alt={e.titre}
-            seed={e.id}
-            className="h-[300px] w-full"
-            sizes="(max-width: 1024px) 100vw, 1000px"
-            icon={<CalendarDays size={34} />}
-          />
+          <Partage nom={`evenement-${e.id}`}>
+            <Visuel
+              src={e.photo}
+              alt={e.titre}
+              seed={e.id}
+              className="h-[300px] w-full"
+              sizes="(max-width: 1024px) 100vw, 1000px"
+              icon={<CalendarDays size={34} />}
+            />
+          </Partage>
         </Agrandir>
         {/* Le dégradé garantit la lisibilité du titre quelle que soit la photo. */}
         <div className="absolute inset-0 bg-linear-to-t from-[#0f1d2c]/90 via-[#0f1d2c]/35 to-transparent pointer-events-none" />
@@ -217,9 +220,13 @@ export default async function EvenementDetailPage({
                   {...matriceQr(reg.code)}
                   billet={{
                     titre: e.titre,
-                    quand: [fmtDate(e.date), horaire].filter(Boolean).join(" · "),
+                    quand: [fmtDate(e.date), horaire]
+                      .filter(Boolean)
+                      .join(" · "),
                     lieu: e.lieu,
-                    participant: [user.nom, entreprise].filter(Boolean).join(" · "),
+                    participant: [user.nom, entreprise]
+                      .filter(Boolean)
+                      .join(" · "),
                   }}
                 />
               </>

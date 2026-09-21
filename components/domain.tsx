@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import { Card, Pill, StatusPill } from "@/components/ui";
+import { Partage } from "@/components/Partage";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
 import { filetDe } from "@/lib/filets";
@@ -307,7 +308,7 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   // il laissait un grand vide autour d'un libellé de deux mots.
   const avecPhotos = member.produits.some((p) => p.photos.length > 0);
   return (
-    <Link href={href} className="no-underline">
+    <Link href={href} prefetch className="no-underline">
       <Card
         className={`carte-filet filet-bas ${filetDe(member.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
       >
@@ -326,9 +327,11 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           }
         />
         <div className="flex gap-3 px-4 pt-4 pb-3">
-          <div className="shrink-0">
-            <LogoMark member={member} />
-          </div>
+          <Partage nom={`membre-${member.id}`}>
+            <div className="shrink-0">
+              <LogoMark member={member} />
+            </div>
+          </Partage>
           <div className="min-w-0">
             <h3 className="m-0 mb-1.5 text-[15px]">{member.nom}</h3>
             <PuceSecteur secteur={member.secteur} />
@@ -447,14 +450,16 @@ export function EventCard({
       className={`carte-filet filet-bas ${href ? "" : "filet-fixe"} ${filetDe(event.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
     >
       <div className="relative">
-        <Visuel
-          src={event.photo}
-          alt=""
-          seed={event.id}
-          className="h-[150px] w-full"
-          sizes="(max-width: 768px) 100vw, 420px"
-          icon={<CalendarDays size={28} />}
-        />
+        <Partage nom={`evenement-${event.id}`}>
+          <Visuel
+            src={event.photo}
+            alt=""
+            seed={event.id}
+            className="h-[150px] w-full"
+            sizes="(max-width: 768px) 100vw, 420px"
+            icon={<CalendarDays size={28} />}
+          />
+        </Partage>
         <div className="absolute top-2.5 left-2.5 bg-white rounded-[var(--radius-s)] px-2.5 py-[5px] text-center shadow-[var(--shadow)] min-w-[38px]">
           <div className="font-[family-name:var(--font-display)] font-bold text-base leading-none text-accent-strong">
             {d.getDate()}
@@ -485,8 +490,10 @@ export function EventCard({
     </Card>
   );
 
+  // Fiche préchargée en entier : au clic, elle est prête, et l'image peut
+  // voyager de la carte au bandeau.
   return href ? (
-    <Link href={href} className="no-underline">
+    <Link href={href} prefetch className="no-underline">
       {body}
     </Link>
   ) : (

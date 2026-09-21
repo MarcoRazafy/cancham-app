@@ -266,8 +266,7 @@ export function BulleSupport({
     };
   }, [charger, ouvert, masquee, pathname]);
 
-  const conversation =
-    donnees?.cle === url ? donnees.conversation : null;
+  const conversation = donnees?.cle === url ? donnees.conversation : null;
   const fils = donnees?.fils ?? [];
   const chargement = !donnees || (filActif !== null && donnees.cle !== url);
 
@@ -512,7 +511,13 @@ export function BulleSupport({
           ref={panneau}
           role="dialog"
           aria-label={libelle}
-          className="print:hidden fixed z-[61] flex flex-col bg-surface text-ink border border-line rounded-[var(--radius-l)] shadow-[0_22px_60px_-14px_rgba(15,29,44,0.5)] overflow-hidden"
+          className={`anim-echelle print:hidden fixed z-[61] flex flex-col bg-surface text-ink border border-line rounded-[var(--radius-l)] shadow-[0_22px_60px_-14px_rgba(15,29,44,0.5)] overflow-hidden ${
+            telephone
+              ? "origin-bottom"
+              : position.cote === "droite"
+                ? "origin-right"
+                : "origin-left"
+          }`}
           style={stylePanneau}
         >
           {/* ---------- En-tête ---------- */}
@@ -737,7 +742,8 @@ function FilMessages({
         const precedent = messages[i - 1];
         // Un séparateur dès que l'on change de jour, et devant le premier.
         const jour = jourLisible(m.envoyeLe);
-        const nouveauJour = !precedent || jourLisible(precedent.envoyeLe) !== jour;
+        const nouveauJour =
+          !precedent || jourLisible(precedent.envoyeLe) !== jour;
         // Qui, dans l'équipe, a répondu : le nom en tête de chaque suite.
         const signe =
           m.equipe &&
@@ -812,8 +818,8 @@ function Accueil({
     <div className="my-auto flex flex-col gap-3">
       <div className="self-start max-w-[88%] px-3.5 py-3 bg-surface border border-line rounded-[14px] rounded-bl-[4px] text-[13.5px] leading-relaxed">
         <strong className="block mb-1">Bonjour {prenom},</strong>
-        Une question sur votre adhésion, un paiement, un événement ou un
-        service ? Écrivez-nous : l’équipe CanCham vous répond ici même, et la
+        Une question sur votre adhésion, un paiement, un événement ou un service
+        ? Écrivez-nous : l’équipe CanCham vous répond ici même, et la
         conversation reste dans votre messagerie.
       </div>
       <div className="flex flex-wrap gap-1.5">

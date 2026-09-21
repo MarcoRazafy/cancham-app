@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Partage } from "@/components/Partage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -156,21 +157,23 @@ export default async function EvenementAdmin({
       {/* ==================== En-tête ==================== */}
       <Card className="p-0 overflow-hidden mb-5">
         <div className="grid md:grid-cols-[320px_1fr]">
-          <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[210px] bg-surface-2">
-            {e.photo ? (
-              <Image
-                src={e.photo}
-                alt={e.titre}
-                fill
-                sizes="(max-width: 768px) 100vw, 320px"
-                className="object-cover"
-              />
-            ) : (
-              <span className="absolute inset-0 flex items-center justify-center text-faint">
-                <CalendarDays size={32} />
-              </span>
-            )}
-          </div>
+          <Partage nom={`evenement-${e.id}`}>
+            <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[210px] bg-surface-2">
+              {e.photo ? (
+                <Image
+                  src={e.photo}
+                  alt={e.titre}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 320px"
+                  className="object-cover"
+                />
+              ) : (
+                <span className="absolute inset-0 flex items-center justify-center text-faint">
+                  <CalendarDays size={32} />
+                </span>
+              )}
+            </div>
+          </Partage>
           <div className="p-6 flex flex-col gap-3 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <Pill tone={passe ? "muted" : "ok"}>
@@ -222,7 +225,7 @@ export default async function EvenementAdmin({
       </Card>
 
       {/* ==================== Chiffres ==================== */}
-      <div className="grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="cascade grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
         <Compteur
           icone={<Users size={22} />}
           teinte="bleu"

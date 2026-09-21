@@ -68,7 +68,7 @@ export default async function AnnuairePage({
       </FiltresAuto>
 
       {list.length ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="cascade grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {list.map((m) => (
             <MemberCard
               key={m.id}

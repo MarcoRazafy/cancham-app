@@ -7,6 +7,7 @@ import { Suspense, useState, type ReactNode } from "react";
 import { ChevronRight, Menu, Search } from "lucide-react";
 import { BoutonDeconnexion } from "@/components/BoutonDeconnexion";
 import { MenuNotifications } from "@/components/MenuNotifications";
+import { EnCoursLien, TirerPourRafraichir } from "@/components/Mouvement";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { titrePour, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
@@ -44,7 +45,7 @@ export function CoquilleAdmin({
         <button
           aria-label="Fermer le menu"
           onClick={() => setMenuOuvert(false)}
-          className="fixed inset-0 bg-black/55 z-35 lg:hidden"
+          className="fixed inset-0 bg-black/55 z-35 lg:hidden anim-fondu"
         />
       ) : null}
 
@@ -53,7 +54,11 @@ export function CoquilleAdmin({
         className={`print:hidden w-[274px] shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 text-white transition-transform duration-200 ${
           menuOuvert ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
-        style={{ background: "var(--laterale)" }}
+        style={{
+          background: "var(--laterale)",
+          // Point fixe pendant les transitions de page : seul le contenu bouge.
+          viewTransitionName: "barre-laterale",
+        }}
       >
         <div className="px-5 pt-7 pb-5">
           <Link
@@ -112,6 +117,7 @@ export function CoquilleAdmin({
                   >
                     <Icone size={18} className="shrink-0 opacity-90" />
                     <span className="flex-1">{item.label}</span>
+                    <EnCoursLien />
                     {badge ? (
                       <span
                         className={`pastille text-[11px] font-bold min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center ${
@@ -155,7 +161,10 @@ export function CoquilleAdmin({
       <div className="flex-1 min-w-0 flex flex-col lg:ml-[274px] print:ml-0">
         <header
           className="print:hidden sticky top-0 z-30 border-b border-white/10 flex items-center gap-4 px-4 md:px-7 py-3 text-white"
-          style={{ background: "var(--superieure)" }}
+          style={{
+            background: "var(--superieure)",
+            viewTransitionName: "barre-superieure",
+          }}
         >
           <button
             onClick={() => setMenuOuvert((v) => !v)}
@@ -187,6 +196,7 @@ export function CoquilleAdmin({
         </header>
 
         <main className="px-4 md:px-6 pt-6 pb-12 max-w-[1600px] w-full mx-auto print:p-0">
+          <TirerPourRafraichir />
           {children}
         </main>
       </div>

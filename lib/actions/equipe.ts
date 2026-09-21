@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { getCurrentUser } from "@/lib/session";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 
@@ -23,10 +23,10 @@ export async function modifierProfilEquipe(formData: FormData) {
   const tel = texte(formData, "tel") || null;
 
   if (!nom || !fonction) {
-    redirectWithFlash(retour, "Le nom et la fonction sont obligatoires.");
+    redirectWithErreur(retour, "Le nom et la fonction sont obligatoires.");
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    redirectWithFlash(retour, "Indiquez une adresse e-mail valide.");
+    redirectWithErreur(retour, "Indiquez une adresse e-mail valide.");
   }
   // L'adresse servira d'identifiant de connexion : elle est unique.
   const pris = await prisma.user.findFirst({
@@ -34,7 +34,7 @@ export async function modifierProfilEquipe(formData: FormData) {
     select: { id: true },
   });
   if (pris) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `${email} est déjà utilisée par un autre compte.`,
     );
@@ -47,7 +47,7 @@ export async function modifierProfilEquipe(formData: FormData) {
       largeur: 480,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
   const retirerPhoto = texte(formData, "retirerPhoto") === "1";
@@ -124,9 +124,9 @@ export async function promouvoirAdmin(formData: FormData) {
       },
     },
   });
-  if (!u) redirectWithFlash(EQUIPE, "Compte introuvable.");
+  if (!u) redirectWithErreur(EQUIPE, "Compte introuvable.");
   if (u.role === "admin") {
-    redirectWithFlash(EQUIPE, `${u.nom} est déjà administrateur.`);
+    redirectWithErreur(EQUIPE, `${u.nom} est déjà administrateur.`);
   }
 
   // La fiche d'entreprise créée à l'inscription n'a plus lieu d'être quand
@@ -181,7 +181,7 @@ export async function retirerAdmin(formData: FormData) {
   const userId = texte(formData, "userId");
 
   if (userId === acteur.id) {
-    redirectWithFlash(
+    redirectWithErreur(
       EQUIPE,
       "Vous ne pouvez pas retirer votre propre accès : demandez-le à un autre administrateur.",
     );
@@ -192,12 +192,12 @@ export async function retirerAdmin(formData: FormData) {
     select: { id: true, nom: true, email: true, role: true, memberId: true },
   });
   if (!u || u.role !== "admin") {
-    redirectWithFlash(EQUIPE, "Ce compte n’est pas administrateur.");
+    redirectWithErreur(EQUIPE, "Ce compte n’est pas administrateur.");
   }
 
   const restants = await prisma.user.count({ where: { role: "admin" } });
   if (restants <= 1) {
-    redirectWithFlash(
+    redirectWithErreur(
       EQUIPE,
       "Il faut au moins un administrateur : promouvez quelqu’un d’abord.",
     );

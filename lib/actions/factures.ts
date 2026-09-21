@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { numeroFacture } from "@/lib/factures";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtMontant, type Devise } from "@/lib/membership";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
@@ -46,10 +46,10 @@ export async function creerFacture(formData: FormData) {
     where: { id: memberId },
     select: { nom: true, statut: true },
   });
-  if (!membre) redirectWithFlash(retour, "Choisissez le membre facturé.");
-  if (!objet) redirectWithFlash(retour, "Indiquez l’objet de la facture.");
+  if (!membre) redirectWithErreur(retour, "Choisissez le membre facturé.");
+  if (!objet) redirectWithErreur(retour, "Indiquez l’objet de la facture.");
   if (!Number.isFinite(montant) || montant <= 0) {
-    redirectWithFlash(retour, "Le montant doit être un nombre positif.");
+    redirectWithErreur(retour, "Le montant doit être un nombre positif.");
   }
 
   const acteur = (await getCurrentUser("admin")).nom;
@@ -117,7 +117,7 @@ export async function marquerFacturePayee(formData: FormData) {
     where: { id },
     include: { member: { select: { id: true, nom: true, statut: true } } },
   });
-  if (!f) redirectWithFlash("/admin/paiements", "Facture introuvable.");
+  if (!f) redirectWithErreur("/admin/paiements", "Facture introuvable.");
   const retour = `/admin/paiements/${id}`;
   if (f.statut === "payee") redirect(retour);
 

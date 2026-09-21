@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Partage } from "@/components/Partage";
 import Link from "next/link";
 import { CalendarDays, ChevronRight, MapPin, Plus } from "lucide-react";
 import { EnTeteAdmin, Jauge, Onglets, Vide } from "@/components/admin/ui";
@@ -66,7 +67,7 @@ export default async function AdminEvenements({
       />
 
       {liste.length ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="cascade grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {liste.map((e) => {
             const d = parseISO(e.date);
             const complet = e.inscrits >= e.cap;
@@ -74,39 +75,42 @@ export default async function AdminEvenements({
               <Link
                 key={e.id}
                 href={`/admin/evenements/${e.id}`}
+                prefetch
                 className="no-underline group block"
               >
                 <Card className="carte-filet filet-bas filet-degrade p-0 h-full overflow-hidden flex flex-col">
-                  <div className="relative aspect-[16/9] bg-surface-2 overflow-hidden">
-                    {e.photo ? (
-                      <Image
-                        src={e.photo}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                      />
-                    ) : (
-                      <span className="absolute inset-0 flex items-center justify-center text-faint">
-                        <CalendarDays size={30} />
+                  <Partage nom={`evenement-${e.id}`}>
+                    <div className="relative aspect-[16/9] bg-surface-2 overflow-hidden">
+                      {e.photo ? (
+                        <Image
+                          src={e.photo}
+                          alt=""
+                          fill
+                          sizes="(max-width: 768px) 100vw, 400px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                        />
+                      ) : (
+                        <span className="absolute inset-0 flex items-center justify-center text-faint">
+                          <CalendarDays size={30} />
+                        </span>
+                      )}
+                      <span className="pastille absolute top-3 left-3 rounded-lg bg-accent text-white text-center px-3 py-1.5 leading-none">
+                        <span className="titre block text-[20px]">
+                          {d.getDate()}
+                        </span>
+                        <span className="block text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                          {d
+                            .toLocaleDateString("fr-FR", { month: "short" })
+                            .replace(".", "")}
+                        </span>
                       </span>
-                    )}
-                    <span className="pastille absolute top-3 left-3 rounded-lg bg-accent text-white text-center px-3 py-1.5 leading-none">
-                      <span className="titre block text-[20px]">
-                        {d.getDate()}
+                      <span className="absolute top-3 right-3">
+                        <Pill tone={e.payant ? "warn" : "ok"}>
+                          {e.payant ? fmtMoney(e.prix) : "Inclus"}
+                        </Pill>
                       </span>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                        {d
-                          .toLocaleDateString("fr-FR", { month: "short" })
-                          .replace(".", "")}
-                      </span>
-                    </span>
-                    <span className="absolute top-3 right-3">
-                      <Pill tone={e.payant ? "warn" : "ok"}>
-                        {e.payant ? fmtMoney(e.prix) : "Inclus"}
-                      </Pill>
-                    </span>
-                  </div>
+                    </div>
+                  </Partage>
                   <div className="p-5 flex-1 flex flex-col">
                     <h2 className="text-[16px] m-0 text-ink">{e.titre}</h2>
                     <div className="flex items-center gap-1.5 text-[12.8px] text-muted mt-1.5">

@@ -183,7 +183,7 @@ export function MenuNotifications({
         <div
           role="dialog"
           aria-label="Notifications"
-          className="fixed left-3 right-3 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-12 z-50 sm:w-[380px] bg-surface text-ink border border-line rounded-[var(--radius-m)] shadow-[0_18px_48px_-18px_rgba(15,29,44,0.55)] overflow-hidden"
+          className="anim-echelle origin-top sm:origin-top-right fixed left-3 right-3 top-[70px] sm:absolute sm:left-auto sm:right-0 sm:top-12 z-50 sm:w-[380px] bg-surface text-ink border border-line rounded-[var(--radius-m)] shadow-[0_18px_48px_-18px_rgba(15,29,44,0.55)] overflow-hidden"
         >
           <div
             className="h-1"
