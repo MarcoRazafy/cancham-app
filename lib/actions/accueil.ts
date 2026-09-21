@@ -240,12 +240,15 @@ export async function enregistrerEtape(formData: FormData) {
 
     case "formule": {
       const formule = texte(formData, "formule");
-      if (formule in FORMULES) {
-        await prisma.member.update({
-          where: { id: memberId },
-          data: { formule: formule as keyof typeof FORMULES },
-        });
-      }
+      await prisma.member.update({
+        where: { id: memberId },
+        data: {
+          ...(formule in FORMULES
+            ? { formule: formule as keyof typeof FORMULES }
+            : {}),
+          motivation: texte(formData, "motivation").slice(0, 1000) || null,
+        },
+      });
       break;
     }
 

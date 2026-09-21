@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Briefcase, Building2, Phone, User } from "lucide-react";
-import {
-  ChampAuth,
-  CHAMP_AUTH,
-  Saisie,
-} from "@/components/public/CadreAuth";
+import { ChampAuth, CHAMP_AUTH, Saisie } from "@/components/public/CadreAuth";
 import { BoutonPilule } from "@/components/public/BoutonMarque";
 import { LogoOfficiel } from "@/components/public/Marque";
 import { PAYS } from "@/components/public/ChoixFormule";
@@ -52,9 +48,9 @@ const TEXTES: Record<EtapeAccueil, { titre: string; intro: string }> = {
       "Ces informations composent votre fiche dans l’annuaire : c’est ce que les membres voient en premier.",
   },
   formule: {
-    titre: "Choisissez votre formule",
+    titre: "Votre adhésion",
     intro:
-      "Elle fixe votre cotisation annuelle. L’équipe la confirme avec vous avant tout règlement.",
+      "Votre formule fixe la cotisation annuelle, que l’équipe confirme avec vous avant tout règlement. Votre motivation l’aide à examiner votre demande.",
   },
   activite: {
     titre: "Présentez votre activité",
@@ -119,7 +115,9 @@ export default async function BienvenuePage({
             style={{ animationDelay: "0.08s" }}
           >
             {etape === "vous" ? <EtapeVous user={user} /> : null}
-            {etape === "entreprise" ? <EtapeEntreprise membre={membre} /> : null}
+            {etape === "entreprise" ? (
+              <EtapeEntreprise membre={membre} />
+            ) : null}
             {etape === "formule" ? <EtapeFormule membre={membre} /> : null}
             {etape === "activite" ? <EtapeActivite membre={membre} /> : null}
           </div>
@@ -305,11 +303,15 @@ function EtapeEntreprise({ membre }: { membre: Member }) {
             className={`${CHAMP_AUTH} px-3.5`}
           >
             <option value="">À préciser</option>
-            {["Entreprise Individuelle (EI)", "SARL", "SA", "Association", "Autre"].map(
-              (s) => (
-                <option key={s}>{s}</option>
-              ),
-            )}
+            {[
+              "Entreprise Individuelle (EI)",
+              "SARL",
+              "SA",
+              "Association",
+              "Autre",
+            ].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
           </select>
         </ChampAuth>
         <ChampAuth label="Pays d’implantation">
@@ -340,21 +342,38 @@ function EtapeEntreprise({ membre }: { membre: Member }) {
 
 function EtapeFormule({ membre }: { membre: Member }) {
   return (
-    <fieldset className="m-0 p-0 border-0">
-      <legend className="sr-only">Formule d’adhésion</legend>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {ORDRE_FORMULES.map((f) => (
-          <Choix
-            key={f}
-            name="formule"
-            value={f}
-            defaultChecked={membre.formule === f}
-            titre={libelleFormule(f)}
-            prix={fmtCotisation(f)}
-          />
-        ))}
-      </div>
-    </fieldset>
+    <>
+      <fieldset className="m-0 p-0 border-0">
+        <legend className="block text-[13px] font-semibold text-ink mb-2">
+          Formule d’adhésion
+        </legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {ORDRE_FORMULES.map((f) => (
+            <Choix
+              key={f}
+              name="formule"
+              value={f}
+              defaultChecked={membre.formule === f}
+              titre={libelleFormule(f)}
+              prix={fmtCotisation(f)}
+            />
+          ))}
+        </div>
+      </fieldset>
+      <ChampAuth
+        label="Motivation à rejoindre CanCham"
+        hint="Ce que vous attendez de la chambre : contacts au Canada, événements, accompagnement…"
+      >
+        <textarea
+          name="motivation"
+          rows={4}
+          maxLength={1000}
+          defaultValue={membre.motivation ?? ""}
+          placeholder="Nous cherchons à exporter vers le Canada…"
+          className={`${CHAMP_AUTH} px-3.5`}
+        />
+      </ChampAuth>
+    </>
   );
 }
 
