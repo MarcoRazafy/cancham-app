@@ -1,6 +1,13 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Briefcase, Building2, Phone, User } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
+import {
+  ArrowLeft,
+  Briefcase,
+  Building2,
+  Phone,
+  Plus,
+  User,
+} from "lucide-react";
 import { ChampAuth, CHAMP_AUTH, Saisie } from "@/components/public/CadreAuth";
 import { BoutonPilule } from "@/components/public/BoutonMarque";
 import { LogoOfficiel } from "@/components/public/Marque";
@@ -18,6 +25,7 @@ import {
 import { enregistrerEtape, terminerAccueil } from "@/lib/actions/accueil";
 import {
   ORDRE_FORMULES,
+  PHOTOS_PAR_PRODUIT,
   fmtCotisation,
   libelleFormule,
 } from "@/lib/membership";
@@ -51,12 +59,22 @@ const TEXTES: Record<EtapeAccueil, { titre: string; intro: string }> = {
   formule: {
     titre: "Votre adhésion",
     intro:
-      "Votre formule fixe la cotisation annuelle, que l’équipe confirme avec vous avant tout règlement. Votre motivation l’aide à examiner votre demande.",
+      "Votre formule fixe la cotisation annuelle, que l’équipe confirme avec vous avant tout règlement.",
   },
   activite: {
     titre: "Présentez votre activité",
     intro:
       "Ce que vous faites et ce que vous cherchez : c’est ce qui déclenche les mises en relation.",
+  },
+  visuels: {
+    titre: "Votre logo et votre couverture",
+    intro:
+      "Ils habillent votre fiche dans l’annuaire. Facultatifs : vous pourrez les ajouter plus tard depuis « Mon entreprise ».",
+  },
+  produits: {
+    titre: "Vos produits et services",
+    intro:
+      "Ce que vous proposez aux autres membres, avec des photos si vous en avez. Ajoutez-en autant que vous voulez, ou passez l’étape.",
   },
 };
 
@@ -68,6 +86,8 @@ export default async function BienvenuePage({
   const user = await getCurrentUser("membre");
   const membre = user.memberId ? await getMember(user.memberId) : null;
   if (!membre) notFound();
+  // La suite de la fiche vient après la validation de la candidature.
+  if (membre.statut === "candidature") redirect("/public?attente=1");
 
   const numero = numeroEtape((await searchParams).etape);
   const etape = ETAPES_ACCUEIL[numero - 1].cle;
@@ -121,6 +141,8 @@ export default async function BienvenuePage({
             ) : null}
             {etape === "formule" ? <EtapeFormule membre={membre} /> : null}
             {etape === "activite" ? <EtapeActivite membre={membre} /> : null}
+            {etape === "visuels" ? <EtapeVisuels membre={membre} /> : null}
+            {etape === "produits" ? <EtapeProduits membre={membre} /> : null}
           </div>
         </div>
       </main>
@@ -417,6 +439,16 @@ function EtapeActivite({ membre }: { membre: Member }) {
           className={`${CHAMP_AUTH} px-3.5`}
         />
       </ChampAuth>
+    </>
+  );
+}
+
+const CHAMP_FICHIER =
+  "w-full min-w-0 rounded-lg border border-line bg-white text-ink text-[14px] px-3.5 py-2.5 outline-none focus:border-marque-vert/25 focus:bg-marque-vert/[0.06] file:mr-3 file:rounded-md file:border-0 file:bg-marque-vert/10 file:px-3 file:py-1.5 file:text-[13px] file:font-semibold file:text-marque-vert file:cursor-pointer";
+
+function EtapeVisuels({ membre }: { membre: Member }) {
+  return (
+    <>
       <ChampAuth
         label="Logo (facultatif)"
         hint={
@@ -429,9 +461,107 @@ function EtapeActivite({ membre }: { membre: Member }) {
           type="file"
           name="logo"
           accept="image/*"
-          className="w-full min-w-0 rounded-lg border border-line bg-white text-ink text-[14px] px-3.5 py-2.5 outline-none focus:border-marque-vert/25 focus:bg-marque-vert/[0.06] file:mr-3 file:rounded-md file:border-0 file:bg-marque-vert/10 file:px-3 file:py-1.5 file:text-[13px] file:font-semibold file:text-marque-vert file:cursor-pointer"
+          className={CHAMP_FICHIER}
         />
       </ChampAuth>
+      <ChampAuth
+        label="Photo de couverture (facultatif)"
+        hint={
+          membre.cover
+            ? "Une couverture est déjà enregistrée : choisissez-en une autre pour la remplacer."
+            : "Le bandeau en tête de votre fiche : une photo au format paysage."
+        }
+      >
+        <input
+          type="file"
+          name="cover"
+          accept="image/*"
+          className={CHAMP_FICHIER}
+        />
+      </ChampAuth>
+    </>
+  );
+}
+
+function EtapeProduits({ membre }: { membre: Member }) {
+  return (
+    <>
+      {membre.produits.length ? (
+        <div className="rounded-lg border border-marque-vert/25 bg-marque-vert/[0.05] px-4 py-3">
+          <div className="text-[13px] font-semibold text-marque-vert mb-1.5">
+            Déjà dans votre catalogue
+          </div>
+          <ul className="m-0 p-0 list-none flex flex-col gap-1">
+            {membre.produits.map((p, i) => (
+              <li key={p.id ?? i} className="text-[14px] text-ink">
+                {p.label}
+                <span className="text-muted">
+                  {" "}
+                  · {p.type === "produit" ? "produit" : "service"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="grid gap-3.5 sm:grid-cols-[1fr_180px]">
+        <ChampAuth label="Titre de l’offre">
+          <Saisie
+            name="label"
+            maxLength={120}
+            placeholder="Ex. Huiles essentielles de ravintsara"
+          />
+        </ChampAuth>
+        <ChampAuth label="Type">
+          <select
+            name="type"
+            defaultValue="service"
+            className={`${CHAMP_AUTH} px-3.5`}
+          >
+            <option value="service">Service</option>
+            <option value="produit">Produit</option>
+          </select>
+        </ChampAuth>
+      </div>
+      <ChampAuth label="Description (facultatif)">
+        <textarea
+          name="description"
+          rows={3}
+          maxLength={2000}
+          placeholder="Ce que l’offre comprend, pour qui, à quelles conditions…"
+          className={`${CHAMP_AUTH} px-3.5`}
+        />
+      </ChampAuth>
+      <div className="grid gap-3.5 sm:grid-cols-2">
+        <ChampAuth
+          label="Prix indicatif (facultatif)"
+          hint="En clair : « 25 000 Ar le flacon », « Sur devis »…"
+        >
+          <Saisie name="prix" maxLength={80} placeholder="Sur devis" />
+        </ChampAuth>
+        <ChampAuth
+          label="Photos (facultatif)"
+          hint={`${PHOTOS_PAR_PRODUIT} au plus.`}
+        >
+          <input
+            type="file"
+            name="photos"
+            accept="image/*"
+            multiple
+            className={CHAMP_FICHIER}
+          />
+        </ChampAuth>
+      </div>
+      {/* Enregistre l'offre et revient ici pour la suivante. */}
+      <button
+        type="submit"
+        name="encore"
+        value="1"
+        className="self-start inline-flex items-center gap-1.5 rounded-full border border-marque-vert/40 bg-white px-5 py-2.5 text-[14px] font-semibold text-marque-vert cursor-pointer hover:bg-marque-vert/[0.06]"
+      >
+        <Plus size={16} aria-hidden /> Ajouter et en saisir une autre
+      </button>
     </>
   );
 }

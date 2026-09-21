@@ -2,7 +2,7 @@ import Link from "next/link";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
-import { submitAdhesion } from "@/lib/actions/members";
+import { deposerCandidature } from "@/lib/actions/accueil";
 import { MOT_DE_PASSE_MIN } from "@/lib/mots-de-passe";
 
 const CHAMP =
@@ -14,15 +14,16 @@ const ETIQUETTE = "block text-[12.5px] font-semibold text-ink mb-1.5";
  * Formulaire d'adhésion de la page d'accueil.
  *
  * Il reprend champ pour champ la fiche d'inscription de la chambre et poste
- * vers la même action serveur que le formulaire détaillé de `/public/adhesion` :
- * une candidature déposée ici apparaît immédiatement dans le back-office.
+ * vers la même action que la page d'inscription : une candidature déposée
+ * ici apparaît aussitôt dans le back-office, et la connexion s'ouvre quand
+ * l'équipe l'a validée.
  */
 export function FormulaireAdhesion() {
   return (
     <div className="rounded-2xl border border-line bg-surface-2 p-5 md:p-7">
       <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
 
-      <form action={submitAdhesion} className="flex flex-col gap-4">
+      <form action={deposerCandidature} className="flex flex-col gap-4">
         <input type="hidden" name="retour" value="/public/vitrine" />
         {/*
           Mêmes champs, dans le même ordre, que la fiche d'inscription de la
@@ -90,6 +91,7 @@ export function FormulaireAdhesion() {
               id="ad-tel"
               name="tel"
               type="tel"
+              required
               autoComplete="tel"
               placeholder="+261 34 00 000 00"
               className={CHAMP}
@@ -228,8 +230,8 @@ export function FormulaireAdhesion() {
         </BoutonEnvoi>
 
         <p className="text-[12px] text-faint m-0">
-          L’adhésion devient active après validation et règlement de la
-          cotisation.
+          La connexion s’ouvre dès que l’équipe a validé votre demande ;
+          l’adhésion devient active au règlement de la cotisation.
         </p>
 
         <p className="text-[13px] text-muted m-0">

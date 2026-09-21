@@ -63,12 +63,20 @@ export async function connexion(formData: FormData) {
       id: true,
       role: true,
       motDePasse: true,
-      member: { select: { accueilEnCours: true } },
+      member: { select: { accueilEnCours: true, statut: true } },
     },
   });
 
   if (!u || !verifier(motDePasse, u.motDePasse)) {
     echec("Adresse ou mot de passe incorrect.", email);
+  }
+
+  // Une candidature à l'examen n'ouvre pas encore de session. On ne le dit
+  // qu'une fois le mot de passe vérifié : l'état d'une demande ne regarde
+  // que son auteur.
+  if (u.role === "membre" && u.member?.statut === "candidature") {
+    oublier(`connexion:${origine}:${email}`);
+    redirect(`/public?${new URLSearchParams({ attente: "1", email })}`);
   }
 
   // Connexion réussie : le compteur de cette adresse repart à zéro.

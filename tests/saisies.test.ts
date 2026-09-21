@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { telephoneValide } from "@/lib/accueil";
+import { numeroComplet, telephoneValide } from "@/lib/accueil";
 import { echapper, gabarit } from "@/lib/courriel";
 import { lienJournal } from "@/lib/journal";
 import { normaliserSite } from "@/lib/liens";
@@ -61,5 +61,23 @@ describe("téléphone à l'inscription", () => {
     expect(telephoneValide("appelez-moi")).toBe(false);
     expect(telephoneValide("12 34")).toBe(false);
     expect(telephoneValide("<script>")).toBe(false);
+  });
+});
+
+describe("numéro avec indicatif", () => {
+  it("ajoute l'indicatif et retire le 0 du numéro national", () => {
+    expect(numeroComplet("+261", "034 50 280 53")).toBe("+261 34 50 280 53");
+    expect(numeroComplet("+1", "514 555 0199")).toBe("+1 514 555 0199");
+  });
+
+  it("garde tel quel un numéro déjà international, ou sans indicatif choisi", () => {
+    expect(numeroComplet("+261", "+33 6 12 34 56 78")).toBe(
+      "+33 6 12 34 56 78",
+    );
+    expect(numeroComplet("", "+230 5 123 4567")).toBe("+230 5 123 4567");
+  });
+
+  it("ne fabrique rien à partir d'un champ vide", () => {
+    expect(numeroComplet("+261", "   ")).toBe("");
   });
 });

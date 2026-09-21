@@ -26,15 +26,22 @@ export default async function ConnexionPage({
     erreur?: string;
     email?: string;
     suite?: string;
-    inscrit?: string;
+    demande?: string;
+    attente?: string;
   }>;
 }) {
-  const { erreur, email, suite, inscrit } = await searchParams;
-  // Juste après l'inscription : l'adresse est connue, reste le mot de passe.
-  const vientDeSInscrire = inscrit === "1" && !erreur;
+  const { erreur, email, suite, demande, attente } = await searchParams;
+  // Juste après le dépôt d'une demande, ou connexion d'une demande encore à
+  // l'examen : on explique où en est la candidature.
+  const demandeDeposee = demande === "1" && !erreur;
+  const enAttente = attente === "1" && !erreur;
 
+  // Qui est connecté rentre chez lui — sauf une candidature à l'examen, que
+  // son espace renverrait ici : ce serait une boucle.
   const connecte = await utilisateurConnecte();
-  if (connecte) redirect(connecte.role === "admin" ? "/admin" : "/membre");
+  if (connecte && !enAttente) {
+    redirect(connecte.role === "admin" ? "/admin" : "/membre");
+  }
 
   return (
     <CadreAuth
@@ -58,9 +65,22 @@ export default async function ConnexionPage({
       </p>
 
       {erreur ? <Alerte>{erreur}</Alerte> : null}
-      {vientDeSInscrire ? (
+      {demandeDeposee ? (
         <Confirmation>
-          Votre compte est créé. Connectez-vous pour continuer.
+          <strong className="block mb-1">
+            Votre demande d’adhésion est envoyée.
+          </strong>
+          L’équipe CanCham l’examine. Vous recevrez un e-mail dès qu’elle sera
+          validée : vous pourrez alors vous connecter et compléter votre fiche.
+        </Confirmation>
+      ) : null}
+      {enAttente ? (
+        <Confirmation>
+          <strong className="block mb-1">
+            Votre demande d’adhésion est en cours d’examen.
+          </strong>
+          Vous pourrez vous connecter dès qu’elle sera validée par l’équipe
+          CanCham ; un e-mail vous préviendra.
         </Confirmation>
       ) : null}
 
@@ -76,7 +96,7 @@ export default async function ConnexionPage({
             name="email"
             required
             autoComplete="email"
-            autoFocus={!vientDeSInscrire}
+            autoFocus
             defaultValue={email ?? ""}
             placeholder="vous@entreprise.mg"
           />
@@ -87,7 +107,6 @@ export default async function ConnexionPage({
           icone={<Lock size={16} />}
           name="motDePasse"
           required
-          autoFocus={vientDeSInscrire}
           autoComplete="current-password"
           placeholder="Votre mot de passe"
         />

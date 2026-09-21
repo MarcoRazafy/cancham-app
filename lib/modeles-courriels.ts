@@ -57,22 +57,17 @@ export function courrielInvitation(
   };
 }
 
-export function courrielBienvenue(
-  a: string,
-  nom: string,
-  lien: string,
-): Courriel {
+export function courrielDemandeRecue(a: string, nom: string): Courriel {
   return {
     a,
-    sujet: "Bienvenue sur CanCham Connect",
+    sujet: "Votre demande d’adhésion à CanCham est bien reçue",
     ...gabarit({
-      titre: "Bienvenue sur CanCham Connect",
+      titre: "Votre demande d’adhésion est bien reçue",
       paragraphes: [
         `Bonjour ${prenom(nom)},`,
-        "Votre compte est créé et votre demande d’adhésion est enregistrée. Prochaine étape : présentez-vous et présentez votre entreprise, en quelques minutes.",
-        "L’équipe CanCham examine ensuite votre demande ; votre espace s’ouvre entièrement dès la cotisation réglée.",
+        "Merci de votre intérêt pour la Chambre de Commerce et de Coopération Canada–Madagascar. Votre demande d’adhésion est enregistrée, et l’équipe CanCham l’examine.",
+        "Vous recevrez un e-mail dès qu’elle sera validée. Vous pourrez alors vous connecter à CanCham Connect et compléter votre fiche : logo, couverture, produits et services.",
       ],
-      bouton: { libelle: "Compléter mon inscription", url: lien },
     }),
   };
 }
@@ -86,15 +81,15 @@ export function courrielNouvelleInscription(
 ): Courriel {
   return {
     a,
-    sujet: `Nouvelle inscription : ${email}`,
+    sujet: `Nouvelle demande d’adhésion : ${email}`,
     ...gabarit({
-      titre: "Nouvelle inscription sur CanCham Connect",
+      titre: "Nouvelle demande d’adhésion",
       paragraphes: [
-        `${email} vient de créer un compte.`,
+        `${email} vient de déposer une demande d’adhésion. Sa connexion reste fermée tant que vous ne l’avez pas validée.`,
         ...precisions.filter((p): p is string => !!p),
-        "S’il s’agit d’un collaborateur de la chambre, promouvez-le depuis « Équipe & accès » ; sinon, sa demande d’adhésion vous attend.",
+        "S’il s’agit d’un collaborateur de la chambre, promouvez-le plutôt depuis « Équipe & accès ».",
       ],
-      bouton: { libelle: "Voir les inscriptions", url: lien },
+      bouton: { libelle: "Examiner la demande", url: lien },
     }),
   };
 }
@@ -142,15 +137,16 @@ export function courrielDemandeApprouvee(
 ): Courriel {
   return {
     a,
-    sujet: "Votre demande d’adhésion est approuvée",
+    sujet: "Votre demande d’adhésion est validée",
     ...gabarit({
-      titre: "Votre demande d’adhésion est approuvée",
+      titre: "Votre demande d’adhésion est validée",
       paragraphes: [
         `Bonjour ${prenom(d.nom)},`,
-        `L’équipe CanCham a approuvé la demande d’adhésion de ${d.entreprise}. Bienvenue dans la chambre !`,
-        `Dernière étape : le règlement de la cotisation annuelle (${d.formule}, ${d.montant}), auprès de l’équipe, en espèces, par virement ou par chèque. Votre espace s’ouvre entièrement dès qu’il est enregistré.`,
+        `L’équipe CanCham a validé la demande d’adhésion de ${d.entreprise}. Bienvenue dans la chambre !`,
+        "Connectez-vous dès maintenant avec l’adresse et le mot de passe choisis à l’inscription : quelques étapes vous permettent de compléter votre fiche — activité, logo, couverture, produits et services.",
+        `Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle (${d.formule}, ${d.montant}), auprès de l’équipe, en espèces, par virement ou par chèque.`,
       ],
-      bouton: { libelle: "Voir ma cotisation", url: d.lien },
+      bouton: { libelle: "Me connecter", url: d.lien },
     }),
   };
 }
