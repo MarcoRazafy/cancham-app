@@ -1,0 +1,16 @@
+# Ce qui n'entre pas dans l'image : dépendances et compilations locales
+# (reconstruites dans l'image), secrets, données d'exécution.
+node_modules
+.next
+lib/generated
+*.tsbuildinfo
+next-env.d.ts
+.env*
+!.env.example
+stockage
+public/televersements
+.pgdata
+.git
+.vercel
+coverage
+npm-debug.log*

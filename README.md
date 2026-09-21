@@ -13,21 +13,25 @@ npm run db:seed
 npm run dev
 ```
 
+Pour la production, voir [`DEPLOIEMENT.md`](./DEPLOIEMENT.md).
+
 Voir **Base de données** ci-dessous pour la création du rôle et de la base.
 
 ## Les trois espaces
 
-Il n'y a **pas encore d'authentification**. L'espace est déterminé par l'URL, et
-un utilisateur de démonstration y est chargé automatiquement.
-
-| URL | Espace | Utilisateur de démonstration |
+| URL | Espace | Compte de démonstration (après `db:seed`) |
 |---|---|---|
-| `/public` | Vitrine et adhésion | Hasina Rakotoarisoa — Gérante, Zafy Design (candidature en cours) |
+| `/public` | Vitrine, connexion, inscription | — |
 | `/membre` | Portail adhérent | Voninkazo Andriamampianina — Directrice Générale, Bio Sud Essences |
 | `/admin` | Back-office | Ando Ratovomanana — Direction exécutive |
 
-La page `/` propose le choix entre les trois. Un sélecteur est également présent
-en haut de la sidebar.
+Chacun se connecte avec son adresse et son mot de passe ; `/` envoie chacun
+dans son espace, ou à la connexion. En local, `npm run motsdepasse:demo`
+donne un mot de passe aux comptes de démonstration qui n'en ont pas.
+
+Mot de passe oublié, invitation d'un contact, bienvenue, relance de
+cotisation : les e-mails partent par Resend. Sans `RESEND_API_KEY`, en local,
+ils sont écrits dans le terminal du serveur, lien compris.
 
 ## Règle d'accès liée à la cotisation
 
@@ -57,7 +61,7 @@ paiement).
 
 ```
 app/
-├── page.tsx              Choix de l'espace
+├── page.tsx              Redirection vers l'espace de chacun
 ├── public/               Vitrine, formulaire d'adhésion, confirmation
 ├── membre/               8 sections, protégées par proxy.ts
 └── admin/                8 sections
@@ -195,15 +199,9 @@ les modales en ont besoin pour s'ouvrir.
 
 ## Volontairement absent
 
-- **Authentification** — écarté à la demande, pour cette étape
 - **Paiement en ligne** — V1 prévue en enregistrement manuel par l'admin
-- **Envoi d'e-mails** — les relances sont consignées, pas expédiées
-- **Fichiers** — aucun document n'est stocké : télécharger consigne la demande
-- **QR fonctionnel** — l'aperçu reste décoratif
-- **Envoi d'e-mails**, **upload d'images**, **QR fonctionnel** — l'aperçu de QR
-  est un placeholder, comme dans le prototype
 
-## Stack
+## Déploiement
 
-Next.js 16.3 · React 19 · TypeScript · Tailwind CSS 4 · lucide-react ·
-Prisma 7.10 · PostgreSQL 16
+Sur Railway, avec un volume pour les fichiers et Resend pour les e-mails :
+voir [`DEPLOIEMENT.md`](./DEPLOIEMENT.md).
