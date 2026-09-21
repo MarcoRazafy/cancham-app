@@ -79,6 +79,16 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "info",
   },
+  admin_promu: {
+    libelle: "Accès administrateur accordé",
+    famille: "adhesion",
+    ton: "ok",
+  },
+  admin_retire: {
+    libelle: "Accès administrateur retiré",
+    famille: "adhesion",
+    ton: "bad",
+  },
   service_gratuit_reserve: {
     libelle: "Réservation d’un service gratuit",
     famille: "programme",
@@ -205,6 +215,8 @@ export function lienJournal(
       return "/admin/offres-cancham";
     case "MessageThread":
       return `/admin/messagerie?t=${entiteId}`;
+    case "User":
+      return "/admin/equipe";
     default:
       return null;
   }

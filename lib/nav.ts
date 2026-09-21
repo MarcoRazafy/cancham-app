@@ -64,6 +64,7 @@ export const NAV_ADMIN: NavGroup[] = [
     items: [
       { href: "/admin", label: "Tableau de bord", icon: "gauge" },
       { href: "/admin/journal", label: "Journal d’activité", icon: "history" },
+      { href: "/admin/equipe", label: "Équipe & accès", icon: "shield" },
     ],
   },
   {
@@ -115,6 +116,7 @@ export const TITLES: Record<string, [string, string]> = {
   "/admin": ["Back-office", "Tableau de bord"],
   "/admin/recherche": ["Back-office", "Recherche"],
   "/admin/journal": ["Back-office", "Journal d’activité"],
+  "/admin/equipe": ["Back-office", "Équipe & accès"],
   "/admin/profil": ["Back-office", "Mon profil"],
   "/admin/membres": ["Back-office", "Membres"],
   "/admin/evenements": ["Back-office", "Événements"],

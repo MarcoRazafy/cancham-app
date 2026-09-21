@@ -14,6 +14,7 @@ import {
   Lock,
   MessageSquare,
   Newspaper,
+  ShieldCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -38,5 +39,6 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   help: HelpCircle,
   history: History,
   support: Headset,
+  shield: ShieldCheck,
   lock: Lock,
 };

@@ -263,3 +263,161 @@ export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
     demandes: parRessource.get(r.id) ?? 0,
   }));
 }
+
+/* ============================ Comptes et accès ============================ */
+
+export interface CompteEquipe {
+  id: string;
+  nom: string;
+  fonction: string;
+  email: string;
+  tel: string | null;
+  photo: string | null;
+  /** Date de création du compte, ISO court. */
+  depuis: string;
+  /** Compte jamais utilisé : le mot de passe n'a pas encore été défini. */
+  sansMotDePasse: boolean;
+}
+
+/** L'équipe CanCham : les comptes qui ouvrent le back-office. */
+export async function getAdministrateurs(): Promise<CompteEquipe[]> {
+  const rows = await prisma.user.findMany({
+    where: { role: "admin" },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      nom: true,
+      fonction: true,
+      email: true,
+      tel: true,
+      photo: true,
+      createdAt: true,
+      motDePasse: true,
+    },
+  });
+  return rows.map((u) => ({
+    id: u.id,
+    nom: u.nom,
+    fonction: u.fonction,
+    email: u.email,
+    tel: u.tel,
+    photo: u.photo,
+    depuis: u.createdAt.toISOString().slice(0, 10),
+    sansMotDePasse: !u.motDePasse,
+  }));
+}
+
+export interface CompteMembre extends CompteEquipe {
+  /** L'entreprise à laquelle le compte est rattaché. */
+  membre: {
+    id: string;
+    nom: string;
+    statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+    motivation: string | null;
+    /** Fiche encore vide de tout historique : sa suppression n'emporte rien. */
+    sansHistorique: boolean;
+  } | null;
+}
+
+const compteMembreSelect = {
+  id: true,
+  nom: true,
+  fonction: true,
+  email: true,
+  tel: true,
+  photo: true,
+  createdAt: true,
+  motDePasse: true,
+  member: {
+    select: {
+      id: true,
+      nom: true,
+      statut: true,
+      motivation: true,
+      _count: { select: { factures: true, inscriptions: true, produits: true } },
+    },
+  },
+} as const;
+
+type LigneCompte = {
+  id: string;
+  nom: string;
+  fonction: string;
+  email: string;
+  tel: string | null;
+  photo: string | null;
+  createdAt: Date;
+  motDePasse: string | null;
+  member: {
+    id: string;
+    nom: string;
+    statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+    motivation: string | null;
+    _count: { factures: number; inscriptions: number; produits: number };
+  } | null;
+};
+
+function versCompteMembre(u: LigneCompte): CompteMembre {
+  return {
+    id: u.id,
+    nom: u.nom,
+    fonction: u.fonction,
+    email: u.email,
+    tel: u.tel,
+    photo: u.photo,
+    depuis: u.createdAt.toISOString().slice(0, 10),
+    sansMotDePasse: !u.motDePasse,
+    membre: u.member
+      ? {
+          id: u.member.id,
+          nom: u.member.nom,
+          statut: u.member.statut,
+          motivation: u.member.motivation,
+          sansHistorique:
+            u.member._count.factures === 0 &&
+            u.member._count.inscriptions === 0 &&
+            u.member._count.produits === 0,
+        }
+      : null,
+  };
+}
+
+/**
+ * Les inscriptions à examiner : les comptes créés depuis l'espace public dont
+ * l'adhésion n'est pas encore tranchée. C'est là que l'équipe reconnaît un
+ * collaborateur et le promeut, au lieu de lui ouvrir une candidature.
+ */
+export async function getInscriptionsRecentes(
+  limite = 12,
+): Promise<CompteMembre[]> {
+  const rows = await prisma.user.findMany({
+    where: { role: "membre", member: { statut: "candidature" } },
+    orderBy: { createdAt: "desc" },
+    take: limite,
+    select: compteMembreSelect,
+  });
+  return rows.map(versCompteMembre);
+}
+
+/** Recherche d'un compte membre par nom, adresse ou entreprise. */
+export async function chercherComptes(
+  recherche: string,
+  limite = 20,
+): Promise<CompteMembre[]> {
+  const q = recherche.trim();
+  if (!q) return [];
+  const rows = await prisma.user.findMany({
+    where: {
+      role: { in: ["membre", "visiteur"] },
+      OR: [
+        { nom: { contains: q, mode: "insensitive" } },
+        { email: { contains: q, mode: "insensitive" } },
+        { member: { nom: { contains: q, mode: "insensitive" } } },
+      ],
+    },
+    orderBy: { nom: "asc" },
+    take: limite,
+    select: compteMembreSelect,
+  });
+  return rows.map(versCompteMembre);
+}
