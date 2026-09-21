@@ -553,6 +553,21 @@ h3 {
 
 /* Le certificat et les factures s'impriment seuls, comme dans le prototype. */
 @media print {
+  /*
+   * Pas de marge de page : le navigateur n'a plus où écrire la date, le
+   * titre de l'onglet et l'adresse de la page (« localhost:3001/… »). Les
+   * documents portent leurs propres marges, et leur propre pied de page.
+   */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  html,
+  body,
+  .espace-membre,
+  .espace-admin {
+    background: #ffffff !important;
+  }
   .no-print {
     display: none !important;
   }

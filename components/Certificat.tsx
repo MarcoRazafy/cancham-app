@@ -1,5 +1,6 @@
 import { Award } from "lucide-react";
 import { Card } from "@/components/ui";
+import { COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate, statusLabel } from "@/lib/format";
 import type { Member } from "@/lib/types";
 
@@ -16,7 +17,9 @@ export function CertificatAdhesion({
   membre: Pick<Member, "nom" | "adhesion" | "statut">;
 }) {
   return (
-    <Card className="p-0 max-w-[720px] mx-auto">
+    // Sur papier, sans marge de page (voir `@page`), le certificat prend
+    // lui-même ses distances avec le bord de la feuille.
+    <Card className="p-0 max-w-[720px] mx-auto print:mt-[22mm] print:border-0 print:shadow-none">
       <div className="relative border-2 border-navy rounded-[14px] m-2 px-8 py-9 text-center">
         <div
           className="absolute inset-2 border border-accent rounded-[9px] opacity-40 pointer-events-none"
@@ -57,6 +60,8 @@ export function CertificatAdhesion({
             </b>
           </div>
         </div>
+
+        <div className="mt-6 text-[11px] text-muted">{COORDONNEES.site}</div>
       </div>
     </Card>
   );

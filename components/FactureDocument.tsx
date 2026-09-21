@@ -15,14 +15,17 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
   const devise = f.devise === "CAD" ? "dollars canadiens" : "ariary";
 
   return (
-    <article className="bg-white text-[#16202b] border border-line rounded-[var(--radius-m)] shadow-[var(--shadow)] max-w-[820px] mx-auto print:border-0 print:shadow-none print:max-w-none">
+    // À l'impression, la facture occupe une feuille A4 entière : le filet de
+    // la charte en haut de page, le pied de page en bas, à la place de ce
+    // qu'y écrirait le navigateur.
+    <article className="bg-white text-[#16202b] border border-line rounded-[var(--radius-m)] shadow-[var(--shadow)] max-w-[820px] mx-auto print:border-0 print:shadow-none print:max-w-none print:rounded-none print:min-h-[296mm] print:flex print:flex-col">
       {/* Filet de la charte en tête de document. */}
       <div
         className="h-1.5 rounded-t-[var(--radius-m)] print:rounded-none"
         style={{ background: "var(--marque-degrade)" }}
       />
 
-      <div className="px-8 sm:px-12 py-10">
+      <div className="px-8 sm:px-12 py-10 print:px-[16mm] print:py-[14mm] print:flex-1 print:flex print:flex-col">
         <header className="flex justify-between items-start gap-8 flex-wrap">
           <Image
             src="/marque/logo-couleur.png"
@@ -53,6 +56,8 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
               {COORDONNEES.adresse}
               <br />
               {COORDONNEES.email} · {COORDONNEES.telephone}
+              <br />
+              {COORDONNEES.site}
             </div>
           </div>
           <div>
@@ -129,10 +134,15 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
           </div>
         </div>
 
-        <footer className="mt-12 pt-5 border-t border-[#dfe5ec] text-[11px] text-[#8797a6] leading-relaxed">
-          CanCham Madagascar · {COORDONNEES.email} · {COORDONNEES.telephone}
-          <br />
-          Document émis par la plateforme CanCham Connect.
+        <footer className="mt-12 print:mt-auto pt-5 border-t border-[#dfe5ec] text-[11px] text-[#8797a6] leading-relaxed flex justify-between items-end gap-4 flex-wrap">
+          <span>
+            CanCham Madagascar · {COORDONNEES.email} · {COORDONNEES.telephone}
+            <br />
+            Document émis par la plateforme CanCham Connect.
+          </span>
+          <span className="font-semibold text-[#5b6b7a]">
+            {COORDONNEES.site}
+          </span>
         </footer>
       </div>
     </article>
