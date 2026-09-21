@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ArrowRight, CalendarDays, FileText, Users } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
@@ -25,6 +26,10 @@ import {
  * que l'annuaire contient réellement et se met à jour d'elle-même.
  */
 export default async function PublicHome() {
+  // Lue à chaque visite : sans cela, Next la calculerait une fois pour
+  // toutes à la compilation, et les chiffres comme les prochains événements
+  // resteraient ceux du jour du déploiement.
+  await connection();
   const [stats, evenements, secteurs] = await Promise.all([
     getStatsPubliques(),
     getProchainsEvenements(8),
