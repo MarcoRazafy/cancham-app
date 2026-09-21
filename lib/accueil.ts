@@ -1,12 +1,14 @@
 /**
- * Accueil d'un nouvel inscrit.
+ * Adhésion d'un nouveau membre.
  *
- * L'inscription ne demande que l'essentiel : courriel, fonction, téléphone
- * (facultatif) et mot de passe. On se connecte ensuite, et le reste — qui
- * l'on est, l'entreprise, la formule et la motivation, l'activité — se
- * complète à la première
- * connexion, une étape à la fois, chacune pouvant être passée. On s'inscrit
- * en une minute ; la fiche se remplit à son rythme.
+ * L'inscription reprend la fiche de la chambre : nom, prénom, courriel,
+ * téléphone, ville, pays, entreprise, secteur (facultatif) et motivation,
+ * avec un mot de passe. Elle dépose une candidature : pas de connexion tant
+ * que l'équipe ne l'a pas validée.
+ *
+ * Validée, la candidature ouvre la connexion ; la première mène à la suite
+ * de la fiche, une étape à la fois — fonction, détails de l'entreprise,
+ * formule, activité, visuels, produits —, chacune pouvant être passée.
  *
  * Tant qu'une information n'est pas donnée, la fiche porte une valeur
  * provisoire : le schéma exige un nom d'entreprise, un secteur, une
@@ -19,6 +21,8 @@ export const ETAPES_ACCUEIL = [
   { cle: "entreprise", court: "Entreprise" },
   { cle: "formule", court: "Adhésion" },
   { cle: "activite", court: "Activité" },
+  { cle: "visuels", court: "Visuels" },
+  { cle: "produits", court: "Produits" },
 ] as const;
 
 export type EtapeAccueil = (typeof ETAPES_ACCUEIL)[number]["cle"];
@@ -27,6 +31,25 @@ export const NOMBRE_ETAPES = ETAPES_ACCUEIL.length;
 
 /** Pays d'implantation proposés, dans l'ordre de la fiche : Madagascar d'abord. */
 export const PAYS = ["Madagascar", "Canada", "France", "Autre"] as const;
+
+/** Indicatifs téléphoniques proposés à l'inscription, Madagascar d'abord. */
+export const INDICATIFS = [
+  { code: "+261", pays: "Madagascar", drapeau: "🇲🇬" },
+  { code: "+1", pays: "Canada", drapeau: "🇨🇦" },
+  { code: "+33", pays: "France", drapeau: "🇫🇷" },
+] as const;
+
+/**
+ * Numéro complet, indicatif compris : « +261 » et « 034 50 280 53 » donnent
+ * « +261 34 50 280 53 » — le 0 initial du numéro national tombe. Un numéro
+ * déjà saisi avec son « + » est gardé tel quel.
+ */
+export function numeroComplet(indicatif: string, numero: string): string {
+  const n = numero.trim().replace(/\s+/g, " ");
+  if (!n) return "";
+  if (n.startsWith("+") || !indicatif) return n;
+  return `${indicatif} ${n.replace(/^0\s*/, "")}`;
+}
 
 /** Valeurs de la fiche tant que le membre ne les a pas données. */
 export const PROVISOIRE = {

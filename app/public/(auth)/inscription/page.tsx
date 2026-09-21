@@ -1,26 +1,28 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Briefcase, Lock, Mail, Phone } from "lucide-react";
+import { Building2, Lock, Mail, MapPin, User } from "lucide-react";
 import {
   CadreAuth,
   ChampAuth,
   ChampMotDePasse,
+  CHAMP_AUTH,
   Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
+import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { Saillant } from "@/components/ui";
+import { INDICATIFS, PAYS } from "@/lib/accueil";
 import { MOT_DE_PASSE_MIN } from "@/lib/auth";
-import { creerCompte } from "@/lib/actions/accueil";
+import { deposerCandidature } from "@/lib/actions/accueil";
 import { utilisateurConnecte } from "@/lib/session";
 
 /**
- * Inscription : l'essentiel seulement — courriel, fonction, téléphone
- * (facultatif) et mot de passe.
+ * Demande d'adhésion : la fiche d'inscription de la chambre, champ pour
+ * champ, avec un mot de passe.
  *
- * On s'inscrit en une minute, puis on se connecte. À la première connexion,
- * la suite de la fiche d'inscription de la chambre — qui l'on est,
- * l'entreprise, la formule, l'activité — se complète étape par étape sur
- * `/bienvenue`.
+ * La demande part à l'équipe ; la connexion s'ouvre quand elle est validée.
+ * La suite — fonction, détails de l'entreprise, formule, visuels, produits —
+ * se complète à la première connexion, sur `/bienvenue`.
  */
 export default async function InscriptionPage() {
   const connecte = await utilisateurConnecte();
@@ -28,6 +30,7 @@ export default async function InscriptionPage() {
 
   return (
     <CadreAuth
+      large
       photo="/photos/auth-rencontre.jpg"
       alt="Membres et partenaires réunis lors d’une rencontre CanCham"
       accroche={
@@ -36,20 +39,43 @@ export default async function InscriptionPage() {
           <Saillant ton="vert">ici</Saillant>.
         </>
       }
-      sous="Inscrivez-vous en une minute : vous présenterez votre entreprise ensuite, étape par étape, à votre rythme."
+      sous="Déposez votre demande en quelques minutes : l’équipe CanCham l’examine, puis vous complétez votre fiche à votre rythme."
     >
       <span className="surtitre text-marque-vert">Demande d’adhésion</span>
       <h1 className="titre text-[clamp(26px,3.4vw,34px)] m-0 mt-2.5 mb-2">
-        Créer mon compte
+        Rejoindre CanCham
       </h1>
       <p className="text-[14.5px] text-muted m-0 mb-7">
-        Quelques secondes suffisent. Connectez-vous ensuite : vous présenterez
-        votre entreprise étape par étape ; l’accès complet s’ouvre après
-        validation par l’équipe et règlement de la cotisation.
+        L’équipe examine chaque demande. Une fois la vôtre validée, vous recevez
+        un e-mail : connectez-vous alors pour compléter votre fiche.
       </p>
 
-      <form action={creerCompte} className="flex flex-col gap-3.5">
-        <Field label="Adresse courriel" icone={<Mail size={16} />}>
+      <form action={deposerCandidature} className="flex flex-col gap-3.5">
+        <input type="hidden" name="retour" value="/public/inscription" />
+
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <ChampAuth label="Nom" icone={<User size={16} />}>
+            <Saisie
+              avecIcone
+              name="nomRep"
+              required
+              maxLength={60}
+              autoComplete="family-name"
+              placeholder="Votre nom"
+            />
+          </ChampAuth>
+          <ChampAuth label="Prénom">
+            <Saisie
+              name="prenomRep"
+              required
+              maxLength={60}
+              autoComplete="given-name"
+              placeholder="Prénom"
+            />
+          </ChampAuth>
+        </div>
+
+        <ChampAuth label="Courriel" icone={<Mail size={16} />}>
           <Saisie
             avecIcone
             type="email"
@@ -58,30 +84,103 @@ export default async function InscriptionPage() {
             autoComplete="email"
             placeholder="vous@entreprise.mg"
           />
-        </Field>
+        </ChampAuth>
 
-        <div className="grid gap-3.5 sm:grid-cols-2">
-          <Field label="Fonction" icone={<Briefcase size={16} />}>
+        {/* Indicatif et numéro : deux champs sous une même étiquette. */}
+        <div>
+          <span
+            id="etiquette-tel"
+            className="block text-[13px] font-semibold text-ink mb-1.5"
+          >
+            Numéro de téléphone
+          </span>
+          <div className="flex gap-2">
+            <select
+              name="indicatif"
+              defaultValue="+261"
+              aria-label="Indicatif du pays"
+              className={`${CHAMP_AUTH} px-2.5`}
+              // Largeur fixe : `w-full`, dans les classes communes, l'emporterait.
+              style={{ width: 118, flex: "none" }}
+            >
+              {INDICATIFS.map((i) => (
+                <option key={i.code} value={i.code}>
+                  {i.drapeau} {i.code}
+                </option>
+              ))}
+              <option value="">Autre</option>
+            </select>
             <Saisie
-              avecIcone
-              name="fonction"
-              required
-              maxLength={80}
-              autoComplete="organization-title"
-              placeholder="Ex. Gérante"
-            />
-          </Field>
-          <Field label="Téléphone (facultatif)" icone={<Phone size={16} />}>
-            <Saisie
-              avecIcone
               type="tel"
               name="tel"
-              maxLength={30}
-              autoComplete="tel"
-              placeholder="+261 34 …"
+              required
+              maxLength={24}
+              autoComplete="tel-national"
+              aria-labelledby="etiquette-tel"
+              placeholder="34 00 000 00"
             />
-          </Field>
+          </div>
         </div>
+
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <ChampAuth label="Ville" icone={<MapPin size={16} />}>
+            <Saisie
+              avecIcone
+              name="ville"
+              required
+              maxLength={80}
+              autoComplete="address-level2"
+              placeholder="Antananarivo"
+            />
+          </ChampAuth>
+          <ChampAuth label="Pays">
+            <select
+              name="pays"
+              defaultValue="Madagascar"
+              className={`${CHAMP_AUTH} px-3.5`}
+            >
+              {PAYS.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </ChampAuth>
+        </div>
+
+        <ChampAuth
+          label="Nom de l’entreprise représentée"
+          hint="Mettez N/A si vous n’avez pas d’entreprise."
+          icone={<Building2 size={16} />}
+        >
+          <Saisie
+            avecIcone
+            name="nom"
+            required
+            maxLength={120}
+            autoComplete="organization"
+            placeholder="Ex. Zafy Design, ou N/A"
+          />
+        </ChampAuth>
+
+        <ChampAuth label="Secteur d’activité (facultatif)">
+          <select
+            name="secteur"
+            defaultValue=""
+            className={`${CHAMP_AUTH} px-3.5`}
+          >
+            <OptionsSecteurs vide="Choisissez un secteur" />
+          </select>
+        </ChampAuth>
+
+        <ChampAuth label="Vos motivations à nous rejoindre">
+          <textarea
+            name="motivation"
+            required
+            rows={3}
+            maxLength={1000}
+            placeholder="Ce que vous attendez de la chambre : contacts au Canada, événements, accompagnement…"
+            className={`${CHAMP_AUTH} px-3.5`}
+          />
+        </ChampAuth>
 
         <div className="grid gap-3.5 sm:grid-cols-2">
           <ChampMotDePasse
@@ -106,12 +205,12 @@ export default async function InscriptionPage() {
         </div>
 
         <div className="mt-3">
-          <BoutonEnvoi enCours="Création du compte…">
-            Créer mon compte
+          <BoutonEnvoi enCours="Envoi de la demande…">
+            Envoyer ma demande
           </BoutonEnvoi>
           <EcranPassage
-            message="Création de votre compte…"
-            detail="Vous pourrez ensuite vous connecter et présenter votre entreprise."
+            message="Envoi de votre demande…"
+            detail="L’équipe CanCham est prévenue et l’examine au plus vite."
           />
         </div>
       </form>
@@ -128,5 +227,3 @@ export default async function InscriptionPage() {
     </CadreAuth>
   );
 }
-
-const Field = ChampAuth;

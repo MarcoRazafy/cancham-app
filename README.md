@@ -29,7 +29,8 @@ Chacun se connecte avec son adresse et son mot de passe ; `/` envoie chacun
 dans son espace, ou à la connexion. En local, `npm run motsdepasse:demo`
 donne un mot de passe aux comptes de démonstration qui n'en ont pas.
 
-Mot de passe oublié, invitation d'un contact, bienvenue, relance de
+Mot de passe oublié, invitation d'un contact, accusé de réception et
+validation d'une demande d'adhésion, relance de
 cotisation : les e-mails partent par Resend. Sans `RESEND_API_KEY`, en local,
 ils sont écrits dans le terminal du serveur, lien compris.
 

@@ -65,9 +65,6 @@ export default async function proxy(request: NextRequest) {
   if (user.role !== espace) return vers(ACCUEIL[user.role] ?? CONNEXION);
 
   if (espace === "admin") return NextResponse.next();
-  if (TOUJOURS_OUVERT.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
-  }
 
   const member = user.memberId
     ? await prisma.member.findUnique({
@@ -75,6 +72,14 @@ export default async function proxy(request: NextRequest) {
         select: { statut: true, retardDepuis: true },
       })
     : null;
+
+  // Candidature à l'examen : pas encore d'espace, pas même le profil.
+  if (member?.statut === "candidature")
+    return vers(CONNEXION, { attente: "1" });
+
+  if (TOUJOURS_OUVERT.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
   // `isAccessLocked` attend le modèle de vue : la date y est une ISO courte.
   const vue = member

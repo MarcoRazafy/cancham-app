@@ -1,20 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { prisma } from "@/lib/db";
-import {
-  COURRIEL_EQUIPE,
-  courrielsActifs,
-  envoyerCourriel,
-  urlPublique,
-} from "@/lib/courriel";
+import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
-import { hacher, MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { jourBase, jourSaisi } from "@/lib/format";
-import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { creerJeton } from "@/lib/jetons";
 import {
   FORMULES,
@@ -26,7 +18,6 @@ import {
 import {
   courrielDemandeApprouvee,
   courrielInvitation,
-  courrielNouvelleInscription,
   courrielRelanceCotisation,
 } from "@/lib/modeles-courriels";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
@@ -34,6 +25,11 @@ import { normaliserSite } from "@/lib/liens";
 import { PAYS, PROVISOIRE } from "@/lib/accueil";
 import { estSecteur, secteurOuProvisoire } from "@/lib/secteurs";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
+import {
+  champsProduit,
+  creerProduit,
+  recevoirPhotosProduit,
+} from "@/lib/produits";
 import {
   exigerContact,
   exigerEquipe,
@@ -52,15 +48,6 @@ import type { MemberStatus, MemberType } from "@/lib/types";
  */
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
-
-/** Demandes d'adhésion déposées depuis une même origine en une heure. */
-const DEMANDES_PAR_HEURE = 5;
-
-/** Page de retour d'un formulaire public : un chemin interne, jamais ailleurs. */
-function cheminRetour(fd: FormData, defaut: string): string {
-  const r = texte(fd, "retour");
-  return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
-}
 
 async function journal(
   action: string,
@@ -132,147 +119,6 @@ async function contactDe(memberId: string) {
 
 /* ============================ Candidatures ============================ */
 
-/** Dépôt d'une demande depuis l'espace public. */
-export async function submitAdhesion(formData: FormData) {
-  // Formulaire public : une même origine ne dépose pas des demandes en rafale.
-  const attente = tentative(
-    `adhesion:${await origineAppelante()}`,
-    DEMANDES_PAR_HEURE,
-    60 * 60 * 1000,
-  );
-  if (attente) {
-    redirectWithErreur(
-      cheminRetour(formData, "/public/inscription"),
-      `Trop de demandes depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
-    );
-  }
-
-  // Nom et prénom sont saisis à part, comme sur la fiche de la chambre. Les
-  // anciens formulaires envoient encore un « rep » d'un seul tenant.
-  const prenomRep = texte(formData, "prenomRep");
-  const nomRep = texte(formData, "nomRep");
-  const rep =
-    [prenomRep, nomRep].filter(Boolean).join(" ") ||
-    texte(formData, "rep") ||
-    "À préciser";
-
-  // « Mettre N/A si pas d'entreprise » : la fiche de la chambre distingue ainsi
-  // l'indépendant de l'entreprise. Une case vide dit la même chose.
-  const nomSaisi = texte(formData, "nom");
-  const sansEntreprise = !nomSaisi || /^n\s*\/?\s*a$/i.test(nomSaisi);
-  const type = (texte(formData, "type") ||
-    (sansEntreprise ? "physique" : "morale")) as MemberType;
-  const nom = sansEntreprise ? (type === "physique" ? rep : "") : nomSaisi;
-
-  const formuleSaisie = texte(formData, "formule");
-  const formule = (
-    formuleSaisie in FORMULES ? formuleSaisie : "mg_entreprise"
-  ) as keyof typeof FORMULES;
-
-  const retourInscription = cheminRetour(formData, "/public/inscription");
-  if (!nom) {
-    redirectWithErreur(
-      retourInscription,
-      "Merci d’indiquer le nom de votre entreprise ou votre nom.",
-    );
-  }
-
-  const email = texte(formData, "email").toLowerCase();
-  const motDePasse = String(formData.get("motDePasse") ?? "");
-  const confirmation = String(formData.get("confirmation") ?? "");
-
-  if (!email) {
-    redirectWithErreur(retourInscription, "Indiquez votre adresse courriel.");
-  }
-  if (motDePasse.length < MOT_DE_PASSE_MIN) {
-    redirectWithErreur(
-      retourInscription,
-      `Le mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`,
-    );
-  }
-  if (motDePasse !== confirmation) {
-    redirectWithErreur(
-      retourInscription,
-      "Les deux mots de passe ne correspondent pas.",
-    );
-  }
-  if (
-    await prisma.user.findUnique({ where: { email }, select: { id: true } })
-  ) {
-    redirectWithErreur(
-      retourInscription,
-      "Cette adresse a déjà un compte : connectez-vous.",
-    );
-  }
-
-  const membre = await prisma.member.create({
-    data: {
-      type,
-      nom,
-      secteur: secteurOuProvisoire(
-        texte(formData, "secteur"),
-        PROVISOIRE.secteur,
-      ),
-      ville: texte(formData, "ville") || "Antananarivo",
-      statut: "candidature",
-      formule,
-      adhesion: jourBase(),
-      activite: texte(formData, "desc").slice(0, 120) || "Activité à préciser.",
-      desc: texte(formData, "desc") || "Description à compléter.",
-      statutJuridique: texte(formData, "statutJuridique") || null,
-      pays: texte(formData, "pays") || null,
-      siteweb: texte(formData, "siteweb") || null,
-      motivation: texte(formData, "motivation") || "À compléter.",
-    },
-  });
-
-  // Le représentant devient le contact principal de l'entreprise, et le
-  // compte avec lequel il se connectera : son accès restera limité à sa fiche
-  // et à ses cotisations tant que la candidature n'est pas validée et réglée.
-  await prisma.user.create({
-    data: {
-      role: "membre",
-      nom: rep,
-      fonction:
-        texte(formData, "repTitre") ||
-        (type === "physique" ? "Indépendant(e)" : "Représentant(e)"),
-      email,
-      motDePasse: hacher(motDePasse),
-      tel: texte(formData, "tel") || null,
-      memberId: membre.id,
-      contactPrincipal: true,
-    },
-  });
-
-  await journal(
-    "candidature_deposee",
-    "Member",
-    membre.id,
-    rep,
-    `Demande de ${nom}.`,
-  );
-  const fiche = await urlPublique(`/admin/membres/${membre.id}`);
-  after(() =>
-    envoyerCourriel(
-      courrielNouvelleInscription(
-        COURRIEL_EQUIPE,
-        email,
-        [
-          `Demande de ${nom}.`,
-          texte(formData, "motivation")
-            ? `Sa motivation : « ${texte(formData, "motivation")} »`
-            : null,
-        ],
-        fiche,
-      ),
-    ),
-  );
-  revalideTout();
-  // Comme pour l'inscription : retour à la connexion, l'adresse déjà
-  // remplie. La fiche, elle, explique ensuite ce qu'il reste à faire.
-  redirect(`/public?${new URLSearchParams({ inscrit: "1", email })}`);
-}
-
 /** Approbation : la demande devient une adhésion en attente de règlement. */
 export async function approveCandidature(formData: FormData) {
   await exigerEquipe();
@@ -290,7 +136,11 @@ export async function approveCandidature(formData: FormData) {
   );
   const contact = await contactDe(id);
   if (contact) {
-    const lien = await urlPublique("/membre/cotisations");
+    // Vers la connexion, l'adresse déjà remplie : la première mène à la
+    // suite de la fiche.
+    const lien = await urlPublique(
+      `/public?${new URLSearchParams({ email: contact.email })}`,
+    );
     after(() =>
       envoyerCourriel(
         courrielDemandeApprouvee(contact.email, {
@@ -664,78 +514,29 @@ export async function ajouterBesoin(formData: FormData) {
 
 /* ============================ Produits & services ============================ */
 
-/** Photos envoyées, redimensionnées, dans la limite de la place restante. */
-async function recevoirPhotos(
-  formData: FormData,
-  memberId: string,
-  place: number,
-): Promise<string[]> {
-  const urls: string[] = [];
-  for (const fichier of formData.getAll("photos")) {
-    if (urls.length >= place) break;
-    const url = await enregistrerImage(fichier, {
-      prefixe: `produit-${memberId}`,
-      largeur: 900,
-    });
-    if (url) urls.push(url);
-  }
-  return urls;
-}
-
-function champsService(formData: FormData) {
-  return {
-    label: texte(formData, "label"),
-    type: (texte(formData, "type") === "produit" ? "produit" : "service") as
-      "produit" | "service",
-    description: texte(formData, "description") || null,
-    prix: texte(formData, "prix") || null,
-  };
-}
-
 export async function ajouterService(formData: FormData) {
-  const { memberId } = await exigerFiche(
-    texte(formData, "memberId"),
-    retourInterne(formData, "/membre/profil"),
-  );
-  const champs = champsService(formData);
-  if (!champs.label)
-    redirectWithErreur("/membre/profil", "Le titre est obligatoire.");
+  const retour = retourInterne(formData, "/membre/profil");
+  const { memberId } = await exigerFiche(texte(formData, "memberId"), retour);
+  if (!champsProduit(formData).label) {
+    redirectWithErreur(retour, "Le titre est obligatoire.");
+  }
 
-  let photos: string[] = [];
+  let label: string | null = null;
   try {
-    photos = await recevoirPhotos(formData, memberId, PHOTOS_PAR_PRODUIT);
+    label = await creerProduit(formData, memberId);
   } catch (e) {
-    if (e instanceof ImageRefusee)
-      redirectWithErreur("/membre/profil", e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
-  // Le nouveau venu se range en fin de catalogue.
-  const dernier = await prisma.produit.aggregate({
-    where: { memberId },
-    _max: { ordre: true },
-  });
-
-  await prisma.produit.create({
-    data: {
-      ...champs,
-      photos,
-      memberId,
-      ordre: (dernier._max.ordre ?? -1) + 1,
-    },
-  });
-
   revalideTout();
-  redirectWithFlash(
-    "/membre/profil",
-    `« ${champs.label} » ajouté au catalogue.`,
-  );
+  redirectWithFlash(retour, `« ${label} » ajouté au catalogue.`);
 }
 
 export async function modifierService(formData: FormData) {
   const id = texte(formData, "produitId");
   await exigerProduit(id, retourInterne(formData, "/membre/profil"));
-  const champs = champsService(formData);
+  const champs = champsProduit(formData);
   if (!champs.label)
     redirectWithErreur("/membre/profil", "Le titre est obligatoire.");
 
@@ -750,7 +551,7 @@ export async function modifierService(formData: FormData) {
 
   let ajoutees: string[] = [];
   try {
-    ajoutees = await recevoirPhotos(
+    ajoutees = await recevoirPhotosProduit(
       formData,
       actuel.memberId,
       PHOTOS_PAR_PRODUIT - conservees.length,

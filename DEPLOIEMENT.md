@@ -78,8 +78,8 @@ Ce qui part par e-mail :
 - le lien de réinitialisation du mot de passe, valable une heure ;
 - l'invitation d'un contact ajouté par l'équipe ou par un collègue, valable
   sept jours ;
-- la bienvenue après une inscription, et l'alerte correspondante à l'équipe ;
-- l'annonce d'une demande d'adhésion approuvée ;
+- l'accusé de réception d'une demande d'adhésion, et l'alerte à l'équipe ;
+- la validation de la demande, qui ouvre la connexion ;
 - la relance de cotisation, envoyée depuis la fiche d'un membre.
 
 ## 4. Premier déploiement
