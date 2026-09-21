@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import { dossierStockage } from "@/lib/stockage";
 
 const executer = promisify(execFile);
 
@@ -23,7 +24,7 @@ const executer = promisify(execFile);
  * convertir au moment du dépôt sur une machine qui les a.
  */
 
-export const RACINE = path.join(process.cwd(), "stockage", "ressources");
+export const RACINE = dossierStockage("ressources");
 
 /** Dossier d'une ressource. L'identifiant est contrôlé : pas de `../`. */
 export function dossierRessource(id: string): string {
