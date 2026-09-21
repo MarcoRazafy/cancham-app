@@ -1,5 +1,7 @@
 import Link from "next/link";
 import {
+  ShieldCheck,
+  ShieldOff,
   CalendarCheck,
   BadgeCheck,
   Banknote,
@@ -50,6 +52,8 @@ const ICONES: Record<string, LucideIcon> = {
   facture_payee: BadgeCheck,
   relance_envoyee: BellRing,
   ressource_achetee: ShoppingBag,
+  admin_promu: ShieldCheck,
+  admin_retire: ShieldOff,
   service_reserve: CreditCard,
   service_gratuit_reserve: CalendarCheck,
   evenement_cree: CalendarPlus,
