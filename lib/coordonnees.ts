@@ -12,6 +12,7 @@ export const COORDONNEES = {
   telephone: "+261 34 50 280 53",
   email: "info@cancham.mg",
   adresse: "Antananarivo, Madagascar",
+  site: "https://cancham.mg/",
 
   /**
    * À CONFIRMER. Le site ne publie aucun numéro WhatsApp : on reprend le
