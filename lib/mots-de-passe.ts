@@ -1,4 +1,9 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import {
+  randomBytes,
+  randomInt,
+  scryptSync,
+  timingSafeEqual,
+} from "node:crypto";
 
 /**
  * Empreintes de mots de passe.
@@ -38,4 +43,22 @@ export function verifier(motDePasse: string, stocke: string | null): boolean {
   const attendu = Buffer.from(empreinte, "hex");
   const calcule = scryptSync(motDePasse, sel, attendu.length, { N: COUT });
   return attendu.length === calcule.length && timingSafeEqual(attendu, calcule);
+}
+
+/** Signes d'un mot de passe provisoire : ni O/0, ni l/1/I, qui se confondent. */
+const SIGNES_PROVISOIRES =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+
+/**
+ * Mot de passe provisoire d'un compte créé par l'équipe, envoyé par e-mail :
+ * trois groupes de quatre signes, « Kc7m-Pq2x-Rt9w ». Facile à recopier,
+ * long assez pour ne pas se deviner ; son titulaire le change ensuite.
+ */
+export function motDePasseProvisoire(): string {
+  return Array.from({ length: 3 }, () =>
+    Array.from(
+      { length: 4 },
+      () => SIGNES_PROVISOIRES[randomInt(SIGNES_PROVISOIRES.length)],
+    ).join(""),
+  ).join("-");
 }

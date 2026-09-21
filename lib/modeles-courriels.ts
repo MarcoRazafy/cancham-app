@@ -150,3 +150,27 @@ export function courrielDemandeApprouvee(
     }),
   };
 }
+
+export function courrielCompteEquipe(
+  a: string,
+  d: { fonction: string; motDePasse: string; lien: string },
+): Courriel {
+  return {
+    a,
+    sujet: "Votre accès à l’équipe CanCham Connect",
+    ...gabarit({
+      titre: "Bienvenue dans l’équipe CanCham Connect",
+      paragraphes: [
+        "Bonjour,",
+        `Un accès au back-office de CanCham Connect vient d’être ouvert pour vous, en tant que « ${d.fonction} ».`,
+        `Votre identifiant : ${a}`,
+        `Votre mot de passe provisoire : ${d.motDePasse}`,
+        "Dès votre première connexion, ouvrez « Mon profil » pour indiquer votre nom et choisir votre propre mot de passe.",
+      ],
+      bouton: { libelle: "Me connecter", url: d.lien },
+      apres: [
+        "Si vous n’attendiez pas cet accès, ignorez ce message et prévenez l’équipe CanCham.",
+      ],
+    }),
+  };
+}

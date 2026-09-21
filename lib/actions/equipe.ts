@@ -1,8 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { nomDepuisCourriel } from "@/lib/accueil";
+import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { prisma } from "@/lib/db";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
+import { courrielCompteEquipe } from "@/lib/modeles-courriels";
+import { hacher, motDePasseProvisoire } from "@/lib/mots-de-passe";
 import { getCurrentUser } from "@/lib/session";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 
@@ -72,10 +76,10 @@ export async function modifierProfilEquipe(formData: FormData) {
 /**
  * Qui tient le back-office.
  *
- * Il n'y a pas d'invitation par courriel : un collaborateur de la chambre
- * s'inscrit comme tout le monde depuis l'espace public, puis l'équipe le
- * reconnaît et le promeut. L'inverse existe aussi — retirer l'accès à
- * quelqu'un qui quitte la chambre.
+ * Seule l'équipe ouvre un compte d'équipe : une adresse et une fonction, et
+ * un e-mail part avec l'identifiant et un mot de passe provisoire. Un compte
+ * existant peut aussi être promu, et l'accès retiré à quelqu'un qui quitte
+ * la chambre.
  *
  * Deux garde-fous : on ne se retire pas soi-même, et la plateforme garde au
  * moins un administrateur.
@@ -92,6 +96,79 @@ async function journal(
   await prisma.auditLog.create({
     data: { action, entite: "User", entiteId: userId, acteur, detail },
   });
+}
+
+/**
+ * Nouveau membre de l'équipe : son adresse et sa fonction suffisent. Le nom
+ * se tire de l'adresse en attendant qu'il le donne dans « Mon profil ».
+ *
+ * L'identifiant et le mot de passe provisoire partent par e-mail, attendus
+ * ici : si l'envoi échoue, le compte n'est pas gardé — personne n'en
+ * connaîtrait le mot de passe. Sans service d'e-mails (en local), le compte
+ * est créé et le message écrit dans le journal du serveur.
+ */
+export async function creerCompteEquipe(formData: FormData) {
+  const acteur = await getCurrentUser("admin");
+  const email = texte(formData, "email").toLowerCase();
+  const fonction = texte(formData, "fonction").slice(0, 80);
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    redirectWithErreur(EQUIPE, "Indiquez une adresse e-mail valide.");
+  }
+  if (!fonction) redirectWithErreur(EQUIPE, "Indiquez sa fonction.");
+  const existant = await prisma.user.findUnique({
+    where: { email },
+    select: { role: true },
+  });
+  if (existant) {
+    redirectWithErreur(
+      EQUIPE,
+      existant.role === "admin"
+        ? `${email} fait déjà partie de l’équipe.`
+        : `${email} a déjà un compte : cherchez-le plus bas pour le promouvoir.`,
+    );
+  }
+
+  const motDePasse = motDePasseProvisoire();
+  const compte = await prisma.user.create({
+    data: {
+      role: "admin",
+      nom: nomDepuisCourriel(email),
+      fonction,
+      email,
+      motDePasse: hacher(motDePasse),
+    },
+    select: { id: true },
+  });
+
+  const envoye = await envoyerCourriel(
+    courrielCompteEquipe(email, {
+      fonction,
+      motDePasse,
+      lien: await urlPublique(`/public?${new URLSearchParams({ email })}`),
+    }),
+  );
+  if (!envoye && courrielsActifs()) {
+    await prisma.user.delete({ where: { id: compte.id } });
+    redirectWithErreur(
+      EQUIPE,
+      `L’e-mail n’a pas pu partir vers ${email} : le compte n’a pas été créé. Réessayez dans un instant.`,
+    );
+  }
+
+  await journal(
+    "equipe_ajoutee",
+    compte.id,
+    acteur.nom,
+    `Compte d’équipe ouvert pour ${email} (${fonction}).`,
+  );
+  revalidatePath("/", "layout");
+  redirectWithFlash(
+    EQUIPE,
+    envoye
+      ? `Compte créé · identifiants envoyés à ${email}`
+      : `Compte créé · e-mails non configurés : identifiants écrits dans le journal du serveur`,
+  );
 }
 
 /** Promotion d'un compte en administrateur. */

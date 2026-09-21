@@ -3,12 +3,13 @@
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
+import { hacher, MOT_DE_PASSE_MIN, ouvrirSession, verifier } from "@/lib/auth";
 import { envoyerCourriel, urlPublique } from "@/lib/courriel";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { creerJeton, jetonValide } from "@/lib/jetons";
-import { minutes, origineAppelante, tentative } from "@/lib/limite";
+import { minutes, oublier, origineAppelante, tentative } from "@/lib/limite";
 import { courrielReinitialisation } from "@/lib/modeles-courriels";
+import { getCurrentUser } from "@/lib/session";
 
 /**
  * Mot de passe oublié, et premier mot de passe d'un compte invité.
@@ -132,4 +133,72 @@ export async function definirMotDePasse(formData: FormData) {
   if (user.role === "admin") redirectWithFlash("/admin", message);
   if (user.member?.accueilEnCours) redirect("/bienvenue");
   redirectWithFlash("/membre", message);
+}
+
+/** Essais du mot de passe actuel tolérés par quart d'heure. */
+const ESSAIS_CHANGEMENT = 5;
+
+/**
+ * Changer son mot de passe, connecté, depuis « Mon profil ».
+ *
+ * L'actuel est exigé : une session laissée ouverte sur un poste partagé ne
+ * suffit pas à s'approprier le compte. Le changement ferme les autres
+ * sessions ; celle-ci est rouverte aussitôt, pour qu'on reste connecté ici.
+ */
+export async function changerMonMotDePasse(formData: FormData) {
+  const retour = "/admin/profil";
+  const user = await getCurrentUser("admin");
+  const actuel = String(formData.get("actuel") ?? "");
+  const nouveau = String(formData.get("nouveau") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "");
+  const erreur = (message: string): never =>
+    redirectWithErreur(retour, message);
+
+  const cle = `changement:${user.id}`;
+  const attente = tentative(cle, ESSAIS_CHANGEMENT, 15 * 60 * 1000);
+  if (attente) {
+    erreur(
+      `Trop d’essais. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
+    );
+  }
+  const compte = await prisma.user.findUniqueOrThrow({
+    where: { id: user.id },
+    select: { motDePasse: true, email: true },
+  });
+  if (!verifier(actuel, compte.motDePasse)) {
+    erreur("Le mot de passe actuel n’est pas le bon.");
+  }
+  if (nouveau.length < MOT_DE_PASSE_MIN) {
+    erreur(
+      `Le nouveau mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`,
+    );
+  }
+  if (nouveau !== confirmation) {
+    erreur("Les deux nouveaux mots de passe ne correspondent pas.");
+  }
+  if (nouveau === actuel) {
+    erreur("Choisissez un mot de passe différent de l’actuel.");
+  }
+
+  oublier(cle);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { motDePasse: hacher(nouveau), motDePasseModifieLe: new Date() },
+    }),
+    prisma.auditLog.create({
+      data: {
+        action: "mot_de_passe_modifie",
+        entite: "User",
+        entiteId: user.id,
+        acteur: user.nom,
+        detail: `${compte.email} a changé son mot de passe.`,
+      },
+    }),
+  ]);
+  await ouvrirSession(user.id);
+  redirectWithFlash(
+    retour,
+    "Mot de passe modifié · vos autres sessions sont fermées",
+  );
 }

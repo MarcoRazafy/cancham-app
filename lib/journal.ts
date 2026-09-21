@@ -94,6 +94,16 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "adhesion",
     ton: "info",
   },
+  equipe_ajoutee: {
+    libelle: "Compte d’équipe créé",
+    famille: "adhesion",
+    ton: "ok",
+  },
+  mot_de_passe_modifie: {
+    libelle: "Mot de passe modifié",
+    famille: "adhesion",
+    ton: "info",
+  },
   admin_promu: {
     libelle: "Accès administrateur accordé",
     famille: "adhesion",

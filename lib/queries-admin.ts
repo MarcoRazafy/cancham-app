@@ -334,7 +334,9 @@ const compteMembreSelect = {
       nom: true,
       statut: true,
       motivation: true,
-      _count: { select: { factures: true, inscriptions: true, produits: true } },
+      _count: {
+        select: { factures: true, inscriptions: true, produits: true },
+      },
     },
   },
 } as const;
@@ -380,23 +382,6 @@ function versCompteMembre(u: LigneCompte): CompteMembre {
         }
       : null,
   };
-}
-
-/**
- * Les inscriptions à examiner : les comptes créés depuis l'espace public dont
- * l'adhésion n'est pas encore tranchée. C'est là que l'équipe reconnaît un
- * collaborateur et le promeut, au lieu de lui ouvrir une candidature.
- */
-export async function getInscriptionsRecentes(
-  limite = 12,
-): Promise<CompteMembre[]> {
-  const rows = await prisma.user.findMany({
-    where: { role: "membre", member: { statut: "candidature" } },
-    orderBy: { createdAt: "desc" },
-    take: limite,
-    select: compteMembreSelect,
-  });
-  return rows.map(versCompteMembre);
 }
 
 /** Recherche d'un compte membre par nom, adresse ou entreprise. */

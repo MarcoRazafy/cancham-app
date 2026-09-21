@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Mail, Phone, Search, UserRound } from "lucide-react";
+import { Mail, Phone, Search } from "lucide-react";
 import { EnTeteAdmin, Panneau, Vide } from "@/components/admin/ui";
 import { FiltresAuto } from "@/components/FiltresAuto";
 import {
+  FormulaireNouvelEquipier,
   PromouvoirButton,
   RetirerAdminButton,
 } from "@/components/forms/EquipeForms";
@@ -13,7 +14,6 @@ import { fmtDate } from "@/lib/format";
 import {
   chercherComptes,
   getAdministrateurs,
-  getInscriptionsRecentes,
   type CompteMembre,
 } from "@/lib/queries-admin";
 import { getCurrentUser } from "@/lib/session";
@@ -21,11 +21,9 @@ import { getCurrentUser } from "@/lib/session";
 /**
  * Équipe et accès : qui tient le back-office, et qui peut y entrer.
  *
- * Il n'y a pas d'invitation par courriel. Un collaborateur de la chambre
- * s'inscrit depuis l'espace public comme n'importe qui ; sa demande arrive
- * ici, parmi les inscriptions à examiner, et l'équipe le promeut au lieu de
- * lui ouvrir une candidature. Pour un compte plus ancien, la recherche le
- * retrouve.
+ * Seule l'équipe ouvre un compte d'équipe : une adresse, une fonction, et
+ * l'identifiant part par e-mail avec un mot de passe provisoire. Un compte
+ * déjà inscrit peut aussi être promu, en le cherchant.
  */
 export default async function AdminEquipe({
   searchParams,
@@ -38,9 +36,8 @@ export default async function AdminEquipe({
   ]);
   const recherche = q?.trim() ?? "";
 
-  const [admins, inscriptions, trouves] = await Promise.all([
+  const [admins, trouves] = await Promise.all([
     getAdministrateurs(),
-    getInscriptionsRecentes(),
     chercherComptes(recherche),
   ]);
 
@@ -54,8 +51,8 @@ export default async function AdminEquipe({
           </>
         }
       >
-        Les comptes qui ouvrent le back-office. Un collaborateur s’inscrit
-        depuis l’espace public, puis vous le promouvez ici.
+        Les comptes qui ouvrent le back-office. Ajoutez un membre de l’équipe
+        avec son adresse et sa fonction : il reçoit ses accès par e-mail.
       </EnTeteAdmin>
 
       <div className="grid gap-4 items-start lg:grid-cols-[1fr_380px]">
@@ -64,30 +61,19 @@ export default async function AdminEquipe({
           <Panneau
             titre={
               <>
-                Inscriptions à <Saillant>examiner</Saillant>
+                Ajouter à <Saillant>l’équipe</Saillant>
               </>
             }
-            sousTitre="Les comptes créés depuis l’espace public, dont l’adhésion n’est pas encore tranchée"
+            sousTitre="Un compte d’administrateur, ouvert par vous"
             teinte="rouge"
-            corpsClassName="px-6 pb-3"
           >
-            {inscriptions.length ? (
-              <ul className="list-none m-0 p-0">
-                {inscriptions.map((c) => (
-                  <Inscription key={c.id} compte={c} />
-                ))}
-              </ul>
-            ) : (
-              <Vide icone={<UserRound size={26} />}>
-                Aucune inscription en attente.
-              </Vide>
-            )}
+            <FormulaireNouvelEquipier />
           </Panneau>
 
           {/* ==================== Recherche ==================== */}
           <Panneau
-            titre="Chercher un compte"
-            sousTitre="Pour promouvoir quelqu’un inscrit il y a plus longtemps"
+            titre="Promouvoir un compte existant"
+            sousTitre="Quelqu’un qui a déjà un compte de membre et rejoint l’équipe"
             teinte="bleu"
             corpsClassName="px-6 pb-3"
           >

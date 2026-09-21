@@ -95,3 +95,30 @@ describe("cookie de session", () => {
     expect(sessionPerimee(nouvelle, plusTard)).toBe(false);
   });
 });
+
+describe("mot de passe provisoire", () => {
+  it("donne trois groupes de quatre signes, sans caractère ambigu", async () => {
+    const { motDePasseProvisoire } = await import("@/lib/mots-de-passe");
+    for (let i = 0; i < 50; i++) {
+      const m = motDePasseProvisoire();
+      expect(m).toMatch(
+        /^[A-HJ-NP-Za-km-z2-9]{4}(-[A-HJ-NP-Za-km-z2-9]{4}){2}$/,
+      );
+      expect(m).not.toMatch(/[O0Il1]/);
+    }
+  });
+
+  it("ne se répète pas", async () => {
+    const { motDePasseProvisoire } = await import("@/lib/mots-de-passe");
+    const tirages = new Set(Array.from({ length: 200 }, motDePasseProvisoire));
+    expect(tirages.size).toBe(200);
+  });
+
+  it("passe la longueur minimale et se vérifie une fois haché", async () => {
+    const { motDePasseProvisoire, hacher, verifier, MOT_DE_PASSE_MIN } =
+      await import("@/lib/mots-de-passe");
+    const m = motDePasseProvisoire();
+    expect(m.length).toBeGreaterThanOrEqual(MOT_DE_PASSE_MIN);
+    expect(verifier(m, hacher(m))).toBe(true);
+  });
+});
