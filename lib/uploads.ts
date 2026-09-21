@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { dossierStockage } from "@/lib/stockage";
 
 /**
  * Réception des images envoyées par les membres.
@@ -11,15 +12,14 @@ import sharp from "sharp";
  * téléphone de 4 Mo rendrait la fiche inconsultable. Rien n'est stocké en base
  * — seul le chemin public l'est.
  *
- * Limite assumée : les fichiers atterrissent dans `public/televersements/`, ce
- * qui suppose un disque persistant. Sur un VPS avec un volume monté, cela
- * fonctionne tel quel. Sur un hébergement au système de fichiers éphémère
- * (Vercel), il faudra basculer `ecrire()` vers un stockage objet — c'est la
- * seule fonction à réécrire.
+ * Les fichiers sont écrits dans le stockage persistant (`lib/stockage.ts`),
+ * puis servis par la route `/televersements/[fichier]` : l'adresse enregistrée
+ * en base reste `/televersements/<nom>`.
  */
 
-/** Dossier d'écriture, servi tel quel par Next à la racine du site. */
-const DOSSIER = path.join(process.cwd(), "public", "televersements");
+/** Dossier d'écriture des images, dans le stockage persistant. */
+export const DOSSIER_TELEVERSEMENTS = dossierStockage("televersements");
+const DOSSIER = DOSSIER_TELEVERSEMENTS;
 
 /** Au-delà, on refuse : c'est déjà quatre fois une photo de téléphone recadrée. */
 const POIDS_MAX = 8 * 1024 * 1024;

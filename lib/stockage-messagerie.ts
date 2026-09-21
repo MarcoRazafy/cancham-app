@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { dossierStockage } from "@/lib/stockage";
 
 /**
  * Pièces jointes de la messagerie : réception, contrôle et rangement.
@@ -16,11 +17,7 @@ import sharp from "sharp";
  * commence par sa signature EBML, et une image doit pouvoir être décodée.
  */
 
-export const RACINE_MESSAGERIE = path.join(
-  process.cwd(),
-  "stockage",
-  "messagerie",
-);
+export const RACINE_MESSAGERIE = dossierStockage("messagerie");
 
 export type TypePiece = "image" | "video" | "pdf";
 
