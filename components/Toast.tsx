@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Check, CircleAlert, X } from "lucide-react";
 
 /**
@@ -40,29 +40,29 @@ function ToastVisible({
   message: string;
   erreur: boolean;
 }) {
-  const params = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
   const [visible, setVisible] = useState(true);
   const duree = erreur ? DUREE.erreur : DUREE.succes;
 
   useEffect(() => {
     const masquer = setTimeout(() => setVisible(false), duree);
+    // Le message quitte l'adresse sans navigation : `replaceState` réécrit
+    // l'URL, et Next suit. Une navigation (`router.replace`) aurait pu
+    // écraser celle d'une action lancée entre-temps — cliquer « Terminer »
+    // juste après un « ajouté » ramenait sur la page quittée. Et seulement
+    // si l'adresse porte encore ce message : sinon, on est déjà ailleurs.
     const nettoyer = setTimeout(() => {
-      const reste = new URLSearchParams(params.toString());
-      reste.delete("msg");
-      reste.delete("ton");
-      const query = reste.toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
-      });
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("msg") !== message) return;
+      url.searchParams.delete("msg");
+      url.searchParams.delete("ton");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
     }, duree + 400);
 
     return () => {
       clearTimeout(masquer);
       clearTimeout(nettoyer);
     };
-  }, [pathname, params, router, duree]);
+  }, [message, duree]);
 
   return (
     <div
