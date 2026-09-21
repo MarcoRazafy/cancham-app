@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   KeyRound,
   KeySquare,
+  PenLine,
   ShieldCheck,
   ShieldOff,
   CalendarCheck,
@@ -47,6 +48,7 @@ const ICONES: Record<string, LucideIcon> = {
   candidature_refusee: UserX,
   membre_cree: UserPlus,
   membre_supprime: UserMinus,
+  membre_renomme: PenLine,
   contact_ajoute: UserRoundPlus,
   contact_retire: UserRoundMinus,
   paiement_enregistre: Banknote,

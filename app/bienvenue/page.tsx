@@ -5,10 +5,10 @@ import { ChampAuth, CHAMP_AUTH, Saisie } from "@/components/public/CadreAuth";
 import { BoutonPilule } from "@/components/public/BoutonMarque";
 import { LogoOfficiel } from "@/components/public/Marque";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
-import { PAYS } from "@/components/public/ChoixFormule";
 import {
   ETAPES_ACCUEIL,
   NOMBRE_ETAPES,
+  PAYS,
   PROVISOIRE,
   nomDepuisCourriel,
   numeroEtape,

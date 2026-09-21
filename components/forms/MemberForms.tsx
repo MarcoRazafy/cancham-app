@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
+import { PAYS } from "@/lib/accueil";
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
 import {
@@ -35,6 +36,7 @@ import {
   rejectCandidature,
   sendReminder,
   updateMemberProfile,
+  ajouterBesoin,
 } from "@/lib/actions/members";
 import {
   FORMULES,
@@ -364,6 +366,11 @@ export function DeleteMemberButton({
 /** Édition de sa propre fiche par le membre. */
 export function EditProfileButton({
   memberId,
+  nom,
+  independant = false,
+  ville,
+  pays = null,
+  motivation = null,
   activite,
   desc,
   besoins,
@@ -374,6 +381,12 @@ export function EditProfileButton({
   logo = null,
 }: {
   memberId: string;
+  nom: string;
+  /** Personne physique : la fiche porte son nom, pas celui d'une entreprise. */
+  independant?: boolean;
+  ville: string;
+  pays?: string | null;
+  motivation?: string | null;
   /** Secteur actuel ; « Secteur à préciser » compte comme vide. */
   secteur: string;
   activite: string;
@@ -403,6 +416,53 @@ export function EditProfileButton({
           <input type="hidden" name="memberId" value={memberId} />
           <ModalBody>
             <Field
+              label={independant ? "Nom affiché" : "Nom de l’entreprise"}
+              hint="Tel qu’il apparaît dans l’annuaire et sur vos prochaines factures."
+            >
+              <input
+                type="text"
+                name="nom"
+                required
+                maxLength={120}
+                defaultValue={nom}
+                autoComplete="organization"
+                className={INPUT}
+              />
+            </Field>
+            <div className="grid gap-3.5 md:grid-cols-3">
+              <Field label="Secteur d’activité">
+                <select name="secteur" defaultValue={secteur} className={INPUT}>
+                  <OptionsSecteurs actuel={secteur} />
+                </select>
+              </Field>
+              <Field label="Ville">
+                <input
+                  type="text"
+                  name="ville"
+                  required
+                  maxLength={80}
+                  defaultValue={ville}
+                  autoComplete="address-level2"
+                  className={INPUT}
+                />
+              </Field>
+              <Field label="Pays">
+                <select
+                  name="pays"
+                  defaultValue={pays ?? "Madagascar"}
+                  className={INPUT}
+                >
+                  {PAYS.map((p) => (
+                    <option key={p}>{p}</option>
+                  ))}
+                  {/* Un pays saisi avant la liste reste proposé. */}
+                  {pays && !(PAYS as readonly string[]).includes(pays) ? (
+                    <option value={pays}>{pays}</option>
+                  ) : null}
+                </select>
+              </Field>
+            </div>
+            <Field
               label="Site web"
               hint="Facultatif. Par exemple : monentreprise.mg"
             >
@@ -415,11 +475,6 @@ export function EditProfileButton({
                 placeholder="www.monentreprise.mg"
                 className={INPUT}
               />
-            </Field>
-            <Field label="Secteur d’activité">
-              <select name="secteur" defaultValue={secteur} className={INPUT}>
-                <OptionsSecteurs actuel={secteur} />
-              </select>
             </Field>
             <Field label="Activité (description courte)">
               <input
@@ -448,6 +503,18 @@ export function EditProfileButton({
                 name="besoins"
                 rows={4}
                 defaultValue={[besoins, interets].filter(Boolean).join("\n")}
+                className={INPUT}
+              />
+            </Field>
+            <Field
+              label="Motivation à rejoindre CanCham"
+              hint="Ce que vous attendez de la chambre. L’équipe la lit en examinant votre adhésion."
+            >
+              <textarea
+                name="motivation"
+                rows={3}
+                maxLength={1000}
+                defaultValue={motivation ?? ""}
                 className={INPUT}
               />
             </Field>
@@ -963,6 +1030,51 @@ function ChampsService({ produit }: { produit?: Produit }) {
       </Field>
       <ChampGalerie actuelles={produit?.photos ?? []} />
     </>
+  );
+}
+
+/** Un besoin de plus dans « Besoins & intérêts », depuis sa fiche. */
+export function AjouterBesoinButton({ memberId }: { memberId: string }) {
+  return (
+    <Modal
+      title="Ajouter un besoin"
+      trigger={(ouvrir) => (
+        <button
+          onClick={ouvrir}
+          className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
+        >
+          <Plus size={14} /> Ajouter
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={ajouterBesoin}>
+          <input type="hidden" name="memberId" value={memberId} />
+          <ModalBody>
+            <Field
+              label="Ce que vous recherchez"
+              hint="Une phrase : elle devient un tiret sous « Recherche actuellement »."
+            >
+              <input
+                type="text"
+                name="besoin"
+                required
+                maxLength={200}
+                autoFocus
+                placeholder="Ex. Un distributeur bio établi au Québec"
+                className={INPUT}
+              />
+            </Field>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Ajout…">
+              <Check size={14} /> Ajouter
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
   );
 }
 
