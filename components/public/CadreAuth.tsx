@@ -44,22 +44,24 @@ export function CadreAuth({
           fill
           priority
           sizes="65vw"
-          className="zoom-lent object-cover saturate-[0.65] brightness-[1.12]"
+          className="zoom-lent object-cover saturate-[0.9] brightness-[1.05]"
         />
 
-        {/* Le dégradé de la charte, en multiply et en demi-teinte : il colore
-            la photo sans la recouvrir — on doit reconnaître le rouge et le
-            vert, et voir la scène. */}
+        {/* Le dégradé de la charte, en multiply et à peine posé : une teinte
+            rouge et verte sur une photo qui reste claire — on doit voir la
+            scène et les visages avant la couleur. */}
         <div
-          className="degrade-anime absolute inset-0 mix-blend-multiply opacity-[0.62]"
+          className="degrade-anime absolute inset-0 mix-blend-multiply opacity-[0.3]"
           style={{
             background:
               "linear-gradient(135deg, #c41414 0%, #a3122a 26%, #1b3a6b 52%, #0a7a49 76%, #00a05b 100%)",
           }}
         />
-        {/* Voile du bas : le dégradé étant en demi-teinte, c'est lui qui
-            garantit la lisibilité du titre sur une photo claire. */}
-        <div className="absolute inset-0 bg-linear-to-t from-marque-nuit/85 from-5% via-marque-nuit/20 via-55% to-marque-nuit/10" />
+        {/* Voiles des bords seulement : sombre en bas, derrière le titre, et
+            léger en haut, derrière le logo blanc. Le milieu de la photo reste
+            à nu. */}
+        <div className="absolute inset-0 bg-linear-to-t from-marque-nuit/80 from-0% via-marque-nuit/0 via-45% to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[28%] bg-linear-to-b from-marque-nuit/45 to-transparent" />
 
         <div className="sur-sombre relative h-full flex flex-col justify-between p-10 xl:p-14">
           <Link
