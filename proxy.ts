@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { lireJeton, NOM_COOKIE } from "@/lib/auth";
+import { lireSession, NOM_COOKIE, sessionPerimee } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isAccessLocked, PAGES_TOUJOURS_OUVERTES } from "@/lib/membership";
 
@@ -50,14 +50,17 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   };
 
-  const userId = lireJeton(request.cookies.get(NOM_COOKIE)?.value);
-  if (!userId) return vers(CONNEXION, { suite: pathname });
+  const session = lireSession(request.cookies.get(NOM_COOKIE)?.value);
+  if (!session) return vers(CONNEXION, { suite: pathname });
 
   const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { role: true, memberId: true },
+    where: { id: session.userId },
+    select: { role: true, memberId: true, motDePasseModifieLe: true },
   });
-  if (!user) return vers(CONNEXION);
+  // Compte supprimé, ou mot de passe changé depuis l'ouverture de la session.
+  if (!user || sessionPerimee(session, user.motDePasseModifieLe)) {
+    return vers(CONNEXION);
+  }
   // Chacun chez soi : un membre n'entre pas dans le back-office.
   if (user.role !== espace) return vers(ACCUEIL[user.role] ?? CONNEXION);
 

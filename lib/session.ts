@@ -2,7 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { fermerSession, sessionCourante } from "@/lib/auth";
+import { fermerSession, sessionCourante, sessionPerimee } from "@/lib/auth";
 import type { Space, User, UserRole } from "@/lib/types";
 
 /**
@@ -29,6 +29,19 @@ const ACCUEIL: Record<UserRole, string> = {
 
 export const CONNEXION = "/public";
 
+/**
+ * Efface le cookie quand c'est permis. Pendant le rendu d'une page, Next
+ * interdit d'écrire les cookies : on n'insiste pas — un cookie refusé l'est
+ * de nouveau à chaque requête, et la prochaine connexion le remplace.
+ */
+async function oublierCookie(): Promise<void> {
+  try {
+    await fermerSession();
+  } catch {
+    /* Rendu d'une page : écriture des cookies impossible, sans conséquence. */
+  }
+}
+
 /** La personne connectée, sans exiger d'espace. `null` si personne. */
 export async function utilisateurConnecte(): Promise<{
   id: string;
@@ -36,27 +49,34 @@ export async function utilisateurConnecte(): Promise<{
   memberId: string | null;
   nom: string;
 } | null> {
-  const id = await sessionCourante();
-  if (!id) return null;
+  const session = await sessionCourante();
+  if (!session) return null;
   const u = await prisma.user.findUnique({
-    where: { id },
-    select: { id: true, role: true, memberId: true, nom: true },
+    where: { id: session.userId },
+    select: {
+      id: true,
+      role: true,
+      memberId: true,
+      nom: true,
+      motDePasseModifieLe: true,
+    },
   });
-  if (!u) {
-    // Compte supprimé depuis l'ouverture de la session.
-    await fermerSession();
+  if (!u || sessionPerimee(session, u.motDePasseModifieLe)) {
+    // Compte supprimé, ou mot de passe changé depuis l'ouverture de la
+    // session : le cookie ne vaut plus rien.
+    await oublierCookie();
     return null;
   }
-  return u;
+  return { id: u.id, role: u.role, memberId: u.memberId, nom: u.nom };
 }
 
 export async function getCurrentUser(space: Space): Promise<User> {
-  const id = await sessionCourante();
-  if (!id) redirect(CONNEXION);
+  const session = await sessionCourante();
+  if (!session) redirect(CONNEXION);
 
-  const u = await prisma.user.findUnique({ where: { id } });
-  if (!u) {
-    await fermerSession();
+  const u = await prisma.user.findUnique({ where: { id: session.userId } });
+  if (!u || sessionPerimee(session, u.motDePasseModifieLe)) {
+    await oublierCookie();
     redirect(CONNEXION);
   }
   if (u.role !== ROLE_PAR_ESPACE[space]) redirect(ACCUEIL[u.role]);

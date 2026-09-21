@@ -79,6 +79,16 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "info",
   },
+  acces_active: {
+    libelle: "Accès activé",
+    famille: "adhesion",
+    ton: "ok",
+  },
+  mot_de_passe_reinitialise: {
+    libelle: "Mot de passe réinitialisé",
+    famille: "adhesion",
+    ton: "info",
+  },
   admin_promu: {
     libelle: "Accès administrateur accordé",
     famille: "adhesion",

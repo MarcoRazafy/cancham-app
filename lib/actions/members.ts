@@ -1,13 +1,33 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  COURRIEL_EQUIPE,
+  courrielsActifs,
+  envoyerCourriel,
+  urlPublique,
+} from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
 import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
-import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
+import { creerJeton } from "@/lib/jetons";
+import {
+  FORMULES,
+  fmtCotisation,
+  fmtMontant,
+  libelleFormule,
+  type Devise,
+} from "@/lib/membership";
+import {
+  courrielDemandeApprouvee,
+  courrielInvitation,
+  courrielNouvelleInscription,
+  courrielRelanceCotisation,
+} from "@/lib/modeles-courriels";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
@@ -76,6 +96,35 @@ async function acteurDepuis(retour: string): Promise<string> {
   return (
     await getCurrentUser(retour.startsWith("/admin") ? "admin" : "membre")
   ).nom;
+}
+
+/**
+ * Invitation d'un compte créé sans mot de passe — contact ajouté par
+ * l'équipe ou par un collègue : un lien pour choisir le sien. L'envoi part
+ * après la réponse.
+ */
+async function inviter(
+  userId: string,
+  email: string,
+  nom: string,
+  entreprise: string | null,
+) {
+  const base = await urlPublique("/public/nouveau-mot-de-passe");
+  after(async () => {
+    const jeton = await creerJeton(userId, "invitation");
+    await envoyerCourriel(
+      courrielInvitation(email, nom, entreprise, `${base}?jeton=${jeton}`),
+    );
+  });
+}
+
+/** Contact à qui écrire pour une entreprise : le référent, sinon le premier. */
+async function contactDe(memberId: string) {
+  return prisma.user.findFirst({
+    where: { memberId, role: "membre" },
+    orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
+    select: { nom: true, email: true },
+  });
 }
 
 /* ============================ Candidatures ============================ */
@@ -196,6 +245,17 @@ export async function submitAdhesion(formData: FormData) {
     rep,
     `Demande de ${nom}.`,
   );
+  const fiche = await urlPublique(`/admin/membres/${membre.id}`);
+  after(() =>
+    envoyerCourriel(
+      courrielNouvelleInscription(
+        COURRIEL_EQUIPE,
+        email,
+        texte(formData, "motivation") || `Demande de ${nom}.`,
+        fiche,
+      ),
+    ),
+  );
   revalideTout();
   // La session s'ouvre dans la foulée : on arrive sur sa fiche, avec le
   // bandeau qui explique ce qu'il reste à faire.
@@ -221,6 +281,21 @@ export async function approveCandidature(formData: FormData) {
     await acteurEquipe(),
     `${m.nom} · en attente du paiement de la cotisation.`,
   );
+  const contact = await contactDe(id);
+  if (contact) {
+    const lien = await urlPublique("/membre/cotisations");
+    after(() =>
+      envoyerCourriel(
+        courrielDemandeApprouvee(contact.email, {
+          nom: contact.nom,
+          entreprise: m.nom,
+          formule: libelleFormule(m.formule),
+          montant: fmtCotisation(m.formule),
+          lien,
+        }),
+      ),
+    );
+  }
   revalideTout();
   redirectWithFlash(
     `/admin/membres/${id}`,
@@ -317,27 +392,66 @@ export async function registerPayment(formData: FormData) {
   );
 }
 
-/** Relance de cotisation. Rien n'est envoyé tant que l'e-mail n'est pas branché. */
+/**
+ * Relance de cotisation, par e-mail au contact de l'entreprise.
+ *
+ * L'envoi est attendu ici, contrairement aux autres : l'équipe doit savoir
+ * si la relance est vraiment partie. Le journal ne la consigne que si
+ * c'est le cas.
+ */
 export async function sendReminder(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
+  const fiche = `/admin/membres/${id}`;
   const m = await prisma.member.findUnique({
     where: { id },
-    select: { nom: true, users: { select: { email: true }, take: 1 } },
+    select: { nom: true, formule: true, retardDepuis: true },
   });
-  const email = m?.users[0]?.email ?? "l’adresse du membre";
+  if (!m) redirectWithErreur("/admin/membres", "Membre introuvable.");
+  const contact = await contactDe(id);
+  if (!contact) {
+    redirectWithErreur(
+      fiche,
+      `${m.nom} n’a aucun contact à qui écrire : ajoutez-en un d’abord.`,
+    );
+  }
+
+  const retardJours = m.retardDepuis
+    ? Math.max(
+        0,
+        Math.floor(
+          (jourBase().getTime() - m.retardDepuis.getTime()) / 86_400_000,
+        ),
+      )
+    : null;
+  const envoye = await envoyerCourriel(
+    courrielRelanceCotisation(contact.email, {
+      nom: contact.nom,
+      entreprise: m.nom,
+      formule: libelleFormule(m.formule),
+      montant: fmtCotisation(m.formule),
+      retardJours: retardJours || null,
+      lien: await urlPublique("/membre/cotisations"),
+    }),
+  );
+  if (!envoye) {
+    redirectWithErreur(
+      fiche,
+      courrielsActifs()
+        ? `La relance n’a pas pu partir vers ${contact.email}. Réessayez plus tard.`
+        : "L’envoi d’e-mails n’est pas encore configuré (RESEND_API_KEY) : aucune relance n’est partie.",
+    );
+  }
+
   await journal(
     "relance_envoyee",
     "Member",
     id,
     await acteurEquipe(),
-    `Relance de cotisation pour ${m?.nom}.`,
+    `Relance de cotisation envoyée à ${contact.email}.`,
   );
   revalideTout();
-  redirectWithFlash(
-    `/admin/membres/${id}`,
-    `Relance consignée pour ${email} — l’envoi réel viendra avec le service d’e-mails`,
-  );
+  redirectWithFlash(fiche, `Relance envoyée à ${contact.email}`);
 }
 
 /* ============================ Fiche membre ============================ */
@@ -366,9 +480,10 @@ export async function createMember(formData: FormData) {
     },
   });
 
-  const email = texte(formData, "email");
+  const email = texte(formData, "email").toLowerCase();
+  let invite = false;
   if (email && !(await prisma.user.findUnique({ where: { email } }))) {
-    await prisma.user.create({
+    const contact = await prisma.user.create({
       data: {
         role: "membre",
         nom: rep,
@@ -379,6 +494,8 @@ export async function createMember(formData: FormData) {
         contactPrincipal: true,
       },
     });
+    await inviter(contact.id, email, rep, type === "morale" ? nom : null);
+    invite = true;
   }
 
   await journal(
@@ -391,7 +508,9 @@ export async function createMember(formData: FormData) {
   revalideTout();
   redirectWithFlash(
     `/admin/membres/${m.id}`,
-    `${nom} a été ajouté à l’annuaire`,
+    invite
+      ? `${nom} a été ajouté à l’annuaire · invitation envoyée à ${email}`
+      : `${nom} a été ajouté à l’annuaire`,
   );
 }
 
@@ -663,7 +782,7 @@ export async function addContact(formData: FormData) {
     throw e;
   }
 
-  await prisma.$transaction(async (tx) => {
+  const cree = await prisma.$transaction(async (tx) => {
     // Un seul référent par entreprise : le nouveau détrône l'ancien.
     if (principal) {
       await tx.user.updateMany({
@@ -671,7 +790,7 @@ export async function addContact(formData: FormData) {
         data: { contactPrincipal: false },
       });
     }
-    await tx.user.create({
+    return tx.user.create({
       data: {
         memberId,
         role: "membre",
@@ -685,15 +804,29 @@ export async function addContact(formData: FormData) {
     });
   });
 
+  const entreprise = await prisma.member.findUnique({
+    where: { id: memberId },
+    select: { nom: true, type: true },
+  });
+  await inviter(
+    cree.id,
+    email,
+    nom,
+    entreprise?.type === "morale" ? entreprise.nom : null,
+  );
+
   await journal(
     "contact_ajoute",
     "Member",
     memberId,
     await acteurDepuis(retour),
-    `Ajout du contact ${nom} (${email}).`,
+    `Ajout du contact ${nom} (${email}), invité à choisir son mot de passe.`,
   );
   revalideTout();
-  redirectWithFlash(retour, `${nom} a été ajouté aux contacts.`);
+  redirectWithFlash(
+    retour,
+    `${nom} a été ajouté aux contacts · invitation envoyée`,
+  );
 }
 
 /** Retrait d'un contact. Le dernier de la liste ne peut pas être retiré. */
