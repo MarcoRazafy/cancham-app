@@ -28,3 +28,11 @@ export function initialesDe(nom: string): string {
     .join("")
     .toUpperCase();
 }
+
+/**
+ * Le visage de l'équipe CanCham dans la messagerie et le chat de support :
+ * l'emblème de la chambre, sur un rond blanc. Il vient d'ici, pas de la
+ * conversation enregistrée — changer le logo change toutes les
+ * conversations, anciennes comprises.
+ */
+export const LOGO_EQUIPE = "/marque/avatar-equipe.png";

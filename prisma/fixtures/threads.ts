@@ -46,7 +46,6 @@ export const THREADS: {
     id: "t2",
     type: "individuel",
     nom: "Équipe CanCham",
-    avatar: "/photos/cancham-13.jpg",
     equipe: true,
     participants: ["u-membre", "u-admin"],
     nonLus: 0,

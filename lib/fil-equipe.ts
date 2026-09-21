@@ -27,7 +27,6 @@ export async function filEquipe(userId: string): Promise<string> {
       type: "individuel",
       equipe: true,
       nom: "Équipe CanCham",
-      avatar: "/photos/cancham-13.jpg",
       participants: {
         create: [
           { userId, luLe: new Date() },
