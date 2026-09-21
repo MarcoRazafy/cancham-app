@@ -16,6 +16,7 @@ import {
   type ElementAgenda,
 } from "@/lib/agenda";
 
+import { PROVISOIRE } from "@/lib/accueil";
 import { initialesDe } from "@/lib/avatars";
 import { prisma } from "@/lib/db";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
@@ -1167,7 +1168,11 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
 
   return {
     membres,
-    secteurs: new Set(groupes.map((g) => g.secteur)).size,
+    // « Secteur à préciser » n'est pas un secteur : c'est l'étape sautée
+    // d'une inscription.
+    secteurs: new Set(
+      groupes.map((g) => g.secteur).filter((s) => s !== PROVISOIRE.secteur),
+    ).size,
     villes: new Set(groupes.map((g) => g.ville)).size,
     evenementsAVenir: evenements,
   };
@@ -1176,7 +1181,10 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
 /** Secteurs représentés, pour le menu déroulant du formulaire d'adhésion. */
 export async function getSecteurs(): Promise<string[]> {
   const rows = await prisma.member.findMany({
-    where: { statut: { not: "candidature" } },
+    where: {
+      statut: { not: "candidature" },
+      secteur: { not: PROVISOIRE.secteur },
+    },
     select: { secteur: true },
     distinct: ["secteur"],
     orderBy: { secteur: "asc" },

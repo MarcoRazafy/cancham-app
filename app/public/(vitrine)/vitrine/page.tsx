@@ -46,7 +46,7 @@ export default async function PublicHome() {
     {
       nombre: stats.secteurs,
       apres: "",
-      libelle: `secteur${stats.secteurs > 1 ? "s" : ""} représentés`,
+      libelle: `secteur${stats.secteurs > 1 ? "s représentés" : " représenté"}`,
     },
     { nombre: 2, apres: " pays", libelle: "une ambition commune" },
   ];
