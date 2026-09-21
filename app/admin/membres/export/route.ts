@@ -1,3 +1,4 @@
+import { exigerEquipe } from "@/lib/autorisations";
 import { reponseCsv, versCsv } from "@/lib/csv";
 import { prisma } from "@/lib/db";
 import { lireFiltres, filtrerMembres } from "@/lib/filtres-membres";
@@ -7,6 +8,8 @@ import { getMembers } from "@/lib/queries";
 
 /** Liste des membres au format tableur, avec les filtres de la page. */
 export async function GET(requete: Request) {
+  // Le proxy garde déjà /admin ; l'export le redit pour lui-même.
+  await exigerEquipe();
   const params = Object.fromEntries(new URL(requete.url).searchParams);
   const membres = filtrerMembres(await getMembers(), lireFiltres(params));
 

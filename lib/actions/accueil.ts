@@ -12,6 +12,7 @@ import {
 } from "@/lib/accueil";
 import { redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
+import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { normaliserSite } from "@/lib/liens";
 import { FORMULES } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
@@ -30,8 +31,24 @@ const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 const INSCRIPTION = "/public/inscription";
 
+/** Comptes créés depuis une même origine en une heure. */
+const COMPTES_PAR_HEURE = 5;
+
 /** Création du compte : courriel, mot de passe, motivation. */
 export async function creerCompte(formData: FormData) {
+  // Une même origine ne crée pas des comptes à la chaîne.
+  const attente = tentative(
+    `inscription:${await origineAppelante()}`,
+    COMPTES_PAR_HEURE,
+    60 * 60 * 1000,
+  );
+  if (attente) {
+    redirectWithFlash(
+      INSCRIPTION,
+      `Trop d’inscriptions depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
+    );
+  }
+
   const email = texte(formData, "email").toLowerCase();
   const motDePasse = String(formData.get("motDePasse") ?? "");
   const confirmation = String(formData.get("confirmation") ?? "");

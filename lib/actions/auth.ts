@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { fermerSession, ouvrirSession, verifier } from "@/lib/auth";
+import { minutes, oublier, origineAppelante, tentative } from "@/lib/limite";
 
 /**
  * Connexion et déconnexion.
@@ -13,6 +14,11 @@ import { fermerSession, ouvrirSession, verifier } from "@/lib/auth";
  */
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+
+/** Tentatives tolérées par quart d'heure : sur un compte, puis sur une origine. */
+const ESSAIS_PAR_COMPTE = 8;
+const ESSAIS_PAR_ORIGINE = 30;
+const FENETRE = 15 * 60 * 1000;
 
 const ACCUEIL: Record<string, string> = {
   membre: "/membre",
@@ -35,6 +41,22 @@ export async function connexion(formData: FormData) {
     echec("Indiquez votre adresse et votre mot de passe.", email);
   }
 
+  // Essayer les mots de passe en série n'avance à rien : le compte visé se
+  // ferme au bout de quelques essais, et l'origine aussi.
+  const origine = await origineAppelante();
+  const attente = Math.max(
+    tentative(`connexion:${origine}:${email}`, ESSAIS_PAR_COMPTE, FENETRE),
+    tentative(`connexion:${origine}`, ESSAIS_PAR_ORIGINE, FENETRE),
+  );
+  if (attente) {
+    echec(
+      `Trop de tentatives de connexion. Réessayez dans ${minutes(attente)} minute${
+        minutes(attente) > 1 ? "s" : ""
+      }.`,
+      email,
+    );
+  }
+
   const u = await prisma.user.findUnique({
     where: { email },
     select: {
@@ -49,6 +71,8 @@ export async function connexion(formData: FormData) {
     echec("Adresse ou mot de passe incorrect.", email);
   }
 
+  // Connexion réussie : le compteur de cette adresse repart à zéro.
+  oublier(`connexion:${origine}:${email}`);
   await ouvrirSession(u.id, texte(formData, "souvenir") === "1");
 
   // Une inscription pas encore terminée reprend là où elle s'est arrêtée :

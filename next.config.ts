@@ -1,6 +1,68 @@
 import type { NextConfig } from "next";
 
+/**
+ * Politique de sécurité du contenu.
+ *
+ * Elle dit au navigateur d'où le code, les images et les connexions ont le
+ * droit de venir : un script injecté depuis un autre site ne s'exécute pas,
+ * et la page ne peut pas être enfermée dans une iframe tierce
+ * (`frame-ancestors`), ce qui coupe court au détournement de clic.
+ *
+ * `'unsafe-inline'` reste nécessaire pour les scripts et les styles que Next
+ * insère dans la page ; le remplacer par un nonce demanderait de rendre
+ * chaque page dynamiquement. En développement, Turbopack recompile à chaud :
+ * il lui faut `'unsafe-eval'` et la connexion WebSocket.
+ */
+function politiqueContenu(dev: boolean): string {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com",
+    "media-src 'self' blob:",
+    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline'",
+    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
+    `connect-src 'self'${dev ? " ws: wss:" : ""}`,
+  ].join("; ");
+}
+
 const nextConfig: NextConfig = {
+  /**
+   * En-têtes de sécurité, sur toutes les pages.
+   *
+   * Ils ne remplacent pas les contrôles du serveur : ils ferment les portes
+   * que le navigateur laisse ouvertes par défaut — deviner le type d'un
+   * fichier envoyé, afficher le site dans l'iframe d'un autre, divulguer
+   * l'adresse complète en partant vers un site tiers, ou laisser une page
+   * réclamer le micro et la position.
+   */
+  async headers() {
+    const dev = process.env.NODE_ENV !== "production";
+    const entetes = [
+      { key: "Content-Security-Policy", value: politiqueContenu(dev) },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      {
+        key: "Permissions-Policy",
+        // La caméra sert au scanner de QR codes, et à rien d'autre.
+        value: "camera=(self), microphone=(), geolocation=(), payment=()",
+      },
+      ...(dev
+        ? []
+        : [
+            {
+              key: "Strict-Transport-Security",
+              value: "max-age=63072000; includeSubDomains; preload",
+            },
+          ]),
+    ];
+    return [{ source: "/:chemin*", headers: entetes }];
+  },
+
   /**
    * Adresses autorisées à interroger le serveur de développement.
    *
