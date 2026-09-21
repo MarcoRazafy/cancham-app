@@ -390,24 +390,45 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
  * devient un tiret ; un tiret tapé en tête de ligne est retiré, pour ne pas
  * s'afficher en double.
  */
-export function NeedsAndInterests({ member }: { member: Member }) {
+export function NeedsAndInterests({
+  member,
+  action,
+}: {
+  member: Member;
+  /** Bouton d'ajout, sur sa propre fiche : la section s'affiche alors même vide. */
+  action?: ReactNode;
+}) {
   const lignes = [member.besoins, member.interets]
     .flatMap((texte) => (texte ?? "").split("\n"))
     .map((ligne) => ligne.replace(/^\s*[-–—•*]\s*/, "").trim())
     .filter(Boolean);
-  if (!lignes.length) return null;
+  if (!lignes.length && !action) return null;
 
   return (
     <>
-      <div className="flex items-center gap-2.5 mt-[22px] mb-3.5">
+      <div className="flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
         <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
         <h2 className="text-[17px] font-semibold m-0">
           Besoins &amp; intérêts
         </h2>
+        {action ? (
+          <>
+            <span className="flex-1" />
+            {action}
+          </>
+        ) : null}
       </div>
-      <div className="text-[12.3px] font-semibold text-muted mb-2">
-        Recherche actuellement
-      </div>
+      {!lignes.length ? (
+        <p className="m-0 text-[13.4px] text-muted">
+          Dites ce que vous recherchez — partenaires, distributeurs,
+          financement… : c’est ce qui déclenche les mises en relation.
+        </p>
+      ) : null}
+      {lignes.length ? (
+        <div className="text-[12.3px] font-semibold text-muted mb-2">
+          Recherche actuellement
+        </div>
+      ) : null}
       <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
         {lignes.map((ligne, i) => (
           <li

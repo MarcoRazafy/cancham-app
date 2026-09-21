@@ -31,7 +31,7 @@ import {
 } from "@/lib/modeles-courriels";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
-import { PROVISOIRE } from "@/lib/accueil";
+import { PAYS, PROVISOIRE } from "@/lib/accueil";
 import { estSecteur, secteurOuProvisoire } from "@/lib/secteurs";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import {
@@ -544,9 +544,20 @@ export async function updateMemberProfile(formData: FormData) {
   // Un champ fichier laissé vide signifie « garde l'image actuelle ».
   const actuel = await prisma.member.findUnique({
     where: { id },
-    select: { cover: true, logo: true },
+    select: { cover: true, logo: true, nom: true, pays: true },
   });
   if (!actuel) redirectWithErreur("/membre/profil", "Fiche introuvable.");
+
+  const nom = texte(formData, "nom").slice(0, 120);
+  if (!nom) {
+    redirectWithErreur("/membre/profil", "Le nom de l’entreprise est requis.");
+  }
+  // Un pays de la liste, ou celui déjà enregistré ; sinon, inchangé.
+  const paysSaisi = texte(formData, "pays");
+  const pays =
+    (PAYS as readonly string[]).includes(paysSaisi) || paysSaisi === actuel.pays
+      ? paysSaisi
+      : undefined;
 
   const siteSaisi = texte(formData, "siteweb");
   const siteweb = normaliserSite(siteSaisi);
@@ -578,6 +589,10 @@ export async function updateMemberProfile(formData: FormData) {
   await prisma.member.update({
     where: { id },
     data: {
+      nom,
+      ville: texte(formData, "ville").slice(0, 80) || undefined,
+      pays,
+      motivation: texte(formData, "motivation").slice(0, 1000) || null,
       // Hors de la liste — ancien libellé renvoyé tel quel, ou valeur
       // fabriquée —, le secteur ne change pas.
       secteur: estSecteur(texte(formData, "secteur"))
@@ -595,8 +610,56 @@ export async function updateMemberProfile(formData: FormData) {
     },
   });
 
+  // Un changement de nom se trace : les factures déjà émises portent
+  // l'ancien, et l'équipe doit pouvoir faire le lien.
+  if (nom !== actuel.nom) {
+    await journal(
+      "membre_renomme",
+      "Member",
+      id,
+      await acteurDepuis(retour),
+      `« ${actuel.nom} » devient « ${nom} ».`,
+    );
+  }
+
   revalideTout();
   redirectWithFlash("/membre/profil", "Fiche mise à jour");
+}
+
+/** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */
+const BESOINS_MAX = 15;
+
+/** Ajoute un besoin à la liste « Besoins & intérêts » de sa fiche. */
+export async function ajouterBesoin(formData: FormData) {
+  const retour = "/membre/profil";
+  const { memberId } = await exigerFiche(texte(formData, "memberId"), retour);
+  // Une ligne : c'est un tiret sur la fiche.
+  const besoin = texte(formData, "besoin").replace(/\s+/g, " ").slice(0, 200);
+  if (!besoin) redirectWithErreur(retour, "Décrivez ce que vous recherchez.");
+
+  const m = await prisma.member.findUnique({
+    where: { id: memberId },
+    select: { besoins: true, interets: true },
+  });
+  // Besoins et intérêts ne forment qu'une liste : les intérêts d'avant y
+  // sont repris, comme le fait « Modifier ma fiche ».
+  const lignes = [m?.besoins, m?.interets]
+    .flatMap((t) => (t ?? "").split("\n"))
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lignes.length >= BESOINS_MAX) {
+    redirectWithErreur(
+      retour,
+      `${BESOINS_MAX} besoins au plus : retirez-en un depuis « Modifier ma fiche ».`,
+    );
+  }
+
+  await prisma.member.update({
+    where: { id: memberId },
+    data: { besoins: [...lignes, besoin].join("\n"), interets: null },
+  });
+  revalideTout();
+  redirectWithFlash(retour, "Besoin ajouté à votre fiche");
 }
 
 /* ============================ Produits & services ============================ */

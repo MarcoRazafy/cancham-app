@@ -25,6 +25,9 @@ export type EtapeAccueil = (typeof ETAPES_ACCUEIL)[number]["cle"];
 
 export const NOMBRE_ETAPES = ETAPES_ACCUEIL.length;
 
+/** Pays d'implantation proposés, dans l'ordre de la fiche : Madagascar d'abord. */
+export const PAYS = ["Madagascar", "Canada", "France", "Autre"] as const;
+
 /** Valeurs de la fiche tant que le membre ne les a pas données. */
 export const PROVISOIRE = {
   entreprise: "Entreprise à préciser",

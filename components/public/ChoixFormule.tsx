@@ -39,5 +39,5 @@ export function ChoixFormule({
   );
 }
 
-/** Pays proposés, dans l'ordre de la fiche : Madagascar d'abord. */
-export const PAYS = ["Madagascar", "Canada", "France", "Autre"] as const;
+// La liste des pays vit avec les autres valeurs de la fiche.
+export { PAYS } from "@/lib/accueil";

@@ -38,6 +38,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "adhesion",
     ton: "bad",
   },
+  membre_renomme: {
+    libelle: "Entreprise renommée",
+    famille: "adhesion",
+    ton: "info",
+  },
   contact_ajoute: {
     libelle: "Contact ajouté",
     famille: "adhesion",

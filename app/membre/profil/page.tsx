@@ -24,6 +24,7 @@ import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import {
   AddContactButton,
+  AjouterBesoinButton,
   AjouterServiceButton,
   ModifierServiceButton,
   SupprimerServiceButton,
@@ -85,6 +86,11 @@ export default async function ProfilPage() {
           <div className="flex gap-2 flex-wrap">
             <EditProfileButton
               memberId={m.id}
+              nom={saisi(m.nom, PROVISOIRE.entreprise)}
+              independant={m.type === "physique"}
+              ville={m.ville}
+              pays={m.pays}
+              motivation={m.motivation}
               secteur={saisi(m.secteur, PROVISOIRE.secteur)}
               activite={m.activite}
               desc={m.desc}
@@ -223,7 +229,10 @@ export default async function ProfilPage() {
             <TexteLie texte={m.desc} />
           </p>
 
-          <NeedsAndInterests member={m} />
+          <NeedsAndInterests
+            member={m}
+            action={<AjouterBesoinButton memberId={m.id} />}
+          />
 
           {m.motivation ? (
             <>
@@ -233,8 +242,7 @@ export default async function ProfilPage() {
                   Vos <Saillant>motivations</Saillant>
                 </h2>
               </div>
-              {/* Réponse donnée à l'inscription, telle quelle : c'est une
-                  déclaration d'intention, pas une fiche à retoucher. */}
+              {/* Donnée à l'inscription ; « Modifier ma fiche » la reprend. */}
               <p className="m-0 text-[14px] text-muted leading-relaxed max-w-[70ch] whitespace-pre-line">
                 <TexteLie texte={m.motivation} />
               </p>
