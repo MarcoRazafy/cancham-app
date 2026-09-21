@@ -308,7 +308,9 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   // il laissait un grand vide autour d'un libellé de deux mots.
   const avecPhotos = member.produits.some((p) => p.photos.length > 0);
   return (
-    <Link href={href} prefetch className="no-underline">
+    // `min-w-0` : dans une grille, une carte n'impose jamais sa largeur à la
+    // colonne — sur téléphone, elle déborderait de l'écran.
+    <Link href={href} prefetch className="no-underline block min-w-0">
       <Card
         className={`carte-filet filet-bas ${filetDe(member.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
       >
@@ -358,7 +360,7 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
               key={prod.label}
               className={
                 avecPhotos
-                  ? `flex-1 aspect-square rounded-lg overflow-hidden flex items-center justify-center text-[10px] font-semibold text-center px-1 ${swatches[i % 3]}`
+                  ? `flex-1 min-w-0 aspect-square rounded-lg overflow-hidden flex items-center justify-center text-[10px] font-semibold text-center px-1 ${swatches[i % 3]}`
                   : `rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${swatches[i % 3]}`
               }
             >
@@ -514,7 +516,9 @@ export function EventCard({
   // Fiche préchargée en entier : au clic, elle est prête, et l'image peut
   // voyager de la carte au bandeau.
   return href ? (
-    <Link href={href} prefetch className="no-underline">
+    // `min-w-0` : dans une grille, une carte n'impose jamais sa largeur à la
+    // colonne — sur téléphone, elle déborderait de l'écran.
+    <Link href={href} prefetch className="no-underline block min-w-0">
       {body}
     </Link>
   ) : (
