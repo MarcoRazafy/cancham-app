@@ -120,7 +120,10 @@ export async function recevoirPiece(
           ? "mov"
           : "mp4";
   const fichier = `${id}.${extension}`;
-  await writeFile(path.join(RACINE_MESSAGERIE, fichier), octets);
+  await writeFile(
+    path.join(/*turbopackIgnore: true*/ RACINE_MESSAGERIE, fichier),
+    octets,
+  );
   return { nom: entree.name, type, fichier, taille: octets.length };
 }
 
