@@ -31,6 +31,8 @@ import {
 } from "@/lib/modeles-courriels";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
+import { PROVISOIRE } from "@/lib/accueil";
+import { estSecteur, secteurOuProvisoire } from "@/lib/secteurs";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import {
   exigerContact,
@@ -207,7 +209,10 @@ export async function submitAdhesion(formData: FormData) {
     data: {
       type,
       nom,
-      secteur: texte(formData, "secteur") || "Secteur à préciser",
+      secteur: secteurOuProvisoire(
+        texte(formData, "secteur"),
+        PROVISOIRE.secteur,
+      ),
       ville: texte(formData, "ville") || "Antananarivo",
       statut: "candidature",
       formule,
@@ -473,7 +478,10 @@ export async function createMember(formData: FormData) {
     data: {
       type,
       nom,
-      secteur: texte(formData, "secteur") || "Secteur à préciser",
+      secteur: secteurOuProvisoire(
+        texte(formData, "secteur"),
+        PROVISOIRE.secteur,
+      ),
       ville: texte(formData, "ville") || "Antananarivo",
       statut: (texte(formData, "statut") || "en_attente") as MemberStatus,
       adhesion: jourBase(),
@@ -570,6 +578,11 @@ export async function updateMemberProfile(formData: FormData) {
   await prisma.member.update({
     where: { id },
     data: {
+      // Hors de la liste — ancien libellé renvoyé tel quel, ou valeur
+      // fabriquée —, le secteur ne change pas.
+      secteur: estSecteur(texte(formData, "secteur"))
+        ? texte(formData, "secteur")
+        : undefined,
       activite: texte(formData, "activite") || undefined,
       desc: texte(formData, "desc") || undefined,
       // Besoins et intérêts ne font plus qu'un champ : le formulaire reprend

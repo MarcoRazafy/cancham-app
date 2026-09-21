@@ -4,6 +4,7 @@ import { ArrowLeft, Briefcase, Building2, Phone, User } from "lucide-react";
 import { ChampAuth, CHAMP_AUTH, Saisie } from "@/components/public/CadreAuth";
 import { BoutonPilule } from "@/components/public/BoutonMarque";
 import { LogoOfficiel } from "@/components/public/Marque";
+import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { PAYS } from "@/components/public/ChoixFormule";
 import {
   ETAPES_ACCUEIL,
@@ -279,11 +280,15 @@ function EtapeEntreprise({ membre }: { membre: Member }) {
 
       <div className="grid gap-3.5 sm:grid-cols-2">
         <ChampAuth label="Secteur d’activité">
-          <Saisie
+          <select
             name="secteur"
             defaultValue={saisi(membre.secteur, PROVISOIRE.secteur)}
-            placeholder="Ex. Artisanat & design"
-          />
+            className={`${CHAMP_AUTH} px-3.5`}
+          >
+            <OptionsSecteurs
+              actuel={saisi(membre.secteur, PROVISOIRE.secteur)}
+            />
+          </select>
         </ChampAuth>
         <ChampAuth label="Ville">
           <Saisie

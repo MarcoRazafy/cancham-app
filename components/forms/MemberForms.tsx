@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { useState } from "react";
 import { Modal } from "@/components/Modal";
 import {
@@ -88,12 +89,9 @@ export function AddMemberButton() {
             </Field>
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field label="Secteur d’activité">
-                <input
-                  type="text"
-                  name="secteur"
-                  placeholder="Ex. Artisanat & design"
-                  className={INPUT}
-                />
+                <select name="secteur" defaultValue="" className={INPUT}>
+                  <OptionsSecteurs />
+                </select>
               </Field>
               <Field label="Ville">
                 <input
@@ -370,11 +368,14 @@ export function EditProfileButton({
   desc,
   besoins,
   interets,
+  secteur,
   siteweb = null,
   cover = null,
   logo = null,
 }: {
   memberId: string;
+  /** Secteur actuel ; « Secteur à préciser » compte comme vide. */
+  secteur: string;
   activite: string;
   desc: string;
   besoins?: string;
@@ -414,6 +415,11 @@ export function EditProfileButton({
                 placeholder="www.monentreprise.mg"
                 className={INPUT}
               />
+            </Field>
+            <Field label="Secteur d’activité">
+              <select name="secteur" defaultValue={secteur} className={INPUT}>
+                <OptionsSecteurs actuel={secteur} />
+              </select>
             </Field>
             <Field label="Activité (description courte)">
               <input

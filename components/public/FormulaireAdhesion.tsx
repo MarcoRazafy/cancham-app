@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
 import { submitAdhesion } from "@/lib/actions/members";
@@ -16,7 +17,7 @@ const ETIQUETTE = "block text-[12.5px] font-semibold text-ink mb-1.5";
  * vers la même action serveur que le formulaire détaillé de `/public/adhesion` :
  * une candidature déposée ici apparaît immédiatement dans le back-office.
  */
-export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
+export function FormulaireAdhesion() {
   return (
     <div className="rounded-2xl border border-line bg-surface-2 p-5 md:p-7">
       <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
@@ -190,13 +191,7 @@ export function FormulaireAdhesion({ secteurs }: { secteurs: string[] }) {
             defaultValue=""
             style={{ colorScheme: "light" }}
           >
-            <option value="">Sélectionner</option>
-            {secteurs.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-            <option value="Autre secteur">Autre secteur</option>
+            <OptionsSecteurs vide="Sélectionner" />
           </select>
         </div>
 
