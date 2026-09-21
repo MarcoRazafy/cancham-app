@@ -45,7 +45,7 @@ export default async function AnnuairePage({
       </ViewHead>
 
       <FiltresAuto className="flex gap-3 flex-wrap mb-[18px]">
-        <div className="relative max-w-[340px] flex-1 min-w-[240px]">
+        <div className="relative w-full sm:max-w-[340px] sm:flex-1 sm:min-w-[240px]">
           <Search
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
@@ -61,7 +61,7 @@ export default async function AnnuairePage({
         <select
           name="secteur"
           defaultValue={secteur}
-          className="max-w-[280px] flex-1 min-w-[200px] border border-line bg-surface text-ink rounded-[var(--radius-s)] px-3 py-[9px] text-[13.6px]"
+          className="w-full sm:w-auto sm:max-w-[280px] sm:flex-1 sm:min-w-[200px] border border-line bg-surface text-ink rounded-[var(--radius-s)] px-3 py-[9px] text-[13.6px]"
         >
           <option value="">Tous les secteurs</option>
           {SECTEURS.map((s) => (
