@@ -27,6 +27,7 @@ import { Pastille } from "@/components/messagerie/outils";
 import { PiecesJointes } from "@/components/messagerie/PiecesJointes";
 import { TexteLie } from "@/components/TexteLie";
 import { ecrireAuSupport, markThreadRead } from "@/lib/actions/messages";
+import { LOGO_EQUIPE } from "@/lib/avatars";
 import { heureExacte, heureRelative, jourLisible } from "@/lib/enums";
 import type {
   ConversationSupport,
@@ -61,9 +62,6 @@ const SEUIL_GLISSE = 6;
 /** Rythme de relecture : vif quand la conversation est sous les yeux. */
 const RELECTURE_OUVERTE = 4_000;
 const RELECTURE_FERMEE = 30_000;
-
-/** Portrait du fil d'assistance, tel que le crée `filEquipe`. */
-const AVATAR_EQUIPE = "/photos/cancham-13.jpg";
 
 /** Premiers mots proposés au membre qui n'a encore jamais écrit. */
 const SUGGESTIONS = [
@@ -545,7 +543,7 @@ export function BulleSupport({
                 <Pastille
                   src={
                     espace === "membre"
-                      ? (conversation?.avatar ?? AVATAR_EQUIPE)
+                      ? LOGO_EQUIPE
                       : (conversation?.avatar ?? null)
                   }
                   alt=""

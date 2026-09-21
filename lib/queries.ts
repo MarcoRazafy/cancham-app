@@ -17,7 +17,7 @@ import {
 } from "@/lib/agenda";
 
 import { PROVISOIRE } from "@/lib/accueil";
-import { initialesDe } from "@/lib/avatars";
+import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
 import { prisma } from "@/lib/db";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
 import { critereJoignable } from "@/lib/messagerie";
@@ -862,7 +862,7 @@ export async function getThreads(user: {
       entete = {
         nom: t.nom ?? EQUIPE,
         sousTitre: "Support membres",
-        avatar: t.avatar,
+        avatar: LOGO_EQUIPE,
         membre: null,
         contact: null,
       };

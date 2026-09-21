@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
-import { initialesDe } from "@/lib/avatars";
+import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
 import type { PieceJointe } from "@/lib/types";
 
 /**
@@ -131,7 +131,7 @@ export async function supportMembre(userId: string): Promise<{
   const fil = await prisma.messageThread.findFirst({
     where: { equipe: true, participants: { some: { userId } } },
     orderBy: { createdAt: "asc" },
-    select: { id: true, nom: true, avatar: true },
+    select: { id: true, nom: true },
   });
   if (!fil) return { conversation: null, nonLus: 0 };
 
@@ -146,7 +146,7 @@ export async function supportMembre(userId: string): Promise<{
       id: fil.id,
       nom,
       sousTitre: "Support membres",
-      avatar: fil.avatar,
+      avatar: LOGO_EQUIPE,
       init: initialesDe(nom),
       membreId: null,
       nonLus,
