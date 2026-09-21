@@ -1,10 +1,11 @@
 /**
  * Accueil d'un nouvel inscrit.
  *
- * L'inscription ne demande que l'essentiel : courriel, mot de passe et
- * motivation. Le reste — qui l'on est, l'entreprise, la formule, l'activité —
- * se complète ensuite, une étape à la fois, chacune pouvant être passée. On
- * s'inscrit en une minute ; la fiche se remplit à son rythme.
+ * L'inscription ne demande que l'essentiel : courriel, fonction, téléphone
+ * (facultatif) et mot de passe. On se connecte ensuite, et le reste — qui
+ * l'on est, l'entreprise, la formule, l'activité — se complète à la première
+ * connexion, une étape à la fois, chacune pouvant être passée. On s'inscrit
+ * en une minute ; la fiche se remplit à son rythme.
  *
  * Tant qu'une information n'est pas donnée, la fiche porte une valeur
  * provisoire : le schéma exige un nom d'entreprise, un secteur, une
@@ -59,4 +60,16 @@ export function nomDepuisCourriel(email: string): string {
 export function numeroEtape(brut: string | undefined): number {
   const n = Number(brut);
   return Number.isInteger(n) && n >= 1 && n <= NOMBRE_ETAPES ? n : 1;
+}
+
+/**
+ * Un numéro de téléphone plausible : chiffres, espaces, « + », points,
+ * tirets et parenthèses, avec au moins six chiffres. On ne vérifie pas le
+ * format d'un pays : les membres appellent de Madagascar comme du Canada.
+ */
+export function telephoneValide(saisie: string): boolean {
+  return (
+    /^[+\d\s().-]{6,30}$/.test(saisie) &&
+    (saisie.match(/\d/g) ?? []).length >= 6
+  );
 }

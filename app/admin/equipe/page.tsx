@@ -218,6 +218,7 @@ function Inscription({ compte: c }: { compte: CompteMembre }) {
         <div className="text-[12.8px] text-muted truncate">
           {c.email}
           {c.fonction ? ` · ${c.fonction}` : ""}
+          {c.tel ? ` · ${c.tel}` : ""}
         </div>
         {c.membre ? (
           <div className="text-[12.8px] text-muted">

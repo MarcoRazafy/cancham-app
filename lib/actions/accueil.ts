@@ -4,12 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { prisma } from "@/lib/db";
-import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
+import { hacher, MOT_DE_PASSE_MIN } from "@/lib/auth";
 import {
   ETAPES_ACCUEIL,
   NOMBRE_ETAPES,
   PROVISOIRE,
   nomDepuisCourriel,
+  telephoneValide,
 } from "@/lib/accueil";
 import { COURRIEL_EQUIPE, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -40,7 +41,11 @@ const INSCRIPTION = "/public/inscription";
 /** Comptes créés depuis une même origine en une heure. */
 const COMPTES_PAR_HEURE = 5;
 
-/** Création du compte : courriel, mot de passe, motivation. */
+/**
+ * Création du compte : courriel, fonction, téléphone (facultatif), mot de
+ * passe. La session ne s'ouvre pas ici : on renvoie vers la connexion, et la
+ * première connexion mène à la présentation pas à pas.
+ */
 export async function creerCompte(formData: FormData) {
   // Une même origine ne crée pas des comptes à la chaîne.
   const attente = tentative(
@@ -58,7 +63,8 @@ export async function creerCompte(formData: FormData) {
   const email = texte(formData, "email").toLowerCase();
   const motDePasse = String(formData.get("motDePasse") ?? "");
   const confirmation = String(formData.get("confirmation") ?? "");
-  const motivation = texte(formData, "motivation");
+  const fonction = texte(formData, "fonction").slice(0, 80);
+  const tel = texte(formData, "tel");
 
   if (!email.includes("@")) {
     redirectWithErreur(INSCRIPTION, "Indiquez une adresse courriel valide.");
@@ -75,10 +81,13 @@ export async function creerCompte(formData: FormData) {
       "Les deux mots de passe ne correspondent pas.",
     );
   }
-  if (!motivation) {
+  if (!fonction) {
+    redirectWithErreur(INSCRIPTION, "Indiquez votre fonction.");
+  }
+  if (tel && !telephoneValide(tel)) {
     redirectWithErreur(
       INSCRIPTION,
-      "Dites-nous en quelques mots pourquoi vous souhaitez rejoindre CanCham.",
+      `« ${tel} » n’est pas un numéro de téléphone valide.`,
     );
   }
   if (
@@ -101,19 +110,19 @@ export async function creerCompte(formData: FormData) {
       adhesion: jourBase(),
       activite: PROVISOIRE.activite,
       desc: PROVISOIRE.desc,
-      motivation,
       accueilEnCours: true,
     },
   });
 
   // La personne qui s'inscrit devient le contact principal : c'est elle que
   // la chambre appellera, et le compte avec lequel elle se connecte.
-  const compte = await prisma.user.create({
+  await prisma.user.create({
     data: {
       role: "membre",
       nom,
-      fonction: PROVISOIRE.fonction,
+      fonction,
       email,
+      tel: tel || null,
       motDePasse: hacher(motDePasse),
       memberId: membre.id,
       contactPrincipal: true,
@@ -143,7 +152,7 @@ export async function creerCompte(formData: FormData) {
         courrielNouvelleInscription(
           COURRIEL_EQUIPE,
           email,
-          motivation,
+          [`Fonction : ${fonction}`, tel ? `Téléphone : ${tel}` : null],
           inscriptions,
         ),
       ),
@@ -151,8 +160,8 @@ export async function creerCompte(formData: FormData) {
   );
 
   revalidatePath("/", "layout");
-  await ouvrirSession(compte.id);
-  redirect("/bienvenue");
+  // Retour à la connexion, l'adresse déjà remplie.
+  redirect(`/public?${new URLSearchParams({ inscrit: "1", email })}`);
 }
 
 /** Enregistre une étape de la présentation, puis passe à la suivante. */
@@ -176,12 +185,19 @@ export async function enregistrerEtape(formData: FormData) {
           "Indiquez votre prénom et votre nom, ou passez l’étape.",
         );
       }
+      const tel = texte(formData, "tel");
+      if (tel && !telephoneValide(tel)) {
+        redirectWithErreur(
+          ici,
+          `« ${tel} » n’est pas un numéro de téléphone valide.`,
+        );
+      }
       await prisma.user.update({
         where: { id: user.id },
         data: {
           nom,
           fonction: texte(formData, "fonction") || PROVISOIRE.fonction,
-          tel: texte(formData, "tel") || null,
+          tel: tel || null,
         },
       });
       break;

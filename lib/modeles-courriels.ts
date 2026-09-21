@@ -80,7 +80,8 @@ export function courrielBienvenue(
 export function courrielNouvelleInscription(
   a: string,
   email: string,
-  motivation: string,
+  /** Ce que la personne a dit d'elle : fonction, téléphone, motivation… */
+  precisions: (string | null)[],
   lien: string,
 ): Courriel {
   return {
@@ -90,7 +91,7 @@ export function courrielNouvelleInscription(
       titre: "Nouvelle inscription sur CanCham Connect",
       paragraphes: [
         `${email} vient de créer un compte.`,
-        `Sa motivation : « ${motivation} »`,
+        ...precisions.filter((p): p is string => !!p),
         "S’il s’agit d’un collaborateur de la chambre, promouvez-le depuis « Équipe & accès » ; sinon, sa demande d’adhésion vous attend.",
       ],
       bouton: { libelle: "Voir les inscriptions", url: lien },

@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Lock, Mail } from "lucide-react";
+import { Briefcase, Lock, Mail, Phone } from "lucide-react";
 import {
   CadreAuth,
   ChampAuth,
   ChampMotDePasse,
-  CHAMP_AUTH,
   Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
@@ -15,11 +14,13 @@ import { creerCompte } from "@/lib/actions/accueil";
 import { utilisateurConnecte } from "@/lib/session";
 
 /**
- * Inscription : l'essentiel seulement — courriel, mot de passe, motivation.
+ * Inscription : l'essentiel seulement — courriel, fonction, téléphone
+ * (facultatif) et mot de passe.
  *
- * On s'inscrit en une minute. La session s'ouvre aussitôt, et la suite de la
- * fiche d'inscription de la chambre — qui l'on est, l'entreprise, la
- * formule, l'activité — se complète étape par étape sur `/bienvenue`.
+ * On s'inscrit en une minute, puis on se connecte. À la première connexion,
+ * la suite de la fiche d'inscription de la chambre — qui l'on est,
+ * l'entreprise, la formule, l'activité — se complète étape par étape sur
+ * `/bienvenue`.
  */
 export default async function InscriptionPage() {
   const connecte = await utilisateurConnecte();
@@ -42,9 +43,9 @@ export default async function InscriptionPage() {
         Créer mon compte
       </h1>
       <p className="text-[14.5px] text-muted m-0 mb-7">
-        Quelques secondes suffisent. Vous présenterez ensuite votre entreprise,
-        étape par étape ; l’accès complet s’ouvre après validation par l’équipe
-        et règlement de la cotisation.
+        Quelques secondes suffisent. Connectez-vous ensuite : vous présenterez
+        votre entreprise étape par étape ; l’accès complet s’ouvre après
+        validation par l’équipe et règlement de la cotisation.
       </p>
 
       <form action={creerCompte} className="flex flex-col gap-3.5">
@@ -58,6 +59,29 @@ export default async function InscriptionPage() {
             placeholder="vous@entreprise.mg"
           />
         </Field>
+
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <Field label="Fonction" icone={<Briefcase size={16} />}>
+            <Saisie
+              avecIcone
+              name="fonction"
+              required
+              maxLength={80}
+              autoComplete="organization-title"
+              placeholder="Ex. Gérante"
+            />
+          </Field>
+          <Field label="Téléphone (facultatif)" icone={<Phone size={16} />}>
+            <Saisie
+              avecIcone
+              type="tel"
+              name="tel"
+              maxLength={30}
+              autoComplete="tel"
+              placeholder="+261 34 …"
+            />
+          </Field>
+        </div>
 
         <div className="grid gap-3.5 sm:grid-cols-2">
           <ChampMotDePasse
@@ -81,23 +105,13 @@ export default async function InscriptionPage() {
           />
         </div>
 
-        <Field label="Motivation à rejoindre CanCham">
-          <textarea
-            name="motivation"
-            required
-            rows={4}
-            placeholder="Ce que vous attendez de la chambre : contacts au Canada, événements, accompagnement…"
-            className={`${CHAMP_AUTH} px-3.5`}
-          />
-        </Field>
-
         <div className="mt-3">
           <BoutonEnvoi enCours="Création du compte…">
             Créer mon compte
           </BoutonEnvoi>
           <EcranPassage
             message="Création de votre compte…"
-            detail="Vous allez pouvoir présenter votre entreprise."
+            detail="Vous pourrez ensuite vous connecter et présenter votre entreprise."
           />
         </div>
       </form>

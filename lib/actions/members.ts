@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import {
@@ -11,7 +12,7 @@ import {
 } from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
-import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
+import { hacher, MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { creerJeton } from "@/lib/jetons";
@@ -223,7 +224,7 @@ export async function submitAdhesion(formData: FormData) {
   // Le représentant devient le contact principal de l'entreprise, et le
   // compte avec lequel il se connectera : son accès restera limité à sa fiche
   // et à ses cotisations tant que la candidature n'est pas validée et réglée.
-  const compte = await prisma.user.create({
+  await prisma.user.create({
     data: {
       role: "membre",
       nom: rep,
@@ -251,19 +252,20 @@ export async function submitAdhesion(formData: FormData) {
       courrielNouvelleInscription(
         COURRIEL_EQUIPE,
         email,
-        texte(formData, "motivation") || `Demande de ${nom}.`,
+        [
+          `Demande de ${nom}.`,
+          texte(formData, "motivation")
+            ? `Sa motivation : « ${texte(formData, "motivation")} »`
+            : null,
+        ],
         fiche,
       ),
     ),
   );
   revalideTout();
-  // La session s'ouvre dans la foulée : on arrive sur sa fiche, avec le
-  // bandeau qui explique ce qu'il reste à faire.
-  await ouvrirSession(compte.id);
-  redirectWithFlash(
-    "/membre/profil",
-    `Bienvenue ${rep.split(" ")[0]} · votre demande est enregistrée`,
-  );
+  // Comme pour l'inscription : retour à la connexion, l'adresse déjà
+  // remplie. La fiche, elle, explique ensuite ce qu'il reste à faire.
+  redirect(`/public?${new URLSearchParams({ inscrit: "1", email })}`);
 }
 
 /** Approbation : la demande devient une adhésion en attente de règlement. */
