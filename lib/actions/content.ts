@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithFlash } from "@/lib/flash";
 import { jourBase, jourSaisi } from "@/lib/format";
+import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import {
   FichierRefuse,
@@ -62,6 +63,7 @@ const PHOTOS_PAR_ACTUALITE = 10;
  * dans le fil. Sans photo, la publication garde son bandeau de couleur.
  */
 export async function enregistrerActualite(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "newsId");
   const retour = id
     ? `/admin/actualites/${id}/modifier`
@@ -158,6 +160,7 @@ export async function enregistrerActualite(formData: FormData) {
 }
 
 export async function deleteNews(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "newsId");
   const n = await prisma.news.findUnique({
     where: { id },
@@ -341,6 +344,7 @@ export async function basculerJaimeCommentaire(formData: FormData) {
  * la ressource ne soit annoncée prête.
  */
 export async function enregistrerRessource(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "resourceId");
   const retour = id
     ? `/admin/ressources/${id}/modifier`
@@ -444,6 +448,7 @@ export async function enregistrerRessource(formData: FormData) {
 }
 
 export async function deleteResource(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "resourceId");
   const r = await prisma.resource.findUnique({
     where: { id },
@@ -500,6 +505,7 @@ export async function downloadResource(formData: FormData) {
 
 /** Offre ou promotion publiée au nom d'un membre, créée ou modifiée. */
 export async function enregistrerOffre(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "offerId");
   const titre = texte(formData, "titre");
   const desc = texte(formData, "desc");
@@ -549,12 +555,14 @@ export async function enregistrerOffre(formData: FormData) {
 }
 
 export async function deleteOffer(formData: FormData) {
+  await exigerEquipe();
   await prisma.offer.deleteMany({ where: { id: texte(formData, "offerId") } });
   revalideTout();
   redirectWithFlash("/admin/actualites", "Offre retirée");
 }
 
 export async function saveService(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "serviceId");
   const type = texte(formData, "type") === "payant" ? "payant" : "gratuit";
   const titre = texte(formData, "titre");
@@ -597,6 +605,7 @@ export async function saveService(formData: FormData) {
 }
 
 export async function deleteService(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "serviceId");
   const s = await prisma.canchamService.findUnique({
     where: { id },
@@ -615,6 +624,7 @@ export async function deleteService(formData: FormData) {
  * choisir ce que les membres voient en premier.
  */
 export async function deplacerService(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "serviceId");
   const sens = texte(formData, "sens") === "haut" ? -1 : 1;
   const retour = "/admin/offres-cancham";

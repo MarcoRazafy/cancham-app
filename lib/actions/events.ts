@@ -9,6 +9,7 @@ import { redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { numeroFacture } from "@/lib/factures";
 import { estTermine } from "@/lib/presences";
+import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import type { EventFormat } from "@/lib/types";
@@ -185,6 +186,7 @@ function retourListe(fd: FormData, eventId: string, onglet?: string): string {
  * une pour les comparer n'apporterait rien.
  */
 export async function saveEvent(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "eventId");
   const retour = id
     ? `/admin/evenements/${id}/modifier`
@@ -299,6 +301,7 @@ export async function saveEvent(formData: FormData) {
 }
 
 export async function deleteEvent(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "eventId");
   const e = await prisma.event.findUnique({
     where: { id },
@@ -322,6 +325,7 @@ export async function deleteEvent(formData: FormData) {
 
 /** Pointage à l'accueil : bascule présent / absent. */
 export async function toggleAttendance(formData: FormData) {
+  await exigerEquipe();
   const attendeeId = texte(formData, "attendeeId");
   const eventId = texte(formData, "eventId");
   const retour = retourListe(formData, eventId);
@@ -466,6 +470,7 @@ export async function pointerParCode(
 
 /** Inscription manuelle à l'accueil, y compris pour une arrivée sans inscription. */
 export async function addAttendee(formData: FormData) {
+  await exigerEquipe();
   const eventId = texte(formData, "eventId");
   const nom = texte(formData, "nom");
   if (!nom) {
@@ -497,6 +502,7 @@ export async function addAttendee(formData: FormData) {
 
 /** Retrait d'une personne de la liste, inscrite par erreur ou désistée. */
 export async function retirerParticipant(formData: FormData) {
+  await exigerEquipe();
   const attendeeId = texte(formData, "attendeeId");
   const eventId = texte(formData, "eventId");
   const retour = retourListe(formData, eventId);

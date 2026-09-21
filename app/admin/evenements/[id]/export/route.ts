@@ -1,3 +1,4 @@
+import { exigerEquipe } from "@/lib/autorisations";
 import { reponseCsv, versCsv } from "@/lib/csv";
 import { marquerAbsentsPasses } from "@/lib/presences";
 import { getParticipants } from "@/lib/queries-admin";
@@ -9,6 +10,8 @@ export async function GET(
   _requete: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  // Le proxy garde déjà /admin ; l'export le redit pour lui-même.
+  await exigerEquipe();
   const { id } = await params;
   // Un export après l'événement doit déjà compter les absents.
   await marquerAbsentsPasses(id);

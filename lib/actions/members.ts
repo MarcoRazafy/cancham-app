@@ -6,10 +6,17 @@ import { redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
 import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
 import { jourBase, jourSaisi } from "@/lib/format";
+import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { FORMULES, fmtMontant, type Devise } from "@/lib/membership";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
+import {
+  exigerContact,
+  exigerEquipe,
+  exigerFiche,
+  exigerProduit,
+} from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import type { MemberStatus, MemberType } from "@/lib/types";
 
@@ -22,6 +29,9 @@ import type { MemberStatus, MemberType } from "@/lib/types";
  */
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+
+/** Demandes d'adhésion déposées depuis une même origine en une heure. */
+const DEMANDES_PAR_HEURE = 5;
 
 /** Page de retour d'un formulaire public : un chemin interne, jamais ailleurs. */
 function cheminRetour(fd: FormData, defaut: string): string {
@@ -72,6 +82,19 @@ async function acteurDepuis(retour: string): Promise<string> {
 
 /** Dépôt d'une demande depuis l'espace public. */
 export async function submitAdhesion(formData: FormData) {
+  // Formulaire public : une même origine ne dépose pas des demandes en rafale.
+  const attente = tentative(
+    `adhesion:${await origineAppelante()}`,
+    DEMANDES_PAR_HEURE,
+    60 * 60 * 1000,
+  );
+  if (attente) {
+    redirectWithFlash(
+      cheminRetour(formData, "/public/inscription"),
+      `Trop de demandes depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
+    );
+  }
+
   // Nom et prénom sont saisis à part, comme sur la fiche de la chambre. Les
   // anciens formulaires envoient encore un « rep » d'un seul tenant.
   const prenomRep = texte(formData, "prenomRep");
@@ -185,6 +208,7 @@ export async function submitAdhesion(formData: FormData) {
 
 /** Approbation : la demande devient une adhésion en attente de règlement. */
 export async function approveCandidature(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "memberId");
   const m = await prisma.member.update({
     where: { id },
@@ -205,6 +229,7 @@ export async function approveCandidature(formData: FormData) {
 }
 
 export async function rejectCandidature(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "memberId");
   const m = await prisma.member.findUnique({
     where: { id },
@@ -229,6 +254,7 @@ export async function rejectCandidature(formData: FormData) {
 
 /** Enregistrement d'un règlement encaissé par l'équipe. Génère la facture. */
 export async function registerPayment(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "memberId");
   const mode = texte(formData, "mode") || "Espèces";
   const dateSaisie = texte(formData, "date");
@@ -293,6 +319,7 @@ export async function registerPayment(formData: FormData) {
 
 /** Relance de cotisation. Rien n'est envoyé tant que l'e-mail n'est pas branché. */
 export async function sendReminder(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "memberId");
   const m = await prisma.member.findUnique({
     where: { id },
@@ -316,6 +343,7 @@ export async function sendReminder(formData: FormData) {
 /* ============================ Fiche membre ============================ */
 
 export async function createMember(formData: FormData) {
+  await exigerEquipe();
   const type = (texte(formData, "type") || "morale") as MemberType;
   const rep = texte(formData, "rep") || "À préciser";
   const nomSaisi = texte(formData, "nom");
@@ -377,7 +405,9 @@ export async function createMember(formData: FormData) {
  * connaissait pas.
  */
 export async function updateMemberProfile(formData: FormData) {
-  const id = texte(formData, "memberId");
+  // L'identifiant reçu ne fait pas foi : un membre ne modifie que sa fiche.
+  const retour = retourInterne(formData, "/membre/profil");
+  const { memberId: id } = await exigerFiche(texte(formData, "memberId"), retour);
 
   // Un champ fichier laissé vide signifie « garde l'image actuelle ».
   const actuel = await prisma.member.findUnique({
@@ -463,7 +493,10 @@ function champsService(formData: FormData) {
 }
 
 export async function ajouterService(formData: FormData) {
-  const memberId = texte(formData, "memberId");
+  const { memberId } = await exigerFiche(
+    texte(formData, "memberId"),
+    retourInterne(formData, "/membre/profil"),
+  );
   const champs = champsService(formData);
   if (!champs.label)
     redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
@@ -501,6 +534,7 @@ export async function ajouterService(formData: FormData) {
 
 export async function modifierService(formData: FormData) {
   const id = texte(formData, "produitId");
+  await exigerProduit(id, retourInterne(formData, "/membre/profil"));
   const champs = champsService(formData);
   if (!champs.label)
     redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
@@ -538,6 +572,7 @@ export async function modifierService(formData: FormData) {
 
 export async function supprimerService(formData: FormData) {
   const id = texte(formData, "produitId");
+  await exigerProduit(id, retourInterne(formData, "/membre/profil"));
   const actuel = await prisma.produit.findUnique({
     where: { id },
     select: { label: true },
@@ -554,6 +589,7 @@ export async function supprimerService(formData: FormData) {
 }
 
 export async function deleteMember(formData: FormData) {
+  await exigerEquipe();
   const id = texte(formData, "memberId");
   const m = await prisma.member.findUnique({
     where: { id },
@@ -594,10 +630,10 @@ export async function deleteMember(formData: FormData) {
  * d'écrire pour renvoyer un message lisible plutôt qu'une erreur de contrainte.
  */
 export async function addContact(formData: FormData) {
-  const memberId = texte(formData, "memberId");
+  const retour = retourInterne(formData, "/membre/profil");
+  const { memberId } = await exigerFiche(texte(formData, "memberId"), retour);
   const nom = texte(formData, "nom");
   const email = texte(formData, "email").toLowerCase();
-  const retour = retourInterne(formData, "/membre/profil");
 
   if (!nom || !email) {
     redirectWithFlash(retour, "Nom et courriel sont obligatoires.");
@@ -661,6 +697,7 @@ export async function addContact(formData: FormData) {
 export async function removeContact(formData: FormData) {
   const id = texte(formData, "contactId");
   const retour = retourInterne(formData, "/membre/profil");
+  await exigerContact(id, retour);
 
   const contact = await prisma.user.findUnique({ where: { id } });
   if (!contact?.memberId) redirectWithFlash(retour, "Contact introuvable.");
@@ -710,9 +747,10 @@ export async function removeContact(formData: FormData) {
  */
 export async function updateContact(formData: FormData) {
   const id = texte(formData, "contactId");
+  const retour = retourInterne(formData, "/membre/profil");
+  await exigerContact(id, retour);
   const email = texte(formData, "email").toLowerCase();
   const nom = texte(formData, "nom");
-  const retour = retourInterne(formData, "/membre/profil");
 
   const actuel = await prisma.user.findUnique({ where: { id } });
   if (!actuel) redirectWithFlash(retour, "Contact introuvable.");
