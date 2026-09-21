@@ -327,11 +327,13 @@ export function EnTeteConversation({
                   ))}
                 </ul>
                 <div className="flex flex-col gap-2">
-                  <AjouterParticipants
-                    threadId={threadId}
-                    space={space}
-                    personnes={ajoutables}
-                  />
+                  {space === "admin" ? (
+                    <AjouterParticipants
+                      threadId={threadId}
+                      space={space}
+                      personnes={ajoutables}
+                    />
+                  ) : null}
                   <QuitterGroupe threadId={threadId} nom={nom} space={space} />
                 </div>
               </div>

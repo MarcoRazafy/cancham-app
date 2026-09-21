@@ -150,7 +150,10 @@ export function ListeFils({
             </button>
           ) : null}
         </div>
-        <NouveauGroupe space={space} personnes={personnes} />
+        {/* Les groupes se créent côté équipe seulement. */}
+        {space === "admin" ? (
+          <NouveauGroupe space={space} personnes={personnes} />
+        ) : null}
       </div>
 
       <div className="overflow-y-auto flex-1 min-h-0">

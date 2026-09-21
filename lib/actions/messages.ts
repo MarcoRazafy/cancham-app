@@ -352,10 +352,20 @@ async function personnesValides(fd: FormData, userId: string) {
   });
 }
 
-/** Crée un groupe de discussion avec les personnes choisies. */
+const GROUPES_RESERVES =
+  "Seule l’équipe CanCham peut créer un groupe ou y ajouter quelqu’un.";
+
+/**
+ * Crée un groupe de discussion avec les personnes choisies.
+ *
+ * Réservé à l'équipe : les groupes sont un outil d'animation de la chambre.
+ * Un membre écrit dans les groupes où on l'a invité, et peut les quitter.
+ */
 export async function creerGroupe(formData: FormData) {
   const space = espace(formData);
   const base = `/${space}/messagerie`;
+  const user = await getCurrentUser(space);
+  if (user.role !== "admin") redirectWithErreur(base, GROUPES_RESERVES);
   const nom = texte(formData, "nom");
 
   if (!nom) redirectWithErreur(base, "Donnez un nom au groupe.");
@@ -366,7 +376,6 @@ export async function creerGroupe(formData: FormData) {
     );
   }
 
-  const user = await getCurrentUser(space);
   const invites = await personnesValides(formData, user.id);
   if (invites.length === 0) {
     redirectWithErreur(base, "Ajoutez au moins une personne au groupe.");
@@ -408,13 +417,14 @@ export async function creerGroupe(formData: FormData) {
   redirect(lienFil(space, fil.id));
 }
 
-/** Ajoute des personnes à un groupe dont on fait partie. */
+/** Ajoute des personnes à un groupe dont on fait partie. Réservé à l'équipe. */
 export async function ajouterParticipants(formData: FormData) {
   const space = espace(formData);
   const threadId = texte(formData, "threadId");
   const retour = lienFil(space, threadId);
 
   const user = await getCurrentUser(space);
+  if (user.role !== "admin") redirectWithErreur(retour, GROUPES_RESERVES);
   const fil = await prisma.messageThread.findUnique({
     where: { id: threadId },
     select: { type: true, _count: { select: { participants: true } } },
