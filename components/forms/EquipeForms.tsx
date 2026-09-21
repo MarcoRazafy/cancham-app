@@ -1,14 +1,61 @@
 "use client";
 
-import { ShieldCheck, ShieldOff } from "lucide-react";
+import { Send, ShieldCheck, ShieldOff } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
+  Field,
+  INPUT,
   ModalBody,
   ModalFooter,
   SubmitButton,
 } from "@/components/form-bits";
-import { promouvoirAdmin, retirerAdmin } from "@/lib/actions/equipe";
+import {
+  creerCompteEquipe,
+  promouvoirAdmin,
+  retirerAdmin,
+} from "@/lib/actions/equipe";
+
+/**
+ * Ouvrir un compte à un membre de l'équipe : son adresse et sa fonction.
+ * Il reçoit par e-mail son identifiant et un mot de passe provisoire.
+ */
+export function FormulaireNouvelEquipier() {
+  return (
+    <form action={creerCompteEquipe} className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Adresse e-mail">
+          <input
+            type="email"
+            name="email"
+            required
+            autoComplete="off"
+            placeholder="prenom@cancham.mg"
+            className={INPUT}
+          />
+        </Field>
+        <Field label="Fonction">
+          <input
+            name="fonction"
+            required
+            maxLength={80}
+            placeholder="Ex. Chargée des adhésions"
+            className={INPUT}
+          />
+        </Field>
+      </div>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p className="m-0 text-[12.5px] text-muted max-w-[46ch]">
+          Un e-mail lui envoie son identifiant et un mot de passe provisoire, à
+          changer depuis « Mon profil ».
+        </p>
+        <SubmitButton pendingLabel="Création…">
+          <Send size={14} /> Créer et envoyer les accès
+        </SubmitButton>
+      </div>
+    </form>
+  );
+}
 
 /**
  * Accorder et retirer l'accès au back-office.

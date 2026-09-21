@@ -1,6 +1,10 @@
 import { EnTeteAdmin } from "@/components/admin/ui";
-import { FormulaireProfilEquipe } from "@/components/forms/ProfilEquipe";
+import {
+  FormulaireMotDePasse,
+  FormulaireProfilEquipe,
+} from "@/components/forms/ProfilEquipe";
 import { Card, Saillant } from "@/components/ui";
+import { MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 
 export default async function MonProfil() {
@@ -16,13 +20,16 @@ export default async function MonProfil() {
           </>
         }
       >
-        Vos nom, fonction, coordonnées et photo. C’est ainsi que les membres
-        vous voient dans la messagerie, et que l’équipe vous retrouve au journal
-        d’activité.
+        Vos nom, fonction, coordonnées, photo et mot de passe. C’est ainsi que
+        les membres vous voient dans la messagerie, et que l’équipe vous
+        retrouve au journal d’activité.
       </EnTeteAdmin>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
-        <FormulaireProfilEquipe user={user} />
+        <div className="flex flex-col gap-4 min-w-0">
+          <FormulaireProfilEquipe user={user} />
+          <FormulaireMotDePasse email={user.email} minimum={MOT_DE_PASSE_MIN} />
+        </div>
 
         <Card className="carte-filet filet-fixe filet-degrade p-6">
           <div className="surtitre text-faint mb-3">Où ce profil apparaît</div>
@@ -40,10 +47,6 @@ export default async function MonProfil() {
               et en haut à droite de chaque page.
             </li>
           </ul>
-          <p className="m-0 mt-4 text-[12px] text-faint">
-            Tant que la connexion par compte n’est pas en place, ce profil est
-            celui de l’espace d’administration de démonstration.
-          </p>
         </Card>
       </div>
     </>

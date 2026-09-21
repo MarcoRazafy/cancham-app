@@ -1,9 +1,10 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, KeyRound } from "lucide-react";
 import { ChampPhoto, Field, INPUT, SubmitButton } from "@/components/form-bits";
 import { Card } from "@/components/ui";
 import { modifierProfilEquipe } from "@/lib/actions/equipe";
+import { changerMonMotDePasse } from "@/lib/actions/motdepasse";
 import type { User } from "@/lib/types";
 
 /** Profil de la personne de l'équipe : photo, identité, coordonnées. */
@@ -63,6 +64,78 @@ export function FormulaireProfilEquipe({ user }: { user: User }) {
         <div className="flex justify-end pt-1">
           <SubmitButton pendingLabel="Enregistrement…">
             <Check size={15} /> Enregistrer le profil
+          </SubmitButton>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+/**
+ * Changer son mot de passe : l'actuel, puis le nouveau deux fois. Les autres
+ * sessions se ferment ; celle-ci reste ouverte.
+ */
+export function FormulaireMotDePasse({
+  email,
+  minimum,
+}: {
+  email: string;
+  minimum: number;
+}) {
+  return (
+    <Card className="p-6">
+      <h2 className="text-[17px] m-0 mb-1">Mot de passe</h2>
+      <p className="m-0 mb-4 text-[13px] text-muted">
+        Remplacez le mot de passe provisoire reçu par e-mail, ou changez le
+        vôtre. Vos autres sessions ouvertes seront fermées.
+      </p>
+      <form action={changerMonMotDePasse} className="flex flex-col gap-4">
+        {/* Pour que le gestionnaire de mots de passe sache quel compte il met à jour. */}
+        <input
+          type="text"
+          name="identifiant"
+          autoComplete="username"
+          value={email}
+          hidden
+          readOnly
+        />
+        <Field label="Mot de passe actuel">
+          <input
+            type="password"
+            name="actuel"
+            required
+            autoComplete="current-password"
+            className={INPUT}
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Nouveau mot de passe"
+            hint={`${minimum} caractères au moins.`}
+          >
+            <input
+              type="password"
+              name="nouveau"
+              required
+              minLength={minimum}
+              autoComplete="new-password"
+              className={INPUT}
+            />
+          </Field>
+          <Field label="Confirmation">
+            <input
+              type="password"
+              name="confirmation"
+              required
+              minLength={minimum}
+              autoComplete="new-password"
+              className={INPUT}
+            />
+          </Field>
+        </div>
+        <div className="flex justify-end pt-1">
+          <SubmitButton pendingLabel="Enregistrement…">
+            <KeyRound size={15} /> Changer le mot de passe
           </SubmitButton>
         </div>
       </form>
