@@ -31,6 +31,7 @@ import {
   EditProfileButton,
   RemoveContactButton,
 } from "@/components/forms/MemberForms";
+import { PROVISOIRE, saisi } from "@/lib/accueil";
 import {
   Banner,
   BtnLink,
@@ -84,6 +85,7 @@ export default async function ProfilPage() {
           <div className="flex gap-2 flex-wrap">
             <EditProfileButton
               memberId={m.id}
+              secteur={saisi(m.secteur, PROVISOIRE.secteur)}
               activite={m.activite}
               desc={m.desc}
               besoins={m.besoins}
@@ -116,9 +118,9 @@ export default async function ProfilPage() {
               </BtnLink>
             }
           >
-            Présentez-vous, votre entreprise, votre formule et votre activité
-            en quatre étapes rapides : votre fiche sera complète dans
-            l’annuaire, et l’équipe pourra examiner votre demande.
+            Présentez-vous, votre entreprise, votre formule et votre activité en
+            quatre étapes rapides : votre fiche sera complète dans l’annuaire,
+            et l’équipe pourra examiner votre demande.
           </Banner>
         </div>
       ) : null}

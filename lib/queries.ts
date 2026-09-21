@@ -1178,20 +1178,6 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
   };
 }
 
-/** Secteurs représentés, pour le menu déroulant du formulaire d'adhésion. */
-export async function getSecteurs(): Promise<string[]> {
-  const rows = await prisma.member.findMany({
-    where: {
-      statut: { not: "candidature" },
-      secteur: { not: PROVISOIRE.secteur },
-    },
-    select: { secteur: true },
-    distinct: ["secteur"],
-    orderBy: { secteur: "asc" },
-  });
-  return rows.map((r) => r.secteur);
-}
-
 /** Les prochains rendez-vous mis en avant sur la page publique. */
 export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
   const rows = await prisma.event.findMany({

@@ -17,6 +17,7 @@ import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { normaliserSite } from "@/lib/liens";
+import { estSecteur } from "@/lib/secteurs";
 import {
   courrielBienvenue,
   courrielNouvelleInscription,
@@ -228,7 +229,13 @@ export async function enregistrerEtape(formData: FormData) {
         data: {
           type,
           nom,
-          secteur: texte(formData, "secteur") || PROVISOIRE.secteur,
+          // Rien de choisi : la valeur provisoire. Hors de la liste (ancien
+          // libellé renvoyé tel quel, ou valeur fabriquée) : inchangé.
+          secteur: !texte(formData, "secteur")
+            ? PROVISOIRE.secteur
+            : estSecteur(texte(formData, "secteur"))
+              ? texte(formData, "secteur")
+              : undefined,
           ville: texte(formData, "ville") || PROVISOIRE.ville,
           statutJuridique: texte(formData, "statutJuridique") || null,
           pays: texte(formData, "pays") || null,

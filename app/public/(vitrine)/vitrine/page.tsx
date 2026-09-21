@@ -13,11 +13,7 @@ import {
   ORDRE_FORMULES,
 } from "@/lib/membership";
 import { VISUELS } from "@/lib/images-publiques";
-import {
-  getProchainsEvenements,
-  getSecteurs,
-  getStatsPubliques,
-} from "@/lib/queries";
+import { getProchainsEvenements, getStatsPubliques } from "@/lib/queries";
 
 /**
  * Page d'accueil publique, conforme à la charte CanCham.
@@ -30,10 +26,9 @@ export default async function PublicHome() {
   // toutes à la compilation, et les chiffres comme les prochains événements
   // resteraient ceux du jour du déploiement.
   await connection();
-  const [stats, evenements, secteurs] = await Promise.all([
+  const [stats, evenements] = await Promise.all([
     getStatsPubliques(),
     getProchainsEvenements(8),
-    getSecteurs(),
   ]);
 
   const chiffres = [
@@ -329,7 +324,7 @@ export default async function PublicHome() {
               </div>
 
               <div className="min-w-0">
-                <FormulaireAdhesion secteurs={secteurs} />
+                <FormulaireAdhesion />
               </div>
             </div>
           </div>

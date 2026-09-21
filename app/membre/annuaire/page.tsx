@@ -2,7 +2,9 @@ import { Search } from "lucide-react";
 import { FiltresAuto } from "@/components/FiltresAuto";
 import { MemberCard } from "@/components/domain";
 import { EmptyState, Saillant, ViewHead } from "@/components/ui";
+import { PROVISOIRE } from "@/lib/accueil";
 import { getMembresAnnuaire } from "@/lib/queries";
+import { SECTEURS, estSecteur } from "@/lib/secteurs";
 
 /**
  * Le filtrage passe par l'URL plutôt que par un état client : la recherche
@@ -18,9 +20,12 @@ export default async function AnnuairePage({
     // Une candidature n'est pas encore un membre : elle est exclue par la requête.
     getMembresAnnuaire(),
   ]);
-  const secteurs = [...new Set(visibles.map((m) => m.secteur))].sort((a, b) =>
-    a.localeCompare(b, "fr"),
-  );
+  // Le filtre propose la liste fermée des secteurs. Une fiche saisie avant
+  // elle garde son ancien libellé : il s'ajoute à la suite, pour qu'elle
+  // reste trouvable. Une étape d'inscription sautée n'est pas un secteur.
+  const autresSecteurs = [...new Set(visibles.map((m) => m.secteur))]
+    .filter((s) => !estSecteur(s) && s !== PROVISOIRE.secteur)
+    .sort((a, b) => a.localeCompare(b, "fr"));
 
   const needle = q.toLowerCase();
   const list = visibles
@@ -59,7 +64,13 @@ export default async function AnnuairePage({
           className="max-w-[280px] flex-1 min-w-[200px] border border-line bg-surface text-ink rounded-[var(--radius-s)] px-3 py-[9px] text-[13.6px]"
         >
           <option value="">Tous les secteurs</option>
-          {secteurs.map((s) => (
+          {SECTEURS.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+          {/* Fiches saisies avant la liste fermée : toujours trouvables. */}
+          {autresSecteurs.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
