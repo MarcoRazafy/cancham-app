@@ -3,7 +3,8 @@
  *
  * L'inscription ne demande que l'essentiel : courriel, fonction, téléphone
  * (facultatif) et mot de passe. On se connecte ensuite, et le reste — qui
- * l'on est, l'entreprise, la formule, l'activité — se complète à la première
+ * l'on est, l'entreprise, la formule et la motivation, l'activité — se
+ * complète à la première
  * connexion, une étape à la fois, chacune pouvant être passée. On s'inscrit
  * en une minute ; la fiche se remplit à son rythme.
  *
@@ -16,7 +17,7 @@
 export const ETAPES_ACCUEIL = [
   { cle: "vous", court: "Vous" },
   { cle: "entreprise", court: "Entreprise" },
-  { cle: "formule", court: "Formule" },
+  { cle: "formule", court: "Adhésion" },
   { cle: "activite", court: "Activité" },
 ] as const;
 
