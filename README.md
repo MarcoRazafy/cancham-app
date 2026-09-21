@@ -197,6 +197,18 @@ Deux garde-fous :
 Les formulaires postent vers les actions sans dépendre de JavaScript ; seules
 les modales en ont besoin pour s'ouvrir.
 
+## Tests
+
+```bash
+npm test             # une fois
+npm run test:watch   # en continu pendant le développement
+```
+
+Les règles qui ne doivent jamais casser, sans base ni navigateur : accès
+selon la cotisation, dates et échéances, mots de passe et sessions,
+limitation des tentatives, saisies dangereuses (liens `javascript:`, HTML
+dans les e-mails), fin des événements. Voir [`tests/`](./tests/).
+
 ## Volontairement absent
 
 - **Paiement en ligne** — V1 prévue en enregistrement manuel par l'admin
