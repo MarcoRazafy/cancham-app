@@ -514,7 +514,7 @@ export function AddContactButton({
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field
                 label="Courriel"
-                hint="Unique : il servira d’identifiant de connexion."
+                hint="Il recevra un lien pour choisir son mot de passe."
               >
                 <input type="email" name="email" required className={INPUT} />
               </Field>

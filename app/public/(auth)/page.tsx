@@ -78,16 +78,24 @@ export default async function ConnexionPage({
           placeholder="Votre mot de passe"
         />
 
-        <label className="flex items-center gap-2.5 text-[13.5px] text-muted cursor-pointer w-fit">
-          <input
-            type="checkbox"
-            name="souvenir"
-            value="1"
-            defaultChecked
-            className="w-4 h-4 accent-[var(--marque-vert)] cursor-pointer"
-          />
-          Se souvenir de moi
-        </label>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <label className="flex items-center gap-2.5 text-[13.5px] text-muted cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              name="souvenir"
+              value="1"
+              defaultChecked
+              className="w-4 h-4 accent-[var(--marque-vert)] cursor-pointer"
+            />
+            Se souvenir de moi
+          </label>
+          <Link
+            href="/public/mot-de-passe-oublie"
+            className="text-[13.5px] text-marque-vert font-semibold no-underline hover:underline"
+          >
+            Mot de passe oublié ?
+          </Link>
+        </div>
 
         <div className="mt-1">
           <BoutonEnvoi enCours="Connexion…">Se connecter</BoutonEnvoi>
@@ -106,9 +114,6 @@ export default async function ConnexionPage({
         >
           Demander une adhésion <ArrowRight size={14} />
         </Link>
-      </p>
-      <p className="text-[12.5px] text-faint mt-2.5 mb-0">
-        Mot de passe oublié ? L’équipe CanCham peut le réinitialiser.
       </p>
     </CadreAuth>
   );

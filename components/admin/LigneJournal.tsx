@@ -1,5 +1,7 @@
 import Link from "next/link";
 import {
+  KeyRound,
+  KeySquare,
   ShieldCheck,
   ShieldOff,
   CalendarCheck,
@@ -52,6 +54,8 @@ const ICONES: Record<string, LucideIcon> = {
   facture_payee: BadgeCheck,
   relance_envoyee: BellRing,
   ressource_achetee: ShoppingBag,
+  acces_active: KeyRound,
+  mot_de_passe_reinitialise: KeySquare,
   admin_promu: ShieldCheck,
   admin_retire: ShieldOff,
   service_reserve: CreditCard,

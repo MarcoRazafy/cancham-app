@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
 import {
@@ -10,10 +11,15 @@ import {
   PROVISOIRE,
   nomDepuisCourriel,
 } from "@/lib/accueil";
+import { COURRIEL_EQUIPE, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { normaliserSite } from "@/lib/liens";
+import {
+  courrielBienvenue,
+  courrielNouvelleInscription,
+} from "@/lib/modeles-courriels";
 import { FORMULES } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
@@ -123,6 +129,26 @@ export async function creerCompte(formData: FormData) {
       detail: `Inscription de ${email}.`,
     },
   });
+
+  // Les e-mails partent après la réponse : l'inscription n'attend pas le
+  // service d'envoi, et ne dépend pas de lui.
+  const [bienvenue, inscriptions] = await Promise.all([
+    urlPublique("/bienvenue"),
+    urlPublique("/admin/equipe"),
+  ]);
+  after(() =>
+    Promise.all([
+      envoyerCourriel(courrielBienvenue(email, nom, bienvenue)),
+      envoyerCourriel(
+        courrielNouvelleInscription(
+          COURRIEL_EQUIPE,
+          email,
+          motivation,
+          inscriptions,
+        ),
+      ),
+    ]),
+  );
 
   revalidatePath("/", "layout");
   await ouvrirSession(compte.id);

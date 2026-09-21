@@ -70,16 +70,38 @@ export async function fermerSession(): Promise<void> {
   (await cookies()).delete(COOKIE);
 }
 
-/** Identifiant de la personne connectée, ou `null`. */
-export async function sessionCourante(): Promise<string | null> {
-  return lireJeton((await cookies()).get(COOKIE)?.value);
+export interface Session {
+  userId: string;
+  /** Ouverture de la session, en millisecondes. */
+  emiseLe: number;
+}
+
+/** La session de la personne connectée, ou `null`. */
+export async function sessionCourante(): Promise<Session | null> {
+  return lireSession((await cookies()).get(COOKIE)?.value);
+}
+
+/**
+ * Une session ouverte avant le dernier changement de mot de passe ne vaut
+ * plus rien : c'est ce qui met dehors quelqu'un qui se serait connecté avec
+ * l'ancien. Une seconde de marge couvre l'ouverture de session qui suit
+ * aussitôt le changement.
+ */
+export function sessionPerimee(
+  session: Session,
+  motDePasseModifieLe: Date | null,
+): boolean {
+  return (
+    motDePasseModifieLe !== null &&
+    session.emiseLe + 1000 < motDePasseModifieLe.getTime()
+  );
 }
 
 /**
  * Lecture d'un jeton de session, utilisable hors des composants serveur —
  * le proxy lit le cookie sur la requête.
  */
-export function lireJeton(jeton: string | undefined): string | null {
+export function lireSession(jeton: string | undefined): Session | null {
   if (!jeton) return null;
   const separateur = jeton.lastIndexOf(".");
   if (separateur < 0) return null;
@@ -96,7 +118,8 @@ export function lireJeton(jeton: string | undefined): string | null {
 
   const [userId, expire] = charge.split(".");
   if (!userId || !expire || Number(expire) < Date.now()) return null;
-  return userId;
+  // Le cookie porte son expiration ; son ouverture s'en déduit.
+  return { userId, emiseLe: Number(expire) - DUREE_JOURS * 86_400_000 };
 }
 
 export const NOM_COOKIE = COOKIE;

@@ -187,6 +187,11 @@ model User {
   /// `null` pour un compte créé par l'équipe qui ne s'est pas encore connecté.
   motDePasse String?
 
+  /// Dernier changement de mot de passe. Toute session ouverte avant cette
+  /// date est refusée : changer de mot de passe met dehors quiconque se
+  /// serait connecté avec l'ancien.
+  motDePasseModifieLe DateTime?
+
   /// `null` pour l'équipe CanCham et les visiteurs.
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -199,6 +204,7 @@ model User {
   commentaires       Comment[]
   jaimesCommentaires CommentLike[]
   rappels            Rappel[]
+  jetons             JetonCompte[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -656,4 +662,27 @@ model AuditLog {
 
   @@index([entite, entiteId])
   @@map("audit_logs")
+}
+
+/// Lien à usage unique envoyé par e-mail : réinitialiser son mot de passe,
+/// ou choisir le premier quand l'équipe a créé le compte (invitation).
+///
+/// Seule l'empreinte du jeton est gardée : une fuite de la base ne donne
+/// aucun lien utilisable.
+model JetonCompte {
+  id        String    @id @default(cuid())
+  /// SHA-256 du jeton envoyé, en hexadécimal.
+  empreinte String    @unique
+  /// « reinitialisation » (une heure) ou « invitation » (sept jours).
+  usage     String
+  expire    DateTime
+  utiliseLe DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("jetons_compte")
 }
