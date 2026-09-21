@@ -8,7 +8,7 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, LoaderCircle } from "lucide-react";
 
 /** Champs de formulaire, accordés aux tokens de l'application. */
 export const INPUT =
@@ -86,7 +86,18 @@ export function SubmitButton({
       disabled={pending || disabled}
       className={`${base} disabled:opacity-60 disabled:cursor-wait ${size} ${variants[variant]} ${className}`}
     >
-      {pending ? (pendingLabel ?? "Envoi…") : children}
+      {pending ? (
+        <>
+          <LoaderCircle
+            size={14}
+            aria-hidden
+            className="animate-spin shrink-0"
+          />
+          {pendingLabel ?? "Envoi…"}
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

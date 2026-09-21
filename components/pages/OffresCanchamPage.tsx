@@ -22,7 +22,7 @@ export async function OffresCanchamPage() {
       </ViewHead>
 
       <SectionTitle>Services gratuits</SectionTitle>
-      <div className="grid gap-4 mb-7 md:grid-cols-2 lg:grid-cols-3">
+      <div className="cascade grid gap-4 mb-7 md:grid-cols-2 lg:grid-cols-3">
         {gratuits.length ? (
           gratuits.map((s) => (
             <ServiceCard
@@ -37,7 +37,7 @@ export async function OffresCanchamPage() {
       </div>
 
       <SectionTitle>Services payants</SectionTitle>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="cascade grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {payants.length ? (
           payants.map((s) => (
             <ServiceCard

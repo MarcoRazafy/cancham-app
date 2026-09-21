@@ -10,7 +10,7 @@ import {
   PROVISOIRE,
   nomDepuisCourriel,
 } from "@/lib/accueil";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { normaliserSite } from "@/lib/liens";
@@ -43,7 +43,7 @@ export async function creerCompte(formData: FormData) {
     60 * 60 * 1000,
   );
   if (attente) {
-    redirectWithFlash(
+    redirectWithErreur(
       INSCRIPTION,
       `Trop d’inscriptions depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
     );
@@ -55,22 +55,22 @@ export async function creerCompte(formData: FormData) {
   const motivation = texte(formData, "motivation");
 
   if (!email.includes("@")) {
-    redirectWithFlash(INSCRIPTION, "Indiquez une adresse courriel valide.");
+    redirectWithErreur(INSCRIPTION, "Indiquez une adresse courriel valide.");
   }
   if (motDePasse.length < MOT_DE_PASSE_MIN) {
-    redirectWithFlash(
+    redirectWithErreur(
       INSCRIPTION,
       `Le mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`,
     );
   }
   if (motDePasse !== confirmation) {
-    redirectWithFlash(
+    redirectWithErreur(
       INSCRIPTION,
       "Les deux mots de passe ne correspondent pas.",
     );
   }
   if (!motivation) {
-    redirectWithFlash(
+    redirectWithErreur(
       INSCRIPTION,
       "Dites-nous en quelques mots pourquoi vous souhaitez rejoindre CanCham.",
     );
@@ -78,7 +78,7 @@ export async function creerCompte(formData: FormData) {
   if (
     await prisma.user.findUnique({ where: { email }, select: { id: true } })
   ) {
-    redirectWithFlash(
+    redirectWithErreur(
       INSCRIPTION,
       "Cette adresse a déjà un compte : connectez-vous.",
     );
@@ -145,7 +145,7 @@ export async function enregistrerEtape(formData: FormData) {
         .filter(Boolean)
         .join(" ");
       if (!nom) {
-        redirectWithFlash(
+        redirectWithErreur(
           ici,
           "Indiquez votre prénom et votre nom, ou passez l’étape.",
         );
@@ -162,11 +162,13 @@ export async function enregistrerEtape(formData: FormData) {
     }
 
     case "entreprise": {
-      const type = texte(formData, "type") === "physique" ? "physique" : "morale";
+      const type =
+        texte(formData, "type") === "physique" ? "physique" : "morale";
       // Un indépendant n'a pas d'entreprise : sa fiche porte son nom.
-      const nom = texte(formData, "nom") || (type === "physique" ? user.nom : "");
+      const nom =
+        texte(formData, "nom") || (type === "physique" ? user.nom : "");
       if (!nom) {
-        redirectWithFlash(
+        redirectWithErreur(
           ici,
           "Indiquez le nom de votre entreprise, ou passez l’étape.",
         );
@@ -174,7 +176,7 @@ export async function enregistrerEtape(formData: FormData) {
       const siteSaisi = texte(formData, "siteweb");
       const siteweb = normaliserSite(siteSaisi);
       if (siteSaisi && !siteweb) {
-        redirectWithFlash(
+        redirectWithErreur(
           ici,
           `« ${siteSaisi} » n’est pas une adresse de site valide.`,
         );
@@ -214,7 +216,7 @@ export async function enregistrerEtape(formData: FormData) {
           transparence: true,
         });
       } catch (e) {
-        if (e instanceof ImageRefusee) redirectWithFlash(ici, e.message);
+        if (e instanceof ImageRefusee) redirectWithErreur(ici, e.message);
         throw e;
       }
       await prisma.member.update({

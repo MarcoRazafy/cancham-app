@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Partage } from "@/components/Partage";
 import {
   ArrowLeft,
   Building2,
@@ -62,7 +63,11 @@ export default async function FicheMembrePage({
         <div className="p-[22px]">
           <div className="flex gap-4 flex-wrap justify-between">
             <div className="flex gap-4">
-              <LogoMark member={m} size={64} />
+              <Partage nom={`membre-${m.id}`}>
+                <div className="shrink-0">
+                  <LogoMark member={m} size={64} />
+                </div>
+              </Partage>
               <div>
                 <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
                 <div className="flex gap-1.5 flex-wrap items-center">

@@ -55,8 +55,8 @@ export async function ActualitesPage({ space }: { space: Space }) {
               ) : null
             }
           >
-            Le fil d’actualité de la chambre : programmation, retours d’événements
-            et vie institutionnelle, dans l’ordre chronologique.
+            Le fil d’actualité de la chambre : programmation, retours
+            d’événements et vie institutionnelle, dans l’ordre chronologique.
           </ViewHead>
 
           {feed.map((n) => (
@@ -96,7 +96,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
             {admin ? <OffreButton membres={proposants} /> : null}
           </div>
           {offers.length ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="cascade grid gap-3 sm:grid-cols-2">
               {offers.map((o) => {
                 const carte = (
                   <OfferCard

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { MOTIFS_CONTACT } from "@/lib/coordonnees";
 import { prisma } from "@/lib/db";
 import { ecrireAEquipe } from "@/lib/fil-equipe";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtMoney } from "@/lib/format";
 import {
   LONGUEUR_NOM_GROUPE,
@@ -90,7 +90,7 @@ export async function sendMessage(formData: FormData) {
 
   const user = await getCurrentUser(space);
   if (!(await participe(threadId, user.id))) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/${space}/messagerie`,
       "Vous ne participez pas à cette conversation.",
     );
@@ -101,10 +101,10 @@ export async function sendMessage(formData: FormData) {
     .filter((f): f is File => f instanceof File && f.size > 0);
 
   if (!contenu && fichiers.length === 0) {
-    redirectWithFlash(retour, "Le message est vide.");
+    redirectWithErreur(retour, "Le message est vide.");
   }
   if (fichiers.length > PIECES_PAR_MESSAGE) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `${PIECES_PAR_MESSAGE} pièces jointes au plus par message.`,
     );
@@ -117,7 +117,7 @@ export async function sendMessage(formData: FormData) {
       if (recue) pieces.push(recue);
     }
   } catch (e) {
-    if (e instanceof PieceRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof PieceRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
@@ -165,7 +165,7 @@ export async function modifierMessage(formData: FormData) {
     },
   });
   if (!message || message.userId !== user.id || message.supprimeLe) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/${space}/messagerie`,
       "Vous ne pouvez modifier que vos propres messages.",
     );
@@ -174,7 +174,7 @@ export async function modifierMessage(formData: FormData) {
   const retour = lienFil(space, message.threadId);
   if (contenu === message.texte) redirect(retour);
   if (!contenu && message._count.piecesJointes === 0) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       "Un message ne peut pas être vide : supprimez-le plutôt.",
     );
@@ -211,7 +211,7 @@ export async function supprimerMessage(formData: FormData) {
     },
   });
   if (!message || message.userId !== user.id) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/${space}/messagerie`,
       "Vous ne pouvez supprimer que vos propres messages.",
     );
@@ -258,7 +258,7 @@ export async function transfererMessage(formData: FormData) {
     source.supprimeLe ||
     !(await participe(source.threadId, user.id))
   ) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/${space}/messagerie`,
       "Ce message n’est plus disponible.",
     );
@@ -266,10 +266,10 @@ export async function transfererMessage(formData: FormData) {
 
   const retour = lienFil(space, source.threadId);
   if (cibles.length === 0) {
-    redirectWithFlash(retour, "Choisissez au moins une conversation.");
+    redirectWithErreur(retour, "Choisissez au moins une conversation.");
   }
   if (cibles.length > MAX_CIBLES_TRANSFERT) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `${MAX_CIBLES_TRANSFERT} conversations au plus par transfert.`,
     );
@@ -298,7 +298,7 @@ export async function transfererMessage(formData: FormData) {
     for (const p of joignables) vises.add(await filIndividuel(user.id, p.id));
   }
   if (vises.size === 0) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       "Aucune des conversations choisies n’est accessible.",
     );
@@ -358,9 +358,9 @@ export async function creerGroupe(formData: FormData) {
   const base = `/${space}/messagerie`;
   const nom = texte(formData, "nom");
 
-  if (!nom) redirectWithFlash(base, "Donnez un nom au groupe.");
+  if (!nom) redirectWithErreur(base, "Donnez un nom au groupe.");
   if (nom.length > LONGUEUR_NOM_GROUPE) {
-    redirectWithFlash(
+    redirectWithErreur(
       base,
       `Le nom du groupe dépasse ${LONGUEUR_NOM_GROUPE} caractères.`,
     );
@@ -369,10 +369,10 @@ export async function creerGroupe(formData: FormData) {
   const user = await getCurrentUser(space);
   const invites = await personnesValides(formData, user.id);
   if (invites.length === 0) {
-    redirectWithFlash(base, "Ajoutez au moins une personne au groupe.");
+    redirectWithErreur(base, "Ajoutez au moins une personne au groupe.");
   }
   if (invites.length + 1 > MAX_PARTICIPANTS_GROUPE) {
-    redirectWithFlash(
+    redirectWithErreur(
       base,
       `Un groupe compte ${MAX_PARTICIPANTS_GROUPE} participants au plus.`,
     );
@@ -385,7 +385,7 @@ export async function creerGroupe(formData: FormData) {
       largeur: 480,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(base, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(base, e.message);
     throw e;
   }
 
@@ -420,7 +420,7 @@ export async function ajouterParticipants(formData: FormData) {
     select: { type: true, _count: { select: { participants: true } } },
   });
   if (fil?.type !== "groupe" || !(await participe(threadId, user.id))) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/${space}/messagerie`,
       "Seuls les participants d’un groupe peuvent y ajouter quelqu’un.",
     );
@@ -428,10 +428,10 @@ export async function ajouterParticipants(formData: FormData) {
 
   const invites = await personnesValides(formData, user.id);
   if (invites.length === 0) {
-    redirectWithFlash(retour, "Choisissez au moins une personne.");
+    redirectWithErreur(retour, "Choisissez au moins une personne.");
   }
   if (fil._count.participants + invites.length > MAX_PARTICIPANTS_GROUPE) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `Un groupe compte ${MAX_PARTICIPANTS_GROUPE} participants au plus.`,
     );
@@ -467,7 +467,7 @@ export async function quitterGroupe(formData: FormData) {
     select: { type: true, nom: true },
   });
   if (fil?.type !== "groupe" || !(await participe(threadId, user.id))) {
-    redirectWithFlash(base, "Vous ne faites pas partie de ce groupe.");
+    redirectWithErreur(base, "Vous ne faites pas partie de ce groupe.");
   }
 
   await prisma.participantFil.delete({
@@ -541,7 +541,7 @@ export async function ouvrirConversation(formData: FormData) {
     select: { id: true },
   });
   if (!referent) {
-    redirectWithFlash(
+    redirectWithErreur(
       space === "admin"
         ? `/admin/membres/${memberId}`
         : `/membre/annuaire/${memberId}`,
@@ -569,7 +569,7 @@ export async function envoyerDemandeContact(formData: FormData) {
   const rappel = texte(formData, "rappel");
 
   if (!sujet || !contenu) {
-    redirectWithFlash(
+    redirectWithErreur(
       "/membre/contact",
       "Merci d’indiquer un sujet et un message.",
     );
@@ -614,7 +614,7 @@ export async function reserverService(formData: FormData) {
     select: { id: true, titre: true, type: true, prix: true },
   });
   if (!service) {
-    redirectWithFlash(retour, "Ce service n’est plus proposé.");
+    redirectWithErreur(retour, "Ce service n’est plus proposé.");
   }
 
   const user = await getCurrentUser("membre");

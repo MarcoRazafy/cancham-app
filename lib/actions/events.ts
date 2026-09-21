@@ -5,7 +5,7 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { EVENT_FORMAT_DB } from "@/lib/enums";
 import { estHeure, estJourISO } from "@/lib/agenda";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { numeroFacture } from "@/lib/factures";
 import { estTermine } from "@/lib/presences";
@@ -34,7 +34,7 @@ export async function registerForEvent(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const user = await getCurrentUser("membre");
   if (!user.memberId) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/membre/evenements/${eventId}`,
       "Aucun membre rattaché à ce compte.",
     );
@@ -52,21 +52,21 @@ export async function registerForEvent(formData: FormData) {
   ]);
 
   if (!event || !membre) {
-    redirectWithFlash("/membre/evenements", "Événement introuvable.");
+    redirectWithErreur("/membre/evenements", "Événement introuvable.");
   }
 
   const deja = await prisma.registration.findUnique({
     where: { eventId_memberId: { eventId, memberId: user.memberId } },
   });
   if (deja) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/membre/evenements/${eventId}`,
       "Vous êtes déjà inscrit à cet événement.",
     );
   }
 
   if (event._count.participants >= event.cap) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/membre/evenements/${eventId}`,
       "Cet événement est complet.",
     );
@@ -123,7 +123,7 @@ export async function cancelRegistration(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const user = await getCurrentUser("membre");
   if (!user.memberId)
-    redirectWithFlash("/membre/evenements", "Aucun membre rattaché.");
+    redirectWithErreur("/membre/evenements", "Aucun membre rattaché.");
 
   const membre = await prisma.member.findUnique({
     where: { id: user.memberId },
@@ -201,24 +201,24 @@ export async function saveEvent(formData: FormData) {
   const debut = texte(formData, "debut") || null;
   const fin = texte(formData, "fin") || null;
 
-  if (!titre) redirectWithFlash(retour, "Le titre est obligatoire.");
+  if (!titre) redirectWithErreur(retour, "Le titre est obligatoire.");
   if (!estJourISO(jour)) {
-    redirectWithFlash(retour, "Indiquez la date de l’événement.");
+    redirectWithErreur(retour, "Indiquez la date de l’événement.");
   }
   if ((debut && !estHeure(debut)) || (fin && !estHeure(fin))) {
-    redirectWithFlash(retour, "Les heures s’écrivent HH:MM.");
+    redirectWithErreur(retour, "Les heures s’écrivent HH:MM.");
   }
   if (fin && !debut) {
-    redirectWithFlash(retour, "Indiquez l’heure de début avant celle de fin.");
+    redirectWithErreur(retour, "Indiquez l’heure de début avant celle de fin.");
   }
   if (debut && fin && fin <= debut) {
-    redirectWithFlash(retour, "L’heure de fin doit suivre celle du début.");
+    redirectWithErreur(retour, "L’heure de fin doit suivre celle du début.");
   }
   if (!Number.isFinite(cap) || cap < 1) {
-    redirectWithFlash(retour, "La capacité doit être d’au moins une place.");
+    redirectWithErreur(retour, "La capacité doit être d’au moins une place.");
   }
   if (payant && (!Number.isFinite(prix) || prix <= 0)) {
-    redirectWithFlash(retour, "Indiquez le tarif d’un événement payant.");
+    redirectWithErreur(retour, "Indiquez le tarif d’un événement payant.");
   }
 
   let photo: string | null = null;
@@ -228,7 +228,7 @@ export async function saveEvent(formData: FormData) {
       largeur: 1600,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
@@ -307,7 +307,7 @@ export async function deleteEvent(formData: FormData) {
     where: { id },
     select: { titre: true, _count: { select: { participants: true } } },
   });
-  if (!e) redirectWithFlash("/admin/evenements", "Événement introuvable.");
+  if (!e) redirectWithErreur("/admin/evenements", "Événement introuvable.");
 
   await prisma.auditLog.create({
     data: {
@@ -331,7 +331,7 @@ export async function toggleAttendance(formData: FormData) {
   const retour = retourListe(formData, eventId);
   const a = await prisma.attendee.findUnique({ where: { id: attendeeId } });
   if (!a || a.eventId !== eventId) {
-    redirectWithFlash(retour, "Participant introuvable.");
+    redirectWithErreur(retour, "Participant introuvable.");
   }
 
   // « Présent » et « Absent » disent ce qu'ils font ; sans précision, le
@@ -432,7 +432,10 @@ export async function pointerParCode(
     });
     const contact = inscription.member.users[0];
     ligne = libre
-      ? await prisma.attendee.update({ where: { id: libre.id }, data: { code } })
+      ? await prisma.attendee.update({
+          where: { id: libre.id },
+          data: { code },
+        })
       : await prisma.attendee.create({
           data: {
             eventId,
@@ -474,7 +477,7 @@ export async function addAttendee(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const nom = texte(formData, "nom");
   if (!nom) {
-    redirectWithFlash(
+    redirectWithErreur(
       retourListe(formData, eventId),
       "Le nom de la personne est requis.",
     );
@@ -508,12 +511,9 @@ export async function retirerParticipant(formData: FormData) {
   const retour = retourListe(formData, eventId);
   const a = await prisma.attendee.findUnique({ where: { id: attendeeId } });
   if (!a || a.eventId !== eventId) {
-    redirectWithFlash(retour, "Participant introuvable.");
+    redirectWithErreur(retour, "Participant introuvable.");
   }
   await prisma.attendee.delete({ where: { id: attendeeId } });
   revalideTout();
-  redirectWithFlash(
-    retour,
-    `${a.nom} retiré de la liste`,
-  );
+  redirectWithFlash(retour, `${a.nom} retiré de la liste`);
 }

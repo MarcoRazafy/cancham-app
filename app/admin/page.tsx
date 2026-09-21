@@ -93,7 +93,7 @@ export default async function TableauDeBord() {
       </EnTeteAdmin>
 
       {/* ==================== Compteurs ==================== */}
-      <div className="grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="cascade grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
         <Compteur
           icone={<Users size={22} />}
           teinte="vert"

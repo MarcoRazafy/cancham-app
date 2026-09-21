@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
@@ -73,11 +73,11 @@ export async function enregistrerActualite(formData: FormData) {
   const extrait = texte(formData, "extrait");
   const corps = texte(formData, "corps");
   if (!titre || !extrait || !corps) {
-    redirectWithFlash(retour, "Titre, résumé et texte sont obligatoires.");
+    redirectWithErreur(retour, "Titre, résumé et texte sont obligatoires.");
   }
 
   const cat = NEWS_CAT_DB[texte(formData, "cat") as NewsCategory];
-  if (!cat) redirectWithFlash(retour, "Catégorie inconnue.");
+  if (!cat) redirectWithErreur(retour, "Catégorie inconnue.");
 
   const jour = texte(formData, "date");
   const date = jourBase(jourSaisi(jour) ?? undefined);
@@ -102,10 +102,10 @@ export async function enregistrerActualite(formData: FormData) {
       ...fichiers.map((_, i) => `n:${i}`),
     ];
   } catch {
-    redirectWithFlash(retour, "L’ordre des photos est illisible.");
+    redirectWithErreur(retour, "L’ordre des photos est illisible.");
   }
   if (ordre.length > PHOTOS_PAR_ACTUALITE) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `${PHOTOS_PAR_ACTUALITE} photos au plus par publication.`,
     );
@@ -119,7 +119,7 @@ export async function enregistrerActualite(formData: FormData) {
       );
     }
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
@@ -166,7 +166,7 @@ export async function deleteNews(formData: FormData) {
     where: { id },
     select: { titre: true, _count: { select: { commentaires: true } } },
   });
-  if (!n) redirectWithFlash("/admin/actualites", "Actualité introuvable.");
+  if (!n) redirectWithErreur("/admin/actualites", "Actualité introuvable.");
 
   await journal(
     "actualite_supprimee",
@@ -190,11 +190,14 @@ export async function supprimerCommentaire(formData: FormData) {
 
   const user = await getCurrentUser(space);
   const c = await prisma.comment.findUnique({ where: { id } });
-  if (!c) redirectWithFlash(retour, "Commentaire introuvable.");
+  if (!c) redirectWithErreur(retour, "Commentaire introuvable.");
 
   const auteur = c.userId === user.id;
   if (!auteur && space !== "admin") {
-    redirectWithFlash(retour, "Vous ne pouvez supprimer que vos commentaires.");
+    redirectWithErreur(
+      retour,
+      "Vous ne pouvez supprimer que vos commentaires.",
+    );
   }
 
   // Seul le retrait par l'équipe du commentaire de quelqu'un d'autre est une
@@ -255,7 +258,7 @@ export async function postComment(formData: FormData) {
   const retour = cheminRetour(formData, `/${space}/actualites`);
 
   if (!texteCommentaire) {
-    redirectWithFlash(retour, "Le commentaire est vide.");
+    redirectWithErreur(retour, "Le commentaire est vide.");
   }
 
   const user = await getCurrentUser(space);
@@ -298,9 +301,9 @@ export async function modifierCommentaire(formData: FormData) {
     select: { userId: true, texte: true },
   });
   if (!c || c.userId !== user.id) {
-    redirectWithFlash(retour, "Vous ne pouvez modifier que vos commentaires.");
+    redirectWithErreur(retour, "Vous ne pouvez modifier que vos commentaires.");
   }
-  if (!nouveau) redirectWithFlash(retour, "Le commentaire est vide.");
+  if (!nouveau) redirectWithErreur(retour, "Le commentaire est vide.");
   if (nouveau === c.texte) return;
 
   await prisma.comment.update({
@@ -357,13 +360,13 @@ export async function enregistrerRessource(formData: FormData) {
   const entree = formData.get("fichier");
   const fichier = entree instanceof File && entree.size > 0 ? entree : null;
 
-  if (!titre) redirectWithFlash(retour, "Le titre est obligatoire.");
-  if (!cat) redirectWithFlash(retour, "Catégorie inconnue.");
+  if (!titre) redirectWithErreur(retour, "Le titre est obligatoire.");
+  if (!cat) redirectWithErreur(retour, "Catégorie inconnue.");
   if (type === "payant" && (!Number.isFinite(prix) || prix <= 0)) {
-    redirectWithFlash(retour, "Indiquez le prix d’une ressource payante.");
+    redirectWithErreur(retour, "Indiquez le prix d’une ressource payante.");
   }
   if (!id && !fichier) {
-    redirectWithFlash(retour, "Joignez le fichier de la ressource.");
+    redirectWithErreur(retour, "Joignez le fichier de la ressource.");
   }
 
   let cover: string | null = null;
@@ -373,7 +376,7 @@ export async function enregistrerRessource(formData: FormData) {
       largeur: 1200,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
   const retirerCover = texte(formData, "retirerCover") === "1";
@@ -420,13 +423,13 @@ export async function enregistrerRessource(formData: FormData) {
       // Une ressource neuve sans fichier lisible n'a pas lieu d'exister.
       if (!id) {
         await prisma.resource.delete({ where: { id: r.id } });
-        redirectWithFlash("/admin/ressources/nouvelle", e.message);
+        redirectWithErreur("/admin/ressources/nouvelle", e.message);
       }
       await prisma.resource.update({
         where: { id: r.id },
         data: { fichier: null, pages: null },
       });
-      redirectWithFlash(retour, e.message);
+      redirectWithErreur(retour, e.message);
     }
   }
 
@@ -454,7 +457,7 @@ export async function deleteResource(formData: FormData) {
     where: { id },
     select: { titre: true },
   });
-  if (!r) redirectWithFlash("/admin/ressources", "Ressource introuvable.");
+  if (!r) redirectWithErreur("/admin/ressources", "Ressource introuvable.");
 
   await prisma.auditLog.create({
     data: {
@@ -481,7 +484,7 @@ export async function downloadResource(formData: FormData) {
   const id = texte(formData, "resourceId");
   const space = (texte(formData, "space") || "membre") as Space;
   const r = await prisma.resource.findUnique({ where: { id } });
-  if (!r) redirectWithFlash(`/${space}/ressources`, "Ressource introuvable.");
+  if (!r) redirectWithErreur(`/${space}/ressources`, "Ressource introuvable.");
 
   const user = await getCurrentUser(space);
   await prisma.auditLog.create({
@@ -513,14 +516,14 @@ export async function enregistrerOffre(formData: FormData) {
   const retour = "/admin/actualites";
 
   if (!titre || !desc) {
-    redirectWithFlash(retour, "Le titre et la description sont requis.");
+    redirectWithErreur(retour, "Le titre et la description sont requis.");
   }
   const membre = await prisma.member.findUnique({
     where: { id: memberId },
     select: { nom: true },
   });
   if (!membre)
-    redirectWithFlash(retour, "Choisissez le membre qui propose l’offre.");
+    redirectWithErreur(retour, "Choisissez le membre qui propose l’offre.");
 
   let image: string | null = null;
   try {
@@ -529,7 +532,7 @@ export async function enregistrerOffre(formData: FormData) {
       largeur: 1200,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
   const retirerImage = texte(formData, "retirerImage") === "1";
@@ -571,10 +574,10 @@ export async function saveService(formData: FormData) {
   const retour = "/admin/offres-cancham";
 
   if (!titre || !desc) {
-    redirectWithFlash(retour, "Le titre et la description sont requis.");
+    redirectWithErreur(retour, "Le titre et la description sont requis.");
   }
   if (type === "payant" && (!Number.isFinite(prix) || prix <= 0)) {
-    redirectWithFlash(retour, "Indiquez le tarif d’un service payant.");
+    redirectWithErreur(retour, "Indiquez le tarif d’un service payant.");
   }
 
   const data = { titre, desc, type, prix } as const;
@@ -611,7 +614,7 @@ export async function deleteService(formData: FormData) {
     where: { id },
     select: { titre: true },
   });
-  if (!s) redirectWithFlash("/admin/offres-cancham", "Service introuvable.");
+  if (!s) redirectWithErreur("/admin/offres-cancham", "Service introuvable.");
 
   await journal("service_supprime", "CanchamService", id, `« ${s.titre} ».`);
   await prisma.canchamService.delete({ where: { id } });
@@ -630,7 +633,7 @@ export async function deplacerService(formData: FormData) {
   const retour = "/admin/offres-cancham";
 
   const courant = await prisma.canchamService.findUnique({ where: { id } });
-  if (!courant) redirectWithFlash(retour, "Service introuvable.");
+  if (!courant) redirectWithErreur(retour, "Service introuvable.");
 
   const liste = await prisma.canchamService.findMany({
     where: { type: courant.type },

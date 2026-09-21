@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { espaceDe, estHeure, estJourISO } from "@/lib/agenda";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 
@@ -43,17 +43,17 @@ function lireRappel(fd: FormData, page: string) {
   const jour = texte(fd, "jour");
   const heure = texte(fd, "journee") === "1" ? "" : texte(fd, "heure");
 
-  if (!titre) redirectWithFlash(page, "Donnez un titre au rappel.");
+  if (!titre) redirectWithErreur(page, "Donnez un titre au rappel.");
   if (titre.length > TITRE_MAX) {
-    redirectWithFlash(page, `Le titre tient en ${TITRE_MAX} caractères.`);
+    redirectWithErreur(page, `Le titre tient en ${TITRE_MAX} caractères.`);
   }
   if (note.length > NOTE_MAX) {
-    redirectWithFlash(page, `La note tient en ${NOTE_MAX} caractères.`);
+    redirectWithErreur(page, `La note tient en ${NOTE_MAX} caractères.`);
   }
   if (!estJourISO(jour))
-    redirectWithFlash(page, "Choisissez la date du rappel.");
+    redirectWithErreur(page, "Choisissez la date du rappel.");
   if (heure && !estHeure(heure)) {
-    redirectWithFlash(page, "L’heure s’écrit HH:MM.");
+    redirectWithErreur(page, "L’heure s’écrit HH:MM.");
   }
 
   return {
@@ -72,7 +72,7 @@ async function rappelDe(fd: FormData, page: string) {
     select: { id: true, userId: true, titre: true, fait: true },
   });
   if (!r || r.userId !== user.id) {
-    redirectWithFlash(page, "Ce rappel n’existe plus.");
+    redirectWithErreur(page, "Ce rappel n’existe plus.");
   }
   return r;
 }

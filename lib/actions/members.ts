@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { redirectWithFlash } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { numeroFacture } from "@/lib/factures";
 import { hacher, MOT_DE_PASSE_MIN, ouvrirSession } from "@/lib/auth";
 import { jourBase, jourSaisi } from "@/lib/format";
@@ -89,7 +89,7 @@ export async function submitAdhesion(formData: FormData) {
     60 * 60 * 1000,
   );
   if (attente) {
-    redirectWithFlash(
+    redirectWithErreur(
       cheminRetour(formData, "/public/inscription"),
       `Trop de demandes depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
     );
@@ -119,7 +119,7 @@ export async function submitAdhesion(formData: FormData) {
 
   const retourInscription = cheminRetour(formData, "/public/inscription");
   if (!nom) {
-    redirectWithFlash(
+    redirectWithErreur(
       retourInscription,
       "Merci d’indiquer le nom de votre entreprise ou votre nom.",
     );
@@ -130,16 +130,16 @@ export async function submitAdhesion(formData: FormData) {
   const confirmation = String(formData.get("confirmation") ?? "");
 
   if (!email) {
-    redirectWithFlash(retourInscription, "Indiquez votre adresse courriel.");
+    redirectWithErreur(retourInscription, "Indiquez votre adresse courriel.");
   }
   if (motDePasse.length < MOT_DE_PASSE_MIN) {
-    redirectWithFlash(
+    redirectWithErreur(
       retourInscription,
       `Le mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`,
     );
   }
   if (motDePasse !== confirmation) {
-    redirectWithFlash(
+    redirectWithErreur(
       retourInscription,
       "Les deux mots de passe ne correspondent pas.",
     );
@@ -147,7 +147,7 @@ export async function submitAdhesion(formData: FormData) {
   if (
     await prisma.user.findUnique({ where: { email }, select: { id: true } })
   ) {
-    redirectWithFlash(
+    redirectWithErreur(
       retourInscription,
       "Cette adresse a déjà un compte : connectez-vous.",
     );
@@ -265,7 +265,7 @@ export async function registerPayment(formData: FormData) {
     where: { id },
     select: { nom: true, paiementNote: true, formule: true },
   });
-  if (!avant) redirectWithFlash("/admin/membres", "Membre introuvable.");
+  if (!avant) redirectWithErreur("/admin/membres", "Membre introuvable.");
 
   // Montant saisi, sinon celui de la formule. La devise suit toujours la
   // formule : un montant canadien enregistré en Ariary vaudrait mille fois moins.
@@ -350,7 +350,7 @@ export async function createMember(formData: FormData) {
   const nom = nomSaisi || (type === "physique" ? rep : "");
 
   if (!nom) {
-    redirectWithFlash("/admin/membres", "Le nom de l’entreprise est requis.");
+    redirectWithErreur("/admin/membres", "Le nom de l’entreprise est requis.");
   }
 
   const m = await prisma.member.create({
@@ -407,19 +407,22 @@ export async function createMember(formData: FormData) {
 export async function updateMemberProfile(formData: FormData) {
   // L'identifiant reçu ne fait pas foi : un membre ne modifie que sa fiche.
   const retour = retourInterne(formData, "/membre/profil");
-  const { memberId: id } = await exigerFiche(texte(formData, "memberId"), retour);
+  const { memberId: id } = await exigerFiche(
+    texte(formData, "memberId"),
+    retour,
+  );
 
   // Un champ fichier laissé vide signifie « garde l'image actuelle ».
   const actuel = await prisma.member.findUnique({
     where: { id },
     select: { cover: true, logo: true },
   });
-  if (!actuel) redirectWithFlash("/membre/profil", "Fiche introuvable.");
+  if (!actuel) redirectWithErreur("/membre/profil", "Fiche introuvable.");
 
   const siteSaisi = texte(formData, "siteweb");
   const siteweb = normaliserSite(siteSaisi);
   if (siteSaisi && !siteweb) {
-    redirectWithFlash(
+    redirectWithErreur(
       "/membre/profil",
       `« ${siteSaisi} » n’est pas une adresse de site valide.`,
     );
@@ -439,7 +442,7 @@ export async function updateMemberProfile(formData: FormData) {
     });
   } catch (e) {
     if (e instanceof ImageRefusee)
-      redirectWithFlash("/membre/profil", e.message);
+      redirectWithErreur("/membre/profil", e.message);
     throw e;
   }
 
@@ -499,14 +502,14 @@ export async function ajouterService(formData: FormData) {
   );
   const champs = champsService(formData);
   if (!champs.label)
-    redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
+    redirectWithErreur("/membre/profil", "Le titre est obligatoire.");
 
   let photos: string[] = [];
   try {
     photos = await recevoirPhotos(formData, memberId, PHOTOS_PAR_PRODUIT);
   } catch (e) {
     if (e instanceof ImageRefusee)
-      redirectWithFlash("/membre/profil", e.message);
+      redirectWithErreur("/membre/profil", e.message);
     throw e;
   }
 
@@ -537,10 +540,10 @@ export async function modifierService(formData: FormData) {
   await exigerProduit(id, retourInterne(formData, "/membre/profil"));
   const champs = champsService(formData);
   if (!champs.label)
-    redirectWithFlash("/membre/profil", "Le titre est obligatoire.");
+    redirectWithErreur("/membre/profil", "Le titre est obligatoire.");
 
   const actuel = await prisma.produit.findUnique({ where: { id } });
-  if (!actuel) redirectWithFlash("/membre/profil", "Offre introuvable.");
+  if (!actuel) redirectWithErreur("/membre/profil", "Offre introuvable.");
 
   // On garde ce qui n'a pas été marqué pour retrait, puis on ajoute les
   // nouvelles photos à la suite : la vignette ne change que si la première
@@ -557,7 +560,7 @@ export async function modifierService(formData: FormData) {
     );
   } catch (e) {
     if (e instanceof ImageRefusee)
-      redirectWithFlash("/membre/profil", e.message);
+      redirectWithErreur("/membre/profil", e.message);
     throw e;
   }
 
@@ -577,7 +580,7 @@ export async function supprimerService(formData: FormData) {
     where: { id },
     select: { label: true },
   });
-  if (!actuel) redirectWithFlash("/membre/profil", "Offre introuvable.");
+  if (!actuel) redirectWithErreur("/membre/profil", "Offre introuvable.");
 
   await prisma.produit.delete({ where: { id } });
 
@@ -595,14 +598,14 @@ export async function deleteMember(formData: FormData) {
     where: { id },
     select: { nom: true, _count: { select: { factures: true } } },
   });
-  if (!m) redirectWithFlash("/admin/membres", "Membre introuvable.");
+  if (!m) redirectWithErreur("/admin/membres", "Membre introuvable.");
 
   // Les factures sont des pièces comptables : la base refuse de les perdre
   // avec le membre. On le dit avant d'essayer, et avant d'écrire au journal
   // une suppression qui n'aurait pas lieu.
   const n = m._count.factures;
   if (n > 0) {
-    redirectWithFlash(
+    redirectWithErreur(
       `/admin/membres/${id}`,
       `${m.nom} a ${n} facture${n > 1 ? "s" : ""} : un membre qui a des pièces comptables ne se supprime pas.`,
     );
@@ -636,12 +639,12 @@ export async function addContact(formData: FormData) {
   const email = texte(formData, "email").toLowerCase();
 
   if (!nom || !email) {
-    redirectWithFlash(retour, "Nom et courriel sont obligatoires.");
+    redirectWithErreur(retour, "Nom et courriel sont obligatoires.");
   }
 
   const occupe = await prisma.user.findUnique({ where: { email } });
   if (occupe) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `Le courriel ${email} est déjà rattaché à un contact.`,
     );
@@ -656,7 +659,7 @@ export async function addContact(formData: FormData) {
       largeur: 400,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
@@ -700,13 +703,13 @@ export async function removeContact(formData: FormData) {
   await exigerContact(id, retour);
 
   const contact = await prisma.user.findUnique({ where: { id } });
-  if (!contact?.memberId) redirectWithFlash(retour, "Contact introuvable.");
+  if (!contact?.memberId) redirectWithErreur(retour, "Contact introuvable.");
 
   const reste = await prisma.user.count({
     where: { memberId: contact.memberId },
   });
   if (reste <= 1) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       "Une entreprise doit garder au moins un contact.",
     );
@@ -753,16 +756,16 @@ export async function updateContact(formData: FormData) {
   const nom = texte(formData, "nom");
 
   const actuel = await prisma.user.findUnique({ where: { id } });
-  if (!actuel) redirectWithFlash(retour, "Contact introuvable.");
+  if (!actuel) redirectWithErreur(retour, "Contact introuvable.");
   if (!nom || !email) {
-    redirectWithFlash(retour, "Nom et courriel sont obligatoires.");
+    redirectWithErreur(retour, "Nom et courriel sont obligatoires.");
   }
 
   const occupe = await prisma.user.findFirst({
     where: { email, id: { not: id } },
   });
   if (occupe) {
-    redirectWithFlash(
+    redirectWithErreur(
       retour,
       `Le courriel ${email} est déjà rattaché à un contact.`,
     );
@@ -775,7 +778,7 @@ export async function updateContact(formData: FormData) {
       largeur: 400,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithFlash(retour, e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
