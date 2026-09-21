@@ -331,6 +331,8 @@ export interface Registration {
   memberId: string;
   code: string;
   date: string;
+  /** Les personnes inscrites par l'entreprise, chacune avec son code d'accueil. */
+  representants?: { nom: string; code: string }[];
 }
 
 /**

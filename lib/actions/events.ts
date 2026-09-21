@@ -1,5 +1,6 @@
 "use server";
 
+import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
@@ -8,6 +9,7 @@ import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { numeroFacture } from "@/lib/factures";
+import { codeRepresentant, extraireCode } from "@/lib/codes-accueil";
 import { estTermine } from "@/lib/presences";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
@@ -17,27 +19,56 @@ import type { EventFormat } from "@/lib/types";
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
 
-/** Code d'accès présenté à l'entrée, ex. CC-E2-4718. */
-function codeAcces(eventId: string): string {
-  return `CC-${eventId.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
+/** Lettres et chiffres sans ambiguïté à la lecture : ni O/0, ni I/1. */
+const ALPHABET_CODE = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+/**
+ * Code d'accès d'une inscription, présenté à l'entrée : « CC-VOPA-K7Q2PX ».
+ *
+ * La fin de l'identifiant de l'événement, puis six signes tirés au sort —
+ * quatre chiffres ne suffisaient pas : au-delà d'une centaine d'inscrits,
+ * deux inscriptions tiraient souvent le même, et la seconde échouait. Un
+ * code déjà pris est retiré.
+ */
+async function codeAcces(eventId: string): Promise<string> {
+  for (;;) {
+    const tirage = Array.from(
+      { length: 6 },
+      () => ALPHABET_CODE[randomInt(ALPHABET_CODE.length)],
+    ).join("");
+    const code = `CC-${eventId.slice(-4).toUpperCase()}-${tirage}`;
+    const pris = await prisma.registration.findUnique({
+      where: { code },
+      select: { id: true },
+    });
+    if (!pris) return code;
+  }
 }
+
+/** Les lignes d'accueil d'une inscription : son code, et ses déclinaisons. */
+const lignesDe = (code: string) => ({
+  OR: [{ code }, { code: { startsWith: `${code}-` } }],
+});
+
+/** Représentants inscrits par un membre, au plus. */
+const REPRESENTANTS_MAX = 10;
 
 /* ============================ Côté membre ============================ */
 
 /**
- * Inscription d'un membre à un événement.
+ * Inscription d'un membre à un événement, avec un ou plusieurs
+ * représentants choisis parmi ses contacts.
  *
- * Trois écritures liées : l'inscription, la personne attendue à l'accueil, et
- * la facture si l'événement est payant. Elles partent ensemble ou pas du tout.
+ * Une inscription pour l'entreprise, une ligne d'accueil — et un QR code —
+ * par représentant, et la facture si l'événement est payant. Tout part
+ * ensemble ou rien ne part.
  */
 export async function registerForEvent(formData: FormData) {
   const eventId = texte(formData, "eventId");
+  const fiche = `/membre/evenements/${eventId}`;
   const user = await getCurrentUser("membre");
   if (!user.memberId) {
-    redirectWithErreur(
-      `/membre/evenements/${eventId}`,
-      "Aucun membre rattaché à ce compte.",
-    );
+    redirectWithErreur(fiche, "Aucun membre rattaché à ce compte.");
   }
 
   const [event, membre] = await Promise.all([
@@ -50,7 +81,6 @@ export async function registerForEvent(formData: FormData) {
       select: { nom: true },
     }),
   ]);
-
   if (!event || !membre) {
     redirectWithErreur("/membre/evenements", "Événement introuvable.");
   }
@@ -58,23 +88,39 @@ export async function registerForEvent(formData: FormData) {
   const deja = await prisma.registration.findUnique({
     where: { eventId_memberId: { eventId, memberId: user.memberId } },
   });
-  if (deja) {
+  if (deja)
+    redirectWithErreur(fiche, "Vous êtes déjà inscrit à cet événement.");
+
+  // Les représentants viennent des contacts de l'entreprise, et d'elle
+  // seule : un identifiant d'ailleurs, glissé dans le formulaire, est ignoré.
+  const choisis = [...new Set(formData.getAll("representant").map(String))];
+  const representants = await prisma.user.findMany({
+    where: { id: { in: choisis }, memberId: user.memberId },
+    orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
+    select: { nom: true, email: true },
+  });
+  if (!representants.length) {
+    redirectWithErreur(fiche, "Choisissez au moins un représentant.");
+  }
+  if (representants.length > REPRESENTANTS_MAX) {
     redirectWithErreur(
-      `/membre/evenements/${eventId}`,
-      "Vous êtes déjà inscrit à cet événement.",
+      fiche,
+      `${REPRESENTANTS_MAX} représentants au plus par entreprise.`,
     );
   }
 
-  if (event._count.participants >= event.cap) {
+  const restantes = event.cap - event._count.participants;
+  if (representants.length > restantes) {
     redirectWithErreur(
-      `/membre/evenements/${eventId}`,
-      "Cet événement est complet.",
+      fiche,
+      restantes > 0
+        ? `Il ne reste que ${restantes} place${restantes > 1 ? "s" : ""} : choisissez moins de représentants.`
+        : "Cet événement est complet.",
     );
   }
 
-  const code = codeAcces(eventId);
-  const nom = texte(formData, "nom") || user.nom;
-  const email = texte(formData, "email") || user.email;
+  const code = await codeAcces(eventId);
+  const n = representants.length;
 
   // Le tableau doit être annoté : sinon son type est figé par ses premiers
   // éléments et la facture ne peut plus y entrer.
@@ -82,16 +128,17 @@ export async function registerForEvent(formData: FormData) {
     prisma.registration.create({
       data: { eventId, memberId: user.memberId, code },
     }),
-    // Même code sur la ligne d'accueil : c'est lui que le scanner lira.
-    prisma.attendee.create({
-      data: {
+    // Une ligne d'accueil par représentant, chacune avec son code : c'est
+    // lui que le scanner lira.
+    prisma.attendee.createMany({
+      data: representants.map((r, i) => ({
         eventId,
-        nom,
+        nom: r.nom,
         entreprise: membre.nom,
-        email,
-        statut: "confirme",
-        code,
-      },
+        email: r.email,
+        statut: "confirme" as const,
+        code: codeRepresentant(code, i),
+      })),
     }),
   ];
 
@@ -102,8 +149,8 @@ export async function registerForEvent(formData: FormData) {
         data: {
           numero: await numeroFacture(date),
           date,
-          objet: `Participation — ${event.titre}`,
-          montant: event.prix,
+          objet: `Participation — ${event.titre}${n > 1 ? ` (${n} personnes)` : ""}`,
+          montant: event.prix * n,
           statut: "envoyee",
           memberId: user.memberId,
         },
@@ -114,8 +161,8 @@ export async function registerForEvent(formData: FormData) {
   await prisma.$transaction(ecritures);
   revalideTout();
   redirectWithFlash(
-    `/membre/evenements/${eventId}`,
-    `Inscription confirmée · code ${code}${event.payant ? " · facture générée" : ""}`,
+    fiche,
+    `Inscription confirmée · ${n} représentant${n > 1 ? "s" : ""}${event.payant ? " · facture générée" : ""}`,
   );
 }
 
@@ -144,7 +191,7 @@ export async function cancelRegistration(formData: FormData) {
     where: {
       eventId,
       OR: [
-        ...(inscription ? [{ code: inscription.code }] : []),
+        ...(inscription ? [lignesDe(inscription.code)] : []),
         { entreprise: membre?.nom, statut: "confirme", code: null },
       ],
     },
@@ -371,7 +418,7 @@ export async function pointerParCode(
   await getCurrentUser("admin");
 
   // Le code seul, même lu au milieu d'un texte plus long.
-  const code = /CC-[A-Z0-9]+-\d{4}/i.exec(lu)?.[0].toUpperCase() ?? lu.trim();
+  const code = extraireCode(lu);
   if (!code) return { etat: "erreur", code, message: "Aucun code lu." };
 
   const event = await prisma.event.findUnique({

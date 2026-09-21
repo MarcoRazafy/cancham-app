@@ -28,6 +28,7 @@ import {
 } from "@/lib/membership";
 import {
   getAgenda,
+  getContacts,
   getEvents,
   getMember,
   getMembresAnnuaire,
@@ -57,6 +58,7 @@ export default async function VueDEnsemble() {
     ressources,
     services,
     semaine,
+    contacts,
   ] = await Promise.all([
     getEvents(),
     getMembresAnnuaire(),
@@ -70,6 +72,7 @@ export default async function VueDEnsemble() {
       aujourdhui,
       ajouterJours(aujourdhui, 6),
     ),
+    getContacts(me.id),
   ]);
 
   const aVenir = events.filter((e) => !isPast(e.date));
@@ -213,9 +216,9 @@ export default async function VueDEnsemble() {
                   ) : (
                     <RegisterButton
                       event={prochain}
-                      nom={user.nom}
-                      email={user.email}
-                      tel={user.tel}
+                      entreprise={me.nom}
+                      contacts={contacts}
+                      moi={user.id}
                       libelle="M’inscrire"
                     />
                   )}

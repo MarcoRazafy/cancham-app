@@ -235,14 +235,29 @@ export async function getRegistration(
   const r = await prisma.registration.findUnique({
     where: { eventId_memberId: { eventId, memberId } },
   });
-  return r
-    ? {
-        eventId: r.eventId,
-        memberId: r.memberId,
-        code: r.code,
-        date: toISODate(r.createdAt),
-      }
-    : null;
+  if (!r) return null;
+  // Les lignes d'accueil de l'inscription : son code, puis « -2 », « -3 »…
+  const lignes = await prisma.attendee.findMany({
+    where: {
+      eventId,
+      OR: [{ code: r.code }, { code: { startsWith: `${r.code}-` } }],
+    },
+    select: { nom: true, code: true },
+  });
+  // Dans l'ordre des rangs : « -10 » vient après « -2 », pas avant.
+  const rang = (c: string | null) =>
+    c === r.code ? 1 : Number(c?.slice(r.code.length + 1)) || 0;
+  lignes.sort((a, b) => rang(a.code) - rang(b.code));
+  return {
+    eventId: r.eventId,
+    memberId: r.memberId,
+    code: r.code,
+    date: toISODate(r.createdAt),
+    // Une inscription d'avant les représentants n'a que son propre code.
+    representants: lignes.length
+      ? lignes.map((l) => ({ nom: l.nom, code: l.code ?? r.code }))
+      : [{ nom: "", code: r.code }],
+  };
 }
 
 /* ============================ Contenus ============================ */
