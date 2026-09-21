@@ -176,6 +176,20 @@ export function Alerte({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Confirmation au-dessus d'un formulaire d'identification. */
+export function Confirmation({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="apparition">
+      <p
+        role="status"
+        className="m-0 mb-5 rounded-lg border border-marque-vert/30 bg-marque-vert/10 px-4 py-3 text-[13.5px] text-marque-vert"
+      >
+        {children}
+      </p>
+    </div>
+  );
+}
+
 export {
   ChampAuth,
   ChampMotDePasse,

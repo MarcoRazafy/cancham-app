@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { telephoneValide } from "@/lib/accueil";
 import { echapper, gabarit } from "@/lib/courriel";
 import { lienJournal } from "@/lib/journal";
 import { normaliserSite } from "@/lib/liens";
@@ -46,5 +47,19 @@ describe("journal", () => {
     expect(lienJournal("paiement_enregistre", "Member", "m1")).toBe(
       "/admin/membres/m1",
     );
+  });
+});
+
+describe("téléphone à l'inscription", () => {
+  it("accepte les numéros de Madagascar et du Canada, écrits librement", () => {
+    expect(telephoneValide("+261 34 50 280 53")).toBe(true);
+    expect(telephoneValide("034 50 280 53")).toBe(true);
+    expect(telephoneValide("+1 (514) 555-0199")).toBe(true);
+  });
+
+  it("refuse ce qui n'est pas un numéro", () => {
+    expect(telephoneValide("appelez-moi")).toBe(false);
+    expect(telephoneValide("12 34")).toBe(false);
+    expect(telephoneValide("<script>")).toBe(false);
   });
 });

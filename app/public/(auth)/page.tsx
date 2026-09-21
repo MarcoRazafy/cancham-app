@@ -6,6 +6,7 @@ import {
   CadreAuth,
   ChampAuth,
   ChampMotDePasse,
+  Confirmation,
   Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
@@ -21,9 +22,16 @@ import { utilisateurConnecte } from "@/lib/session";
 export default async function ConnexionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ erreur?: string; email?: string; suite?: string }>;
+  searchParams: Promise<{
+    erreur?: string;
+    email?: string;
+    suite?: string;
+    inscrit?: string;
+  }>;
 }) {
-  const { erreur, email, suite } = await searchParams;
+  const { erreur, email, suite, inscrit } = await searchParams;
+  // Juste après l'inscription : l'adresse est connue, reste le mot de passe.
+  const vientDeSInscrire = inscrit === "1" && !erreur;
 
   const connecte = await utilisateurConnecte();
   if (connecte) redirect(connecte.role === "admin" ? "/admin" : "/membre");
@@ -50,6 +58,11 @@ export default async function ConnexionPage({
       </p>
 
       {erreur ? <Alerte>{erreur}</Alerte> : null}
+      {vientDeSInscrire ? (
+        <Confirmation>
+          Votre compte est créé. Connectez-vous pour continuer.
+        </Confirmation>
+      ) : null}
 
       <form action={connexion} className="flex flex-col gap-4">
         {suite?.startsWith("/") ? (
@@ -63,7 +76,7 @@ export default async function ConnexionPage({
             name="email"
             required
             autoComplete="email"
-            autoFocus
+            autoFocus={!vientDeSInscrire}
             defaultValue={email ?? ""}
             placeholder="vous@entreprise.mg"
           />
@@ -74,6 +87,7 @@ export default async function ConnexionPage({
           icone={<Lock size={16} />}
           name="motDePasse"
           required
+          autoFocus={vientDeSInscrire}
           autoComplete="current-password"
           placeholder="Votre mot de passe"
         />
