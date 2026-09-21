@@ -8,7 +8,7 @@ import {
   CHAMP_AUTH,
   Saisie,
 } from "@/components/public/CadreAuth";
-import { BoutonEnvoi } from "@/components/public/BoutonMarque";
+import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
 import { Saillant } from "@/components/ui";
 import { MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { creerCompte } from "@/lib/actions/accueil";
@@ -43,8 +43,8 @@ export default async function InscriptionPage() {
       </h1>
       <p className="text-[14.5px] text-muted m-0 mb-7">
         Quelques secondes suffisent. Vous présenterez ensuite votre entreprise,
-        étape par étape ; l’accès complet s’ouvre après validation par
-        l’équipe et règlement de la cotisation.
+        étape par étape ; l’accès complet s’ouvre après validation par l’équipe
+        et règlement de la cotisation.
       </p>
 
       <form action={creerCompte} className="flex flex-col gap-3.5">
@@ -92,7 +92,13 @@ export default async function InscriptionPage() {
         </Field>
 
         <div className="mt-3">
-          <BoutonEnvoi enCours="Création du compte…">Créer mon compte</BoutonEnvoi>
+          <BoutonEnvoi enCours="Création du compte…">
+            Créer mon compte
+          </BoutonEnvoi>
+          <EcranPassage
+            message="Création de votre compte…"
+            detail="Vous allez pouvoir présenter votre entreprise."
+          />
         </div>
       </form>
 

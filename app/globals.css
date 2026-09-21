@@ -1259,6 +1259,29 @@ h3 {
   animation: va-et-vient 1.1s ease-in-out infinite;
 }
 
+/* ---------- Écran de passage (connexion, inscription) ---------- */
+
+/* Il n'apparaît qu'après 0,4 s : un mot de passe refusé revient plus vite,
+   et l'écran ne clignote pas pour rien. Le logo respire doucement, la barre
+   avance en va-et-vient. */
+.ecran-passage {
+  animation: fondu var(--duree-entree) ease-out 400ms backwards;
+}
+.ecran-passage-logo {
+  animation: respire 1.8s ease-in-out 400ms infinite;
+}
+@keyframes respire {
+  50% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+}
+.barre-passage {
+  background: linear-gradient(90deg, #ad0707, #007140);
+  transform-origin: left;
+  animation: va-et-vient 1.1s ease-in-out infinite;
+}
+
 /* ---------- Fenêtres ---------- */
 
 /* Une fenêtre s'ouvre en grandissant à peine, le fond s'assombrit en fondu. */

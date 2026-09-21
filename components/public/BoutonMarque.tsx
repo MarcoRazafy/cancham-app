@@ -1,7 +1,8 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
+import { createPortal, useFormStatus } from "react-dom";
 import { ArrowRight, LoaderCircle } from "lucide-react";
+import { LogoOfficiel } from "@/components/public/Marque";
 
 /**
  * Bouton d'envoi aux couleurs de la charte.
@@ -58,5 +59,54 @@ export function BoutonPilule({
       ) : null}
       {pending ? enCours : children}
     </button>
+  );
+}
+
+/**
+ * Écran de passage, le temps d'entrer dans son espace.
+ *
+ * Après « Se connecter » ou « Créer mon compte », le serveur prépare
+ * l'espace — tableau de bord, notifications, messagerie — avant de
+ * l'envoyer : une à deux secondes pendant lesquelles le formulaire restait
+ * figé, seul le bouton disant qu'il se passait quelque chose. L'écran de
+ * passage prend alors toute la place : le logo, une barre qui avance, et ce
+ * qui est en train de se faire. L'espace arrive ensuite en fondu.
+ *
+ * Il n'apparaît qu'au bout de 0,4 s : un mot de passe refusé revient plus
+ * vite que ça, et l'écran ne clignote pas pour rien.
+ *
+ * À placer dans le formulaire : il suit son état d'envoi. Il est rendu
+ * directement dans `<body>` : la carte du formulaire est animée, et une
+ * transformation ferait d'elle le repère de l'écran « fixe », qui ne
+ * couvrirait plus que la carte.
+ */
+export function EcranPassage({
+  message,
+  detail,
+}: {
+  message: string;
+  detail: string;
+}) {
+  const { pending } = useFormStatus();
+  if (!pending) return null;
+  return createPortal(
+    <div
+      role="status"
+      aria-live="polite"
+      className="ecran-passage fixed inset-0 z-[300] flex flex-col items-center justify-center gap-6 bg-white px-6 text-center"
+    >
+      <LogoOfficiel className="w-[220px] h-auto ecran-passage-logo" priority />
+      <div
+        aria-hidden
+        className="relative w-[200px] h-1 rounded-full bg-line overflow-hidden"
+      >
+        <span className="barre-passage absolute inset-0 rounded-full" />
+      </div>
+      <div>
+        <p className="m-0 text-[17px] font-semibold text-ink">{message}</p>
+        <p className="m-0 mt-1 text-[14px] text-muted">{detail}</p>
+      </div>
+    </div>,
+    document.body,
   );
 }

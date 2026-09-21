@@ -8,7 +8,7 @@ import {
   ChampMotDePasse,
   Saisie,
 } from "@/components/public/CadreAuth";
-import { BoutonEnvoi } from "@/components/public/BoutonMarque";
+import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
 import { Saillant } from "@/components/ui";
 import { connexion } from "@/lib/actions/auth";
 import { utilisateurConnecte } from "@/lib/session";
@@ -91,6 +91,10 @@ export default async function ConnexionPage({
 
         <div className="mt-1">
           <BoutonEnvoi enCours="Connexion…">Se connecter</BoutonEnvoi>
+          <EcranPassage
+            message="Ouverture de votre espace…"
+            detail="Tableau de bord, messages et rendez-vous se préparent."
+          />
         </div>
       </form>
 

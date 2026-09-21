@@ -160,13 +160,19 @@ export function CadreAuth({
 
 /** Message d'erreur d'un formulaire d'identification. */
 export function Alerte({ children }: { children: React.ReactNode }) {
+  // Il apparaît, puis secoue la tête : un refus doit se voir autant qu'une
+  // réussite. Deux enveloppes, pour que les deux mouvements ne se disputent
+  // pas la même transformation.
   return (
-    <p
-      role="alert"
-      className="apparition m-0 mb-5 rounded-lg border border-accent/30 bg-accent-soft px-4 py-3 text-[13.5px] text-accent-strong"
-    >
-      {children}
-    </p>
+    <div className="apparition">
+      <p
+        role="alert"
+        className="anim-secousse m-0 mb-5 rounded-lg border border-accent/30 bg-accent-soft px-4 py-3 text-[13.5px] text-accent-strong"
+        style={{ animationDelay: "0.35s" }}
+      >
+        {children}
+      </p>
+    </div>
   );
 }
 
