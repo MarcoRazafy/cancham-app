@@ -1,7 +1,16 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
-import { Check, LogIn, Plus, Trash2, UserPlus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Check,
+  ChevronDown,
+  LogIn,
+  Plus,
+  Trash2,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -26,20 +35,31 @@ const BTN_PRIMARY = "btn-action btn-action-sm";
 
 /* ============================ Côté membre ============================ */
 
+/** Un contact de l'entreprise, que l'on peut inscrire. */
+export interface ContactInscrivable {
+  id: string;
+  nom: string;
+  fonction: string;
+}
+
 export function RegisterButton({
   event,
-  nom,
-  email,
-  tel,
+  entreprise,
+  contacts,
+  moi,
   libelle = "S’inscrire",
 }: {
   event: CanchamEvent;
-  nom: string;
-  email: string;
-  tel?: string;
+  /** Nom de l'entreprise du membre : c'est elle qui s'inscrit. */
+  entreprise: string;
+  /** Ses contacts, parmi lesquels choisir les représentants. */
+  contacts: ContactInscrivable[];
+  /** La personne connectée, choisie d'office. */
+  moi: string;
   /** Intitulé du bouton déclencheur — « M’inscrire » sur la vue d'ensemble. */
   libelle?: string;
 }) {
+  const restantes = event.cap - event.inscrits;
   return (
     <Modal
       title="Inscription à l’événement"
@@ -59,39 +79,28 @@ export function RegisterButton({
             <div>
               <div className="font-semibold text-[15px]">{event.titre}</div>
               <div className="text-[12.5px] text-muted">
-                {event.lieu} · {event.cap - event.inscrits} place
-                {event.cap - event.inscrits > 1 ? "s" : ""} restante
-                {event.cap - event.inscrits > 1 ? "s" : ""}
+                {event.lieu} · {restantes} place{restantes > 1 ? "s" : ""}{" "}
+                restante{restantes > 1 ? "s" : ""}
               </div>
             </div>
-            <Field label="Personne présente">
-              <input
-                type="text"
-                name="nom"
-                defaultValue={nom}
-                required
+            <Field label="Nom de l’entreprise">
+              {/* Une seule entreprise possible : la sienne. */}
+              <select
+                name="entreprise"
+                defaultValue={entreprise}
                 className={INPUT}
-              />
+              >
+                <option value={entreprise}>{entreprise}</option>
+              </select>
             </Field>
-            <Field label="Courriel de confirmation">
-              <input
-                type="email"
-                name="email"
-                defaultValue={email}
-                className={INPUT}
-              />
-            </Field>
-            <Field label="Téléphone">
-              <input
-                type="tel"
-                name="tel"
-                defaultValue={tel ?? ""}
-                className={INPUT}
-              />
-            </Field>
+            <ChoixRepresentants
+              contacts={contacts}
+              moi={moi}
+              restantes={restantes}
+            />
             {event.payant ? (
               <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
-                <b>Événement payant · {fmtMoney(event.prix)}</b>
+                <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
                 <br />
                 Une facture sera générée à l’inscription, réglable auprès de
                 l’équipe.
@@ -101,12 +110,134 @@ export function RegisterButton({
           <ModalFooter>
             <CancelButton onClick={fermer} />
             <SubmitButton pendingLabel="Inscription…">
-              <Check size={14} /> Confirmer mon inscription
+              <Check size={14} /> Confirmer l’inscription
             </SubmitButton>
           </ModalFooter>
         </form>
       )}
     </Modal>
+  );
+}
+
+/**
+ * « Nom du représentant » : une liste déroulante à choix multiple.
+ *
+ * Fermée, elle résume les personnes choisies ; ouverte, elle coche et
+ * décoche parmi les contacts de l'entreprise. Les cases restent dans le
+ * formulaire même panneau fermé : ce sont elles qui partent au serveur.
+ */
+function ChoixRepresentants({
+  contacts,
+  moi,
+  restantes,
+}: {
+  contacts: ContactInscrivable[];
+  moi: string;
+  restantes: number;
+}) {
+  const [ouvert, setOuvert] = useState(false);
+  const [choisis, setChoisis] = useState<string[]>(() =>
+    contacts.some((c) => c.id === moi)
+      ? [moi]
+      : contacts[0]
+        ? [contacts[0].id]
+        : [],
+  );
+  const cadre = useRef<HTMLDivElement>(null);
+
+  // Un clic ailleurs referme la liste, comme un menu déroulant.
+  useEffect(() => {
+    if (!ouvert) return;
+    const ailleurs = (e: PointerEvent) => {
+      if (!cadre.current?.contains(e.target as Node)) setOuvert(false);
+    };
+    document.addEventListener("pointerdown", ailleurs);
+    return () => document.removeEventListener("pointerdown", ailleurs);
+  }, [ouvert]);
+
+  const basculer = (id: string) =>
+    setChoisis((c) =>
+      c.includes(id) ? c.filter((x) => x !== id) : [...c, id],
+    );
+  const noms = contacts.filter((c) => choisis.includes(c.id)).map((c) => c.nom);
+  const trop = choisis.length > restantes;
+
+  return (
+    <div className="block">
+      <span
+        id="etiquette-representants"
+        className="block text-[12.8px] font-semibold text-ink mb-1.5"
+      >
+        Nom du représentant{" "}
+        <span className="font-normal text-muted">
+          (vous pouvez en choisir plusieurs)
+        </span>
+      </span>
+      <div ref={cadre} className="relative">
+        <button
+          type="button"
+          onClick={() => setOuvert((o) => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={ouvert}
+          aria-labelledby="etiquette-representants"
+          className={`${INPUT} flex items-center justify-between gap-2 text-left cursor-pointer`}
+        >
+          <span className={`truncate ${noms.length ? "" : "text-faint"}`}>
+            {noms.length ? noms.join(", ") : "Choisir parmi vos contacts…"}
+          </span>
+          <ChevronDown
+            size={16}
+            aria-hidden
+            className={`shrink-0 text-muted transition-transform ${ouvert ? "rotate-180" : ""}`}
+          />
+        </button>
+        <div
+          role="listbox"
+          aria-multiselectable="true"
+          aria-labelledby="etiquette-representants"
+          hidden={!ouvert}
+          // Dans le flux, pas en surplomb : la fenêtre qui défile la
+          // rognerait, et le dernier contact disparaîtrait sous son bord.
+          className="mt-1 max-h-[240px] overflow-y-auto rounded-[var(--radius-s)] border border-line bg-surface shadow-[0_8px_24px_-14px_rgba(15,29,44,0.35)] py-1"
+        >
+          {contacts.map((c) => (
+            <label
+              key={c.id}
+              className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-surface-2"
+            >
+              <input
+                type="checkbox"
+                name="representant"
+                value={c.id}
+                checked={choisis.includes(c.id)}
+                onChange={() => basculer(c.id)}
+                className="w-4 h-4 accent-[var(--accent)] cursor-pointer"
+              />
+              <span className="min-w-0">
+                <span className="block text-[13.4px] font-semibold text-ink truncate">
+                  {c.nom}
+                  {c.id === moi ? (
+                    <span className="font-normal text-muted"> (vous)</span>
+                  ) : null}
+                </span>
+                <span className="block text-[11.8px] text-muted truncate">
+                  {c.fonction}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <span
+        className={`block text-[11.8px] mt-1 ${trop || !choisis.length ? "text-bad" : "text-faint"}`}
+      >
+        {!choisis.length
+          ? "Choisissez au moins une personne."
+          : trop
+            ? `Il ne reste que ${restantes} place${restantes > 1 ? "s" : ""}.`
+            : `${choisis.length} personne${choisis.length > 1 ? "s" : ""} inscrite${choisis.length > 1 ? "s" : ""}, chacune avec son QR code.`}
+      </span>
+    </div>
   );
 }
 

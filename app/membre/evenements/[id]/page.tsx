@@ -27,6 +27,7 @@ import {
   getEvent,
   getEvents,
   getMember,
+  getContacts,
   getRegistration,
 } from "@/lib/queries";
 import { matriceQr } from "@/lib/qr";
@@ -45,15 +46,16 @@ export default async function EvenementDetailPage({
   const horaire = plageHoraire(e.debut, e.fin);
 
   const user = await getCurrentUser("membre");
-  const [reg, entreprises, tous] = await Promise.all([
+  const [reg, entreprises, tous, membre, contacts] = await Promise.all([
     getRegistration(e.id, user.memberId),
     getEntreprisesInscrites(e.id),
     getEvents(),
+    user.memberId ? getMember(user.memberId) : null,
+    user.memberId ? getContacts(user.memberId) : [],
   ]);
 
-  // Le billet téléchargé porte le nom de l'entreprise inscrite.
-  const entreprise =
-    reg && user.memberId ? (await getMember(user.memberId))?.nom : null;
+  // L'inscription et le billet portent le nom de l'entreprise.
+  const entreprise = membre?.nom ?? null;
 
   const past = isPast(e.date);
   const restantes = e.cap - e.inscrits;
@@ -210,25 +212,39 @@ export default async function EvenementDetailPage({
                   icon={<CheckCheck size={18} />}
                   title="Inscription confirmée"
                 >
-                  Code {reg.code}
+                  {(reg.representants ?? []).length > 1
+                    ? `${reg.representants?.length} représentants : chacun présente son QR code à l’accueil.`
+                    : `Code ${reg.code}`}
                 </Banner>
                 <div className="mt-3.5">
                   <CancelRegistrationButton eventId={e.id} />
                 </div>
-                <CodeAccueil
-                  code={reg.code}
-                  {...matriceQr(reg.code)}
-                  billet={{
-                    titre: e.titre,
-                    quand: [fmtDate(e.date), horaire]
-                      .filter(Boolean)
-                      .join(" · "),
-                    lieu: e.lieu,
-                    participant: [user.nom, entreprise]
-                      .filter(Boolean)
-                      .join(" · "),
-                  }}
-                />
+                {/* Un QR code par représentant : l'accueil pointe chacun. */}
+                {(reg.representants ?? [{ nom: "", code: reg.code }]).map(
+                  (r) => (
+                    <div key={r.code}>
+                      {(reg.representants ?? []).length > 1 ? (
+                        <div className="mt-4 -mb-1 text-[13px] font-semibold text-ink">
+                          {r.nom}
+                        </div>
+                      ) : null}
+                      <CodeAccueil
+                        code={r.code}
+                        {...matriceQr(r.code)}
+                        billet={{
+                          titre: e.titre,
+                          quand: [fmtDate(e.date), horaire]
+                            .filter(Boolean)
+                            .join(" · "),
+                          lieu: e.lieu,
+                          participant: [r.nom || user.nom, entreprise]
+                            .filter(Boolean)
+                            .join(" · "),
+                        }}
+                      />
+                    </div>
+                  ),
+                )}
               </>
             ) : (
               <>
@@ -250,9 +266,9 @@ export default async function EvenementDetailPage({
                     <RegisterButton
                       event={e}
                       libelle="S’inscrire"
-                      nom={user.nom}
-                      email={user.email}
-                      tel={user.tel}
+                      entreprise={entreprise ?? ""}
+                      contacts={contacts}
+                      moi={user.id}
                     />
                   ) : (
                     <p className="text-[13px] text-muted m-0 text-center">
