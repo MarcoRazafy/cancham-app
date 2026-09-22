@@ -214,7 +214,7 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== Événements ==================== */}
-      <section id="evenements" className="scroll-mt-24">
+      <section id="evenements" className="scroll-mt-[124px]">
         <div className="max-w-[1120px] mx-auto px-5 pt-14 pb-8">
           <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
             <div className="flex items-end justify-between gap-6 flex-wrap">
@@ -254,7 +254,7 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== Adhésion ==================== */}
-      <section id="adhesion" className="scroll-mt-24">
+      <section id="adhesion" className="scroll-mt-[124px]">
         <div className="max-w-[1120px] mx-auto px-5 pb-16">
           <div className="apparition-defilement rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
             {/* `minmax(0, 1fr)` : sans cela, la liste des formules — un menu
