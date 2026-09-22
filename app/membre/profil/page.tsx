@@ -51,12 +51,8 @@ import {
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { affichageSite } from "@/lib/liens";
-import {
-  anneesCotisationReglees,
-  fmtJour,
-  prochaineEcheanceCotisation,
-} from "@/lib/agenda";
-import { aujourdhuiISO, fmtDate, fmtDateShort } from "@/lib/format";
+import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
+import { fmtDate, fmtDateShort } from "@/lib/format";
 import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
 import {
   ADHESION_PENDING,
@@ -76,6 +72,12 @@ export default async function ProfilPage() {
   ]);
 
   const pending = ADHESION_PENDING.includes(m.statut);
+  // Un an après le dernier règlement — pas après l'inscription.
+  const renouvellement = renouvellementCotisation({
+    factures: myInvoices,
+    adhesion: m.adhesion,
+    aJour: m.statut === "a_jour",
+  });
   const blocked = retardBloque(m);
   const overdue = isOverdueWarning(m);
 
@@ -326,8 +328,15 @@ export default async function ProfilPage() {
         <Stat
           k="Adhésion"
           v={
-            <span className="text-[19px]">
-              <StatusPill status={m.statut} />
+            <span className="flex flex-col gap-1">
+              <span className="text-[19px]">
+                <StatusPill status={m.statut} />
+              </span>
+              <span className="text-[12.5px] text-muted">
+                {renouvellement
+                  ? `Renouvellement le ${fmtJour(renouvellement)}`
+                  : "Renouvellement au premier règlement"}
+              </span>
             </span>
           }
         />
@@ -340,16 +349,9 @@ export default async function ProfilPage() {
           v={
             <span className="text-[14px] font-semibold leading-snug">
               {m.paiementNote ??
-                (pending
-                  ? "Au premier règlement"
-                  : fmtJour(
-                      prochaineEcheanceCotisation({
-                        aujourdhui: aujourdhuiISO(),
-                        adhesion: m.adhesion,
-                        anneesReglees: anneesCotisationReglees(myInvoices),
-                        aJour: m.statut === "a_jour",
-                      }),
-                    ))}
+                (renouvellement
+                  ? fmtJour(renouvellement)
+                  : "Au premier règlement")}
             </span>
           }
         />

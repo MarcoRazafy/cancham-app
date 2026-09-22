@@ -10,12 +10,8 @@ import {
   Th,
   ViewHead,
 } from "@/components/ui";
-import {
-  anneesCotisationReglees,
-  fmtJour,
-  prochaineEcheanceCotisation,
-} from "@/lib/agenda";
-import { aujourdhuiISO, fmtDate, fmtDateShort } from "@/lib/format";
+import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
+import { fmtDate, fmtDateShort } from "@/lib/format";
 import {
   ADHESION_PENDING,
   FORMULES,
@@ -45,6 +41,12 @@ export default async function CotisationsPage() {
 
   const factures = await getInvoices(m.id);
   const enAttente = ADHESION_PENDING.includes(m.statut);
+  // Un an après le dernier règlement — pas après l'inscription.
+  const renouvellement = renouvellementCotisation({
+    factures,
+    adhesion: m.adhesion,
+    aJour: m.statut === "a_jour",
+  });
   const bloque = retardBloque(m);
   const enRetard = isOverdueWarning(m);
   const jours = joursDeRetard(m);
@@ -108,16 +110,9 @@ export default async function CotisationsPage() {
             <Donnee
               libelle="Prochain renouvellement"
               valeur={
-                enAttente
-                  ? "Au premier règlement"
-                  : fmtJour(
-                      prochaineEcheanceCotisation({
-                        aujourdhui: aujourdhuiISO(),
-                        adhesion: m.adhesion,
-                        anneesReglees: anneesCotisationReglees(factures),
-                        aJour: m.statut === "a_jour",
-                      }),
-                    )
+                renouvellement
+                  ? fmtJour(renouvellement)
+                  : "Au premier règlement"
               }
             />
           </div>

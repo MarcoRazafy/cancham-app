@@ -6,7 +6,7 @@ import {
   grilleMois,
   periodeVoisine,
   plageHoraire,
-  prochaineEcheanceCotisation,
+  renouvellementCotisation,
 } from "@/lib/agenda";
 import { aujourdhuiISO, jourBase, jourSaisi } from "@/lib/format";
 
@@ -60,36 +60,60 @@ describe("calendrier de l'agenda", () => {
 });
 
 describe("renouvellement de la cotisation", () => {
-  it("n'échoit pas l'année d'adhésion", () => {
+  it("tombe un an après le dernier règlement, pas après l’inscription", () => {
     expect(
-      prochaineEcheanceCotisation({
-        aujourdhui: "2026-09-21",
-        adhesion: "2026-03-10",
-        anneesReglees: [],
+      renouvellementCotisation({
+        adhesion: "2020-03-10",
         aJour: true,
+        factures: [
+          { date: "2025-09-19", objet: "Cotisation annuelle", statut: "payee" },
+          { date: "2026-09-19", objet: "Cotisation annuelle", statut: "payee" },
+          // Un événement payé entre-temps ne décale rien.
+          {
+            date: "2026-10-02",
+            objet: "Participation — 5 à 7",
+            statut: "payee",
+          },
+          // Une facture émise, pas encore réglée, non plus.
+          {
+            date: "2026-11-01",
+            objet: "Cotisation annuelle",
+            statut: "envoyee",
+          },
+        ],
       }),
-    ).toBe("2027-01-31");
+    ).toBe("2027-09-19");
   });
 
-  it("saute les années réglées", () => {
+  it("part de l’adhésion quand aucun règlement n’est enregistré", () => {
     expect(
-      prochaineEcheanceCotisation({
-        aujourdhui: "2026-01-10",
-        adhesion: "2020-05-01",
-        anneesReglees: [2026, 2027],
+      renouvellementCotisation({
+        adhesion: "2026-02-28",
         aJour: true,
+        factures: [],
       }),
-    ).toBe("2028-01-31");
+    ).toBe("2027-02-28");
   });
 
-  it("garde l'échéance passée d'un membre qui n'a pas réglé", () => {
+  it("n’annonce rien tant que la première cotisation n’est pas réglée", () => {
     expect(
-      prochaineEcheanceCotisation({
-        aujourdhui: "2026-09-21",
-        adhesion: "2020-05-01",
-        anneesReglees: [],
+      renouvellementCotisation({
+        adhesion: "2026-09-01",
         aJour: false,
+        factures: [],
       }),
-    ).toBe("2026-01-31");
+    ).toBeNull();
+  });
+
+  it("ramène un 29 février au 28", () => {
+    expect(
+      renouvellementCotisation({
+        adhesion: "2020-01-01",
+        aJour: true,
+        factures: [
+          { date: "2028-02-29", objet: "Cotisation annuelle", statut: "payee" },
+        ],
+      }),
+    ).toBe("2029-02-28");
   });
 });

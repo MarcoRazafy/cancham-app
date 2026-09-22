@@ -24,12 +24,6 @@ export const PHOTOS_PAR_PRODUIT = 5;
 /** Au-delà de ce nombre de jours de retard, l'accès est coupé automatiquement. */
 export const RETARD_BLOCAGE_JOURS = 30;
 
-/**
- * Échéance du renouvellement annuel. La cotisation suit l'année civile : les
- * factures « Cotisation annuelle » sont émises en janvier, pour tous.
- */
-export const ECHEANCE_COTISATION = { mois: 1, jour: 31 };
-
 /** Délai de règlement d'une facture émise, en jours. */
 export const DELAI_REGLEMENT_JOURS = 30;
 

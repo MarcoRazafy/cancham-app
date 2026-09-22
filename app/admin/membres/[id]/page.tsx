@@ -50,6 +50,7 @@ import {
   joursDeRetard,
   libelleFormule,
 } from "@/lib/membership";
+import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
 import { getAccesMembre } from "@/lib/acces-membres";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getHistoriqueMembre } from "@/lib/queries-admin";
@@ -71,6 +72,12 @@ export default async function AdminMembreDetail({
     getAccesMembre(m.id),
   ]);
   const candidature = m.statut === "candidature";
+  // Un an après le dernier règlement de cotisation, pas après l'inscription.
+  const renouvellement = renouvellementCotisation({
+    factures,
+    adhesion: m.adhesion,
+    aJour: m.statut === "a_jour",
+  });
   const fiche = `/admin/membres/${m.id}`;
 
   const s = situation(m);
@@ -360,6 +367,16 @@ export default async function AdminMembreDetail({
                   </dd>
                 </>
               ) : null}
+              {candidature ? null : (
+                <>
+                  <dt className="text-muted">Prochain renouvellement</dt>
+                  <dd className="m-0 text-ink text-right">
+                    {renouvellement
+                      ? fmtJour(renouvellement)
+                      : "Au premier règlement"}
+                  </dd>
+                </>
+              )}
             </dl>
 
             <div className="flex flex-col gap-2 mt-5">

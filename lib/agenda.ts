@@ -1,8 +1,4 @@
-import {
-  DELAI_REGLEMENT_JOURS,
-  ECHEANCE_COTISATION,
-  RETARD_BLOCAGE_JOURS,
-} from "@/lib/membership";
+import { DELAI_REGLEMENT_JOURS, RETARD_BLOCAGE_JOURS } from "@/lib/membership";
 
 /**
  * Agenda du membre : calendrier, heures et échéances.
@@ -78,7 +74,6 @@ export const JOURS_LISTE = 60;
 
 const versDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
 const versISO = (d: Date) => d.toISOString().slice(0, 10);
-const deux = (n: number) => String(n).padStart(2, "0");
 
 /** Vrai pour une date ISO courte qui existe (« 2026-02-30 » est refusée). */
 export function estJourISO(v: string | null | undefined): v is string {
@@ -243,57 +238,52 @@ export function plageHoraire(
 export const echeanceFacture = (dateISO: string) =>
   ajouterJours(dateISO, DELAI_REGLEMENT_JOURS);
 
-/** Échéance du renouvellement de la cotisation d'une année. */
-export const echeanceCotisation = (annee: number) =>
-  `${annee}-${deux(ECHEANCE_COTISATION.mois)}-${deux(ECHEANCE_COTISATION.jour)}`;
+/** Même jour, `n` années plus tard ; un 29 février tombe au 28. */
+export function ajouterAns(iso: string, n: number): string {
+  const [annee, mois, jour] = iso.split("-").map(Number);
+  const d = new Date(Date.UTC(annee + n, mois - 1, jour));
+  // Le 29 février reporté sur une année commune glisse au 1er mars : on le
+  // ramène au dernier jour de février.
+  if (d.getUTCMonth() !== mois - 1) d.setUTCDate(0);
+  return d.toISOString().slice(0, 10);
+}
 
 /** Une facture de cotisation, reconnue à son objet — comme au règlement. */
 export const estFactureCotisation = (objet: string) =>
   /^cotisation/i.test(objet);
 
-/** Années dont la cotisation est réglée, d'après les factures payées. */
-export function anneesCotisationReglees(
+/** Date du dernier règlement de cotisation, d'après les factures payées. */
+export function dernierReglementCotisation(
   factures: { date: string; objet: string; statut: string }[],
-): number[] {
-  return [
-    ...new Set(
-      factures
-        .filter((f) => f.statut === "payee" && estFactureCotisation(f.objet))
-        .map((f) => Number(f.date.slice(0, 4))),
-    ),
-  ];
+): string | null {
+  const dates = factures
+    .filter((f) => f.statut === "payee" && estFactureCotisation(f.objet))
+    .map((f) => f.date)
+    .sort();
+  return dates.at(-1) ?? null;
 }
 
 /**
- * Prochain renouvellement : l'échéance de la première année qui n'est pas
- * réglée, sans remonter avant l'année qui suit l'adhésion — la cotisation
- * versée en adhérant couvre l'année d'entrée.
+ * Prochain renouvellement : un an jour pour jour après le dernier règlement
+ * de la cotisation. C'est lui qui ouvre l'année d'adhésion, pas la date
+ * d'inscription — un membre qui règle en mars renouvelle en mars.
  *
- * Une échéance passée d'un membre à jour compte comme réglée, même sans
- * facture enregistrée : le statut fait foi.
+ * Sans règlement enregistré, un an après l'adhésion pour un membre à jour —
+ * une adhésion reprise d'avant la plateforme. Rien à annoncer tant que la
+ * première cotisation n'est pas réglée : `null`.
  */
-export function prochaineEcheanceCotisation({
-  aujourdhui,
+export function renouvellementCotisation({
+  factures,
   adhesion,
-  anneesReglees,
   aJour,
 }: {
-  aujourdhui: string;
-  adhesion: string;
-  anneesReglees: number[];
+  factures: { date: string; objet: string; statut: string }[];
+  adhesion?: string | null;
   aJour: boolean;
-}): string {
-  let annee = Math.max(
-    Number(aujourdhui.slice(0, 4)),
-    Number(adhesion.slice(0, 4)) + 1,
-  );
-  while (
-    anneesReglees.includes(annee) ||
-    (aJour && echeanceCotisation(annee) < aujourdhui)
-  ) {
-    annee++;
-  }
-  return echeanceCotisation(annee);
+}): string | null {
+  const dernier = dernierReglementCotisation(factures);
+  if (dernier) return ajouterAns(dernier, 1);
+  return aJour && adhesion ? ajouterAns(adhesion, 1) : null;
 }
 
 /**
