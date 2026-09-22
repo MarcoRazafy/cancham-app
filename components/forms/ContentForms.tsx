@@ -51,10 +51,12 @@ export function DownloadResourceButton({
   payant: boolean;
   video: boolean;
 }) {
-  if (!payant) {
+  // Dans le back-office, l'équipe ouvre aussi les ressources payantes : elle
+  // n'a rien à acheter de ce qu'elle publie.
+  if (!payant || space === "admin") {
     return (
       <Link
-        href={`/membre/ressources/${resourceId}`}
+        href={`/${space}/ressources/${resourceId}`}
         className="w-full inline-flex items-center justify-center gap-[7px] rounded-[var(--radius-s)] font-semibold border border-line bg-transparent text-ink no-underline hover:border-faint hover:bg-surface-2 text-[12.4px] px-[11px] py-1.5"
       >
         {video ? <PlayCircle size={13} /> : <BookOpen size={13} />}

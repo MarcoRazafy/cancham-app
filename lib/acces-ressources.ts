@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { isAccessLocked } from "@/lib/membership";
 import { getMember } from "@/lib/queries";
-import { getCurrentUser } from "@/lib/session";
+import { utilisateurConnecte } from "@/lib/session";
 
 /**
  * Qui peut lire une ressource, et à quelles conditions.
@@ -12,6 +12,9 @@ import { getCurrentUser } from "@/lib/session";
  * routes de `/api` échappent au verrou de `proxy.ts`, qui ne surveille que
  * `/membre`. Sans cette vérification, il suffirait de connaître l'URL d'une
  * page pour la récupérer, adhésion à jour ou non.
+ *
+ * L'équipe lit tout, gratuit comme payant : la bibliothèque est la sienne, et
+ * elle doit pouvoir relire ce qu'elle publie avant les membres.
  */
 export type Acces =
   | {
@@ -26,14 +29,18 @@ export type Acces =
   | { ok: false; statut: 403 | 404; message: string };
 
 export async function verifierAcces(id: string): Promise<Acces> {
-  const user = await getCurrentUser("membre");
-  const membre = user.memberId ? await getMember(user.memberId) : null;
-  if (!membre || isAccessLocked(membre)) {
-    return {
-      ok: false,
-      statut: 403,
-      message: "Accès réservé aux membres à jour de cotisation.",
-    };
+  const user = await utilisateurConnecte();
+  const equipe = user?.role === "admin";
+  const refus: Acces = {
+    ok: false,
+    statut: 403,
+    message: "Accès réservé aux membres à jour de cotisation.",
+  };
+  if (!user) return refus;
+
+  if (!equipe) {
+    const membre = user.memberId ? await getMember(user.memberId) : null;
+    if (!membre || isAccessLocked(membre)) return refus;
   }
 
   const r = await prisma.resource.findUnique({
@@ -46,7 +53,7 @@ export async function verifierAcces(id: string): Promise<Acces> {
 
   // Le paiement en ligne n'est pas branché : une ressource payante ne se lit
   // pas tant qu'un achat ne peut pas être constaté.
-  if (r.type === "payant") {
+  if (r.type === "payant" && !equipe) {
     return {
       ok: false,
       statut: 403,
