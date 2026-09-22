@@ -296,6 +296,9 @@ export function PuceSecteur({
   );
 }
 
+/** Cases de la rangée de produits d'une carte de l'annuaire. */
+const VIGNETTES_PAR_CARTE = 4;
+
 export function MemberCard({ member, href }: { member: Member; href: string }) {
   // Trois fonds sobres : le bleu marine sur bleu marine du jeu précédent
   // rendait le libellé illisible sur fond sombre.
@@ -307,6 +310,14 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   // Le carré n'a de sens que pour montrer une photo de produit. Sans photo,
   // il laissait un grand vide autour d'un libellé de deux mots.
   const avecPhotos = member.produits.some((p) => p.photos.length > 0);
+  // Des cases de taille fixe, les mêmes d'une carte à l'autre : partager la
+  // largeur entre les produits donnait de grandes vignettes à qui en a trois
+  // et des timbres-poste à qui en a cinq. Au-delà, la dernière case dit
+  // combien il en reste.
+  const vignettes = avecPhotos
+    ? member.produits.slice(0, VIGNETTES_PAR_CARTE)
+    : member.produits;
+  const reste = member.produits.length - vignettes.length;
   return (
     // `min-w-0` : dans une grille, une carte n'impose jamais sa largeur à la
     // colonne — sur téléphone, elle déborderait de l'écran.
@@ -352,15 +363,15 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
         </p>
         <div
           className={`px-4 pt-3 pb-4 ${
-            avecPhotos ? "flex gap-1.5" : "flex gap-1.5 flex-wrap"
+            avecPhotos ? "grid grid-cols-4 gap-1.5" : "flex gap-1.5 flex-wrap"
           }`}
         >
-          {member.produits.map((prod: Produit, i) => (
+          {vignettes.map((prod: Produit, i) => (
             <div
               key={prod.label}
               className={
                 avecPhotos
-                  ? `flex-1 min-w-0 aspect-square rounded-lg overflow-hidden flex items-center justify-center text-[10px] font-semibold text-center px-1 ${swatches[i % 3]}`
+                  ? `relative min-w-0 aspect-square rounded-lg overflow-hidden flex items-center justify-center text-[10px] font-semibold text-center px-1 ${swatches[i % 3]}`
                   : `rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${swatches[i % 3]}`
               }
             >
@@ -370,11 +381,16 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
                   alt={prod.label}
                   width={200}
                   height={200}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (
                 prod.label
               )}
+              {reste > 0 && i === vignettes.length - 1 ? (
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-[14px] font-bold">
+                  +{reste + 1}
+                </span>
+              ) : null}
             </div>
           ))}
         </div>
