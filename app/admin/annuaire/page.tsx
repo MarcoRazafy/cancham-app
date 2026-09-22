@@ -8,5 +8,5 @@ export default function Page({
 }: {
   searchParams: Promise<ParametresAnnuaire>;
 }) {
-  return <AnnuairePage espace="membre" searchParams={searchParams} />;
+  return <AnnuairePage espace="admin" searchParams={searchParams} />;
 }

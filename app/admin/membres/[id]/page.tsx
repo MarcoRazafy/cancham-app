@@ -185,7 +185,7 @@ export default async function AdminMembreDetail({
             />
             {dansAnnuaire ? (
               <div className="mt-5">
-                <LienFleche href={`/membre/annuaire/${m.id}`}>
+                <LienFleche href={`/admin/annuaire/${m.id}`}>
                   Voir la fiche telle que la voient les membres
                 </LienFleche>
               </div>
@@ -508,7 +508,7 @@ export default async function AdminMembreDetail({
 
           {dansAnnuaire ? (
             <Link
-              href={`/membre/annuaire/${m.id}`}
+              href={`/admin/annuaire/${m.id}`}
               className="inline-flex items-center justify-center gap-1.5 text-[12.8px] font-semibold text-muted no-underline hover:text-accent"
             >
               Fiche publique dans l’annuaire <ExternalLink size={13} />
