@@ -17,7 +17,7 @@ export function FormulaireProfilEquipe({ user }: { user: User }) {
           retirer="retirerPhoto"
           apercu={user.photo}
           libelle="Photo de profil"
-          aide="Un portrait cadré sur le visage. JPEG, PNG ou WebP, 8 Mo au plus."
+          aide="Un portrait cadré sur le visage. JPEG, PNG ou WebP."
           rond
         />
         <div className="grid gap-4 sm:grid-cols-2">

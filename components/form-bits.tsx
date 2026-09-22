@@ -159,7 +159,7 @@ export function ChampPhoto({
   retirer,
   apercu,
   libelle = "Photo",
-  aide = "JPEG, PNG ou WebP, 8 Mo au plus. Elle est redimensionnée à l’envoi.",
+  aide = "JPEG, PNG ou WebP. Elle est redimensionnée à l’envoi.",
   ratio = "aspect-[16/9]",
   rond = false,
 }: {

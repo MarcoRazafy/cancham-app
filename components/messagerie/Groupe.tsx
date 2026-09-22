@@ -70,7 +70,7 @@ export function NouveauGroupe({
             </Field>
             <Field
               label="Photo du groupe"
-              hint="Facultative. Une image de 8 Mo au plus ; sans photo, le groupe prend ses initiales."
+              hint="Facultative ; sans photo, le groupe prend ses initiales."
             >
               <input
                 type="file"
