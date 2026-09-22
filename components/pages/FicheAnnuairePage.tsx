@@ -5,7 +5,6 @@ import {
   Building2,
   Settings2,
   Globe,
-  MapPin,
   User as UserIcon,
 } from "lucide-react";
 import {
@@ -20,7 +19,7 @@ import { TexteLie } from "@/components/TexteLie";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
-import { BtnLink, Card, Pill, StatusPill } from "@/components/ui";
+import { BtnLink, Card, Pill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
@@ -84,12 +83,7 @@ export async function FicheAnnuairePage({
               </Partage>
               <div>
                 <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
-                <div className="flex gap-1.5 flex-wrap items-center">
-                  <PuceSecteur secteur={m.secteur} grand />
-                  <span className="inline-flex items-center gap-1 text-muted text-[13.4px]">
-                    <MapPin size={13} /> {m.ville}
-                  </span>
-                </div>
+                <PuceSecteur secteur={m.secteur} grand />
                 {m.siteweb ? (
                   <a
                     href={m.siteweb}
@@ -102,7 +96,6 @@ export async function FicheAnnuairePage({
                   </a>
                 ) : null}
                 <div className="flex gap-1.5 flex-wrap pt-2.5">
-                  <StatusPill status={m.statut} />
                   {m.type === "physique" ? (
                     <Pill icon={<UserIcon size={10} />}>
                       Indépendant · personne physique
