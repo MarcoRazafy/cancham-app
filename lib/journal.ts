@@ -129,6 +129,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "adhesion",
     ton: "info",
   },
+  compte_supprime: {
+    libelle: "Compte supprimé par son titulaire",
+    famille: "adhesion",
+    ton: "bad",
+  },
   acces_envoye: {
     libelle: "Accès envoyé",
     famille: "adhesion",

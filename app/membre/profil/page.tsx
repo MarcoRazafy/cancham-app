@@ -32,6 +32,7 @@ import {
   EditProfileButton,
   RemoveContactButton,
 } from "@/components/forms/MemberForms";
+import { SupprimerMonCompteButton } from "@/components/forms/CompteForms";
 import { PROVISOIRE, saisi } from "@/lib/accueil";
 import {
   Banner,
@@ -391,6 +392,25 @@ export default async function ProfilPage() {
           )}
         </tbody>
       </TableWrap>
+
+      <SectionTitle>Mon compte</SectionTitle>
+      <Card className="p-5 border-dashed mb-[22px]">
+        <div className="surtitre text-faint mb-2">Zone sensible</div>
+        <p className="m-0 mb-3 text-[12.5px] text-muted max-w-[70ch]">
+          La suppression retire votre compte personnel et votre accès. La fiche
+          de votre entreprise, ses factures et ses inscriptions restent : votre
+          entreprise garde son adhésion. Le seul contact d’une entreprise ne
+          peut pas partir sans laisser quelqu’un pour la joindre.
+        </p>
+        <div className="max-w-[280px]">
+          <SupprimerMonCompteButton
+            espace="membre"
+            nom={user.nom}
+            email={user.email}
+            entreprise={m.nom}
+          />
+        </div>
+      </Card>
 
       <p className="text-[11.5px] text-faint mt-4 flex items-center gap-1.5">
         <CreditCard size={12} />

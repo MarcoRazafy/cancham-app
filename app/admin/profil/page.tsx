@@ -1,4 +1,5 @@
 import { EnTeteAdmin } from "@/components/admin/ui";
+import { SupprimerMonCompteButton } from "@/components/forms/CompteForms";
 import {
   FormulaireMotDePasse,
   FormulaireProfilEquipe,
@@ -29,6 +30,20 @@ export default async function MonProfil() {
         <div className="flex flex-col gap-4 min-w-0">
           <FormulaireProfilEquipe user={user} />
           <FormulaireMotDePasse email={user.email} minimum={MOT_DE_PASSE_MIN} />
+
+          <Card className="p-5 border-dashed">
+            <div className="surtitre text-faint mb-2">Zone sensible</div>
+            <p className="m-0 mb-3 text-[12.5px] text-muted">
+              La suppression retire votre compte et votre accès au back-office.
+              Vos actions restent au journal, à votre nom. Le dernier
+              administrateur ne peut pas partir sans successeur.
+            </p>
+            <SupprimerMonCompteButton
+              espace="admin"
+              nom={user.nom}
+              email={user.email}
+            />
+          </Card>
         </div>
 
         <Card className="carte-filet filet-fixe filet-degrade p-6">

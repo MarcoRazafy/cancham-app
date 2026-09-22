@@ -62,6 +62,7 @@ const ICONES: Record<string, LucideIcon> = {
   ressource_achetee: ShoppingBag,
   acces_active: KeyRound,
   acces_envoye: KeyRound,
+  compte_supprime: UserMinus,
   mot_de_passe_reinitialise: KeySquare,
   equipe_ajoutee: ShieldPlus,
   mot_de_passe_modifie: KeyRound,
