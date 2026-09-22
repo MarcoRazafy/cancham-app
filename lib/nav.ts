@@ -72,7 +72,6 @@ export const NAV_ADMIN: NavGroup[] = [
     items: [
       { href: "/admin/membres", label: "Membres", icon: "users" },
       { href: "/admin/annuaire", label: "Annuaire", icon: "annuaire" },
-      { href: "/admin/paiements", label: "Paiements & factures", icon: "card" },
     ],
   },
   {
@@ -92,6 +91,12 @@ export const NAV_ADMIN: NavGroup[] = [
   {
     label: "Échanges",
     items: [{ href: "/admin/messagerie", label: "Messagerie", icon: "chat" }],
+  },
+  {
+    label: "Compta",
+    items: [
+      { href: "/admin/paiements", label: "Paiements & factures", icon: "card" },
+    ],
   },
 ];
 
