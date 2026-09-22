@@ -19,6 +19,7 @@ import {
 import { PROVISOIRE } from "@/lib/accueil";
 import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
 import { prisma } from "@/lib/db";
+import { nomFacture } from "@/lib/factures";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
 import { critereJoignable } from "@/lib/messagerie";
 import {
@@ -468,7 +469,7 @@ export async function getInvoices(memberId?: string): Promise<Invoice[]> {
     devise: f.devise,
     statut: f.statut,
     membreId: f.memberId,
-    membre: f.member.nom,
+    membre: nomFacture(f),
   }));
 }
 
@@ -728,6 +729,7 @@ export async function getAgendaEquipe(
         objet: true,
         montant: true,
         devise: true,
+        destinataireNom: true,
         member: { select: { nom: true } },
       },
     }),
@@ -762,7 +764,7 @@ export async function getAgendaEquipe(
     elements.push({
       id: `facture-${f.id}`,
       type: "echeance",
-      titre: `Facture ${f.numero} · ${f.member.nom}`,
+      titre: `Facture ${f.numero} · ${nomFacture(f)}`,
       jour,
       debut: null,
       fin: null,
@@ -1090,6 +1092,7 @@ export async function rechercher(
                 { numero: like },
                 { objet: like },
                 { member: { nom: like } },
+                { destinataireNom: like },
               ],
             },
             select: {
@@ -1097,6 +1100,7 @@ export async function rechercher(
               numero: true,
               objet: true,
               statut: true,
+              destinataireNom: true,
               member: { select: { nom: true } },
             },
             take: 8,
@@ -1148,7 +1152,7 @@ export async function rechercher(
     ...factures.map((f) => ({
       type: "facture" as const,
       id: f.id,
-      titre: `${f.numero} · ${f.member.nom}`,
+      titre: `${f.numero} · ${nomFacture(f)}`,
       detail: `${f.objet} · ${f.statut === "payee" ? "payée" : "à régler"}`,
       href: `/admin/paiements/${f.id}`,
     })),
@@ -1260,6 +1264,7 @@ export async function getContacts(memberId: string): Promise<Contact[]> {
     tel: u.tel,
     photo: u.photo,
     principal: u.contactPrincipal,
+    invitationEnAttente: !u.motDePasse,
   }));
 }
 

@@ -84,6 +84,8 @@ export async function getCurrentUser(space: Space): Promise<User> {
   return {
     id: u.id,
     role: u.role,
+    // Un compte d'équipe sans niveau enregistré n'a que les droits du manager.
+    niveauEquipe: u.role === "admin" ? (u.niveauEquipe ?? "manager") : null,
     space,
     memberId: u.memberId,
     nom: u.nom,

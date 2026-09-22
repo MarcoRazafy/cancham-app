@@ -250,12 +250,22 @@ export default async function AdminPaiements({
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <Link
-                        href={`/admin/membres/${f.membreId}`}
-                        className="text-ink font-medium no-underline hover:text-accent"
-                      >
-                        {f.membre}
-                      </Link>
+                      {f.membreId ? (
+                        <Link
+                          href={`/admin/membres/${f.membreId}`}
+                          className="text-ink font-medium no-underline hover:text-accent"
+                        >
+                          {f.membre}
+                        </Link>
+                      ) : (
+                        <span className="text-ink font-medium">
+                          {f.membre}
+                          <span className="font-normal text-faint">
+                            {" "}
+                            · supprimé
+                          </span>
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-muted">{f.objet}</td>
                     <td className="px-5 py-3.5 text-right font-semibold tabular-nums whitespace-nowrap">
@@ -291,6 +301,12 @@ export default async function AdminPaiements({
                       <span className="min-w-0">
                         <span className="block font-semibold text-[14.5px] text-ink truncate">
                           {f.membre}
+                          {f.membreId ? null : (
+                            <span className="font-normal text-faint">
+                              {" "}
+                              · supprimé
+                            </span>
+                          )}
                         </span>
                         <span className="block text-[12.5px] text-muted">
                           {f.objet}

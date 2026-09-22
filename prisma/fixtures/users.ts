@@ -20,6 +20,7 @@ export const USERS: Record<Space, User> = {
   public: {
     id: "u-visiteur",
     role: "visiteur",
+    niveauEquipe: null,
     space: "public",
     memberId: "m10",
     nom: "Hasina Rakotoarisoa",
@@ -35,6 +36,7 @@ export const USERS: Record<Space, User> = {
   membre: {
     id: "u-membre",
     role: "membre",
+    niveauEquipe: null,
     space: "membre",
     memberId: "m1",
     nom: "Voninkazo Andriamampianina",
@@ -50,6 +52,7 @@ export const USERS: Record<Space, User> = {
   admin: {
     id: "u-admin",
     role: "admin",
+    niveauEquipe: "administrateur",
     space: "admin",
     memberId: null,
     nom: "Ando Ratovomanana",

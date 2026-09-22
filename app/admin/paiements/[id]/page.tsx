@@ -26,12 +26,18 @@ export default async function FactureAdmin({
           <ArrowLeft size={14} /> Toutes les factures
         </Link>
         <div className="flex items-center gap-2.5 flex-wrap">
-          <Link
-            href={`/admin/membres/${f.membreId}`}
-            className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
-          >
-            Fiche du membre <ExternalLink size={13} />
-          </Link>
+          {f.membreId ? (
+            <Link
+              href={`/admin/membres/${f.membreId}`}
+              className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
+            >
+              Fiche du membre <ExternalLink size={13} />
+            </Link>
+          ) : (
+            <span className="text-[12.5px] text-muted">
+              Membre supprimé · facture conservée
+            </span>
+          )}
           {f.statut === "envoyee" ? (
             <MarquerPayeeButton
               factureId={f.id}

@@ -5,6 +5,7 @@ import { RESOURCE_CAT_LABEL } from "@/lib/enums";
 import { jourBase } from "@/lib/format";
 import { codesDeFamille, type FamilleJournal } from "@/lib/journal";
 import type { Devise, FormuleId } from "@/lib/membership";
+import type { NiveauEquipe } from "@/lib/types";
 
 /**
  * Lectures propres au back-office : journal des opérations, tableaux de bord
@@ -277,6 +278,8 @@ export interface CompteEquipe {
   depuis: string;
   /** Compte jamais utilisé : le mot de passe n'a pas encore été défini. */
   sansMotDePasse: boolean;
+  /** Sans niveau enregistré, un compte d'équipe n'a que les droits du manager. */
+  niveau: NiveauEquipe;
 }
 
 /** L'équipe CanCham : les comptes qui ouvrent le back-office. */
@@ -293,6 +296,7 @@ export async function getAdministrateurs(): Promise<CompteEquipe[]> {
       photo: true,
       createdAt: true,
       motDePasse: true,
+      niveauEquipe: true,
     },
   });
   return rows.map((u) => ({
@@ -304,10 +308,11 @@ export async function getAdministrateurs(): Promise<CompteEquipe[]> {
     photo: u.photo,
     depuis: u.createdAt.toISOString().slice(0, 10),
     sansMotDePasse: !u.motDePasse,
+    niveau: u.niveauEquipe ?? "manager",
   }));
 }
 
-export interface CompteMembre extends CompteEquipe {
+export interface CompteMembre extends Omit<CompteEquipe, "niveau"> {
   /** L'entreprise à laquelle le compte est rattaché. */
   membre: {
     id: string;

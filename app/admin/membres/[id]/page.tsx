@@ -27,6 +27,7 @@ import {
   RegisterPaymentButton,
   RejectButton,
   ReminderButton,
+  RenvoyerInvitationButton,
 } from "@/components/forms/MemberForms";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { TexteLie } from "@/components/TexteLie";
@@ -198,6 +199,17 @@ export default async function AdminMembreDetail({
                 contacts={contacts}
                 titre={m.type === "physique" ? "Contact" : "Contacts"}
                 intro="Les personnes déclarées par le membre. Le contact principal est joint en premier."
+                piedContact={(c) =>
+                  c.invitationEnAttente ? (
+                    <div className="mt-2.5 flex flex-col items-start gap-1.5">
+                      <Pill tone="warn">Jamais connecté</Pill>
+                      <RenvoyerInvitationButton
+                        contactId={c.id}
+                        retour={`/admin/membres/${m.id}`}
+                      />
+                    </div>
+                  ) : null
+                }
               />
             ) : (
               <div className="pt-5">
@@ -376,7 +388,7 @@ export default async function AdminMembreDetail({
             <div className="surtitre text-faint mb-2">Zone sensible</div>
             <p className="m-0 mb-3 text-[12.5px] text-muted">
               La suppression retire le membre, ses contacts et ses inscriptions.
-              Elle est refusée tant qu’il a des factures.
+              Ses factures restent dans les paiements, à son nom.
             </p>
             <DeleteMemberButton memberId={m.id} nom={m.nom} />
           </Card>

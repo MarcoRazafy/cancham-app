@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { nomDepuisCourriel } from "@/lib/accueil";
 import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
+import { exigerAdministrateur } from "@/lib/autorisations";
 import { prisma } from "@/lib/db";
+import { NIVEAU_EQUIPE_LABEL } from "@/lib/enums";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { courrielCompteEquipe } from "@/lib/modeles-courriels";
 import { hacher, motDePasseProvisoire } from "@/lib/mots-de-passe";
 import { getCurrentUser } from "@/lib/session";
+import type { NiveauEquipe } from "@/lib/types";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -76,16 +79,27 @@ export async function modifierProfilEquipe(formData: FormData) {
 /**
  * Qui tient le back-office.
  *
- * Seule l'équipe ouvre un compte d'équipe : une adresse et une fonction, et
- * un e-mail part avec l'identifiant et un mot de passe provisoire. Un compte
- * existant peut aussi être promu, et l'accès retiré à quelqu'un qui quitte
- * la chambre.
+ * Deux niveaux : l'administrateur a le contrôle total ; le manager a tout,
+ * sauf la gestion de l'équipe elle-même. Seul un administrateur ouvre un
+ * compte d'équipe — une adresse, une fonction, un niveau, et un e-mail part
+ * avec l'identifiant et un mot de passe provisoire —, promeut un compte
+ * existant, change un niveau ou retire un accès.
  *
- * Deux garde-fous : on ne se retire pas soi-même, et la plateforme garde au
- * moins un administrateur.
+ * Deux garde-fous : on ne touche pas à son propre accès, et la plateforme
+ * garde au moins un administrateur.
  */
 
 const EQUIPE = "/admin/equipe";
+
+/** Le niveau choisi dans le formulaire. À défaut, le moins étendu. */
+function niveauSaisi(fd: FormData): NiveauEquipe {
+  return texte(fd, "niveau") === "administrateur"
+    ? "administrateur"
+    : "manager";
+}
+
+/** « administrateur », « manager » : le niveau dans une phrase. */
+const enClair = (n: NiveauEquipe) => NIVEAU_EQUIPE_LABEL[n].toLowerCase();
 
 async function journal(
   action: string,
@@ -108,9 +122,10 @@ async function journal(
  * est créé et le message écrit dans le journal du serveur.
  */
 export async function creerCompteEquipe(formData: FormData) {
-  const acteur = await getCurrentUser("admin");
+  const acteur = await exigerAdministrateur(EQUIPE);
   const email = texte(formData, "email").toLowerCase();
   const fonction = texte(formData, "fonction").slice(0, 80);
+  const niveau = niveauSaisi(formData);
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     redirectWithErreur(EQUIPE, "Indiquez une adresse e-mail valide.");
@@ -133,6 +148,7 @@ export async function creerCompteEquipe(formData: FormData) {
   const compte = await prisma.user.create({
     data: {
       role: "admin",
+      niveauEquipe: niveau,
       nom: nomDepuisCourriel(email),
       fonction,
       email,
@@ -144,6 +160,7 @@ export async function creerCompteEquipe(formData: FormData) {
   const envoye = await envoyerCourriel(
     courrielCompteEquipe(email, {
       fonction,
+      niveau: enClair(niveau),
       motDePasse,
       lien: await urlPublique(`/auth?${new URLSearchParams({ email })}`),
     }),
@@ -160,21 +177,22 @@ export async function creerCompteEquipe(formData: FormData) {
     "equipe_ajoutee",
     compte.id,
     acteur.nom,
-    `Compte d’équipe ouvert pour ${email} (${fonction}).`,
+    `Compte d’équipe ouvert pour ${email} (${fonction}) · ${enClair(niveau)}.`,
   );
   revalidatePath("/", "layout");
   redirectWithFlash(
     EQUIPE,
     envoye
-      ? `Compte créé · identifiants envoyés à ${email}`
-      : `Compte créé · e-mails non configurés : identifiants écrits dans le journal du serveur`,
+      ? `Compte ${enClair(niveau)} créé · identifiants envoyés à ${email}`
+      : `Compte ${enClair(niveau)} créé · e-mails non configurés : identifiants écrits dans le journal du serveur`,
   );
 }
 
-/** Promotion d'un compte en administrateur. */
+/** Entrée d'un compte existant dans l'équipe, au niveau choisi. */
 export async function promouvoirAdmin(formData: FormData) {
-  const acteur = await getCurrentUser("admin");
+  const acteur = await exigerAdministrateur(EQUIPE);
   const userId = texte(formData, "userId");
+  const niveau = niveauSaisi(formData);
 
   const u = await prisma.user.findUnique({
     where: { id: userId },
@@ -203,7 +221,7 @@ export async function promouvoirAdmin(formData: FormData) {
   });
   if (!u) redirectWithErreur(EQUIPE, "Compte introuvable.");
   if (u.role === "admin") {
-    redirectWithErreur(EQUIPE, `${u.nom} est déjà administrateur.`);
+    redirectWithErreur(EQUIPE, `${u.nom} fait déjà partie de l’équipe.`);
   }
 
   // La fiche d'entreprise créée à l'inscription n'a plus lieu d'être quand
@@ -223,6 +241,7 @@ export async function promouvoirAdmin(formData: FormData) {
     where: { id: userId },
     data: {
       role: "admin",
+      niveauEquipe: niveau,
       contactPrincipal: false,
       ...(supprimer ? { memberId: null } : {}),
     },
@@ -235,14 +254,14 @@ export async function promouvoirAdmin(formData: FormData) {
     "admin_promu",
     userId,
     acteur.nom,
-    `${u.nom} (${u.email})${
+    `${u.nom} (${u.email}) · ${enClair(niveau)}${
       supprimer && fiche ? ` · fiche « ${fiche.nom} » supprimée` : ""
     }.`,
   );
   revalidatePath("/", "layout");
   redirectWithFlash(
     EQUIPE,
-    `${u.nom} est désormais administrateur${
+    `${u.nom} rejoint l’équipe en tant que ${enClair(niveau)}${
       supprimer ? " · sa fiche de candidature a été supprimée" : ""
     }`,
   );
@@ -254,7 +273,7 @@ export async function promouvoirAdmin(formData: FormData) {
  * supprimés : leurs messages et leurs traces au journal restent lisibles.
  */
 export async function retirerAdmin(formData: FormData) {
-  const acteur = await getCurrentUser("admin");
+  const acteur = await exigerAdministrateur(EQUIPE);
   const userId = texte(formData, "userId");
 
   if (userId === acteur.id) {
@@ -269,19 +288,14 @@ export async function retirerAdmin(formData: FormData) {
     select: { id: true, nom: true, email: true, role: true, memberId: true },
   });
   if (!u || u.role !== "admin") {
-    redirectWithErreur(EQUIPE, "Ce compte n’est pas administrateur.");
-  }
-
-  const restants = await prisma.user.count({ where: { role: "admin" } });
-  if (restants <= 1) {
-    redirectWithErreur(
-      EQUIPE,
-      "Il faut au moins un administrateur : promouvez quelqu’un d’abord.",
-    );
+    redirectWithErreur(EQUIPE, "Ce compte ne fait pas partie de l’équipe.");
   }
 
   const role = u.memberId ? ("membre" as const) : ("visiteur" as const);
-  await prisma.user.update({ where: { id: userId }, data: { role } });
+  await prisma.user.update({
+    where: { id: userId },
+    data: { role, niveauEquipe: null },
+  });
 
   await journal(
     "admin_retire",
@@ -294,10 +308,51 @@ export async function retirerAdmin(formData: FormData) {
   revalidatePath("/", "layout");
   redirectWithFlash(
     EQUIPE,
-    `${u.nom} n’est plus administrateur${
+    `${u.nom} ne fait plus partie de l’équipe${
       role === "membre"
         ? " · son compte membre reste actif"
         : " · son compte n’a plus accès à la plateforme"
     }`,
   );
+}
+
+/**
+ * Passage d'administrateur à manager, ou l'inverse. On ne change pas son
+ * propre niveau : un administrateur qui se rétrograderait par erreur ne
+ * pourrait plus revenir en arrière seul.
+ */
+export async function changerNiveauEquipe(formData: FormData) {
+  const acteur = await exigerAdministrateur(EQUIPE);
+  const userId = texte(formData, "userId");
+  const niveau = niveauSaisi(formData);
+
+  if (userId === acteur.id) {
+    redirectWithErreur(
+      EQUIPE,
+      "Vous ne pouvez pas changer votre propre niveau : demandez-le à un autre administrateur.",
+    );
+  }
+  const u = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { nom: true, email: true, role: true, niveauEquipe: true },
+  });
+  if (!u || u.role !== "admin") {
+    redirectWithErreur(EQUIPE, "Ce compte ne fait pas partie de l’équipe.");
+  }
+  if ((u.niveauEquipe ?? "manager") === niveau) {
+    redirectWithFlash(EQUIPE, `${u.nom} est déjà ${enClair(niveau)}`);
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { niveauEquipe: niveau },
+  });
+  await journal(
+    "niveau_equipe_modifie",
+    userId,
+    acteur.nom,
+    `${u.nom} (${u.email}) · désormais ${enClair(niveau)}.`,
+  );
+  revalidatePath("/", "layout");
+  redirectWithFlash(EQUIPE, `${u.nom} est désormais ${enClair(niveau)}`);
 }

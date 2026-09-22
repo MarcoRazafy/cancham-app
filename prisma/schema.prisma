@@ -38,6 +38,14 @@ enum UserRole {
   admin
 }
 
+/// Ce qu'une personne de l'équipe peut faire dans le back-office.
+enum NiveauEquipe {
+  /// Tout, y compris ouvrir et retirer les accès de l'équipe.
+  administrateur
+  /// Tout, sauf la gestion de l'équipe elle-même.
+  manager
+}
+
 enum EventFormat {
   presentiel @map("Présentiel")
   webinaire  @map("Webinaire")
@@ -174,14 +182,17 @@ model Member {
 }
 
 model User {
-  id       String   @id @default(cuid())
-  role     UserRole @default(membre)
-  nom      String
-  fonction String
-  email    String   @unique
-  tel      String?
+  id           String        @id @default(cuid())
+  role         UserRole      @default(membre)
+  /// Pour l'équipe (`role = admin`) : administrateur ou manager. `null` hors
+  /// de l'équipe — et, par prudence, lu comme « manager ».
+  niveauEquipe NiveauEquipe?
+  nom          String
+  fonction     String
+  email        String        @unique
+  tel          String?
   /// Portrait de l'utilisateur, par URL. `null` = initiales.
-  photo    String?
+  photo        String?
 
   /// Empreinte du mot de passe (scrypt), jamais le mot de passe lui-même.
   /// `null` pour un compte créé par l'équipe qui ne s'est pas encore connecté.
@@ -530,8 +541,17 @@ model Invoice {
   devise  Devise        @default(MGA)
   statut  InvoiceStatus @default(envoyee)
 
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  /// Le membre facturé. `null` une fois le membre supprimé : la facture est
+  /// une pièce comptable, elle reste — avec son destinataire figé ci-dessous.
+  memberId String?
+  member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  /// Nom du membre supprimé, tel qu'il était : pour les listes et la
+  /// recherche. `null` tant que le membre existe.
+  destinataireNom String?
+  /// Coordonnées du destinataire à la suppression du membre, pour réimprimer
+  /// la facture à l'identique (voir `DestinataireFige` dans `lib/factures.ts`).
+  destinataire    Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
