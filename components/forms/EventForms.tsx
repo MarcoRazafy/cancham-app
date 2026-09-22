@@ -47,6 +47,7 @@ export function RegisterButton({
   entreprise,
   contacts,
   moi,
+  coordonnees,
   libelle = "S’inscrire",
 }: {
   event: CanchamEvent;
@@ -56,6 +57,8 @@ export function RegisterButton({
   contacts: ContactInscrivable[];
   /** La personne connectée, choisie d'office. */
   moi: string;
+  /** Ses coordonnées, proposées d'office pour joindre les inscrits. */
+  coordonnees: { email: string; telephone?: string | null };
   /** Intitulé du bouton déclencheur — « M’inscrire » sur la vue d'ensemble. */
   libelle?: string;
 }) {
@@ -98,6 +101,10 @@ export function RegisterButton({
               moi={moi}
               restantes={restantes}
             />
+            <ChampsCoordonnees
+              email={coordonnees.email}
+              telephone={coordonnees.telephone}
+            />
             {event.payant ? (
               <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
                 <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
@@ -116,6 +123,45 @@ export function RegisterButton({
         </form>
       )}
     </Modal>
+  );
+}
+
+/**
+ * Coordonnées d'une inscription : où joindre les inscrits avant
+ * l'événement — un changement d'horaire, une question sur le règlement.
+ */
+export function ChampsCoordonnees({
+  email = "",
+  telephone = "",
+}: {
+  email?: string;
+  telephone?: string | null;
+}) {
+  return (
+    <div className="grid gap-3.5 sm:grid-cols-2">
+      <Field label="Téléphone">
+        <input
+          type="tel"
+          name="telephone"
+          required
+          defaultValue={telephone ?? ""}
+          autoComplete="tel"
+          placeholder="+261 34 00 000 00"
+          className={INPUT}
+        />
+      </Field>
+      <Field label="E-mail">
+        <input
+          type="email"
+          name="email"
+          required
+          defaultValue={email}
+          autoComplete="email"
+          placeholder="nom@entreprise.mg"
+          className={INPUT}
+        />
+      </Field>
+    </div>
   );
 }
 

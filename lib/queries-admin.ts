@@ -197,6 +197,7 @@ export interface Participant {
   nom: string;
   entreprise: string;
   email: string;
+  telephone: string | null;
   statut: "confirme" | "present" | "absent";
 }
 
@@ -210,6 +211,7 @@ export async function getParticipants(eventId: string): Promise<Participant[]> {
       nom: true,
       entreprise: true,
       email: true,
+      telephone: true,
       statut: true,
     },
   });

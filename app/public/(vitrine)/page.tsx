@@ -2,16 +2,10 @@ import Image from "next/image";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
-import { ArrowRight, CalendarDays, FileText, Users } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
-import { FormulaireAdhesion } from "@/components/public/FormulaireAdhesion";
-import {
-  fmtCotisation,
-  libelleFormule,
-  ORDRE_FORMULES,
-} from "@/lib/membership";
 import { VISUELS } from "@/lib/images-publiques";
 import { getProchainsEvenements, getStatsPubliques } from "@/lib/queries";
 
@@ -44,12 +38,6 @@ export default async function PublicHome() {
       libelle: `secteur${stats.secteurs > 1 ? "s représentés" : " représenté"}`,
     },
     { nombre: 2, apres: " pays", libelle: "une ambition commune" },
-  ];
-
-  const avantages = [
-    { icone: Users, texte: "Développer votre réseau" },
-    { icone: CalendarDays, texte: "Participer aux événements" },
-    { icone: FileText, texte: "Accéder aux ressources et services" },
   ];
 
   return (
@@ -153,7 +141,7 @@ export default async function PublicHome() {
                 className="apparition flex flex-col sm:flex-row gap-3 mt-7"
                 style={{ animationDelay: "0.56s" }}
               >
-                <Link href="#adhesion" className="btn-action">
+                <Link href="/auth/inscription" className="btn-action">
                   Devenir membre <ArrowRight size={17} />
                 </Link>
                 <Link
@@ -249,84 +237,6 @@ export default async function PublicHome() {
                 Aucun rendez-vous programmé pour le moment.
               </p>
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== Adhésion ==================== */}
-      <section id="adhesion" className="scroll-mt-[124px]">
-        <div className="max-w-[1120px] mx-auto px-5 pb-16">
-          <div className="apparition-defilement rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
-            {/* `minmax(0, 1fr)` : sans cela, la liste des formules — un menu
-                déroulant à libellés longs — élargit la colonne au-delà du
-                cadre sur téléphone. */}
-            <div className="grid gap-10 grid-cols-[minmax(0,1fr)] lg:grid-cols-2 items-start">
-              <div className="min-w-0 lg:sticky lg:top-8">
-                <span className="surtitre text-marque-vert">
-                  Rejoignez CanCham
-                </span>
-                <h2 className="titre text-[clamp(26px,3.6vw,38px)] m-0 mt-2.5 max-w-[16ch]">
-                  Votre prochain <Saillant ton="vert">partenariat</Saillant>{" "}
-                  commence ici.
-                </h2>
-                <p className="text-[15px] text-muted m-0 mt-3.5 max-w-[44ch]">
-                  Présentez votre entreprise et faites le premier pas vers le
-                  réseau.
-                </p>
-
-                <ul className="list-none p-0 mt-8 mb-0 flex flex-col gap-5">
-                  {avantages.map((a) => {
-                    const Icone = a.icone;
-                    return (
-                      <li key={a.texte} className="flex items-center gap-4">
-                        <span className="shrink-0 w-11 h-11 rounded-full bg-success-soft text-marque-vert flex items-center justify-center">
-                          <Icone size={19} />
-                        </span>
-                        <span className="text-[15px] text-ink">{a.texte}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                {/* Les tarifs, sous les yeux pendant qu'on remplit le formulaire. */}
-                <div className="mt-8 rounded-xl border border-line bg-surface-2 px-5 py-4">
-                  <div className="surtitre text-faint mb-2">
-                    Cotisation annuelle
-                  </div>
-                  <ul className="list-none m-0 p-0">
-                    {ORDRE_FORMULES.map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-baseline justify-between gap-4 py-2 border-b border-line last:border-b-0 text-[13.5px]"
-                      >
-                        <span className="text-muted min-w-0">
-                          {libelleFormule(f)}
-                        </span>
-                        <span className="text-ink font-semibold whitespace-nowrap tabular-nums">
-                          {fmtCotisation(f)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <p className="text-[13px] text-muted mt-6 mb-0">
-                  Votre candidature sera examinée par l’équipe CanCham. Besoin
-                  d’un dossier complet ?{" "}
-                  <Link
-                    href="/auth/inscription"
-                    className="text-marque-vert font-semibold underline underline-offset-2"
-                  >
-                    Formulaire détaillé
-                  </Link>
-                  .
-                </p>
-              </div>
-
-              <div className="min-w-0">
-                <FormulaireAdhesion />
-              </div>
-            </div>
           </div>
         </div>
       </section>

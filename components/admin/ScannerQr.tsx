@@ -685,6 +685,19 @@ function LigneArrivee({
                 "—"
               )}
             </dd>
+            {a.telephone ? (
+              <>
+                <dt className="text-muted">Téléphone</dt>
+                <dd className="m-0">
+                  <a
+                    href={`tel:${a.telephone.replace(/\s/g, "")}`}
+                    className="text-accent no-underline hover:underline"
+                  >
+                    {a.telephone}
+                  </a>
+                </dd>
+              </>
+            ) : null}
             {a.presentLe ? (
               <>
                 <dt className="text-muted">Arrivée</dt>
@@ -733,7 +746,9 @@ function LigneArrivee({
             </a>
           ) : (
             <p className="m-0 mt-2.5 text-[12px] text-faint">
-              Ajouté par l’équipe à l’accueil : pas de fiche membre.
+              {a.code
+                ? "Inscription publique, sans compte : pas de fiche membre."
+                : "Ajouté par l’équipe à l’accueil : pas de fiche membre."}
             </p>
           )}
         </div>
