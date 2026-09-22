@@ -21,15 +21,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  * sans JavaScript. Flèches et pastilles sont posées par-dessus, et
  * disparaissent quand tout tient sur une page.
  *
- * Tant qu'on n'y touche pas, la piste fait son va-et-vient : elle glisse page
- * après page vers la gauche, puis revient sur ses pas — le catalogue se
- * présente tout seul, et l'on voit du premier coup d'œil qu'il continue plus
- * loin. Elle s'arrête au survol, au focus et au doigt, et ne repart plus dès
- * qu'on a pris les commandes : on ne se bat pas contre un diaporama.
+ * Tant qu'on n'y touche pas, la piste fait son va-et-vient : toutes les cinq
+ * secondes elle glisse d'une page vers la gauche, puis, arrivée au bout,
+ * revient sur ses pas — le catalogue se présente tout seul, et l'on voit du
+ * premier coup d'œil qu'il continue plus loin. Elle marque une pause sous la
+ * souris, sous le doigt et au focus, et ne repart plus dès qu'on a cliqué une
+ * flèche ou une pastille : on ne se bat pas contre un diaporama.
  */
 
 /** Temps d'arrêt sur chaque page avant de glisser à la suivante. */
-const ARRET_MS = 4500;
+const ARRET_MS = 5000;
 
 /** Le va-et-vient s'abstient quand le système demande moins d'animations. */
 function useMoinsDeMouvement(): boolean {
@@ -60,8 +61,10 @@ export function CarrouselSection({
   const sens = useRef(1);
   /** Faux dès que quelqu'un prend les commandes : plus d'avance automatique. */
   const [auto, setAuto] = useState(true);
-  /** Le pointeur ou le focus est dans le carrousel : on laisse regarder. */
-  const [approche, setApproche] = useState(false);
+  /** La souris ou le focus est dans le carrousel : on laisse regarder. */
+  const [survol, setSurvol] = useState(false);
+  /** Un doigt ou un bouton appuyé sur la piste : on ne glisse pas dessous. */
+  const [doigt, setDoigt] = useState(false);
   /** Le carrousel est à l'écran : rien ne bouge dans une section jamais vue. */
   const [enVue, setEnVue] = useState(false);
   const moinsDeMouvement = useMoinsDeMouvement();
@@ -99,10 +102,13 @@ export function CarrouselSection({
   }, []);
 
   useEffect(() => {
-    if (!auto || approche || !enVue || moinsDeMouvement || pages < 2) return;
+    if (!auto || survol || doigt || !enVue || moinsDeMouvement || pages < 2)
+      return;
     const minuteur = setInterval(() => {
       const el = piste.current;
       if (!el || el.clientWidth === 0) return;
+      // Une fiche d'offre ouverte par-dessus : rien ne bouge derrière elle.
+      if (document.querySelector("dialog[open]")) return;
       const courante = Math.round(el.scrollLeft / el.clientWidth);
       // Arrivé au bout, on repart dans l'autre sens : le retour se voit, là
       // où un saut au début passerait pour un bug d'affichage.
@@ -114,7 +120,19 @@ export function CarrouselSection({
       });
     }, ARRET_MS);
     return () => clearInterval(minuteur);
-  }, [auto, approche, enVue, moinsDeMouvement, pages]);
+  }, [auto, survol, doigt, enVue, moinsDeMouvement, pages]);
+
+  /**
+   * Un doigt posé arrête le va-et-vient le temps du geste, pas plus : sur
+   * téléphone, on touche la piste rien qu'en faisant défiler la page. Le
+   * relâchement est écouté sur la fenêtre, le doigt partant souvent ailleurs.
+   */
+  const poser = () => {
+    setDoigt(true);
+    const relacher = () => setDoigt(false);
+    window.addEventListener("pointerup", relacher, { once: true });
+    window.addEventListener("pointercancel", relacher, { once: true });
+  };
 
   /** Flèches et pastilles : le va-et-vient s'efface devant un vrai clic. */
   const allerA = (cible: number) => {
@@ -133,16 +151,16 @@ export function CarrouselSection({
       role="region"
       aria-roledescription="carrousel"
       aria-label={libelle}
-      onPointerEnter={() => setApproche(true)}
-      onPointerLeave={() => setApproche(false)}
-      onFocus={() => setApproche(true)}
-      onBlur={() => setApproche(false)}
+      // Le survol n'a de sens qu'à la souris : sur écran tactile, il ne se
+      // termine jamais, et le carrousel resterait figé après une simple tape.
+      onPointerEnter={(e) => e.pointerType === "mouse" && setSurvol(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setSurvol(false)}
+      onFocus={() => setSurvol(true)}
+      onBlur={() => setSurvol(false)}
     >
       <div
         ref={piste}
-        // Un doigt posé sur la piste, ou une carte ouverte : on a pris les
-        // commandes, et la piste ne repartira pas sous la main.
-        onPointerDown={() => setAuto(false)}
+        onPointerDown={poser}
         className="flex items-stretch gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {/*
