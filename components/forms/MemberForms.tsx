@@ -127,7 +127,7 @@ export function AddMemberButton() {
             <div className="grid gap-3.5 md:grid-cols-2">
               <Field
                 label="Courriel"
-                hint="Son accès lui sera envoyé ici, par « Accéder »."
+                hint="Son accès lui sera envoyé ici, par « Envoyer l’accès »."
               >
                 <input
                   type="email"
@@ -262,10 +262,10 @@ export function RegisterPaymentButton({
 }
 
 /**
- * « Accéder » : envoie au contact principal le lien pour créer son mot de
- * passe. Sur une candidature, le clic valide aussi la demande : il passe
- * par une confirmation. Ailleurs, un clic suffit — et renvoie un lien neuf
- * quand le précédent attend encore.
+ * « Envoyer l’accès » : envoie au contact principal le lien pour créer son
+ * mot de passe. Sur une candidature, le clic valide aussi la demande : il
+ * passe par une confirmation. Ailleurs, un clic suffit — et renvoie un lien
+ * neuf quand le précédent attend encore.
  */
 export function AccederButton({
   memberId,
@@ -309,7 +309,7 @@ export function AccederButton({
               : "Envoyer le lien pour créer son mot de passe"
           }
         >
-          <Send size={13} /> {renvoi ? "Renvoyer" : "Accéder"}
+          <Send size={13} /> {renvoi ? "Renvoyer" : "Envoyer l’accès"}
         </SubmitButton>
       </form>
     );
@@ -324,7 +324,7 @@ export function AccederButton({
           onClick={ouvrir}
           className={`btn-action btn-action-sm whitespace-nowrap ${largeur}`}
         >
-          <Check size={14} /> Accéder
+          <Check size={14} /> Envoyer l’accès
         </button>
       )}
     >

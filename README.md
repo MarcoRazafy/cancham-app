@@ -186,7 +186,7 @@ confirmation, affiché par [`components/Toast.tsx`](./components/Toast.tsx).
 |---|---|
 | Public | Déposer une candidature — elle apparaît aussitôt dans le back-office |
 | Membre | Modifier sa fiche, s'inscrire à un événement et annuler, commenter, écrire dans un fil, télécharger une ressource, imprimer son certificat |
-| Admin | Valider (« Accéder ») ou refuser une candidature, ouvrir l’accès d’un membre, encaisser un paiement, relancer, ajouter ou supprimer un membre, créer et modifier un événement, pointer les arrivées, publier actualités, offres, services et ressources |
+| Admin | Valider (« Envoyer l’accès ») ou refuser une candidature, ouvrir l’accès d’un membre, encaisser un paiement, relancer, ajouter ou supprimer un membre, créer et modifier un événement, pointer les arrivées, publier actualités, offres, services et ressources |
 
 Deux garde-fous :
 

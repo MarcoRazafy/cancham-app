@@ -67,8 +67,8 @@ export default async function AdminMembres({
         }
       >
         {membres.length} adhérents. Suivez les cotisations, examinez les
-        demandes et ouvrez l’accès des nouveaux inscrits : « Accéder » leur
-        envoie le lien pour créer leur mot de passe.
+        demandes et ouvrez l’accès des nouveaux inscrits : « Envoyer l’accès »
+        leur envoie le lien pour créer leur mot de passe.
       </EnTeteAdmin>
 
       <Onglets

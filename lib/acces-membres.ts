@@ -7,8 +7,8 @@ import { prisma } from "@/lib/db";
  *
  * Personne ne choisit de mot de passe en s'inscrivant, ni en étant inscrit
  * par l'équipe : c'est l'équipe qui ouvre l'accès, d'un clic sur
- * « Accéder ». Le contact principal reçoit alors un lien pour créer son mot
- * de passe. On lit ici l'étape où chacun se trouve.
+ * « Envoyer l’accès ». Le contact principal reçoit alors un lien pour créer
+ * son mot de passe. On lit ici l'étape où chacun se trouve.
  */
 export type EtatAcces =
   /** Le contact a son mot de passe : il se connecte. */

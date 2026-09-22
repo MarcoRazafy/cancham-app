@@ -8,7 +8,7 @@ import { fmtDate } from "@/lib/format";
  * Où en est l'accès d'un membre, et le bouton qui l'ouvre.
  *
  * Accès actif : rien à faire. Lien envoyé : on peut le renvoyer. Rien
- * d'envoyé : « Accéder ». Sans contact : personne à qui écrire.
+ * d'envoyé : « Envoyer l’accès ». Sans contact : personne à qui écrire.
  */
 export function EtatAcces({
   acces,

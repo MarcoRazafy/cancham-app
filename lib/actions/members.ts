@@ -133,7 +133,7 @@ async function inviter(
   );
 }
 
-/** Le message qui suit « Accéder », selon le sort de l'e-mail. */
+/** Le message qui suit « Envoyer l’accès », selon le sort de l'e-mail. */
 function suiteAcces(envoye: boolean, email: string): string {
   if (envoye) return `lien de connexion envoyé à ${email}`;
   return courrielsActifs()
@@ -163,7 +163,7 @@ async function contactDe(memberId: string) {
 /* ============================ Candidatures ============================ */
 
 /**
- * « Accéder » : l'équipe ouvre l'accès d'un membre à la plateforme.
+ * « Envoyer l’accès » : l'équipe ouvre l'accès d'un membre à la plateforme.
  *
  * Personne ne choisit son mot de passe en s'inscrivant : c'est ce clic qui
  * envoie au contact principal le lien pour le créer. Sur une candidature, il
@@ -239,7 +239,7 @@ export async function donnerAcces(formData: FormData) {
         ),
   );
   // Un lien qui n'est jamais parti ne doit pas s'afficher « envoyé » : on
-  // le retire, et « Accéder » revient. Sans service d'e-mails (en local),
+  // le retire, et « Envoyer l’accès » revient. Sans service d'e-mails (en local),
   // il reste : il est écrit dans le journal du serveur.
   if (!envoye && courrielsActifs() && !contact.motDePasse) {
     await prisma.jetonCompte.deleteMany({
@@ -475,7 +475,7 @@ export async function createMember(formData: FormData) {
   });
 
   // Le contact principal, sans mot de passe : son accès part quand l'équipe
-  // clique sur « Accéder », depuis la liste ou la fiche.
+  // clique sur « Envoyer l’accès », depuis la liste ou la fiche.
   await prisma.user.create({
     data: {
       role: "membre",
@@ -498,7 +498,7 @@ export async function createMember(formData: FormData) {
   revalideTout();
   redirectWithFlash(
     `/admin/membres/${m.id}`,
-    `${nom} a été ajouté · « Accéder » lui envoie son lien de connexion`,
+    `${nom} a été ajouté · « Envoyer l’accès » lui envoie son lien de connexion`,
   );
 }
 
