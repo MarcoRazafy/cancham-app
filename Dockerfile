@@ -4,8 +4,8 @@
 #
 # Trois étapes : les dépendances, la compilation, puis l'image qui tourne.
 # Celle-ci garde toutes les dépendances, outils compris : la migration de la
-# base (`prisma migrate deploy`, avant chaque déploiement) et le script de
-# création d'un administrateur (`tsx`) s'exécutent dans ce même conteneur.
+# base (`prisma migrate deploy`, au démarrage) et le script de création d'un
+# administrateur (`tsx`) s'exécutent dans ce même conteneur.
 
 FROM node:24-bookworm-slim AS base
 WORKDIR /app
@@ -51,4 +51,8 @@ RUN apt-get update \
 COPY --from=build /app ./
 # Railway fournit le port par la variable PORT, que `next start` lit.
 EXPOSE 3000
-CMD ["node_modules/.bin/next", "start"]
+# Les migrations passent au démarrage, avant le serveur : un code neuf ne
+# tourne jamais sur une base qui n'a pas encore ses colonnes — chaque page
+# échouerait. Sans effet quand tout est déjà appliqué ; en cas d'échec, le
+# conteneur s'arrête, le contrôle de santé échoue, l'ancienne version reste.
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && exec node_modules/.bin/next start"]

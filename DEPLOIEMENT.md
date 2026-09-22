@@ -87,9 +87,11 @@ Ce qui part par e-mail :
 Railway construit l'image à chaque envoi sur la branche suivie. Puis, dans
 l'ordre :
 
-1. **Avant le déploiement** : `prisma migrate deploy` crée ou met à jour les
-   tables. Si une migration échoue, le déploiement s'arrête et l'ancienne
-   version continue de tourner.
+1. **Avant le démarrage** : `prisma migrate deploy` crée ou met à jour les
+   tables — à l'étape *pre-deploy* de Railway, et de nouveau au lancement du
+   conteneur, pour qu'un code neuf ne tourne jamais sur une base en retard.
+   Si une migration échoue, le déploiement s'arrête et l'ancienne version
+   continue de tourner.
 2. **Contrôle de santé** : Railway attend que `/api/sante` réponde 200 — la
    base répond, le volume est accessible en écriture — avant d'y envoyer le
    trafic.
