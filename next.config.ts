@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PLAFOND_ENVOI_MO } from "./lib/plafonds";
 
 /**
  * Politique de sécurité du contenu.
@@ -115,12 +116,19 @@ const nextConfig: NextConfig = {
        * closed early » côté serveur, rien côté membre. Couvertures, logos,
        * photos de services, portraits et pièces jointes en dépendent.
        *
-       * 40 Mo : cinq photos de téléphone d'un coup, ou une courte vidéo en
-       * pièce jointe. Chaque action vérifie ensuite ses propres plafonds par
-       * fichier ; celui-ci ne borne que la requête entière.
+       * Un seul plafond de sécurité pour tout envoi (voir lib/plafonds.ts) :
+       * pas de petite limite par type, mais une borne qui protège la mémoire
+       * du serveur.
        */
-      bodySizeLimit: "40mb",
+      bodySizeLimit: `${PLAFOND_ENVOI_MO}mb`,
     },
+    /**
+     * Même plafond pour les requêtes qui passent par le proxy — tout ce qui
+     * vit sous `/membre` et `/admin`. Next y garde le corps en mémoire, 10 Mo
+     * par défaut, et tronque au-delà sans erreur : une vidéo de 20 Mo
+     * arrivait coupée.
+     */
+    proxyClientMaxBodySize: `${PLAFOND_ENVOI_MO}mb`,
   },
   images: {
     /**

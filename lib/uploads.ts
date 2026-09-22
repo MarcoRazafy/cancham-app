@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
 
 /**
@@ -21,8 +22,8 @@ import { dossierStockage } from "@/lib/stockage";
 export const DOSSIER_TELEVERSEMENTS = dossierStockage("televersements");
 const DOSSIER = DOSSIER_TELEVERSEMENTS;
 
-/** Au-delà, on refuse : c'est déjà quatre fois une photo de téléphone recadrée. */
-const POIDS_MAX = 8 * 1024 * 1024;
+/** Le plafond de sécurité commun : l'image est de toute façon recompressée. */
+const POIDS_MAX = PLAFOND_FICHIER;
 
 export class ImageRefusee extends Error {}
 
@@ -53,7 +54,9 @@ export async function enregistrerImage(
     throw new ImageRefusee("Le fichier envoyé n’est pas une image.");
   }
   if (fichier.size > POIDS_MAX) {
-    throw new ImageRefusee("L’image dépasse 8 Mo. Réduisez-la avant l’envoi.");
+    throw new ImageRefusee(
+      `L’image dépasse ${PLAFOND_FICHIER_MO} Mo. Réduisez-la avant l’envoi.`,
+    );
   }
 
   const source = Buffer.from(await fichier.arrayBuffer());

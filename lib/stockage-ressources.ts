@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import { PLAFOND_FICHIER } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
 
 const executer = promisify(execFile);
@@ -113,11 +114,8 @@ export async function existe(chemin: string): Promise<boolean> {
 /*  Dépôt par l'équipe                                                        */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Au plus 38 Mo : la requête entière est bornée à 40 Mo par `next.config`,
- * et les autres champs du formulaire occupent le reste.
- */
-export const PLAFOND_RESSOURCE = 38 * 1024 * 1024;
+/** Le plafond de sécurité commun (lib/plafonds.ts). */
+export const PLAFOND_RESSOURCE = PLAFOND_FICHIER;
 
 export class FichierRefuse extends Error {}
 

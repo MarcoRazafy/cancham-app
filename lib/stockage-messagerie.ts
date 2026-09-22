@@ -3,6 +3,7 @@ import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { dossierStockage } from "@/lib/stockage";
+import { PLAFOND_FICHIER } from "@/lib/plafonds";
 
 /**
  * Pièces jointes de la messagerie : réception, contrôle et rangement.
@@ -21,11 +22,11 @@ export const RACINE_MESSAGERIE = dossierStockage("messagerie");
 
 export type TypePiece = "image" | "video" | "pdf";
 
-/** Plafonds par fichier. La requête entière est bornée par `next.config`. */
+/** Plafond par fichier : le même pour tous, celui de lib/plafonds.ts. */
 export const PLAFONDS: Record<TypePiece, number> = {
-  image: 8 * 1024 * 1024,
-  video: 25 * 1024 * 1024,
-  pdf: 10 * 1024 * 1024,
+  image: PLAFOND_FICHIER,
+  video: PLAFOND_FICHIER,
+  pdf: PLAFOND_FICHIER,
 };
 
 /** Pièces par message, au plus. */

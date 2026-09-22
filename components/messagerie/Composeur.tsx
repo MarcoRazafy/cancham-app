@@ -15,13 +15,14 @@ import { EMOJIS } from "@/components/SelecteurEmojis";
 import { sendMessage } from "@/lib/actions/messages";
 import type { Space } from "@/lib/types";
 import { poids } from "./outils";
+import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 
-/** Mêmes plafonds que le serveur, pour prévenir avant l'envoi plutôt qu'après. */
-const PLAFONDS = { image: 8, video: 25, pdf: 10 } as const;
+/** Les types acceptés ; le plafond est celui du serveur, vérifié avant l'envoi. */
+type TypePiece = "image" | "video" | "pdf";
 const MAX_PIECES = 5;
 const ACCEPTE = "image/*,video/mp4,video/webm,video/quicktime,application/pdf";
 
-function typeDe(f: File): keyof typeof PLAFONDS | null {
+function typeDe(f: File): TypePiece | null {
   if (f.type.startsWith("image/")) return "image";
   if (["video/mp4", "video/webm", "video/quicktime"].includes(f.type))
     return "video";
@@ -83,8 +84,8 @@ export function Composeur({
         );
         continue;
       }
-      if (f.size > PLAFONDS[type] * 1024 * 1024) {
-        setErreur(`« ${f.name} » dépasse ${PLAFONDS[type]} Mo.`);
+      if (f.size > PLAFOND_FICHIER) {
+        setErreur(`« ${f.name} » dépasse ${PLAFOND_FICHIER_MO} Mo.`);
         continue;
       }
       retenus.push(f);

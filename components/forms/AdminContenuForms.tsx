@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
+import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 import {
   CancelButton,
   ChampPhoto,
@@ -315,8 +316,8 @@ export function SupprimerOffreButton({
 
 /* ============================ Ressources ============================ */
 
-/** Même plafond que le serveur, pour prévenir avant d'envoyer 60 Mo pour rien. */
-const PLAFOND_MO = 38;
+/** Même plafond que le serveur, pour prévenir avant d'envoyer pour rien. */
+const PLAFOND_MO = PLAFOND_FICHIER_MO;
 
 export interface RessourceEditee {
   id: string;
@@ -518,8 +519,8 @@ export function SupprimerRessourceButton({
 /* ============================ Photos d'une actualité ============================ */
 
 const MAX_PHOTOS = 10;
-/** La requête entière est bornée à 40 Mo : on prévient avant l'envoi. */
-const POIDS_MAX_ENVOI = 38 * 1024 * 1024;
+/** L'envoi entier est borné (lib/plafonds.ts) : on prévient avant l'envoi. */
+const POIDS_MAX_ENVOI = PLAFOND_FICHIER;
 
 type PhotoEditee =
   | { cle: string; type: "existante"; url: string }
@@ -696,7 +697,7 @@ function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
         className={`m-0 mt-1.5 text-[11.8px] ${erreur || poids > POIDS_MAX_ENVOI ? "text-accent font-semibold" : "text-faint"}`}
       >
         {poids > POIDS_MAX_ENVOI
-          ? "Les nouvelles photos dépassent 38 Mo à elles toutes : envoyez-en moins à la fois."
+          ? `Les nouvelles photos dépassent ${PLAFOND_FICHIER_MO} Mo à elles toutes : envoyez-en moins à la fois.`
           : (erreur ??
             "La première photo sert de couverture dans le fil. Sans photo, un bandeau aux couleurs de la chambre la remplace.")}
       </p>
