@@ -280,6 +280,8 @@ export interface Message {
   de: string;
   /** `true` si l'auteur est l'utilisateur courant. */
   moi: boolean;
+  /** `true` si l'auteur fait partie de l'équipe CanCham. */
+  equipe: boolean;
   texte: string;
   /** Forme abrégée : « 14:32 » aujourd'hui, « Hier », « Lundi », « 12 sept. ». */
   heure: string;

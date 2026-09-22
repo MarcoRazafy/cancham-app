@@ -38,6 +38,7 @@ export function Bulle({
   heure,
   groupe,
   nomAuteur,
+  equipeADroite = false,
   space,
 }: {
   message: Message;
@@ -53,6 +54,11 @@ export function Bulle({
    * « Équipe CanCham », pas la personne de permanence.
    */
   nomAuteur?: string;
+  /**
+   * Dans l'assistance vue par l'équipe, ses messages se rangent à droite,
+   * comme ceux de la personne connectée : en face, il n'y a que le membre.
+   */
+  equipeADroite?: boolean;
   space: Space;
 }) {
   const [edition, setEdition] = useState(false);
@@ -100,7 +106,8 @@ export function Bulle({
       "Message sans texte",
   };
 
-  const cote = m.moi ? "self-end" : "self-start";
+  const aDroite = m.moi || (equipeADroite && m.equipe);
+  const cote = aDroite ? "self-end" : "self-start";
 
   if (m.supprime) {
     return (
@@ -126,7 +133,9 @@ export function Bulle({
     const place = window.innerHeight - r.bottom >= HAUTEUR_MENU + 8;
     const tientAGauche = r.right - LARGEUR_MENU >= 8;
     const tientADroite = r.left + LARGEUR_MENU <= window.innerWidth - 8;
-    const versLaGauche = m.moi ? tientAGauche || !tientADroite : !tientADroite;
+    const versLaGauche = aDroite
+      ? tientAGauche || !tientADroite
+      : !tientADroite;
     setMenu({
       ...(place
         ? { haut: r.bottom + 4 }
@@ -151,16 +160,16 @@ export function Bulle({
   return (
     <div
       className={`${cote} group/bulle flex items-center gap-1 max-w-[80%] ${
-        m.moi ? "flex-row-reverse" : ""
+        aDroite ? "flex-row-reverse" : ""
       } ${edition ? "w-[min(460px,80%)]" : ""}`}
     >
       <div
         id={`msg-${m.id}`}
-        className={`scroll-mt-20 min-w-0 px-3 py-2 text-[13.3px] leading-relaxed whitespace-pre-line ${
-          m.moi
-            ? "bg-accent text-white rounded-[14px] rounded-br-[4px]"
-            : "bg-surface-2 rounded-[14px] rounded-bl-[4px]"
-        } ${m.pieces.length ? "min-w-[220px]" : ""} ${edition ? "flex-1" : ""}`}
+        className={`scroll-mt-20 min-w-0 px-3 py-2 text-[13.3px] leading-relaxed whitespace-pre-line rounded-[14px] ${
+          m.moi ? "bg-accent text-white" : "bg-surface-2"
+        } ${aDroite ? "rounded-br-[4px]" : "rounded-bl-[4px]"} ${
+          m.pieces.length ? "min-w-[220px]" : ""
+        } ${edition ? "flex-1" : ""}`}
       >
         {!m.moi && groupe ? (
           <div className="text-[10.6px] font-bold opacity-75 mb-0.5">
