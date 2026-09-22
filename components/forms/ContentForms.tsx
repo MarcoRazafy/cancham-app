@@ -15,6 +15,7 @@ import {
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
+  ChampPhoto,
   Field,
   INPUT,
   ModalBody,
@@ -111,6 +112,13 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
             <input type="hidden" name="serviceId" value={service.id} />
           ) : null}
           <ModalBody>
+            <ChampPhoto
+              name="image"
+              retirer="retirerImage"
+              apercu={service?.image}
+              libelle="Photo de couverture"
+              aide="En tête de la carte vue par les membres. Paysage de préférence ; sans photo, la carte garde un dégradé à la couleur du service."
+            />
             <Field label="Titre">
               <input
                 type="text"

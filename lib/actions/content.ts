@@ -580,7 +580,27 @@ export async function saveService(formData: FormData) {
     redirectWithErreur(retour, "Indiquez le tarif d’un service payant.");
   }
 
-  const data = { titre, desc, type, prix } as const;
+  // Un champ laissé vide garde la photo actuelle ; la case « retirer »
+  // revient au dégradé.
+  let image: string | null = null;
+  try {
+    image = await enregistrerImage(formData.get("image"), {
+      prefixe: "service",
+      largeur: 1200,
+    });
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
+    throw e;
+  }
+  const retirerImage = texte(formData, "retirerImage") === "1";
+
+  const data = {
+    titre,
+    desc,
+    type,
+    prix,
+    ...(image ? { image } : retirerImage ? { image: null } : {}),
+  } as const;
   const service = id
     ? await prisma.canchamService.update({ where: { id }, data })
     : await prisma.canchamService.create({

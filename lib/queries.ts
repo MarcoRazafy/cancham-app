@@ -449,6 +449,7 @@ export async function getServices(): Promise<CanchamService[]> {
     type: s.type,
     prix: s.prix,
     icon: s.icon,
+    image: s.image,
   }));
 }
 

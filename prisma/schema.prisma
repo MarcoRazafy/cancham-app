@@ -521,6 +521,9 @@ model CanchamService {
   /// En Ariary. 0 si gratuit.
   prix  Int         @default(0)
   icon  String      @default("award")
+  /// Photo de couverture de la carte, par URL. `null` = dégradé aux couleurs
+  /// du type de service.
+  image String?
   ordre Int         @default(0)
 
   createdAt DateTime @default(now())

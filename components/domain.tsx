@@ -862,32 +862,78 @@ export function ServiceCard({
   action?: ReactNode;
 }) {
   const gratuit = service.type === "gratuit";
+  const Icone = gratuit ? Tag : CreditCard;
   return (
     <Card
-      className={`tuile-hote carte-filet filet-fixe ${gratuit ? "filet-vert" : "filet-rouge"} p-[22px] flex flex-col`}
+      className={`tuile-hote carte-filet filet-fixe filet-bas ${gratuit ? "filet-vert" : "filet-rouge"} p-0 flex flex-col`}
     >
       {/*
         Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est
         facturé. L'icône dit la même chose que la couleur : une étiquette pour
-        ce qui est offert, une carte bancaire pour ce qui se règle. Les deux
-        types portaient jusqu'ici la même carte bancaire, ce qui laissait la
-        couleur seule distinguer un service inclus d'un service payant.
+        ce qui est offert, une carte bancaire pour ce qui se règle.
       */}
-      <div
-        className={`tuile tuile-sm mb-4 ${gratuit ? "tuile-verte" : "tuile-rouge"}`}
-      >
-        {gratuit ? <Tag size={24} /> : <CreditCard size={24} />}
-      </div>
-      <div className="font-bold text-[14.5px] mb-1.5">{service.titre}</div>
-      <p className="text-[12.8px] text-muted leading-relaxed m-0 mb-3 flex-1">
-        <TexteLie texte={service.desc} />
-      </p>
-      <div>
-        <Pill tone={gratuit ? "ok" : "muted"}>
+      <div className="relative h-[168px] shrink-0">
+        {service.image ? (
+          <>
+            <Image
+              src={service.image}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 420px"
+              className="object-cover"
+            />
+            {/* Un voile en pied de photo : la tuile qui chevauche le bord
+                s'y détache, quelle que soit l'image. */}
+            <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
+          </>
+        ) : (
+          // Sans photo, un dégradé à la couleur du type, et l'icône en grand,
+          // à peine marquée : la carte garde la même hauteur que ses voisines.
+          <div
+            className="absolute inset-0 overflow-hidden text-white"
+            style={{
+              background: gratuit
+                ? "linear-gradient(135deg, #00502e, #007140 55%, #138a58)"
+                : "var(--bouton-rouge)",
+            }}
+          >
+            <span
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(135deg, rgb(255 255 255 / 0.07) 0 2px, transparent 2px 22px)",
+              }}
+            />
+            <Icone
+              size={128}
+              strokeWidth={1.25}
+              className="absolute -right-5 -bottom-9 opacity-[0.16] rotate-[-12deg]"
+            />
+          </div>
+        )}
+        <span
+          className={`absolute top-3 right-3 rounded-full bg-white/95 px-3 py-1 text-[12px] font-bold shadow-[0_4px_14px_-6px_rgb(0_0_0/0.45)] ${
+            gratuit ? "text-success-strong" : "text-ink"
+          }`}
+        >
           {gratuit ? "Gratuit" : fmtMoney(service.prix)}
-        </Pill>
+        </span>
       </div>
-      {action ? <div className="mt-3 flex gap-1.5">{action}</div> : null}
+
+      <div className="relative flex flex-col flex-1 px-[22px] pb-[22px]">
+        <div
+          className={`tuile tuile-sm -mt-[23px] mb-3.5 ring-4 ring-surface ${gratuit ? "tuile-verte" : "tuile-rouge"}`}
+        >
+          <Icone size={22} />
+        </div>
+        <div className="font-bold text-[15px] leading-snug mb-1.5">
+          {service.titre}
+        </div>
+        <p className="text-[12.8px] text-muted leading-relaxed m-0 flex-1">
+          <TexteLie texte={service.desc} />
+        </p>
+        {action ? <div className="mt-4 flex gap-1.5">{action}</div> : null}
+      </div>
     </Card>
   );
 }

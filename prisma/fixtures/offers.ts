@@ -64,6 +64,7 @@ export const SERVICES: CanchamService[] = [
     type: "gratuit",
     prix: 0,
     icon: "users",
+    image: null,
   },
   {
     id: "s2",
@@ -72,6 +73,7 @@ export const SERVICES: CanchamService[] = [
     type: "gratuit",
     prix: 0,
     icon: "award",
+    image: null,
   },
   {
     id: "s3",
@@ -80,6 +82,7 @@ export const SERVICES: CanchamService[] = [
     type: "gratuit",
     prix: 0,
     icon: "folder",
+    image: null,
   },
   {
     id: "s4",
@@ -88,6 +91,7 @@ export const SERVICES: CanchamService[] = [
     type: "payant",
     prix: 350000,
     icon: "gauge",
+    image: null,
   },
   {
     id: "s5",
@@ -96,6 +100,7 @@ export const SERVICES: CanchamService[] = [
     type: "payant",
     prix: 250000,
     icon: "building",
+    image: null,
   },
   {
     id: "s6",
@@ -104,5 +109,6 @@ export const SERVICES: CanchamService[] = [
     type: "payant",
     prix: 80000,
     icon: "door",
+    image: null,
   },
 ];

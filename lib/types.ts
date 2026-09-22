@@ -228,6 +228,8 @@ export interface CanchamService {
   /** En Ariary. 0 si gratuit. */
   prix: number;
   icon: string;
+  /** Photo de couverture de la carte. `null` = dégradé aux couleurs du type. */
+  image: string | null;
 }
 
 export type ResourceCategory = "Guide" | "Modèle" | "Formation" | "Rapport";
