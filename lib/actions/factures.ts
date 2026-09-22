@@ -161,3 +161,37 @@ export async function marquerFacturePayee(formData: FormData) {
     `Facture ${f.numero} réglée${cotisation ? ` · ${nom} passe à jour` : ""}`,
   );
 }
+
+/**
+ * Suppression d'une facture émise par erreur.
+ *
+ * La pièce disparaît des totaux et de l'historique du membre ; son numéro,
+ * son montant et son objet restent au journal, qui dit qui l'a supprimée —
+ * une facture ne s'efface pas sans laisser de trace. Le numéro n'est pas
+ * réattribué tant qu'une facture plus récente existe dans l'année.
+ */
+export async function supprimerFacture(formData: FormData) {
+  const acteur = (await getCurrentUser("admin")).nom;
+  const id = texte(formData, "factureId");
+  const f = await prisma.invoice.findUnique({
+    where: { id },
+    include: { member: { select: { nom: true } } },
+  });
+  if (!f) redirectWithErreur("/admin/paiements", "Facture introuvable.");
+
+  await prisma.$transaction([
+    prisma.auditLog.create({
+      data: {
+        action: "facture_supprimee",
+        entite: "Invoice",
+        entiteId: f.numero,
+        acteur,
+        detail: `${f.numero} · ${fmtMontant(f.montant, f.devise)} · ${nomFacture(f)} · ${f.objet}${f.statut === "payee" ? " · elle était réglée" : ""}.`,
+      },
+    }),
+    prisma.invoice.delete({ where: { id } }),
+  ]);
+
+  revalidatePath("/", "layout");
+  redirectWithFlash("/admin/paiements", `Facture ${f.numero} supprimée`);
+}

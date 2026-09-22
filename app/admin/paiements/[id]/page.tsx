@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { FactureDocument } from "@/components/FactureDocument";
-import { MarquerPayeeButton } from "@/components/forms/FactureForms";
+import {
+  MarquerPayeeButton,
+  SupprimerFactureButton,
+} from "@/components/forms/FactureForms";
 import { PrintButton } from "@/components/forms/PrintButton";
 import { fmtMontant } from "@/lib/membership";
 import { getFacture } from "@/lib/factures";
@@ -47,6 +50,13 @@ export default async function FactureAdmin({
             />
           ) : null}
           <PrintButton contour={f.statut === "envoyee"} />
+          <SupprimerFactureButton
+            factureId={f.id}
+            numero={f.numero}
+            montant={fmtMontant(f.montant, f.devise)}
+            membre={f.membre}
+            payee={f.statut === "payee"}
+          />
         </div>
       </div>
 
