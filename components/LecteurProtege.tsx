@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
+import { FILIGRANE } from "@/lib/coordonnees";
 
 /**
  * Lecteur de ressource, dans la plateforme.
@@ -12,7 +13,7 @@ import { ShieldCheck } from "lucide-react";
  * fuite traçable ; cela ne la rend pas impossible.
  *
  * Côté serveur, déjà : le fichier ne quitte jamais le stockage. Un document
- * arrive ici page par page, en images filigranées au nom du lecteur, sans
+ * arrive ici page par page, en images filigranées à la marque CanCham, sans
  * couche de texte à sélectionner. Une vidéo arrive par morceaux, sans lien de
  * téléchargement.
  *
@@ -25,14 +26,7 @@ import { ShieldCheck } from "lucide-react";
  *  - sur la vidéo, pas de bouton de téléchargement ni d'image dans l'image,
  *    et un filigrane qui se déplace pour ne pas pouvoir être masqué d'un bloc.
  */
-export function LecteurProtege({
-  lecteur,
-  children,
-}: {
-  /** Nom affiché dans le filigrane de la vidéo et le bandeau. */
-  lecteur: string;
-  children: ReactNode;
-}) {
+export function LecteurProtege({ children }: { children: ReactNode }) {
   const [masque, setMasque] = useState(false);
 
   useEffect(() => {
@@ -69,8 +63,8 @@ export function LecteurProtege({
     <div className="lecteur-protege">
       <div className="flex items-center gap-2 text-[12.4px] text-muted mb-3">
         <ShieldCheck size={15} className="text-success-strong shrink-0" />
-        Consultation réservée aux membres. Contenu filigrané au nom de{" "}
-        <b className="text-ink">{lecteur}</b>.
+        Consultation réservée aux membres. Contenu protégé, filigrané{" "}
+        <b className="text-ink">CanCham</b>.
       </div>
 
       <div
@@ -135,15 +129,7 @@ export function PagesDocument({
 }
 
 /** Vidéo servie par morceaux, sans téléchargement, avec filigrane mobile. */
-export function VideoProtegee({
-  id,
-  lecteur,
-  titre,
-}: {
-  id: string;
-  lecteur: string;
-  titre: string;
-}) {
+export function VideoProtegee({ id, titre }: { id: string; titre: string }) {
   const [position, setPosition] = useState(0);
   const video = useRef<HTMLVideoElement>(null);
 
@@ -177,7 +163,7 @@ export function VideoProtegee({
       <span
         className={`absolute ${coins[position]} pointer-events-none select-none text-[12px] font-semibold text-white/55 bg-black/25 rounded px-2 py-0.5 transition-all duration-700`}
       >
-        {lecteur}
+        {FILIGRANE}
       </span>
     </div>
   );

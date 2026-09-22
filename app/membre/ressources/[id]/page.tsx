@@ -47,13 +47,9 @@ export default async function LectureRessourcePage({
       </div>
 
       {acces.ok ? (
-        <LecteurProtege lecteur={acces.lecteur.nom}>
+        <LecteurProtege>
           {video ? (
-            <VideoProtegee
-              id={id}
-              lecteur={acces.lecteur.nom}
-              titre={r.titre}
-            />
+            <VideoProtegee id={id} titre={r.titre} />
           ) : (
             <PagesDocument
               id={id}

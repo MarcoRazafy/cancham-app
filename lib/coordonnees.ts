@@ -31,6 +31,9 @@ export const COORDONNEES = {
   },
 } as const;
 
+/** Filigrane des ressources consultées dans la plateforme : la marque de la chambre. */
+export const FILIGRANE = `CanCham · ${new URL(COORDONNEES.site).host}`;
+
 /** Numéro sans espaces ni signe, tel que l'attendent `tel:` et `wa.me`. */
 export function chiffres(numero: string): string {
   return numero.replace(/\D/g, "");
