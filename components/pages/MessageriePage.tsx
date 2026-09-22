@@ -281,7 +281,14 @@ function Conversation({
                 <Bulle
                   message={m}
                   heure={heureExacte(m.envoyeLe)}
-                  groupe={fil.type === "groupe"}
+                  // Dans l'assistance, le membre voit qui, dans l'équipe, lui
+                  // a répondu ; l'équipe distingue ses collègues du membre.
+                  groupe={fil.type === "groupe" || fil.equipe}
+                  signature={
+                    fil.equipe && space === "membre"
+                      ? "Équipe CanCham"
+                      : undefined
+                  }
                   space={space}
                 />
               </Fragment>

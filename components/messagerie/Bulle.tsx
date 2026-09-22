@@ -37,13 +37,19 @@ export function Bulle({
   message: m,
   heure,
   groupe,
+  signature,
   space,
 }: {
   message: Message;
   /** Heure exacte, calculée côté serveur pour éviter un écart de fuseau. */
   heure: string;
-  /** Dans un groupe, le nom de l'auteur s'affiche au-dessus du texte. */
+  /**
+   * Le nom de l'auteur s'affiche au-dessus du texte : dans un groupe, et dans
+   * la conversation d'assistance, où plusieurs personnes de l'équipe répondent.
+   */
   groupe: boolean;
+  /** Ce qui suit le nom de l'auteur, par exemple « Équipe CanCham ». */
+  signature?: string;
   space: Space;
 }) {
   const [edition, setEdition] = useState(false);
@@ -156,6 +162,9 @@ export function Bulle({
         {!m.moi && groupe ? (
           <div className="text-[10.6px] font-bold opacity-75 mb-0.5">
             {m.de}
+            {signature ? (
+              <span className="font-semibold"> · {signature}</span>
+            ) : null}
           </div>
         ) : null}
         {m.transfere ? (
