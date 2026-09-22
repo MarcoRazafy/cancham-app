@@ -34,7 +34,9 @@ describe("e-mails", () => {
       paragraphes: ["Motivation : <img src=x onerror=alert(1)>"],
       bouton: { libelle: "Ouvrir", url: 'https://x.mg/?a="><script>' },
     });
-    expect(html).not.toContain("<img");
+    // Le logo de l'en-tête est une image ; celle glissée dans la saisie, non.
+    expect(html).not.toContain("<img src=x");
+    expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
     expect(html).not.toContain('"><script>');
     // La version texte garde la saisie telle quelle : elle n'est pas du HTML.
     expect(texte).toContain("<img src=x onerror=alert(1)>");

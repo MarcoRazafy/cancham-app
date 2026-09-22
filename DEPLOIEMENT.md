@@ -37,7 +37,7 @@ Sur le service de l'application, onglet **Variables** :
 | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (référence au service PostgreSQL) |
 | `AUTH_SECRET` | Une clé longue et aléatoire, voir ci-dessous. **Sans elle, personne ne peut se connecter.** |
 | `STOCKAGE_RACINE` | `/data` |
-| `APP_URL` | L'adresse publique, sans barre finale : `https://connect.cancham.mg` |
+| `APP_URL` | L'adresse publique, sans barre finale : `https://app.cancham.mg`. Absente ou pointant vers localhost, les liens des e-mails prennent `https://app.cancham.mg`. |
 | `RESEND_API_KEY` | La clé Resend (étape 3) |
 | `COURRIEL_EXPEDITEUR` | `CanCham Connect <connect@cancham.mg>` — sur le domaine vérifié |
 | `COURRIEL_EQUIPE` | L'adresse qui reçoit les alertes d'inscription et les réponses aux e-mails |

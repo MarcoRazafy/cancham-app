@@ -90,14 +90,39 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
 /** Tentatives par e-mail : la première, et une reprise après coupure réseau. */
 const ESSAIS_ENVOI = 2;
 
+/** L'adresse de la plateforme en ligne : celle des liens envoyés aux membres. */
+export const ADRESSE_PLATEFORME = "https://app.cancham.mg";
+
+/** Une adresse qui ne mène qu'à la machine où tourne le serveur. */
+export function estAdresseLocale(url: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?(\/|$)/i.test(
+    url,
+  );
+}
+
+/**
+ * Base des liens des e-mails : `APP_URL`, sans barre finale.
+ *
+ * En production, une adresse locale n'est jamais crue — un `.env` recopié
+ * tel quel enverrait aux membres des liens vers « localhost », qu'ils ne
+ * peuvent pas ouvrir. On prend alors l'adresse de la plateforme, comme quand
+ * la variable manque. En local, `APP_URL` peut viser localhost : les liens
+ * de test mènent à la base locale, où vivent leurs jetons.
+ */
+function baseLiens(): string | null {
+  const base = process.env.APP_URL?.trim().replace(/\/+$/, "") || null;
+  if (process.env.NODE_ENV !== "production") return base;
+  return base && !estAdresseLocale(base) ? base : ADRESSE_PLATEFORME;
+}
+
 /**
  * Adresse complète d'une page, pour les liens des e-mails.
  *
- * `APP_URL` quand elle est définie — c'est le cas en production. Sinon,
- * l'hôte de la requête en cours : suffisant en local.
+ * La base des liens (voir `baseLiens`) ; en local sans `APP_URL`, l'hôte de
+ * la requête en cours.
  */
 export async function urlPublique(chemin: string): Promise<string> {
-  const base = process.env.APP_URL?.replace(/\/$/, "");
+  const base = baseLiens();
   if (base) return `${base}${chemin}`;
   const h = await headers();
   const hote = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
@@ -112,15 +137,15 @@ export async function urlPublique(chemin: string): Promise<string> {
 /**
  * Le logo de la chambre, en tête de chaque e-mail.
  *
- * Il est servi par la plateforme, à son adresse publique : les messageries
- * refusent les images glissées dans le message lui-même (Gmail ignore les
- * `data:`). Sans `APP_URL` — en local, où aucune messagerie ne joindrait
- * l'image —, le nom de la plateforme en toutes lettres.
+ * Il est servi par la plateforme en ligne : les messageries refusent les
+ * images glissées dans le message lui-même (Gmail ignore les `data:`), et
+ * aucune ne joindrait une image sur localhost. Un e-mail parti d'un poste de
+ * développement prend donc lui aussi le logo sur app.cancham.mg.
  */
 function enTete(): string {
-  const base = process.env.APP_URL?.replace(/\/$/, "");
-  if (!base) return "CanCham Connect";
-  return `<img src="${echapper(`${base}/marque/logo-courriel.png`)}" width="220" height="66" alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar" style="display:block;border:0;outline:none;text-decoration:none;width:220px;height:auto;color:#ffffff;font-size:16px;font-weight:bold">`;
+  const base = baseLiens();
+  const site = base && !estAdresseLocale(base) ? base : ADRESSE_PLATEFORME;
+  return `<img src="${echapper(`${site}/marque/logo-courriel.png`)}" width="220" height="66" alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar" style="display:block;border:0;outline:none;text-decoration:none;width:220px;height:auto;color:#ffffff;font-size:16px;font-weight:bold">`;
 }
 
 /** Une valeur venue d'un formulaire ne doit pas devenir du HTML. */
