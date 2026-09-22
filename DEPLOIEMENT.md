@@ -107,8 +107,8 @@ npm run admin:creer -- --email prenom@cancham.mg --nom "Prénom Nom"
 ```
 
 Le mot de passe est demandé au clavier, sans s'afficher. Connectez-vous
-ensuite sur `/public`. Vos collègues créent leur compte par l'inscription,
-puis vous les promouvez depuis **Équipe & accès**.
+ensuite sur `/auth`, puis ouvrez les comptes de vos collègues depuis
+**Équipe & accès** : chacun reçoit ses accès par e-mail.
 
 Le même script remplace le mot de passe d'un administrateur existant et
 ferme ses sessions : c'est le recours si l'accès est perdu.

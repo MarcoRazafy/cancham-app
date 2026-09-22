@@ -23,7 +23,7 @@ import { isAccessLocked, PAGES_TOUJOURS_OUVERTES } from "@/lib/membership";
  */
 const TOUJOURS_OUVERT = PAGES_TOUJOURS_OUVERTES;
 const REPLI = "/membre/profil";
-const CONNEXION = "/public";
+const CONNEXION = "/auth";
 
 const ACCUEIL: Record<string, string> = {
   membre: "/membre",

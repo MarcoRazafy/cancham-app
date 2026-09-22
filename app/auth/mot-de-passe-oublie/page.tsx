@@ -55,7 +55,7 @@ export default async function MotDePasseOubliePage({
             Rien reçu après quelques minutes ? Regardez dans les indésirables,
             ou{" "}
             <Link
-              href={`/public/mot-de-passe-oublie?${new URLSearchParams({ email: envoye })}`}
+              href={`/auth/mot-de-passe-oublie?${new URLSearchParams({ email: envoye })}`}
               className="text-marque-vert font-semibold no-underline hover:underline"
             >
               refaites la demande
@@ -100,7 +100,7 @@ export default async function MotDePasseOubliePage({
 
       <p className="text-[13.5px] text-muted mt-6 mb-0 pt-5 border-t border-line">
         <Link
-          href="/public"
+          href="/auth"
           className="text-marque-vert font-semibold no-underline hover:underline inline-flex items-center gap-1"
         >
           <ArrowLeft size={14} /> Retour à la connexion

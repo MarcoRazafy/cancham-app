@@ -51,7 +51,7 @@ export default async function InscriptionPage() {
       </p>
 
       <form action={deposerCandidature} className="flex flex-col gap-3.5">
-        <input type="hidden" name="retour" value="/public/inscription" />
+        <input type="hidden" name="retour" value="/auth/inscription" />
 
         <div className="grid gap-3.5 sm:grid-cols-2">
           <ChampAuth label="Nom" icone={<User size={16} />}>
@@ -218,7 +218,7 @@ export default async function InscriptionPage() {
       <p className="text-[13.5px] text-muted mt-6 mb-0">
         Déjà un compte ?{" "}
         <Link
-          href="/public"
+          href="/auth"
           className="text-marque-vert font-semibold no-underline hover:underline"
         >
           Se connecter

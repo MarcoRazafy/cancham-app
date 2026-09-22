@@ -21,8 +21,8 @@ import { getCurrentUser } from "@/lib/session";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-const OUBLI = "/public/mot-de-passe-oublie";
-const NOUVEAU = "/public/nouveau-mot-de-passe";
+const OUBLI = "/auth/mot-de-passe-oublie";
+const NOUVEAU = "/auth/nouveau-mot-de-passe";
 
 /** Demandes tolérées par heure : sur une adresse, puis sur une origine. */
 const DEMANDES_PAR_ADRESSE = 3;

@@ -87,7 +87,7 @@ export default async function BienvenuePage({
   const membre = user.memberId ? await getMember(user.memberId) : null;
   if (!membre) notFound();
   // La suite de la fiche vient après la validation de la candidature.
-  if (membre.statut === "candidature") redirect("/public?attente=1");
+  if (membre.statut === "candidature") redirect("/auth?attente=1");
 
   const numero = numeroEtape((await searchParams).etape);
   const etape = ETAPES_ACCUEIL[numero - 1].cle;

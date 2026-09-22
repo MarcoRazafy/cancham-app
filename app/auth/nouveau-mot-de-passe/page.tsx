@@ -58,7 +58,7 @@ export default async function NouveauMotDePassePage({
             en quelques secondes.
           </p>
           <Link
-            href="/public/mot-de-passe-oublie"
+            href="/auth/mot-de-passe-oublie"
             className="btn-action w-full no-underline px-4 sm:px-[26px]"
           >
             Recevoir un nouveau lien{" "}
@@ -129,7 +129,7 @@ export default async function NouveauMotDePassePage({
 
       <p className="text-[13.5px] text-muted mt-6 mb-0 pt-5 border-t border-line">
         <Link
-          href="/public"
+          href="/auth"
           className="text-marque-vert font-semibold no-underline hover:underline inline-flex items-center gap-1"
         >
           <ArrowLeft size={14} /> Retour à la connexion

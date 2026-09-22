@@ -74,7 +74,7 @@ export function EnTetePublique() {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-line">
       <div className="max-w-[1120px] mx-auto px-5 py-3 md:py-4 flex items-center justify-between gap-4">
         <Link
-          href="/public/vitrine"
+          href="/public"
           aria-label="Accueil CanCham Connect"
           className="shrink-0"
         >
@@ -87,17 +87,14 @@ export function EnTetePublique() {
           aria-label="Navigation principale"
           className="flex items-center gap-1 md:gap-2"
         >
-          <Link
-            href="/public/vitrine#evenements"
-            className={`${lien} sm:inline-flex`}
-          >
+          <Link href="/public#evenements" className={`${lien} sm:inline-flex`}>
             Événements
           </Link>
-          <Link href="/public/inscription" className={`${lien} md:inline-flex`}>
+          <Link href="/auth/inscription" className={`${lien} md:inline-flex`}>
             Devenir membre
           </Link>
           <Link
-            href="/membre"
+            href="/auth"
             className="btn-contour btn-contour-sm text-marque-nuit hover:bg-surface-2 ml-1"
           >
             Espace membre
@@ -115,7 +112,7 @@ export function PiedPublique() {
     <footer className="border-t border-line bg-surface-2 mt-auto">
       <div className="max-w-[1120px] mx-auto px-5 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex flex-col gap-3">
-          <Link href="/public/vitrine" aria-label="Accueil CanCham Connect">
+          <Link href="/public" aria-label="Accueil CanCham Connect">
             <LogoOfficiel className="w-[180px] h-auto" />
           </Link>
           <span className="text-[12.5px] text-faint">
@@ -126,10 +123,10 @@ export function PiedPublique() {
           aria-label="Liens du pied de page"
           className="flex flex-wrap gap-x-6 gap-y-3 text-[13px]"
         >
-          <Link href="/public/vitrine#evenements" className={lien}>
+          <Link href="/public#evenements" className={lien}>
             Événements
           </Link>
-          <Link href="/public/inscription" className={lien}>
+          <Link href="/auth/inscription" className={lien}>
             Devenir membre
           </Link>
           <Link href="/membre" className={lien}>

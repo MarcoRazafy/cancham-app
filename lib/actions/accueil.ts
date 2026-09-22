@@ -40,10 +40,10 @@ import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-const INSCRIPTION = "/public/inscription";
+const INSCRIPTION = "/auth/inscription";
 
 /** Pages publiques d'où l'on dépose une candidature — et où l'on revient en cas d'erreur. */
-const FORMULAIRES = [INSCRIPTION, "/public/vitrine"];
+const FORMULAIRES = [INSCRIPTION, "/public"];
 
 /** Candidatures déposées depuis une même origine en une heure. */
 const CANDIDATURES_PAR_HEURE = 5;
@@ -192,7 +192,7 @@ export async function deposerCandidature(formData: FormData) {
 
   revalidatePath("/", "layout");
   // Retour à la connexion, qui explique que la demande est à l'examen.
-  redirect(`/public?${new URLSearchParams({ demande: "1", email })}`);
+  redirect(`/auth?${new URLSearchParams({ demande: "1", email })}`);
 }
 
 /** Enregistre une étape de la présentation, puis passe à la suivante. */

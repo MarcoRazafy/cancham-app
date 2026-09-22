@@ -9,5 +9,5 @@ export default async function Racine() {
   const u = await utilisateurConnecte();
   if (u?.role === "admin") redirect("/admin");
   if (u?.role === "membre") redirect("/membre");
-  redirect("/public");
+  redirect("/auth");
 }

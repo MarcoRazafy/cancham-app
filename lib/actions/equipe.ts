@@ -145,7 +145,7 @@ export async function creerCompteEquipe(formData: FormData) {
     courrielCompteEquipe(email, {
       fonction,
       motDePasse,
-      lien: await urlPublique(`/public?${new URLSearchParams({ email })}`),
+      lien: await urlPublique(`/auth?${new URLSearchParams({ email })}`),
     }),
   );
   if (!envoye && courrielsActifs()) {
