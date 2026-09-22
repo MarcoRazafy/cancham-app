@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { nomDepuisCourriel } from "@/lib/accueil";
 import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { exigerAdministrateur } from "@/lib/autorisations";
+import { rattacherEquipe } from "@/lib/fil-equipe";
 import { prisma } from "@/lib/db";
 import { NIVEAU_EQUIPE_LABEL } from "@/lib/enums";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -173,6 +174,9 @@ export async function creerCompteEquipe(formData: FormData) {
     );
   }
 
+  // Le nouveau venu rejoint les conversations d'assistance en cours : une
+  // demande de membre s'adresse à l'équipe, pas à ses anciens.
+  await rattacherEquipe();
   await journal(
     "equipe_ajoutee",
     compte.id,
@@ -250,6 +254,7 @@ export async function promouvoirAdmin(formData: FormData) {
     await prisma.member.delete({ where: { id: fiche.id } });
   }
 
+  await rattacherEquipe();
   await journal(
     "admin_promu",
     userId,

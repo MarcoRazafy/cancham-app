@@ -281,10 +281,10 @@ function Conversation({
                 <Bulle
                   message={m}
                   heure={heureExacte(m.envoyeLe)}
-                  // Dans l'assistance, le membre voit qui, dans l'équipe, lui
-                  // a répondu ; l'équipe distingue ses collègues du membre.
+                  // Dans l'assistance, l'équipe voit qui a répondu ; le
+                  // membre, lui, s'adresse à la chambre, pas à une personne.
                   groupe={fil.type === "groupe" || fil.equipe}
-                  signature={
+                  nomAuteur={
                     fil.equipe && space === "membre"
                       ? "Équipe CanCham"
                       : undefined

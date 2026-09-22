@@ -742,7 +742,8 @@ function FilMessages({
         const jour = jourLisible(m.envoyeLe);
         const nouveauJour =
           !precedent || jourLisible(precedent.envoyeLe) !== jour;
-        // Qui, dans l'équipe, a répondu : le nom en tête de chaque suite.
+        // Côté équipe, qui a répondu : le nom en tête de chaque suite. Côté
+        // membre, c'est la chambre qui répond, pas une personne.
         const signe =
           m.equipe &&
           !m.supprime &&
@@ -758,8 +759,7 @@ function FilMessages({
             ) : null}
             {signe ? (
               <div className="self-start mt-1 -mb-0.5 ml-1 text-[11px] font-semibold text-muted">
-                {m.de}
-                {espace === "membre" ? " · Équipe CanCham" : " · équipe"}
+                {espace === "membre" ? "Équipe CanCham" : `${m.de} · équipe`}
               </div>
             ) : null}
             {m.supprime ? (
