@@ -32,9 +32,16 @@ export function register() {
       "COURRIEL_EXPEDITEUR manquant : l'adresse de test de Resend n'écrit qu'au propriétaire du compte.",
     );
   }
-  if (!process.env.APP_URL) {
+  const appUrl = process.env.APP_URL?.trim();
+  if (!appUrl) {
     alertes.push(
-      "APP_URL manquant : les liens des e-mails reprendront l'hôte de chaque requête.",
+      "APP_URL manquant : les liens des e-mails utilisent https://app.cancham.mg.",
+    );
+  } else if (
+    /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])/i.test(appUrl)
+  ) {
+    alertes.push(
+      `APP_URL=${appUrl} pointe vers le serveur lui-même : ignorée, les liens des e-mails utilisent https://app.cancham.mg.`,
     );
   }
   if (process.env.CANCHAM_TODAY) {
