@@ -1,5 +1,6 @@
 import {
   Award,
+  BookUser,
   Briefcase,
   Building2,
   CalendarDays,
@@ -28,6 +29,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   building: Building2,
   award: Award,
   users: Users,
+  annuaire: BookUser,
   calendar: CalendarDays,
   agenda: CalendarRange,
   news: Newspaper,
