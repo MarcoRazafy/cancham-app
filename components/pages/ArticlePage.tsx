@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Globe, LockKeyhole, Pencil } from "lucide-react";
 import { MediaBanner, OfferCard } from "@/components/domain";
 import { BtnLink, Card, EmptyState, Kicker } from "@/components/ui";
 import { GaleriePhotos } from "@/components/GaleriePhotos";
@@ -32,7 +32,19 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
         </BtnLink>
         {/* L'équipe voit l'article comme les membres, avec ses commandes. */}
         {admin ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
+              {n.public ? (
+                <>
+                  <Globe size={14} className="text-success-strong" /> Plateforme
+                  et page publique
+                </>
+              ) : (
+                <>
+                  <LockKeyhole size={14} /> Plateforme uniquement
+                </>
+              )}
+            </span>
             <BtnLink href={`/admin/actualites/${n.id}/modifier`} sm>
               <Pencil size={14} /> Modifier
             </BtnLink>

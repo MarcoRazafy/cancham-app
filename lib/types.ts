@@ -125,9 +125,14 @@ export interface CanchamEvent {
   format: EventFormat;
   cap: number;
   inscrits: number;
+  /** Payant pour les membres. */
   payant: boolean;
-  /** En Ariary. */
+  /** Tarif membre, en Ariary. */
   prix: number;
+  /** Diffusé aussi sur la page publique ; sinon, réservé à la plateforme. */
+  public: boolean;
+  /** Tarif d'une inscription depuis la page publique, en Ariary. 0 = gratuite. */
+  prixPublic: number;
   desc: string;
   photo: string | null;
   /** Heure de début, « HH:MM ». `null` = toute la journée. */
@@ -199,6 +204,8 @@ export interface NewsItem {
   corps: string;
   /** Photos de l'article, dans l'ordre ; la première sert de couverture. */
   images: string[];
+  /** Diffusée aussi sur la page publique ; sinon, réservée aux membres. */
+  public: boolean;
   commentaires: Comment[];
   /** Nombre de « j'aime ». */
   jaimes: number;

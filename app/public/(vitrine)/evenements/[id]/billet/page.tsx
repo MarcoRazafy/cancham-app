@@ -68,10 +68,11 @@ export default async function BilletsPublics({
           <b className="text-ink">{billets[0].email}</b>, avec le lien de cette
           page.
         </p>
-        {e.payant ? (
+        {e.prixPublic > 0 ? (
           <p className="m-0 mt-4 text-[13.5px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3">
             <b>
-              Événement payant · {fmtMoney(e.prix * billets.length)} à régler
+              Événement payant · {fmtMoney(e.prixPublic * billets.length)} à
+              régler
             </b>
             <br />
             Le règlement se fait auprès de l’équipe CanCham, avant l’événement.

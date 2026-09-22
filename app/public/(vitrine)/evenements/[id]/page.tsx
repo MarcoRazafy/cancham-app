@@ -37,7 +37,8 @@ export default async function EvenementPublic({
     getEvent(id),
     getProchainsEvenements(8),
   ]);
-  if (!e) notFound();
+  // Réservé à la plateforme : il n'existe pas pour le public.
+  if (!e || !e.public) notFound();
 
   const index = Math.max(
     0,
@@ -122,7 +123,7 @@ export default async function EvenementPublic({
           <aside className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 rounded-xl border border-line bg-surface shadow-[var(--shadow)] p-6">
             <div className="surtitre text-faint">Participation</div>
             <div className="titre text-[30px] mt-1.5">
-              {e.payant ? fmtMoney(e.prix) : "Gratuit"}
+              {e.prixPublic > 0 ? fmtMoney(e.prixPublic) : "Gratuit"}
             </div>
             <p className="text-[13px] text-muted mt-1.5 mb-5">
               {restantes > 0
@@ -140,8 +141,8 @@ export default async function EvenementPublic({
                   id: e.id,
                   titre: e.titre,
                   lieu: e.lieu,
-                  payant: e.payant,
-                  prix: e.prix,
+                  payant: e.prixPublic > 0,
+                  prix: e.prixPublic,
                   restantes,
                 }}
               />

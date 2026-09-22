@@ -33,6 +33,7 @@ import {
   enregistrerOffre,
   enregistrerRessource,
 } from "@/lib/actions/content";
+import { ChoixDiffusion } from "@/components/forms/ChoixDiffusion";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
 
 const CATEGORIES: NewsCategory[] = [
@@ -117,6 +118,11 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
               className={INPUT}
             />
           </Field>
+        </Card>
+
+        <Card className="p-6 flex flex-col gap-3">
+          <h2 className="text-[15px] m-0">Diffusion</h2>
+          <ChoixDiffusion publique={news?.public ?? false} />
         </Card>
 
         <SubmitButton pendingLabel="Publication…" className="w-full">

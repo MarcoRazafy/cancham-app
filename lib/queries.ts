@@ -39,6 +39,7 @@ import type {
   Invoice,
   Member,
   MessageThread,
+  NewsCategory,
   NewsItem,
   Personne,
   Offer,
@@ -175,6 +176,8 @@ export async function getEvents(): Promise<CanchamEvent[]> {
     inscrits: e._count.participants,
     payant: e.payant,
     prix: e.prix,
+    public: e.public,
+    prixPublic: e.prixPublic,
     desc: e.desc,
     photo: e.photo,
     debut: e.debut,
@@ -233,6 +236,8 @@ export async function getEvent(id: string): Promise<CanchamEvent | null> {
     inscrits: e._count.participants,
     payant: e.payant,
     prix: e.prix,
+    public: e.public,
+    prixPublic: e.prixPublic,
     desc: e.desc,
     photo: e.photo,
     debut: e.debut,
@@ -370,6 +375,7 @@ function versNews(n: NewsRow, userId?: string): NewsItem {
     },
     extrait: n.extrait,
     corps: n.corps,
+    public: n.public,
     images: n.images,
     commentaires: versCommentaires(n.commentaires, userId),
     jaimes: n._count.jaimes,
@@ -395,6 +401,76 @@ export async function getNewsItem(
     include: newsInclude(userId),
   });
   return n ? versNews(n, userId) : null;
+}
+
+/** Une actualité telle que la page publique la montre : sans commentaires ni « j'aime ». */
+export interface ActualitePublique {
+  id: string;
+  titre: string;
+  date: string;
+  cat: NewsCategory;
+  extrait: string;
+  corps: string;
+  images: string[];
+}
+
+function versActualitePublique(n: {
+  id: string;
+  titre: string;
+  date: Date;
+  cat: keyof typeof NEWS_CAT_LABEL;
+  extrait: string;
+  corps: string;
+  images: string[];
+}): ActualitePublique {
+  return {
+    id: n.id,
+    titre: n.titre,
+    date: toISODate(n.date),
+    cat: NEWS_CAT_LABEL[n.cat],
+    extrait: n.extrait,
+    corps: n.corps,
+    images: n.images,
+  };
+}
+
+const CHAMPS_ACTUALITE_PUBLIQUE = {
+  id: true,
+  titre: true,
+  date: true,
+  cat: true,
+  extrait: true,
+  corps: true,
+  images: true,
+} as const;
+
+/** Les dernières actualités diffusées sur la page publique. */
+export async function getActualitesPubliques(
+  n = 3,
+): Promise<ActualitePublique[]> {
+  const rows = await prisma.news.findMany({
+    where: { public: true },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    take: n,
+    select: CHAMPS_ACTUALITE_PUBLIQUE,
+  });
+  return rows.map(versActualitePublique);
+}
+
+/** Une actualité de la page publique ; `null` si elle est réservée aux membres. */
+export async function getActualitePublique(
+  id: string,
+): Promise<ActualitePublique | null> {
+  const n = await prisma.news.findFirst({
+    where: { id, public: true },
+    select: CHAMPS_ACTUALITE_PUBLIQUE,
+  });
+  return n ? versActualitePublique(n) : null;
+}
+
+/** Y a-t-il au moins une actualité sur la page publique ? */
+export async function aDesActualitesPubliques(): Promise<boolean> {
+  return (await prisma.news.count({ where: { public: true } })) > 0;
 }
 
 export async function getResources(
@@ -1216,7 +1292,7 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
       where: { statut: { not: "candidature" } },
       select: { secteur: true, ville: true },
     }),
-    prisma.event.count({ where: { date: { gte: jourBase() } } }),
+    prisma.event.count({ where: { date: { gte: jourBase() }, public: true } }),
   ]);
 
   return {
@@ -1231,10 +1307,13 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
   };
 }
 
-/** Les prochains rendez-vous mis en avant sur la page publique. */
+/**
+ * Les prochains rendez-vous mis en avant sur la page publique — ceux qui y
+ * sont diffusés : un événement réservé à la plateforme n'y paraît pas.
+ */
 export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
   const rows = await prisma.event.findMany({
-    where: { date: { gte: jourBase() } },
+    where: { date: { gte: jourBase() }, public: true },
     include: { _count: { select: { participants: true } } },
     orderBy: { date: "asc" },
     take: n,
@@ -1249,6 +1328,8 @@ export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
     inscrits: e._count.participants,
     payant: e.payant,
     prix: e.prix,
+    public: e.public,
+    prixPublic: e.prixPublic,
     desc: e.desc,
     photo: e.photo,
     debut: e.debut,

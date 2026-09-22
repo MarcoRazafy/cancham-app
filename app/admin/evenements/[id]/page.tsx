@@ -21,6 +21,8 @@ import {
   UserX,
   Users,
   X,
+  Globe,
+  LockKeyhole,
 } from "lucide-react";
 import { Compteur, Jauge, Onglets, Panneau, Vide } from "@/components/admin/ui";
 import { ScannerQr } from "@/components/admin/ScannerQr";
@@ -183,7 +185,20 @@ export default async function EvenementAdmin({
               </Pill>
               <Pill>{e.format}</Pill>
               <Pill tone={e.payant ? "warn" : "ok"}>
-                {e.payant ? fmtMoney(e.prix) : "Inclus"}
+                Membres · {e.payant ? fmtMoney(e.prix) : "Inclus"}
+              </Pill>
+              {e.public ? (
+                <Pill tone={e.prixPublic > 0 ? "warn" : "ok"}>
+                  Public ·{" "}
+                  {e.prixPublic > 0 ? fmtMoney(e.prixPublic) : "Gratuit"}
+                </Pill>
+              ) : null}
+              <Pill
+                icon={
+                  e.public ? <Globe size={11} /> : <LockKeyhole size={11} />
+                }
+              >
+                {e.public ? "Page publique" : "Plateforme uniquement"}
               </Pill>
             </div>
             <h1 className="text-[clamp(22px,2.6vw,30px)] m-0">{e.titre}</h1>
@@ -214,12 +229,18 @@ export default async function EvenementAdmin({
               >
                 <Pencil size={14} /> Modifier
               </Link>
-              <Link
-                href={`/membre/evenements/${e.id}`}
-                className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
-              >
-                Page membre <ExternalLink size={13} />
-              </Link>
+              {/* La page publique, telle que le public la voit ; l'espace
+                  membre, lui, est fermé à l'équipe. */}
+              {e.public ? (
+                <a
+                  href={`/public/evenements/${e.id}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"
+                >
+                  Page publique <ExternalLink size={13} />
+                </a>
+              ) : null}
               <DeleteEventButton eventId={e.id} titre={e.titre} />
             </div>
           </div>
