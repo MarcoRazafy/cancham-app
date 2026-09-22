@@ -93,6 +93,20 @@ export async function urlPublique(chemin: string): Promise<string> {
 
 /* ============================ Gabarit ============================ */
 
+/**
+ * Le logo de la chambre, en tête de chaque e-mail.
+ *
+ * Il est servi par la plateforme, à son adresse publique : les messageries
+ * refusent les images glissées dans le message lui-même (Gmail ignore les
+ * `data:`). Sans `APP_URL` — en local, où aucune messagerie ne joindrait
+ * l'image —, le nom de la plateforme en toutes lettres.
+ */
+function enTete(): string {
+  const base = process.env.APP_URL?.replace(/\/$/, "");
+  if (!base) return "CanCham Connect";
+  return `<img src="${echapper(`${base}/marque/logo-courriel.png`)}" width="220" height="66" alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar" style="display:block;border:0;outline:none;text-decoration:none;width:220px;height:auto;color:#ffffff;font-size:16px;font-weight:bold">`;
+}
+
 /** Une valeur venue d'un formulaire ne doit pas devenir du HTML. */
 export function echapper(texte: string): string {
   return texte
@@ -127,7 +141,7 @@ export function gabarit({
 <html lang="fr"><body style="margin:0;padding:24px 12px;background:#f3f5f8;font-family:Arial,Helvetica,sans-serif">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden">
-<tr><td style="background:#0f1d2c;padding:20px 28px;color:#ffffff;font-size:18px;font-weight:bold">CanCham Connect</td></tr>
+<tr><td style="background:#0f1d2c;padding:18px 28px;color:#ffffff;font-size:18px;font-weight:bold">${enTete()}</td></tr>
 <tr><td style="height:4px;background:linear-gradient(90deg,#ad0707,#007140)"></td></tr>
 <tr><td style="padding:28px">
 <h1 style="margin:0 0 18px;font-size:21px;color:#0f1d2c">${echapper(titre)}</h1>
