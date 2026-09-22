@@ -135,7 +135,18 @@ export async function enregistrerActualite(formData: FormData) {
     )
     .filter((u): u is string => Boolean(u));
 
-  const data = { titre, extrait, corps, cat, date, images };
+  // Sans choix explicite, réservée aux membres, comme avant que la
+  // diffusion se choisisse.
+  const estPublique = texte(formData, "diffusion") === "public";
+  const data = {
+    titre,
+    extrait,
+    corps,
+    cat,
+    date,
+    images,
+    public: estPublique,
+  };
   const n = id
     ? await prisma.news.update({ where: { id }, data })
     : await prisma.news.create({
@@ -150,12 +161,16 @@ export async function enregistrerActualite(formData: FormData) {
     id ? "actualite_modifiee" : "actualite_publiee",
     "News",
     n.id,
-    `« ${n.titre} »`,
+    `« ${n.titre} » · ${n.public ? "plateforme et page publique" : "plateforme uniquement"}`,
   );
   revalideTout();
   redirectWithFlash(
     `/admin/actualites/${n.id}`,
-    id ? "Actualité mise à jour" : "Actualité publiée",
+    id
+      ? "Actualité mise à jour"
+      : n.public
+        ? "Actualité publiée sur la plateforme et la page publique"
+        : "Actualité publiée sur la plateforme",
   );
 }
 

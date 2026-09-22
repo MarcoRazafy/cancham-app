@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { Globe, Pencil, Plus } from "lucide-react";
 import { NewsFeedItem, OfferCard } from "@/components/domain";
 import {
   OffreButton,
@@ -68,6 +68,14 @@ export async function ActualitesPage({ space }: { space: Space }) {
               actions={
                 admin ? (
                   <>
+                    {n.public ? (
+                      <span
+                        title="Diffusée aussi sur la page publique"
+                        className="inline-flex items-center gap-1 h-9 px-2.5 rounded-[var(--radius-s)] border border-line bg-surface text-[12px] font-semibold text-success-strong"
+                      >
+                        <Globe size={13} /> Page publique
+                      </span>
+                    ) : null}
                     <Link
                       href={`/admin/actualites/${n.id}/modifier`}
                       aria-label={`Modifier « ${n.titre} »`}

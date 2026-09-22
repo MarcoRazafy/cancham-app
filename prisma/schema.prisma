@@ -257,24 +257,31 @@ model Produit {
 // ============================ Événements ============================
 
 model Event {
-  id      String      @id @default(cuid())
-  titre   String
-  date    DateTime    @db.Date
-  lieu    String
-  format  EventFormat
+  id         String      @id @default(cuid())
+  titre      String
+  date       DateTime    @db.Date
+  lieu       String
+  format     EventFormat
   /// Capacité d'accueil.
-  cap     Int
-  payant  Boolean     @default(false)
-  /// En Ariary. 0 si gratuit.
-  prix    Int         @default(0)
-  desc    String
-  photo   String?
+  cap        Int
+  /// Payant pour les membres : `prix` est leur tarif.
+  payant     Boolean     @default(false)
+  /// Tarif membre, en Ariary. 0 si inclus dans l'adhésion.
+  prix       Int         @default(0)
+  /// Diffusé aussi sur la page publique, où l'on s'inscrit sans compte.
+  /// Faux : l'événement n'existe que sur la plateforme, pour les membres.
+  public     Boolean     @default(true)
+  /// Tarif public, en Ariary, pour une inscription depuis la page publique.
+  /// 0 si gratuite.
+  prixPublic Int         @default(0)
+  desc       String
+  photo      String?
   /// Heure de début, « HH:MM ». `null` = toute la journée.
-  debut   String?
+  debut      String?
   /// Heure de fin, « HH:MM ». `null` = pas d'heure de fin annoncée.
-  fin     String?
+  fin        String?
   /// À qui l'événement s'adresse en priorité.
-  pourQui String?
+  pourQui    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -383,6 +390,9 @@ model News {
   cat     NewsCategory
   extrait String
   corps   String
+  /// Diffusée aussi sur la page publique. Faux : réservée aux membres, sur
+  /// la plateforme.
+  public  Boolean      @default(false)
 
   mediaType     MediaType
   mediaTheme    MediaTheme

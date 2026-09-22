@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowDown, ArrowUp, Check, Plus, Trash2 } from "lucide-react";
 import { ChampPhoto, Field, INPUT, SubmitButton } from "@/components/form-bits";
+import { ChoixDiffusion } from "@/components/forms/ChoixDiffusion";
 import { Card } from "@/components/ui";
 import { saveEvent } from "@/lib/actions/events";
 import type { CanchamEvent, EtapeProgramme } from "@/lib/types";
@@ -44,6 +45,11 @@ function Rubrique({
  */
 export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
   const [payant, setPayant] = useState(event?.payant ?? false);
+  // Un nouvel événement paraît aussi sur la page publique, comme jusqu'ici.
+  const [publique, setPublique] = useState(event?.public ?? true);
+  const [payantPublic, setPayantPublic] = useState(
+    (event?.prixPublic ?? 0) > 0,
+  );
   const [etapes, setEtapes] = useState<Etape[]>(() =>
     event?.programme?.length
       ? event.programme.map(nouvelleEtape)
@@ -241,8 +247,19 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
         </div>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-[88px]">
-          <Rubrique titre="Participation">
-            <Field label="Accès">
+          <Rubrique titre="Diffusion">
+            <ChoixDiffusion publique={publique} onChange={setPublique} />
+          </Rubrique>
+
+          <Rubrique
+            titre="Participation"
+            aide={
+              publique
+                ? "Deux tarifs : celui des membres, et celui d’une inscription depuis la page publique."
+                : undefined
+            }
+          >
+            <Field label="Tarif membres">
               <select
                 name="type"
                 value={payant ? "payant" : "gratuit"}
@@ -255,8 +272,8 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
             </Field>
             {payant ? (
               <Field
-                label="Tarif (Ariary)"
-                hint="Une facture est générée à chaque inscription."
+                label="Prix membre (Ariary)"
+                hint="Une facture est générée à chaque inscription de membre."
               >
                 <input
                   type="number"
@@ -267,6 +284,38 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
                   className={INPUT}
                 />
               </Field>
+            ) : null}
+            {publique ? (
+              <>
+                <Field label="Tarif public">
+                  <select
+                    name="typePublic"
+                    value={payantPublic ? "payant" : "gratuit"}
+                    onChange={(ev) =>
+                      setPayantPublic(ev.target.value === "payant")
+                    }
+                    className={INPUT}
+                  >
+                    <option value="gratuit">Gratuit</option>
+                    <option value="payant">Payant</option>
+                  </select>
+                </Field>
+                {payantPublic ? (
+                  <Field
+                    label="Prix public (Ariary)"
+                    hint="Réglé auprès de l’équipe : le journal signale chaque inscription."
+                  >
+                    <input
+                      type="number"
+                      name="prixPublic"
+                      min={1}
+                      required
+                      defaultValue={event?.prixPublic || event?.prix || 75000}
+                      className={INPUT}
+                    />
+                  </Field>
+                ) : null}
+              </>
             ) : null}
           </Rubrique>
 

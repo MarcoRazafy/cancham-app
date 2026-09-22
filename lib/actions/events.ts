@@ -244,7 +244,9 @@ export async function inscriptionPublique(formData: FormData) {
     where: { id: eventId },
     include: { _count: { select: { participants: true } } },
   });
-  if (!event) redirectWithErreur("/public", "Événement introuvable.");
+  if (!event?.public) {
+    redirectWithErreur("/public", "Événement introuvable.");
+  }
   if (estTermine(event)) {
     redirectWithErreur(fiche, "Cet événement est terminé.");
   }
@@ -306,7 +308,8 @@ export async function inscriptionPublique(formData: FormData) {
 
   const code = await codeAcces(eventId);
   const n = noms.length;
-  const aRegler = event.payant ? fmtMoney(event.prix * n) : null;
+  // Le tarif public, pas celui des membres.
+  const aRegler = event.prixPublic > 0 ? fmtMoney(event.prixPublic * n) : null;
   await prisma.$transaction([
     prisma.attendee.createMany({
       data: noms.map((nom, i) => ({
@@ -438,6 +441,13 @@ export async function saveEvent(formData: FormData) {
   const cap = Math.round(Number(formData.get("cap")));
   const payant = texte(formData, "type") === "payant";
   const prix = payant ? Math.round(Number(formData.get("prix"))) : 0;
+  // Sans choix explicite, l'événement paraît aussi sur la page publique :
+  // c'était la règle avant que la diffusion se choisisse.
+  const estPublic = texte(formData, "diffusion") !== "plateforme";
+  const payantPublic = estPublic && texte(formData, "typePublic") === "payant";
+  const prixPublic = payantPublic
+    ? Math.round(Number(formData.get("prixPublic")))
+    : 0;
 
   const debut = texte(formData, "debut") || null;
   const fin = texte(formData, "fin") || null;
@@ -459,7 +469,10 @@ export async function saveEvent(formData: FormData) {
     redirectWithErreur(retour, "La capacité doit être d’au moins une place.");
   }
   if (payant && (!Number.isFinite(prix) || prix <= 0)) {
-    redirectWithErreur(retour, "Indiquez le tarif d’un événement payant.");
+    redirectWithErreur(retour, "Indiquez le prix membre.");
+  }
+  if (payantPublic && (!Number.isFinite(prixPublic) || prixPublic <= 0)) {
+    redirectWithErreur(retour, "Indiquez le prix public.");
   }
 
   let photo: string | null = null;
@@ -498,6 +511,8 @@ export async function saveEvent(formData: FormData) {
     cap,
     payant,
     prix,
+    public: estPublic,
+    prixPublic,
     desc: texte(formData, "desc") || "Détails à venir.",
     pourQui: texte(formData, "pourQui") || null,
   };
@@ -528,7 +543,7 @@ export async function saveEvent(formData: FormData) {
       entite: "Event",
       entiteId: e.id,
       acteur: await acteurEquipe(),
-      detail: `« ${e.titre} » · ${e.date.toLocaleDateString("fr-FR", { timeZone: "UTC" })} · ${e.lieu}.`,
+      detail: `« ${e.titre} » · ${e.date.toLocaleDateString("fr-FR", { timeZone: "UTC" })} · ${e.lieu} · ${e.public ? "plateforme et page publique" : "plateforme uniquement"}.`,
     },
   });
 
@@ -537,7 +552,7 @@ export async function saveEvent(formData: FormData) {
     pageEvenement(e.id),
     id
       ? `« ${e.titre} » mis à jour`
-      : `« ${e.titre} » créé et publié aux membres`,
+      : `« ${e.titre} » créé · ${e.public ? "publié sur la plateforme et la page publique" : "publié sur la plateforme"}`,
   );
 }
 

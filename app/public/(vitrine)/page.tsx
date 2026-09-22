@@ -4,10 +4,15 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
+import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
 import { VISUELS } from "@/lib/images-publiques";
-import { getProchainsEvenements, getStatsPubliques } from "@/lib/queries";
+import {
+  getActualitesPubliques,
+  getProchainsEvenements,
+  getStatsPubliques,
+} from "@/lib/queries";
 
 /**
  * Page d'accueil publique, conforme à la charte CanCham.
@@ -20,9 +25,11 @@ export default async function PublicHome() {
   // toutes à la compilation, et les chiffres comme les prochains événements
   // resteraient ceux du jour du déploiement.
   await connection();
-  const [stats, evenements] = await Promise.all([
+  const [stats, evenements, actualites] = await Promise.all([
     getStatsPubliques(),
     getProchainsEvenements(8),
+    // Seules les actualités diffusées sur la page publique.
+    getActualitesPubliques(3),
   ]);
 
   const chiffres = [
@@ -240,6 +247,30 @@ export default async function PublicHome() {
           </div>
         </div>
       </section>
+
+      {/* ==================== Actualités ==================== */}
+      {actualites.length ? (
+        <section id="actualites" className="scroll-mt-[124px]">
+          <div className="max-w-[1120px] mx-auto px-5 pb-16">
+            <div className="apparition-defilement">
+              <span className="surtitre text-marque-vert">
+                La vie de la chambre
+              </span>
+              <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
+                Les dernières <Saillant ton="vert">actualités</Saillant>
+              </h2>
+              <p className="text-[15px] text-muted m-0 mt-2.5">
+                Ce qui se passe au sein du réseau CanCham.
+              </p>
+              <div className="grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
+                {actualites.map((a) => (
+                  <CarteActualite key={a.id} actualite={a} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }

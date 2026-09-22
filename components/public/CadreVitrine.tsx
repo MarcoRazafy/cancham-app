@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { ArrowUpRight, CircleUserRound } from "lucide-react";
 import { LogoOfficiel, Sigle } from "@/components/public/Marque";
 import { fmtDate } from "@/lib/format";
-import { getProchainsEvenements } from "@/lib/queries";
+import { aDesActualitesPubliques, getProchainsEvenements } from "@/lib/queries";
 
 /**
  * En-tête et pied de la vitrine, sur le modèle du site cancham.mg.
@@ -31,7 +31,10 @@ export async function EnTetePublique() {
   // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
   // pendant le build, et le bandeau doit suivre la programmation.
   await connection();
-  const evenements = await getProchainsEvenements(6);
+  const [evenements, actualites] = await Promise.all([
+    getProchainsEvenements(6),
+    aDesActualitesPubliques(),
+  ]);
   const annonces = evenements.length
     ? evenements.map((e) => ({
         texte: [
@@ -120,6 +123,11 @@ export async function EnTetePublique() {
             <Link href="/public#evenements" className={lien}>
               Événements
             </Link>
+            {actualites ? (
+              <Link href="/public#actualites" className={lien}>
+                Actualités
+              </Link>
+            ) : null}
             <a
               href="https://cancham.mg"
               target="_blank"

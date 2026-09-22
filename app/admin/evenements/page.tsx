@@ -1,7 +1,14 @@
 import Image from "next/image";
 import { Partage } from "@/components/Partage";
 import Link from "next/link";
-import { CalendarDays, ChevronRight, MapPin, Plus } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronRight,
+  Globe,
+  LockKeyhole,
+  MapPin,
+  Plus,
+} from "lucide-react";
 import { EnTeteAdmin, Jauge, Onglets, Vide } from "@/components/admin/ui";
 import { Card, Pill, Saillant } from "@/components/ui";
 import { fmtMoney, isPast, parseISO } from "@/lib/format";
@@ -104,9 +111,20 @@ export default async function AdminEvenements({
                             .replace(".", "")}
                         </span>
                       </span>
-                      <span className="absolute top-3 right-3">
+                      <span className="absolute top-3 right-3 flex flex-col items-end gap-1">
                         <Pill tone={e.payant ? "warn" : "ok"}>
                           {e.payant ? fmtMoney(e.prix) : "Inclus"}
+                        </Pill>
+                        <Pill
+                          icon={
+                            e.public ? (
+                              <Globe size={11} />
+                            ) : (
+                              <LockKeyhole size={11} />
+                            )
+                          }
+                        >
+                          {e.public ? "Public" : "Plateforme"}
                         </Pill>
                       </span>
                     </div>
