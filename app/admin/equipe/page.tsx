@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { Mail, Phone, Search } from "lucide-react";
+import { Lock, Mail, Phone, Search } from "lucide-react";
 import { EnTeteAdmin, Panneau, Vide } from "@/components/admin/ui";
 import { FiltresAuto } from "@/components/FiltresAuto";
 import {
+  ChangerNiveauButton,
   FormulaireNouvelEquipier,
   PromouvoirButton,
   RetirerAdminButton,
 } from "@/components/forms/EquipeForms";
 import { Pastille } from "@/components/messagerie/outils";
 import { Pill, Saillant, StatusPill } from "@/components/ui";
+import { estAdministrateur } from "@/lib/autorisations";
 import { initialesDe } from "@/lib/avatars";
+import { NIVEAU_EQUIPE_LABEL } from "@/lib/enums";
 import { fmtDate } from "@/lib/format";
 import {
   chercherComptes,
@@ -21,9 +24,10 @@ import { getCurrentUser } from "@/lib/session";
 /**
  * Équipe et accès : qui tient le back-office, et qui peut y entrer.
  *
- * Seule l'équipe ouvre un compte d'équipe : une adresse, une fonction, et
- * l'identifiant part par e-mail avec un mot de passe provisoire. Un compte
- * déjà inscrit peut aussi être promu, en le cherchant.
+ * Seul un administrateur ouvre un compte d'équipe : une adresse, une
+ * fonction, un rôle, et l'identifiant part par e-mail avec un mot de passe
+ * provisoire. Un compte déjà inscrit peut aussi être promu, en le cherchant.
+ * Un manager voit l'équipe, sans pouvoir la modifier.
  */
 export default async function AdminEquipe({
   searchParams,
@@ -35,10 +39,11 @@ export default async function AdminEquipe({
     getCurrentUser("admin"),
   ]);
   const recherche = q?.trim() ?? "";
+  const gere = estAdministrateur(moi);
 
   const [admins, trouves] = await Promise.all([
     getAdministrateurs(),
-    chercherComptes(recherche),
+    gere ? chercherComptes(recherche) : Promise.resolve([]),
   ]);
 
   return (
@@ -51,68 +56,82 @@ export default async function AdminEquipe({
           </>
         }
       >
-        Les comptes qui ouvrent le back-office. Ajoutez un membre de l’équipe
-        avec son adresse et sa fonction : il reçoit ses accès par e-mail.
+        {gere
+          ? "Les comptes qui ouvrent le back-office. Ajoutez un membre de l’équipe avec son adresse, sa fonction et son rôle : il reçoit ses accès par e-mail."
+          : "Les comptes qui ouvrent le back-office. Seuls les administrateurs ajoutent ou retirent un membre de l’équipe."}
       </EnTeteAdmin>
 
       <div className="grid gap-4 items-start lg:grid-cols-[1fr_380px]">
-        {/* ==================== Inscriptions à examiner ==================== */}
-        <div className="flex flex-col gap-4 min-w-0">
-          <Panneau
-            titre={
-              <>
-                Ajouter à <Saillant>l’équipe</Saillant>
-              </>
-            }
-            sousTitre="Un compte d’administrateur, ouvert par vous"
-            teinte="rouge"
-          >
-            <FormulaireNouvelEquipier />
-          </Panneau>
+        {gere ? (
+          <div className="flex flex-col gap-4 min-w-0">
+            <Panneau
+              titre={
+                <>
+                  Ajouter à <Saillant>l’équipe</Saillant>
+                </>
+              }
+              sousTitre="Un compte d’administrateur ou de manager, ouvert par vous"
+              teinte="rouge"
+            >
+              <FormulaireNouvelEquipier />
+            </Panneau>
 
-          {/* ==================== Recherche ==================== */}
-          <Panneau
-            titre="Promouvoir un compte existant"
-            sousTitre="Quelqu’un qui a déjà un compte de membre et rejoint l’équipe"
-            teinte="bleu"
-            corpsClassName="px-6 pb-3"
-          >
-            <FiltresAuto action="/admin/equipe" className="relative mb-4">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
-              />
-              <input
-                type="search"
-                name="q"
-                defaultValue={recherche}
-                placeholder="Nom, adresse courriel, entreprise…"
-                aria-label="Chercher un compte"
-                className="w-full max-w-[420px] rounded-[var(--radius-s)] border border-line bg-surface text-ink pl-9 pr-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
-              />
-            </FiltresAuto>
+            {/* ==================== Recherche ==================== */}
+            <Panneau
+              titre="Promouvoir un compte existant"
+              sousTitre="Quelqu’un qui a déjà un compte de membre et rejoint l’équipe"
+              teinte="bleu"
+              corpsClassName="px-6 pb-3"
+            >
+              <FiltresAuto action="/admin/equipe" className="relative mb-4">
+                <Search
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none"
+                />
+                <input
+                  type="search"
+                  name="q"
+                  defaultValue={recherche}
+                  placeholder="Nom, adresse courriel, entreprise…"
+                  aria-label="Chercher un compte"
+                  className="w-full max-w-[420px] rounded-[var(--radius-s)] border border-line bg-surface text-ink pl-9 pr-3 py-2.5 text-[13.5px] outline-none focus:border-accent"
+                />
+              </FiltresAuto>
 
-            {!recherche ? (
-              <p className="m-0 pb-3 text-[13px] text-muted">
-                Tapez quelques lettres pour retrouver un compte.
+              {!recherche ? (
+                <p className="m-0 pb-3 text-[13px] text-muted">
+                  Tapez quelques lettres pour retrouver un compte.
+                </p>
+              ) : trouves.length ? (
+                <ul className="list-none m-0 p-0">
+                  {trouves.map((c) => (
+                    <Inscription key={c.id} compte={c} />
+                  ))}
+                </ul>
+              ) : (
+                <Vide icone={<Search size={26} />}>
+                  Aucun compte ne correspond à « {recherche} ».
+                </Vide>
+              )}
+            </Panneau>
+          </div>
+        ) : (
+          <Panneau titre="Votre rôle : manager" teinte="bleu">
+            <div className="flex gap-3 items-start pb-2">
+              <Lock size={18} className="text-faint shrink-0 mt-0.5" />
+              <p className="m-0 text-[13.4px] text-muted">
+                Vous avez accès à tout le back-office — membres, paiements,
+                événements, contenus, messagerie —, sauf à la gestion de
+                l’équipe : ajouter quelqu’un, changer son rôle ou retirer son
+                accès revient à un administrateur.
               </p>
-            ) : trouves.length ? (
-              <ul className="list-none m-0 p-0">
-                {trouves.map((c) => (
-                  <Inscription key={c.id} compte={c} />
-                ))}
-              </ul>
-            ) : (
-              <Vide icone={<Search size={26} />}>
-                Aucun compte ne correspond à « {recherche} ».
-              </Vide>
-            )}
+            </div>
           </Panneau>
-        </div>
+        )}
 
-        {/* ==================== Administrateurs ==================== */}
+        {/* ==================== L'équipe ==================== */}
         <Panneau
-          titre="Administrateurs"
+          titre="L’équipe"
           sousTitre={`${admins.length} compte${admins.length > 1 ? "s" : ""} avec accès au back-office`}
           teinte="degrade"
           corpsClassName="px-6 pb-3"
@@ -137,7 +156,12 @@ export default async function AdminEquipe({
                       <span className="text-[14.5px] font-semibold text-ink">
                         {a.nom}
                       </span>
-                      {cest_moi ? <Pill tone="ok">Vous</Pill> : null}
+                      <Pill
+                        tone={a.niveau === "administrateur" ? "ok" : "muted"}
+                      >
+                        {NIVEAU_EQUIPE_LABEL[a.niveau]}
+                      </Pill>
+                      {cest_moi ? <Pill>Vous</Pill> : null}
                       {a.sansMotDePasse ? (
                         <Pill tone="warn">Jamais connecté</Pill>
                       ) : null}
@@ -162,10 +186,15 @@ export default async function AdminEquipe({
                       ) : null}
                     </div>
                     <div className="text-[11.5px] text-faint mt-1.5">
-                      Administrateur depuis le {fmtDate(a.depuis)}
+                      Dans l’équipe depuis le {fmtDate(a.depuis)}
                     </div>
-                    {!cest_moi ? (
-                      <div className="mt-2.5">
+                    {gere && !cest_moi ? (
+                      <div className="mt-2.5 flex gap-2 flex-wrap">
+                        <ChangerNiveauButton
+                          userId={a.id}
+                          nom={a.nom}
+                          niveau={a.niveau}
+                        />
                         <RetirerAdminButton userId={a.id} nom={a.nom} />
                       </div>
                     ) : null}
@@ -175,8 +204,8 @@ export default async function AdminEquipe({
             })}
           </ul>
           <p className="m-0 mt-1 mb-3 text-[12px] text-faint">
-            Un administrateur ne peut pas retirer son propre accès, et la
-            plateforme en garde toujours au moins un.
+            Un administrateur ne peut ni retirer son propre accès ni changer son
+            propre rôle : la plateforme en garde toujours au moins un.
           </p>
         </Panneau>
       </div>

@@ -153,7 +153,7 @@ export function courrielDemandeApprouvee(
 
 export function courrielCompteEquipe(
   a: string,
-  d: { fonction: string; motDePasse: string; lien: string },
+  d: { fonction: string; niveau: string; motDePasse: string; lien: string },
 ): Courriel {
   return {
     a,
@@ -162,7 +162,7 @@ export function courrielCompteEquipe(
       titre: "Bienvenue dans l’équipe CanCham Connect",
       paragraphes: [
         "Bonjour,",
-        `Un accès au back-office de CanCham Connect vient d’être ouvert pour vous, en tant que « ${d.fonction} ».`,
+        `Un accès au back-office de CanCham Connect vient d’être ouvert pour vous, en tant que « ${d.fonction} », avec le niveau ${d.niveau}.`,
         `Votre identifiant : ${a}`,
         `Votre mot de passe provisoire : ${d.motDePasse}`,
         "Dès votre première connexion, ouvrez « Mon profil » pour indiquer votre nom et choisir votre propre mot de passe.",

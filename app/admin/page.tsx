@@ -341,12 +341,22 @@ export default async function TableauDeBord() {
                   className="border-t border-line flex items-center gap-4 py-3"
                 >
                   <span className="min-w-0 flex-1">
-                    <Link
-                      href={`/admin/membres/${f.membreId}`}
-                      className="block text-[14px] font-semibold text-ink no-underline hover:text-accent truncate"
-                    >
-                      {f.membre}
-                    </Link>
+                    {f.membreId ? (
+                      <Link
+                        href={`/admin/membres/${f.membreId}`}
+                        className="block text-[14px] font-semibold text-ink no-underline hover:text-accent truncate"
+                      >
+                        {f.membre}
+                      </Link>
+                    ) : (
+                      <span className="block text-[14px] font-semibold text-ink truncate">
+                        {f.membre}
+                        <span className="font-normal text-faint">
+                          {" "}
+                          · supprimé
+                        </span>
+                      </span>
+                    )}
                     <span className="block text-[12px] text-muted truncate">
                       <Link
                         href={`/admin/paiements/${f.id}`}

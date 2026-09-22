@@ -105,14 +105,24 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     ton: "info",
   },
   admin_promu: {
-    libelle: "Accès administrateur accordé",
+    libelle: "Accès à l’équipe accordé",
     famille: "adhesion",
     ton: "ok",
   },
   admin_retire: {
-    libelle: "Accès administrateur retiré",
+    libelle: "Accès à l’équipe retiré",
     famille: "adhesion",
     ton: "bad",
+  },
+  niveau_equipe_modifie: {
+    libelle: "Niveau d’accès modifié",
+    famille: "adhesion",
+    ton: "info",
+  },
+  invitation_renvoyee: {
+    libelle: "Invitation renvoyée",
+    famille: "adhesion",
+    ton: "info",
   },
   service_gratuit_reserve: {
     libelle: "Réservation d’un service gratuit",

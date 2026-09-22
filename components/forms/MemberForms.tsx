@@ -7,6 +7,7 @@ import {
   ImagePlus,
   Pencil,
   Plus,
+  Send,
   Trash2,
   X,
 } from "lucide-react";
@@ -34,6 +35,7 @@ import {
   deleteMember,
   registerPayment,
   rejectCandidature,
+  renvoyerInvitation,
   sendReminder,
   updateMemberProfile,
   ajouterBesoin,
@@ -324,6 +326,33 @@ export function ReminderButton({ memberId }: { memberId: string }) {
   );
 }
 
+/**
+ * Contact qui ne s'est jamais connecté : son invitation se renvoie, avec un
+ * lien neuf. Utile quand l'e-mail s'est perdu ou que le lien a expiré.
+ */
+export function RenvoyerInvitationButton({
+  contactId,
+  retour,
+}: {
+  contactId: string;
+  retour: string;
+}) {
+  return (
+    <form action={renvoyerInvitation}>
+      <input type="hidden" name="contactId" value={contactId} />
+      <input type="hidden" name="retour" value={retour} />
+      <SubmitButton
+        sm
+        variant="line"
+        pendingLabel="Envoi…"
+        title="Jamais connecté : renvoyer le lien pour choisir son mot de passe"
+      >
+        <Send size={13} /> Renvoyer l’invitation
+      </SubmitButton>
+    </form>
+  );
+}
+
 export function DeleteMemberButton({
   memberId,
   nom,
@@ -346,9 +375,8 @@ export function DeleteMemberButton({
           <ModalBody>
             <p className="text-[13.6px] text-muted m-0">
               <b className="text-ink">{nom}</b> sera retiré de l’annuaire avec
-              ses produits, ses inscriptions et ses accès. Ses factures étant
-              des pièces comptables, la suppression échoue s’il en existe —
-              c’est voulu.
+              ses produits, ses inscriptions et ses accès. Ses factures, pièces
+              comptables, restent dans les paiements, à son nom.
             </p>
           </ModalBody>
           <ModalFooter>

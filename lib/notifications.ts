@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import { nomFacture } from "@/lib/factures";
 import { getUnreadTotal } from "@/lib/queries";
 import { toISODate } from "@/lib/enums";
 import { ajouterJours, echeanceFacture, fmtHeure } from "@/lib/agenda";
@@ -127,7 +128,12 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       }),
       prisma.invoice.findMany({
         where: { statut: "envoyee" },
-        select: { id: true, numero: true, member: { select: { nom: true } } },
+        select: {
+          id: true,
+          numero: true,
+          destinataireNom: true,
+          member: { select: { nom: true } },
+        },
       }),
       prisma.auditLog.count({
         where: { action: "ressource_achetee", createdAt: { gte: semaine } },
@@ -195,7 +201,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       id: "factures",
       titre:
         aRegler.length === 1
-          ? `Facture ${aRegler[0].numero} à régler · ${aRegler[0].member.nom}`
+          ? `Facture ${aRegler[0].numero} à régler · ${nomFacture(aRegler[0])}`
           : `${pluriel(aRegler.length, "facture")} à régler`,
       temps: "Paiements",
       href:

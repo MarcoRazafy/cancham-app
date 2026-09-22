@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { toISODate } from "@/lib/enums";
 import type { Invoice } from "@/lib/types";
 
@@ -24,6 +25,58 @@ export async function numeroFacture(date: Date): Promise<string> {
   return `${prefixe}${String(n + 1).padStart(4, "0")}`;
 }
 
+/**
+ * Le destinataire d'une facture, tel qu'elle l'imprime.
+ *
+ * Tant que le membre existe, on le lit sur sa fiche. À sa suppression, la
+ * facture en garde une copie (`destinataire`) : une pièce comptable se
+ * réimprime à l'identique, même quand l'entreprise a quitté la chambre.
+ */
+export interface DestinataireFige {
+  nom: string;
+  ville: string;
+  pays: string | null;
+  statutJuridique: string | null;
+  type: "morale" | "physique";
+  contact: { nom: string; email: string; tel: string | null } | null;
+}
+
+/** Ce qu'il faut lire d'un membre pour composer son `DestinataireFige`. */
+export const SELECTION_DESTINATAIRE = {
+  nom: true,
+  ville: true,
+  pays: true,
+  statutJuridique: true,
+  type: true,
+  users: {
+    where: { role: "membre" },
+    orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
+    take: 1,
+    select: { nom: true, email: true, tel: true },
+  },
+} satisfies Prisma.MemberSelect;
+
+export function destinataireDe(
+  m: Prisma.MemberGetPayload<{ select: typeof SELECTION_DESTINATAIRE }>,
+): DestinataireFige {
+  return {
+    nom: m.nom,
+    ville: m.ville,
+    pays: m.pays,
+    statutJuridique: m.statutJuridique,
+    type: m.type,
+    contact: m.users[0] ?? null,
+  };
+}
+
+/** Nom du membre facturé, qu'il existe encore ou non. */
+export function nomFacture(f: {
+  member: { nom: string } | null;
+  destinataireNom: string | null;
+}): string {
+  return f.member?.nom ?? f.destinataireNom ?? "Membre supprimé";
+}
+
 export interface FactureDetaillee extends Invoice {
   membreDetail: {
     ville: string;
@@ -40,23 +93,7 @@ export interface FactureDetaillee extends Invoice {
 export async function getFacture(id: string): Promise<FactureDetaillee | null> {
   const f = await prisma.invoice.findUnique({
     where: { id },
-    include: {
-      member: {
-        select: {
-          nom: true,
-          ville: true,
-          pays: true,
-          statutJuridique: true,
-          type: true,
-          users: {
-            where: { role: "membre" },
-            orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
-            take: 1,
-            select: { nom: true, email: true, tel: true },
-          },
-        },
-      },
-    },
+    include: { member: { select: SELECTION_DESTINATAIRE } },
   });
   if (!f) return null;
 
@@ -70,6 +107,17 @@ export async function getFacture(id: string): Promise<FactureDetaillee | null> {
     select: { detail: true },
   });
 
+  const d: DestinataireFige = f.member
+    ? destinataireDe(f.member)
+    : ((f.destinataire as DestinataireFige | null) ?? {
+        nom: nomFacture(f),
+        ville: "",
+        pays: null,
+        statutJuridique: null,
+        type: "morale",
+        contact: null,
+      });
+
   return {
     id: f.id,
     numero: f.numero,
@@ -79,14 +127,14 @@ export async function getFacture(id: string): Promise<FactureDetaillee | null> {
     devise: f.devise,
     statut: f.statut,
     membreId: f.memberId,
-    membre: f.member.nom,
+    membre: d.nom,
     membreDetail: {
-      ville: f.member.ville,
-      pays: f.member.pays,
-      statutJuridique: f.member.statutJuridique,
-      type: f.member.type,
+      ville: d.ville,
+      pays: d.pays,
+      statutJuridique: d.statutJuridique,
+      type: d.type,
     },
-    contact: f.member.users[0] ?? null,
+    contact: d.contact,
     reglement: trace?.detail ?? null,
   };
 }

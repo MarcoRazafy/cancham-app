@@ -960,6 +960,7 @@ export function ListeContacts({
   intro,
   action,
   actionContact,
+  piedContact,
 }: {
   contacts: Contact[];
   titre?: string;
@@ -968,6 +969,8 @@ export function ListeContacts({
   action?: ReactNode;
   /** Commande par ligne, par exemple le retrait. */
   actionContact?: (contact: Contact) => ReactNode;
+  /** Sous les coordonnées d'un contact, sur toute la largeur de la carte. */
+  piedContact?: (contact: Contact) => ReactNode;
 }) {
   if (!contacts.length) return null;
 
@@ -1024,6 +1027,7 @@ export function ListeContacts({
                   {c.tel}
                 </a>
               ) : null}
+              {piedContact?.(c)}
             </div>
             {actionContact?.(c)}
           </div>

@@ -5,7 +5,11 @@ import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
-import { numeroFacture } from "@/lib/factures";
+import {
+  destinataireDe,
+  numeroFacture,
+  SELECTION_DESTINATAIRE,
+} from "@/lib/factures";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { creerJeton } from "@/lib/jetons";
 import {
@@ -90,23 +94,34 @@ async function acteurDepuis(retour: string): Promise<string> {
 
 /**
  * Invitation d'un compte créé sans mot de passe — contact ajouté par
- * l'équipe ou par un collègue : un lien pour choisir le sien. L'envoi part
- * après la réponse.
+ * l'équipe ou par un collègue : un lien pour choisir le sien.
+ *
+ * L'envoi est attendu : le message qui suit l'action dit ce qui s'est
+ * vraiment passé, au lieu d'annoncer une invitation qui n'est jamais partie.
+ * Faux si rien n'est parti ; l'invitation se renvoie depuis la fiche.
  */
 async function inviter(
   userId: string,
   email: string,
   nom: string,
   entreprise: string | null,
-) {
+): Promise<boolean> {
   const base = await urlPublique("/auth/nouveau-mot-de-passe");
-  after(async () => {
-    const jeton = await creerJeton(userId, "invitation");
-    await envoyerCourriel(
-      courrielInvitation(email, nom, entreprise, `${base}?jeton=${jeton}`),
-    );
-  });
+  const jeton = await creerJeton(userId, "invitation");
+  return envoyerCourriel(
+    courrielInvitation(email, nom, entreprise, `${base}?jeton=${jeton}`),
+  );
 }
+
+/** La fin du message de confirmation, selon le sort de l'invitation. */
+function suiteInvitation(envoyee: boolean, email: string): string {
+  if (envoyee) return `invitation envoyée à ${email}`;
+  return courrielsActifs()
+    ? `l’invitation n’a pas pu partir vers ${email} : renvoyez-la depuis les contacts de la fiche`
+    : "e-mails non configurés : le lien d’invitation est écrit dans le journal du serveur";
+}
+
+const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Contact à qui écrire pour une entreprise : le référent, sinon le premier. */
 async function contactDe(memberId: string) {
@@ -324,6 +339,34 @@ export async function createMember(formData: FormData) {
     redirectWithErreur("/admin/membres", "Le nom de l’entreprise est requis.");
   }
 
+  // L'adresse sert d'identifiant de connexion : une adresse déjà prise ne
+  // recevrait pas d'invitation. On le dit avant de créer quoi que ce soit.
+  const email = texte(formData, "email").toLowerCase();
+  if (email && !ADRESSE.test(email)) {
+    redirectWithErreur(
+      "/admin/membres",
+      `« ${email} » n’est pas une adresse e-mail valide.`,
+    );
+  }
+  const occupe = email
+    ? await prisma.user.findUnique({
+        where: { email },
+        select: { role: true, member: { select: { nom: true } } },
+      })
+    : null;
+  if (occupe) {
+    redirectWithErreur(
+      "/admin/membres",
+      `${email} a déjà un compte${
+        occupe.role === "admin"
+          ? " dans l’équipe"
+          : occupe.member
+            ? ` (${occupe.member.nom})`
+            : ""
+      } : indiquez une autre adresse pour le contact de ce membre.`,
+    );
+  }
+
   const m = await prisma.member.create({
     data: {
       type,
@@ -340,9 +383,8 @@ export async function createMember(formData: FormData) {
     },
   });
 
-  const email = texte(formData, "email").toLowerCase();
-  let invite = false;
-  if (email && !(await prisma.user.findUnique({ where: { email } }))) {
+  let invite: boolean | null = null;
+  if (email) {
     const contact = await prisma.user.create({
       data: {
         role: "membre",
@@ -354,8 +396,12 @@ export async function createMember(formData: FormData) {
         contactPrincipal: true,
       },
     });
-    await inviter(contact.id, email, rep, type === "morale" ? nom : null);
-    invite = true;
+    invite = await inviter(
+      contact.id,
+      email,
+      rep,
+      type === "morale" ? nom : null,
+    );
   }
 
   await journal(
@@ -366,11 +412,17 @@ export async function createMember(formData: FormData) {
     `Ajout manuel de ${nom}.`,
   );
   revalideTout();
+  if (invite === false && courrielsActifs()) {
+    redirectWithErreur(
+      `/admin/membres/${m.id}`,
+      `${nom} a été ajouté · ${suiteInvitation(false, email)}`,
+    );
+  }
   redirectWithFlash(
     `/admin/membres/${m.id}`,
-    invite
-      ? `${nom} a été ajouté à l’annuaire · invitation envoyée à ${email}`
-      : `${nom} a été ajouté à l’annuaire`,
+    invite === null
+      ? `${nom} a été ajouté à l’annuaire · sans contact, personne n’est invité`
+      : `${nom} a été ajouté à l’annuaire · ${suiteInvitation(invite, email)}`,
   );
 }
 
@@ -594,31 +646,46 @@ export async function deleteMember(formData: FormData) {
   const id = texte(formData, "memberId");
   const m = await prisma.member.findUnique({
     where: { id },
-    select: { nom: true, _count: { select: { factures: true } } },
+    select: {
+      ...SELECTION_DESTINATAIRE,
+      _count: { select: { factures: true } },
+    },
   });
   if (!m) redirectWithErreur("/admin/membres", "Membre introuvable.");
 
-  // Les factures sont des pièces comptables : la base refuse de les perdre
-  // avec le membre. On le dit avant d'essayer, et avant d'écrire au journal
-  // une suppression qui n'aurait pas lieu.
+  // Les factures sont des pièces comptables : elles restent, détachées du
+  // membre, avec une copie de son nom et de ses coordonnées pour se
+  // réimprimer à l'identique. Un compte de l'équipe rattaché à l'entreprise
+  // en est détaché aussi : il partirait sinon avec elle.
+  const destinataire = destinataireDe(m);
   const n = m._count.factures;
-  if (n > 0) {
-    redirectWithErreur(
-      `/admin/membres/${id}`,
-      `${m.nom} a ${n} facture${n > 1 ? "s" : ""} : un membre qui a des pièces comptables ne se supprime pas.`,
-    );
-  }
+  await prisma.$transaction([
+    prisma.invoice.updateMany({
+      where: { memberId: id },
+      data: {
+        destinataireNom: m.nom,
+        destinataire: { ...destinataire },
+      },
+    }),
+    prisma.user.updateMany({
+      where: { memberId: id, role: "admin" },
+      data: { memberId: null, contactPrincipal: false },
+    }),
+    prisma.member.delete({ where: { id } }),
+  ]);
 
+  const factures = n
+    ? ` · ${n} facture${n > 1 ? "s" : ""} conservée${n > 1 ? "s" : ""}`
+    : "";
   await journal(
     "membre_supprime",
     "Member",
     id,
     await acteurEquipe(),
-    `Suppression de ${m.nom} et de ses accès.`,
+    `Suppression de ${m.nom} et de ses accès${factures}.`,
   );
-  await prisma.member.delete({ where: { id } });
   revalideTout();
-  redirectWithFlash("/admin/membres", `${m.nom} a été retiré de l’annuaire`);
+  redirectWithFlash("/admin/membres", `${m.nom} a été supprimé${factures}`);
 }
 
 /* ============================ Contacts ============================ */
@@ -687,7 +754,7 @@ export async function addContact(formData: FormData) {
     where: { id: memberId },
     select: { nom: true, type: true },
   });
-  await inviter(
+  const invite = await inviter(
     cree.id,
     email,
     nom,
@@ -702,10 +769,54 @@ export async function addContact(formData: FormData) {
     `Ajout du contact ${nom} (${email}), invité à choisir son mot de passe.`,
   );
   revalideTout();
-  redirectWithFlash(
-    retour,
-    `${nom} a été ajouté aux contacts · invitation envoyée`,
+  const message = `${nom} a été ajouté aux contacts · ${suiteInvitation(invite, email)}`;
+  if (!invite && courrielsActifs()) redirectWithErreur(retour, message);
+  redirectWithFlash(retour, message);
+}
+
+/**
+ * Nouvel envoi de l'invitation d'un contact qui n'a pas encore choisi son
+ * mot de passe : e-mail égaré, lien expiré, adresse corrigée. Le nouveau
+ * lien remplace les précédents.
+ */
+export async function renvoyerInvitation(formData: FormData) {
+  const id = texte(formData, "contactId");
+  const retour = retourInterne(formData, "/membre/profil");
+  const { memberId } = await exigerContact(id, retour);
+
+  const contact = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      nom: true,
+      email: true,
+      motDePasse: true,
+      member: { select: { nom: true, type: true } },
+    },
+  });
+  if (!contact) redirectWithErreur(retour, "Contact introuvable.");
+  if (contact.motDePasse) {
+    redirectWithErreur(
+      retour,
+      `${contact.nom} a déjà choisi son mot de passe : « Mot de passe oublié ? » sur la page de connexion, s’il l’a perdu.`,
+    );
+  }
+
+  const envoyee = await inviter(
+    id,
+    contact.email,
+    contact.nom,
+    contact.member?.type === "morale" ? contact.member.nom : null,
   );
+  await journal(
+    "invitation_renvoyee",
+    "Member",
+    memberId,
+    await acteurDepuis(retour),
+    `Invitation renvoyée à ${contact.nom} (${contact.email})${envoyee ? "" : " · non partie"}.`,
+  );
+  const message = `${contact.nom} · ${suiteInvitation(envoyee, contact.email)}`;
+  if (!envoyee && courrielsActifs()) redirectWithErreur(retour, message);
+  redirectWithFlash(retour, message);
 }
 
 /** Retrait d'un contact. Le dernier de la liste ne peut pas être retiré. */

@@ -188,6 +188,7 @@ async function main() {
       data: {
         id: u.id,
         role: u.role,
+        niveauEquipe: u.niveauEquipe,
         nom: u.nom,
         fonction: u.fonction,
         email: u.email,

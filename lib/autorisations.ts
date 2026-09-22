@@ -25,6 +25,26 @@ export async function exigerEquipe(): Promise<User> {
   return getCurrentUser("admin");
 }
 
+/** Contrôle total : l'administrateur, pas le manager. */
+export function estAdministrateur(user: Pick<User, "niveauEquipe">): boolean {
+  return user.niveauEquipe === "administrateur";
+}
+
+/**
+ * Réservé aux administrateurs : ouvrir, retirer ou changer les accès de
+ * l'équipe. Un manager fait tout le reste.
+ */
+export async function exigerAdministrateur(retour: string): Promise<User> {
+  const user = await getCurrentUser("admin");
+  if (!estAdministrateur(user)) {
+    redirectWithErreur(
+      retour,
+      "Réservé aux administrateurs : un manager ne gère pas les accès de l’équipe.",
+    );
+  }
+  return user;
+}
+
 export interface AccesFiche {
   user: User;
   /** L'entreprise sur laquelle porte l'action. */

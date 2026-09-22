@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { numeroFacture } from "@/lib/factures";
+import { nomFacture, numeroFacture } from "@/lib/factures";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtMontant, type Devise } from "@/lib/membership";
 import { jourBase, jourSaisi } from "@/lib/format";
@@ -122,7 +122,12 @@ export async function marquerFacturePayee(formData: FormData) {
   if (f.statut === "payee") redirect(retour);
 
   const acteur = (await getCurrentUser("admin")).nom;
-  const cotisation = estCotisation(f.objet) && f.member.statut !== "a_jour";
+  // Membre supprimé depuis l'émission : la facture se règle quand même, sans
+  // adhésion à remettre à jour.
+  const membre = f.member;
+  const nom = nomFacture(f);
+  const cotisation =
+    membre !== null && estCotisation(f.objet) && membre.statut !== "a_jour";
   const montant = fmtMontant(f.montant, f.devise);
 
   await prisma.$transaction([
@@ -130,7 +135,7 @@ export async function marquerFacturePayee(formData: FormData) {
     ...(cotisation
       ? [
           prisma.member.update({
-            where: { id: f.member.id },
+            where: { id: membre.id },
             data: {
               statut: "a_jour",
               retardDepuis: null,
@@ -145,7 +150,7 @@ export async function marquerFacturePayee(formData: FormData) {
         entite: "Invoice",
         entiteId: f.numero,
         acteur,
-        detail: `${montant} par ${mode.toLowerCase()} le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })} pour ${f.member.nom}.`,
+        detail: `${montant} par ${mode.toLowerCase()} le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })} pour ${nom}.`,
       },
     }),
   ]);
@@ -153,6 +158,6 @@ export async function marquerFacturePayee(formData: FormData) {
   revalidatePath("/", "layout");
   redirectWithFlash(
     retour,
-    `Facture ${f.numero} réglée${cotisation ? ` · ${f.member.nom} passe à jour` : ""}`,
+    `Facture ${f.numero} réglée${cotisation ? ` · ${nom} passe à jour` : ""}`,
   );
 }

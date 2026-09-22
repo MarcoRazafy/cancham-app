@@ -33,9 +33,17 @@ export type UserRole =
   | "membre" // représentant d'une entreprise adhérente
   | "admin"; // équipe CanCham
 
+/**
+ * Dans l'équipe : l'administrateur a le contrôle total ; le manager a tout,
+ * sauf ouvrir, retirer ou changer les accès de l'équipe.
+ */
+export type NiveauEquipe = "administrateur" | "manager";
+
 export interface User {
   id: string;
   role: UserRole;
+  /** Pour l'équipe seulement ; `null` pour les membres et les visiteurs. */
+  niveauEquipe: NiveauEquipe | null;
   space: Space;
   /** Rattachement à une entreprise. `null` pour l'équipe CanCham et les visiteurs. */
   memberId: string | null;
@@ -253,7 +261,8 @@ export interface Invoice {
   montant: number;
   devise: Devise;
   statut: InvoiceStatus;
-  membreId: string;
+  /** `null` quand le membre a été supprimé : la facture, elle, reste. */
+  membreId: string | null;
   membre: string;
 }
 
@@ -351,4 +360,6 @@ export interface Contact {
   photo: string | null;
   /** Le référent de l'entreprise auprès de la chambre. Un seul par membre. */
   principal: boolean;
+  /** Invité, sans mot de passe choisi : il ne s'est jamais connecté. */
+  invitationEnAttente: boolean;
 }

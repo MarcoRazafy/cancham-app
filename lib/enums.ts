@@ -14,9 +14,16 @@ import type {
 import type {
   EventFormat,
   NewsCategory,
+  NiveauEquipe,
   Resource,
   ResourceCategory,
 } from "@/lib/types";
+
+/** Les deux niveaux d'accès de l'équipe, tels que l'interface les nomme. */
+export const NIVEAU_EQUIPE_LABEL: Record<NiveauEquipe, string> = {
+  administrateur: "Administrateur",
+  manager: "Manager",
+};
 
 export const EVENT_FORMAT_LABEL: Record<DbEventFormat, EventFormat> = {
   presentiel: "Présentiel",
