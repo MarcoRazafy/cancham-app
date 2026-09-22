@@ -283,6 +283,42 @@ export async function rejectCandidature(formData: FormData) {
   );
 }
 
+/**
+ * Date d'adhésion, corrigée par l'équipe : une reprise de dossier, une
+ * inscription enregistrée en retard. Elle sert au calcul du renouvellement
+ * tant qu'aucune cotisation n'est réglée, et à l'ancienneté affichée partout.
+ */
+export async function modifierDateAdhesion(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "memberId");
+  const retour = `/admin/membres/${id}`;
+  const jour = jourSaisi(texte(formData, "adhesion"));
+  if (!jour) redirectWithErreur(retour, "Indiquez une date d’adhésion valide.");
+
+  const avant = await prisma.member.findUnique({
+    where: { id },
+    select: { nom: true, adhesion: true },
+  });
+  if (!avant) redirectWithErreur("/admin/membres", "Membre introuvable.");
+
+  const ancienne = avant.adhesion.toISOString().slice(0, 10);
+  if (ancienne === jour) redirectWithFlash(retour, "Date d’adhésion inchangée");
+
+  await prisma.member.update({
+    where: { id },
+    data: { adhesion: jourBase(jour) },
+  });
+  await journal(
+    "adhesion_modifiee",
+    "Member",
+    id,
+    await acteurEquipe(),
+    `${avant.nom} · adhésion du ${ancienne} au ${jour}.`,
+  );
+  revalideTout();
+  redirectWithFlash(retour, "Date d’adhésion mise à jour");
+}
+
 /* ============================ Cotisations ============================ */
 
 /** Enregistrement d'un règlement encaissé par l'équipe. Génère la facture. */
