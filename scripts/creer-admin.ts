@@ -133,7 +133,7 @@ async function main() {
       },
     });
     console.log(
-      `\n  Administrateur créé : ${nom} (${email}).\n  Connectez-vous sur /public. Vos collègues s’inscrivent, puis vous les\n  promouvez depuis « Équipe & accès ».\n`,
+      `\n  Administrateur créé : ${nom} (${email}).\n  Connectez-vous sur /auth, puis ouvrez les comptes de vos collègues\n  depuis « Équipe & accès ».\n`,
     );
   }
   await prisma.$disconnect();

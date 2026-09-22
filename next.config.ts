@@ -64,6 +64,38 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * Anciennes adresses, avant que la connexion passe sous `/auth`.
+   *
+   * Des e-mails déjà envoyés les portent — liens de réinitialisation,
+   * d'invitation, de connexion : ils doivent continuer de fonctionner. Les
+   * paramètres (`?jeton=`, `?email=`) suivent la redirection. `/public` seul
+   * est désormais la vitrine ; avec un paramètre de connexion, c'était la
+   * page de connexion.
+   */
+  async redirects() {
+    const versAuth = (sous: string) => ({
+      source: `/public/${sous}`,
+      destination: `/auth/${sous}`,
+      permanent: true,
+    });
+    const connexionAvec = (cle: string) => ({
+      source: "/public",
+      has: [{ type: "query" as const, key: cle }],
+      destination: "/auth",
+      permanent: false,
+    });
+    return [
+      versAuth("inscription"),
+      versAuth("mot-de-passe-oublie"),
+      versAuth("nouveau-mot-de-passe"),
+      ...["email", "erreur", "suite", "attente", "demande", "inscrit"].map(
+        connexionAvec,
+      ),
+      { source: "/public/vitrine", destination: "/public", permanent: true },
+    ];
+  },
+
+  /**
    * Adresses autorisées à interroger le serveur de développement.
    *
    * Next n'accepte que `localhost` par défaut et bloque le reste. Ouvert

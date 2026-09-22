@@ -5,9 +5,8 @@
  * Montserrat et Open Sans — indépendamment du thème du visiteur : une vitrine
  * ne doit pas changer d'apparence selon les réglages du navigateur.
  *
- * L'en-tête et le pied ne sont pas ici : les écrans de connexion et
- * d'inscription occupent l'écran entier, les pages vitrine ont leur propre
- * coquille.
+ * L'en-tête et le pied sont ceux de la vitrine, dans `(vitrine)`. Les écrans
+ * de connexion et d'inscription vivent à part, sous `/auth`.
  */
 export default function PublicLayout({
   children,

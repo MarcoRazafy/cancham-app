@@ -24,10 +24,10 @@ const ROLE_PAR_ESPACE: Record<Space, UserRole> = {
 const ACCUEIL: Record<UserRole, string> = {
   membre: "/membre",
   admin: "/admin",
-  visiteur: "/public",
+  visiteur: "/auth",
 };
 
-export const CONNEXION = "/public";
+export const CONNEXION = "/auth";
 
 /**
  * Efface le cookie quand c'est permis. Pendant le rendu d'une page, Next

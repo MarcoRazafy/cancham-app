@@ -314,7 +314,7 @@ export default async function PublicHome() {
                   Votre candidature sera examinée par l’équipe CanCham. Besoin
                   d’un dossier complet ?{" "}
                   <Link
-                    href="/public/inscription"
+                    href="/auth/inscription"
                     className="text-marque-vert font-semibold underline underline-offset-2"
                   >
                     Formulaire détaillé

@@ -59,7 +59,7 @@ export default async function EvenementPublic({
     <>
       <main className="max-w-[1120px] mx-auto px-5 py-10 w-full">
         <Link
-          href="/public/vitrine#evenements"
+          href="/public#evenements"
           className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
         >
           <ArrowLeft size={15} /> Tous les rendez-vous
@@ -135,7 +135,7 @@ export default async function EvenementPublic({
             </p>
 
             <Link
-              href="/public/inscription"
+              href="/auth/inscription"
               className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-line text-[13px] text-marque-vert font-semibold no-underline hover:underline"
             >
               Pas encore membre ? Rejoindre la chambre

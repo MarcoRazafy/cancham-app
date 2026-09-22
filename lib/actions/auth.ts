@@ -30,7 +30,7 @@ const ACCUEIL: Record<string, string> = {
 function echec(message: string, email: string): never {
   const q = new URLSearchParams({ erreur: message });
   if (email) q.set("email", email);
-  redirect(`/public?${q}`);
+  redirect(`/auth?${q}`);
 }
 
 export async function connexion(formData: FormData) {
@@ -76,7 +76,7 @@ export async function connexion(formData: FormData) {
   // que son auteur.
   if (u.role === "membre" && u.member?.statut === "candidature") {
     oublier(`connexion:${origine}:${email}`);
-    redirect(`/public?${new URLSearchParams({ attente: "1", email })}`);
+    redirect(`/auth?${new URLSearchParams({ attente: "1", email })}`);
   }
 
   // Connexion réussie : le compteur de cette adresse repart à zéro.
@@ -97,5 +97,5 @@ export async function connexion(formData: FormData) {
 
 export async function deconnexion() {
   await fermerSession();
-  redirect("/public");
+  redirect("/auth");
 }

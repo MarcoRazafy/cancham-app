@@ -99,7 +99,7 @@ async function inviter(
   nom: string,
   entreprise: string | null,
 ) {
-  const base = await urlPublique("/public/nouveau-mot-de-passe");
+  const base = await urlPublique("/auth/nouveau-mot-de-passe");
   after(async () => {
     const jeton = await creerJeton(userId, "invitation");
     await envoyerCourriel(
@@ -139,7 +139,7 @@ export async function approveCandidature(formData: FormData) {
     // Vers la connexion, l'adresse déjà remplie : la première mène à la
     // suite de la fiche.
     const lien = await urlPublique(
-      `/public?${new URLSearchParams({ email: contact.email })}`,
+      `/auth?${new URLSearchParams({ email: contact.email })}`,
     );
     after(() =>
       envoyerCourriel(

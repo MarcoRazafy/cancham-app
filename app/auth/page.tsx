@@ -123,7 +123,7 @@ export default async function ConnexionPage({
             Se souvenir de moi
           </label>
           <Link
-            href="/public/mot-de-passe-oublie"
+            href="/auth/mot-de-passe-oublie"
             className="text-[13.5px] text-marque-vert font-semibold no-underline hover:underline"
           >
             Mot de passe oublié ?
@@ -142,7 +142,7 @@ export default async function ConnexionPage({
       <p className="text-[13.5px] text-muted mt-6 mb-0 pt-5 border-t border-line">
         Pas encore membre ?{" "}
         <Link
-          href="/public/inscription"
+          href="/auth/inscription"
           className="text-marque-vert font-semibold no-underline hover:underline inline-flex items-center gap-1"
         >
           Demander une adhésion <ArrowRight size={14} />

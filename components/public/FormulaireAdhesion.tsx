@@ -24,7 +24,7 @@ export function FormulaireAdhesion() {
       <h3 className="titre text-[20px] m-0 mb-5">Demande d’adhésion</h3>
 
       <form action={deposerCandidature} className="flex flex-col gap-4">
-        <input type="hidden" name="retour" value="/public/vitrine" />
+        <input type="hidden" name="retour" value="/public" />
         {/*
           Mêmes champs, dans le même ordre, que la fiche d'inscription de la
           chambre : un candidat qui a déjà rempli l'une retrouve l'autre.
@@ -237,7 +237,7 @@ export function FormulaireAdhesion() {
         <p className="text-[13px] text-muted m-0">
           Déjà membre ?{" "}
           <Link
-            href="/membre"
+            href="/auth"
             className="text-marque-vert font-semibold underline underline-offset-2"
           >
             Se connecter

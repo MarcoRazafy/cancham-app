@@ -21,7 +21,8 @@ Voir **Base de données** ci-dessous pour la création du rôle et de la base.
 
 | URL | Espace | Compte de démonstration (après `db:seed`) |
 |---|---|---|
-| `/public` | Vitrine, connexion, inscription | — |
+| `/public` | Vitrine de la chambre | — |
+| `/auth` | Connexion, demande d'adhésion, mot de passe oublié | — |
 | `/membre` | Portail adhérent | Voninkazo Andriamampianina — Directrice Générale, Bio Sud Essences |
 | `/admin` | Back-office | Ando Ratovomanana — Direction exécutive |
 
