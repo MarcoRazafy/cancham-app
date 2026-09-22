@@ -78,18 +78,12 @@ export async function RessourcesPage({
                 admin ? (
                   <div className="w-full flex items-center gap-1.5">
                     {r.pret ? (
-                      r.type === "gratuit" ? (
-                        <DownloadResourceButton
-                          resourceId={r.id}
-                          space={space}
-                          payant={false}
-                          video={r.fmt === "Vidéo"}
-                        />
-                      ) : (
-                        <span className="flex-1 text-[12px] text-success-strong font-semibold">
-                          Fichier prêt
-                        </span>
-                      )
+                      <DownloadResourceButton
+                        resourceId={r.id}
+                        space={space}
+                        payant={r.type === "payant"}
+                        video={r.fmt === "Vidéo"}
+                      />
                     ) : (
                       <span className="flex-1 inline-flex items-center gap-1 text-[12px] text-accent font-semibold">
                         <AlertTriangle size={13} /> Fichier manquant
