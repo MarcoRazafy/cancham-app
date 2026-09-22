@@ -22,7 +22,6 @@ export type Acces =
         fichier: string;
         pages: number | null;
       };
-      lecteur: { nom: string; email: string };
     }
   | { ok: false; statut: 403 | 404; message: string };
 
@@ -58,7 +57,6 @@ export async function verifierAcces(id: string): Promise<Acces> {
   return {
     ok: true,
     ressource: { id: r.id, titre: r.titre, fichier: r.fichier, pages: r.pages },
-    lecteur: { nom: user.nom, email: user.email },
   };
 }
 
