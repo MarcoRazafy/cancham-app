@@ -70,8 +70,9 @@ export default async function ConnexionPage({
           <strong className="block mb-1">
             Votre demande d’adhésion est envoyée.
           </strong>
-          L’équipe CanCham l’examine. Vous recevrez un e-mail dès qu’elle sera
-          validée : vous pourrez alors vous connecter et compléter votre fiche.
+          L’équipe CanCham l’examine. Dès qu’elle sera validée, vous recevrez un
+          e-mail avec un lien pour créer votre mot de passe : vous pourrez alors
+          vous connecter et compléter votre fiche.
         </Confirmation>
       ) : null}
       {enAttente ? (

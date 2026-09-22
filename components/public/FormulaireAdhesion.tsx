@@ -3,7 +3,6 @@ import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
 import { deposerCandidature } from "@/lib/actions/accueil";
-import { MOT_DE_PASSE_MIN } from "@/lib/mots-de-passe";
 
 const CHAMP =
   "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
@@ -15,8 +14,8 @@ const ETIQUETTE = "block text-[12.5px] font-semibold text-ink mb-1.5";
  *
  * Il reprend champ pour champ la fiche d'inscription de la chambre et poste
  * vers la même action que la page d'inscription : une candidature déposée
- * ici apparaît aussitôt dans le back-office, et la connexion s'ouvre quand
- * l'équipe l'a validée.
+ * ici apparaît aussitôt dans le back-office. Pas de mot de passe : quand
+ * l'équipe valide la demande, un e-mail apporte le lien pour le créer.
  */
 export function FormulaireAdhesion() {
   return (
@@ -94,39 +93,6 @@ export function FormulaireAdhesion() {
               required
               autoComplete="tel"
               placeholder="+261 34 00 000 00"
-              className={CHAMP}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="ad-motdepasse" className={ETIQUETTE}>
-              Mot de passe
-            </label>
-            <input
-              id="ad-motdepasse"
-              name="motDePasse"
-              type="password"
-              required
-              minLength={MOT_DE_PASSE_MIN}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              className={CHAMP}
-            />
-          </div>
-          <div>
-            <label htmlFor="ad-confirmation" className={ETIQUETTE}>
-              Confirmation
-            </label>
-            <input
-              id="ad-confirmation"
-              name="confirmation"
-              type="password"
-              required
-              minLength={MOT_DE_PASSE_MIN}
-              autoComplete="new-password"
-              placeholder="••••••••"
               className={CHAMP}
             />
           </div>
@@ -230,8 +196,9 @@ export function FormulaireAdhesion() {
         </BoutonEnvoi>
 
         <p className="text-[12px] text-faint m-0">
-          La connexion s’ouvre dès que l’équipe a validé votre demande ;
-          l’adhésion devient active au règlement de la cotisation.
+          Pas de mot de passe à choisir : dès que l’équipe a validé votre
+          demande, un e-mail vous apporte le lien pour le créer. L’adhésion
+          devient active au règlement de la cotisation.
         </p>
 
         <p className="text-[13px] text-muted m-0">

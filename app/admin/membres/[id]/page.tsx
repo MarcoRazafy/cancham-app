@@ -9,6 +9,7 @@ import {
   User as UserIcon,
   MapPin,
 } from "lucide-react";
+import { EtatAcces } from "@/components/admin/EtatAcces";
 import { Jauge, LienFleche, Panneau, Vide } from "@/components/admin/ui";
 import { LigneJournal } from "@/components/admin/LigneJournal";
 import { Agrandir } from "@/components/Agrandir";
@@ -22,7 +23,6 @@ import {
   PuceSecteur,
 } from "@/components/domain";
 import {
-  ApproveButton,
   DeleteMemberButton,
   RegisterPaymentButton,
   RejectButton,
@@ -41,6 +41,7 @@ import {
   joursDeRetard,
   libelleFormule,
 } from "@/lib/membership";
+import { getAccesMembre } from "@/lib/acces-membres";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getHistoriqueMembre } from "@/lib/queries-admin";
 import { situation } from "@/lib/situation";
@@ -54,11 +55,14 @@ export default async function AdminMembreDetail({
   const m = await getMember(id);
   if (!m) notFound();
 
-  const [contacts, factures, historique] = await Promise.all([
+  const [contacts, factures, historique, acces] = await Promise.all([
     getContacts(m.id),
     getInvoices(m.id),
     getHistoriqueMembre(m.id),
+    getAccesMembre(m.id),
   ]);
+  const candidature = m.statut === "candidature";
+  const fiche = `/admin/membres/${m.id}`;
 
   const s = situation(m);
   const dansAnnuaire = m.statut === "a_jour" || m.statut === "en_retard";
@@ -200,7 +204,11 @@ export default async function AdminMembreDetail({
                 titre={m.type === "physique" ? "Contact" : "Contacts"}
                 intro="Les personnes déclarées par le membre. Le contact principal est joint en premier."
                 piedContact={(c) =>
-                  c.invitationEnAttente ? (
+                  // Le contact principal a « Accéder », dans le panneau ; une
+                  // candidature se valide d'abord.
+                  c.invitationEnAttente &&
+                  !candidature &&
+                  c.id !== acces.contact?.id ? (
                     <div className="mt-2.5 flex flex-col items-start gap-1.5">
                       <Pill tone="warn">Jamais connecté</Pill>
                       <RenvoyerInvitationButton
@@ -293,9 +301,16 @@ export default async function AdminMembreDetail({
             </dl>
 
             <div className="flex flex-col gap-2 mt-5">
-              {m.statut === "candidature" ? (
+              {candidature ? (
                 <>
-                  <ApproveButton memberId={m.id} />
+                  <EtatAcces
+                    acces={acces}
+                    memberId={m.id}
+                    nom={m.nom}
+                    candidature
+                    retour={fiche}
+                    large
+                  />
                   <RejectButton memberId={m.id} nom={m.nom} />
                 </>
               ) : m.statut === "a_jour" ? (
@@ -317,6 +332,42 @@ export default async function AdminMembreDetail({
                 <ReminderButton memberId={m.id} />
               ) : null}
             </div>
+
+            {candidature ? null : (
+              <div className="mt-5 pt-4 border-t border-line">
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <span className="text-[12.5px] font-semibold text-muted">
+                    Accès à la plateforme
+                  </span>
+                  {acces.etat === "actif" || acces.etat === "sans_contact" ? (
+                    <EtatAcces
+                      acces={acces}
+                      memberId={m.id}
+                      nom={m.nom}
+                      candidature={false}
+                      retour={fiche}
+                    />
+                  ) : null}
+                </div>
+                {acces.etat === "invite" || acces.etat === "a_envoyer" ? (
+                  <EtatAcces
+                    acces={acces}
+                    memberId={m.id}
+                    nom={m.nom}
+                    candidature={false}
+                    retour={fiche}
+                    large
+                  />
+                ) : null}
+                <p className="m-0 mt-2 text-[12px] text-faint">
+                  {acces.contact
+                    ? acces.etat === "actif"
+                      ? `${acces.contact.nom} se connecte avec ${acces.contact.email}.`
+                      : `Le lien pour créer son mot de passe part à ${acces.contact.email}.`
+                    : "Il faut un contact avec une adresse e-mail pour ouvrir l’accès."}
+                </p>
+              </div>
+            )}
           </Panneau>
 
           <Panneau

@@ -119,6 +119,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "adhesion",
     ton: "info",
   },
+  acces_envoye: {
+    libelle: "Accès envoyé",
+    famille: "adhesion",
+    ton: "info",
+  },
   invitation_renvoyee: {
     libelle: "Invitation renvoyée",
     famille: "adhesion",

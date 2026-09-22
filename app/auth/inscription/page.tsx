@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, Lock, Mail, MapPin, User } from "lucide-react";
+import { Building2, KeyRound, Mail, MapPin, User } from "lucide-react";
 import {
   CadreAuth,
   ChampAuth,
-  ChampMotDePasse,
   CHAMP_AUTH,
   Saisie,
 } from "@/components/public/CadreAuth";
@@ -12,15 +11,15 @@ import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { Saillant } from "@/components/ui";
 import { INDICATIFS, PAYS } from "@/lib/accueil";
-import { MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { deposerCandidature } from "@/lib/actions/accueil";
 import { utilisateurConnecte } from "@/lib/session";
 
 /**
  * Demande d'adhésion : la fiche d'inscription de la chambre, champ pour
- * champ, avec un mot de passe.
+ * champ, sans mot de passe.
  *
- * La demande part à l'équipe ; la connexion s'ouvre quand elle est validée.
+ * La demande part à l'équipe. Quand elle la valide (« Accéder »), un e-mail
+ * apporte le lien pour créer son mot de passe.
  * La suite — fonction, détails de l'entreprise, formule, visuels, produits —
  * se complète à la première connexion, sur `/bienvenue`.
  */
@@ -182,27 +181,14 @@ export default async function InscriptionPage() {
           />
         </ChampAuth>
 
-        <div className="grid gap-3.5 sm:grid-cols-2">
-          <ChampMotDePasse
-            label="Mot de passe"
-            hint={`${MOT_DE_PASSE_MIN} caractères au moins.`}
-            icone={<Lock size={16} />}
-            name="motDePasse"
-            required
-            minLength={MOT_DE_PASSE_MIN}
-            autoComplete="new-password"
-            placeholder="••••••••"
-          />
-          <ChampMotDePasse
-            label="Confirmation"
-            icone={<Lock size={16} />}
-            name="confirmation"
-            required
-            minLength={MOT_DE_PASSE_MIN}
-            autoComplete="new-password"
-            placeholder="••••••••"
-          />
-        </div>
+        <p className="m-0 flex gap-2.5 items-start text-[12.8px] text-muted bg-surface-2 rounded-lg px-3.5 py-3">
+          <KeyRound size={16} className="shrink-0 mt-0.5 text-faint" />
+          <span>
+            Pas de mot de passe à choisir maintenant : dès que l’équipe CanCham
+            aura validé votre demande, vous recevrez un e-mail avec un lien pour
+            le créer.
+          </span>
+        </p>
 
         <div className="mt-3">
           <BoutonEnvoi enCours="Envoi de la demande…">
