@@ -11,18 +11,21 @@ import {
 } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
+import { InscriptionPublique } from "@/components/public/InscriptionPublique";
 import { visuelEvenement } from "@/lib/images-publiques";
 import { Agrandir } from "@/components/Agrandir";
 import { TexteLie } from "@/components/TexteLie";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney } from "@/lib/format";
+import { estTermine } from "@/lib/presences";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
 
 /**
  * Fiche publique d'un événement.
  *
- * Visible sans compte : c'est une porte d'entrée vers l'adhésion. L'inscription
- * elle-même reste réservée aux membres, la page y renvoie explicitement.
+ * Visible sans compte, et l'inscription aussi : on y saisit son entreprise,
+ * ses représentants et ses coordonnées, et chacun reçoit son QR code. Les
+ * membres gardent leur formulaire, dans leur espace, avec leurs contacts.
  */
 export default async function EvenementPublic({
   params,
@@ -53,6 +56,7 @@ export default async function EvenementPublic({
     ? { url: e.photo, alt: "" }
     : visuelEvenement(e.id, index);
   const restantes = Math.max(0, e.cap - e.inscrits);
+  const termine = estTermine({ date: e.date, fin: e.fin ?? null });
   const horaire = plageHoraire(e.debut, e.fin);
 
   return (
@@ -126,12 +130,36 @@ export default async function EvenementPublic({
                 : "Événement complet"}
             </p>
 
-            <Link href="/membre/evenements" className="btn-action w-full">
-              S’inscrire <ArrowRight size={16} />
-            </Link>
+            {termine ? (
+              <p className="text-[13.5px] text-muted m-0">
+                Cet événement est terminé.
+              </p>
+            ) : restantes > 0 ? (
+              <InscriptionPublique
+                event={{
+                  id: e.id,
+                  titre: e.titre,
+                  lieu: e.lieu,
+                  payant: e.payant,
+                  prix: e.prix,
+                  restantes,
+                }}
+              />
+            ) : (
+              <p className="text-[13.5px] text-muted m-0">
+                Plus de place disponible.
+              </p>
+            )}
 
             <p className="text-[12.5px] text-muted mt-3.5 mb-0">
-              L’inscription est réservée aux membres à jour de cotisation.
+              Membre de la chambre ?{" "}
+              <Link
+                href={`/membre/evenements/${e.id}`}
+                className="text-ink font-semibold underline underline-offset-2"
+              >
+                Inscrivez-vous depuis votre espace
+              </Link>
+              , où vos contacts sont déjà enregistrés.
             </p>
 
             <Link
@@ -148,7 +176,7 @@ export default async function EvenementPublic({
               {e.desc.split("\n\n").map((para, i) => (
                 <p
                   key={i}
-                  className="m-0 text-[16px] leading-[1.75] text-[#33475b]"
+                  className="m-0 text-[16px] leading-[1.75] text-muted"
                 >
                   <TexteLie
                     texte={para}

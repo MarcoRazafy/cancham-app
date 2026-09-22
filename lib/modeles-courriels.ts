@@ -189,3 +189,51 @@ export function courrielCompteEquipe(
     }),
   };
 }
+
+/**
+ * Confirmation d'une inscription à un événement faite depuis la vitrine, sans
+ * compte : les codes d'accueil de chacun, et le lien vers les billets à
+ * présenter — le QR code s'y affiche et s'y télécharge.
+ */
+export function courrielInscriptionEvenement(
+  a: string,
+  d: {
+    evenement: string;
+    quand: string;
+    lieu: string;
+    participants: { nom: string; code: string }[];
+    lien: string;
+    /** Montant à régler auprès de l'équipe, pour un événement payant. */
+    aRegler: string | null;
+  },
+): Courriel {
+  const plusieurs = d.participants.length > 1;
+  return {
+    a,
+    sujet: `Inscription confirmée : ${d.evenement}`,
+    ...gabarit({
+      titre: "Votre inscription est confirmée",
+      paragraphes: [
+        "Bonjour,",
+        `Votre inscription à « ${d.evenement} » est enregistrée : ${d.quand}, ${d.lieu}.`,
+        plusieurs
+          ? "Chaque participant a son propre code d’accueil :"
+          : "Votre code d’accueil :",
+        ...d.participants.map((p) => `${p.nom} — ${p.code}`),
+        `Présentez ${plusieurs ? "chacun son" : "votre"} QR code à l’entrée : il s’affiche avec le bouton ci-dessous, et se télécharge pour être montré sans connexion.`,
+        ...(d.aRegler
+          ? [
+              `Événement payant : ${d.aRegler} à régler auprès de l’équipe CanCham avant l’événement.`,
+            ]
+          : []),
+      ],
+      bouton: {
+        libelle: plusieurs ? "Voir les billets" : "Voir mon billet",
+        url: d.lien,
+      },
+      apres: [
+        "Gardez cet e-mail : le lien donne accès à vos billets. Pour toute question, répondez simplement à ce message.",
+      ],
+    }),
+  };
+}

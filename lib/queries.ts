@@ -18,6 +18,7 @@ import {
 
 import { PROVISOIRE } from "@/lib/accueil";
 import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
+import { codeInscription, extraireCode } from "@/lib/codes-accueil";
 import { prisma } from "@/lib/db";
 import { nomFacture } from "@/lib/factures";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
@@ -179,6 +180,38 @@ export async function getEvents(): Promise<CanchamEvent[]> {
     debut: e.debut,
     fin: e.fin,
   }));
+}
+
+/**
+ * Les billets d'une inscription publique, retrouvés par son code : celui du
+ * lien de l'e-mail de confirmation, qui fait office de clé. Le code d'une
+ * inscription de membre n'ouvre rien ici — ses billets sont dans son espace.
+ */
+export async function getBilletsPublics(eventId: string, code: string) {
+  const base = codeInscription(extraireCode(code));
+  if (!/^CC-[A-Z0-9]+-[A-Z0-9]{4,8}$/.test(base)) return [];
+  const [membre, lignes] = await Promise.all([
+    prisma.registration.findUnique({
+      where: { code: base },
+      select: { id: true },
+    }),
+    prisma.attendee.findMany({
+      where: {
+        eventId,
+        OR: [{ code: base }, { code: { startsWith: `${base}-` } }],
+      },
+      orderBy: { createdAt: "asc" },
+      select: {
+        nom: true,
+        entreprise: true,
+        email: true,
+        code: true,
+        statut: true,
+      },
+    }),
+  ]);
+  if (membre) return [];
+  return lignes.flatMap((l) => (l.code ? [{ ...l, code: l.code }] : []));
 }
 
 export async function getEvent(id: string): Promise<CanchamEvent | null> {

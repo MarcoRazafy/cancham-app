@@ -219,6 +219,7 @@ export default async function VueDEnsemble() {
                       entreprise={me.nom}
                       contacts={contacts}
                       moi={user.id}
+                      coordonnees={{ email: user.email, telephone: user.tel }}
                       libelle="M’inscrire"
                     />
                   )}

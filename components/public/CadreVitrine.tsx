@@ -17,7 +17,7 @@ import { getProchainsEvenements } from "@/lib/queries";
 /** Ce que le bandeau annonce quand aucun événement n'est programmé. */
 const ANNONCES_PAR_DEFAUT = [
   { texte: "Le réseau des entreprises du Canada et de Madagascar", href: null },
-  { texte: "Adhésions ouvertes toute l’année", href: "/public#adhesion" },
+  { texte: "Adhésions ouvertes toute l’année", href: "/auth/inscription" },
   { texte: "Événements, ressources et mises en relation", href: null },
 ];
 
@@ -120,9 +120,6 @@ export async function EnTetePublique() {
             <Link href="/public#evenements" className={lien}>
               Événements
             </Link>
-            <Link href="/public#adhesion" className={lien}>
-              Adhésion
-            </Link>
             <a
               href="https://cancham.mg"
               target="_blank"
@@ -141,7 +138,7 @@ export async function EnTetePublique() {
               <span className="hidden sm:inline">Espace membre</span>
             </Link>
             <Link
-              href="/public#adhesion"
+              href="/auth/inscription"
               className="flex items-center px-4 sm:px-7 bg-marque-rouge text-white text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.04em] no-underline whitespace-nowrap transition-colors hover:bg-[#8f0606] shadow-[0_10px_24px_-12px_rgb(173_7_7/0.9)]"
             >
               <span className="sm:hidden">Adhérer</span>
@@ -175,7 +172,7 @@ export function PiedPublique() {
           <Link href="/public#evenements" className={lien}>
             Événements
           </Link>
-          <Link href="/public#adhesion" className={lien}>
+          <Link href="/auth/inscription" className={lien}>
             Devenir membre
           </Link>
           <Link href="/auth" className={lien}>

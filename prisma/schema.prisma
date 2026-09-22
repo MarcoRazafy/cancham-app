@@ -327,6 +327,9 @@ model Attendee {
   nom        String
   entreprise String
   email      String
+  /// Téléphone donné à l'inscription, pour joindre la personne avant
+  /// l'événement. `null` pour les inscriptions d'avant ce champ.
+  telephone  String?
   statut     AttendeeStatus @default(confirme)
   /// Code d'accueil de l'inscription d'un membre — celui de son QR code. Le
   /// scanner le lit à l'entrée et pointe la personne présente. `null` pour

@@ -269,6 +269,7 @@ export default async function EvenementDetailPage({
                       entreprise={entreprise ?? ""}
                       contacts={contacts}
                       moi={user.id}
+                      coordonnees={{ email: user.email, telephone: user.tel }}
                     />
                   ) : (
                     <p className="text-[13px] text-muted m-0 text-center">

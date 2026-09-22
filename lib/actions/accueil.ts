@@ -41,8 +41,8 @@ const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 const INSCRIPTION = "/auth/inscription";
 
-/** Pages publiques d'où l'on dépose une candidature — et où l'on revient en cas d'erreur. */
-const FORMULAIRES = [INSCRIPTION, "/public"];
+/** Pages d'où l'on dépose une candidature — et où l'on revient en cas d'erreur. */
+const FORMULAIRES = [INSCRIPTION];
 
 /** Candidatures déposées depuis une même origine en une heure. */
 const CANDIDATURES_PAR_HEURE = 5;

@@ -99,7 +99,9 @@ export default async function EvenementAdmin({
 
   const trouves = recherche
     ? participants.filter((p) =>
-        plat(`${p.nom} ${p.entreprise} ${p.email}`).includes(plat(recherche)),
+        plat(
+          `${p.nom} ${p.entreprise} ${p.email} ${p.telephone ?? ""}`,
+        ).includes(plat(recherche)),
       )
     : participants;
   const liste =
@@ -374,6 +376,7 @@ export default async function EvenementAdmin({
                     <span className="block text-[12.5px] text-muted truncate">
                       {p.entreprise}
                       {p.email && p.email !== "—" ? ` · ${p.email}` : ""}
+                      {p.telephone ? ` · ${p.telephone}` : ""}
                     </span>
                   </span>
                   <Pill tone={PASTILLES[p.statut].ton}>

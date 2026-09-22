@@ -2,12 +2,18 @@
 
 import { randomInt } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { after } from "next/server";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
-import { EVENT_FORMAT_DB } from "@/lib/enums";
+import { EVENT_FORMAT_DB, toISODate } from "@/lib/enums";
 import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
-import { jourBase } from "@/lib/format";
+import { fmtDate, fmtMoney, jourBase } from "@/lib/format";
+import { envoyerCourriel, urlPublique } from "@/lib/courriel";
+import { minutes, origineAppelante, tentative } from "@/lib/limite";
+import { courrielInscriptionEvenement } from "@/lib/modeles-courriels";
+import { plageHoraire } from "@/lib/agenda";
 import { numeroFacture } from "@/lib/factures";
 import {
   codeInscription,
@@ -15,6 +21,7 @@ import {
   extraireCode,
 } from "@/lib/codes-accueil";
 import { estTermine } from "@/lib/presences";
+import { telephoneValide } from "@/lib/accueil";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
@@ -41,11 +48,16 @@ async function codeAcces(eventId: string): Promise<string> {
       () => ALPHABET_CODE[randomInt(ALPHABET_CODE.length)],
     ).join("");
     const code = `CC-${eventId.slice(-4).toUpperCase()}-${tirage}`;
-    const pris = await prisma.registration.findUnique({
-      where: { code },
-      select: { id: true },
-    });
-    if (!pris) return code;
+    // Libre chez les membres comme parmi les inscriptions publiques, qui
+    // n'ont que leurs lignes d'accueil.
+    const [inscription, ligne] = await Promise.all([
+      prisma.registration.findUnique({ where: { code }, select: { id: true } }),
+      prisma.attendee.findFirst({
+        where: lignesDe(code),
+        select: { id: true },
+      }),
+    ]);
+    if (!inscription && !ligne) return code;
   }
 }
 
@@ -56,6 +68,29 @@ const lignesDe = (code: string) => ({
 
 /** Représentants inscrits par un membre, au plus. */
 const REPRESENTANTS_MAX = 10;
+
+const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Téléphone et e-mail d'une inscription, vérifiés ; sinon retour au formulaire. */
+function coordonneesSaisies(
+  formData: FormData,
+  retour: string,
+): { email: string; telephone: string } {
+  const email = texte(formData, "email").toLowerCase().slice(0, 120);
+  const telephone = texte(formData, "telephone").replace(/\s+/g, " ");
+  if (!ADRESSE.test(email)) {
+    redirectWithErreur(retour, "Indiquez une adresse e-mail valide.");
+  }
+  if (!telephoneValide(telephone)) {
+    redirectWithErreur(
+      retour,
+      telephone
+        ? `« ${telephone} » n’est pas un numéro de téléphone valide.`
+        : "Indiquez un numéro de téléphone.",
+    );
+  }
+  return { email, telephone };
+}
 
 /* ============================ Côté membre ============================ */
 
@@ -94,6 +129,8 @@ export async function registerForEvent(formData: FormData) {
   });
   if (deja)
     redirectWithErreur(fiche, "Vous êtes déjà inscrit à cet événement.");
+
+  const { email, telephone } = coordonneesSaisies(formData, fiche);
 
   // Les représentants viennent des contacts de l'entreprise, et d'elle
   // seule : un identifiant d'ailleurs, glissé dans le formulaire, est ignoré.
@@ -139,7 +176,9 @@ export async function registerForEvent(formData: FormData) {
         eventId,
         nom: r.nom,
         entreprise: membre.nom,
-        email: r.email,
+        // Les coordonnées données à l'inscription : celles où la joindre.
+        email,
+        telephone,
         statut: "confirme" as const,
         code: codeRepresentant(code, i),
       })),
@@ -167,6 +206,157 @@ export async function registerForEvent(formData: FormData) {
   redirectWithFlash(
     fiche,
     `Inscription confirmée · ${n} représentant${n > 1 ? "s" : ""}${event.payant ? " · facture générée" : ""}`,
+  );
+}
+
+/* ============================ Côté public ============================ */
+
+/** Inscriptions publiques depuis une même origine, en une heure. */
+const INSCRIPTIONS_PUBLIQUES_PAR_HEURE = 10;
+
+/**
+ * Inscription à un événement depuis la vitrine, sans compte.
+ *
+ * L'entreprise et les représentants se saisissent à la main, avec les
+ * coordonnées où les joindre. Chaque représentant reçoit sa ligne d'accueil
+ * et son code — le scanner les pointe comme ceux des membres —, et un e-mail
+ * de confirmation mène à la page des billets. Sans membre, pas de facture :
+ * un événement payant se règle auprès de l'équipe, que le journal prévient.
+ */
+export async function inscriptionPublique(formData: FormData) {
+  const eventId = texte(formData, "eventId");
+  const fiche = `/public/evenements/${eventId}`;
+
+  // Une même origine n'inscrit pas des foules à la chaîne.
+  const attente = tentative(
+    `inscription-publique:${await origineAppelante()}`,
+    INSCRIPTIONS_PUBLIQUES_PAR_HEURE,
+    60 * 60 * 1000,
+  );
+  if (attente) {
+    redirectWithErreur(
+      fiche,
+      `Trop d’inscriptions depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
+    );
+  }
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    include: { _count: { select: { participants: true } } },
+  });
+  if (!event) redirectWithErreur("/public", "Événement introuvable.");
+  if (estTermine(event)) {
+    redirectWithErreur(fiche, "Cet événement est terminé.");
+  }
+
+  const entreprise = texte(formData, "entreprise")
+    .replace(/\s+/g, " ")
+    .slice(0, 120);
+  const noms = [
+    ...new Set(
+      formData
+        .getAll("representant")
+        .map((v) => String(v).replace(/\s+/g, " ").trim().slice(0, 80))
+        .filter(Boolean),
+    ),
+  ];
+  if (!entreprise) {
+    redirectWithErreur(
+      fiche,
+      "Indiquez le nom de l’entreprise (ou N/A si vous venez à titre personnel).",
+    );
+  }
+  if (!noms.length) {
+    redirectWithErreur(fiche, "Indiquez le nom d’au moins un représentant.");
+  }
+  if (noms.length > REPRESENTANTS_MAX) {
+    redirectWithErreur(
+      fiche,
+      `${REPRESENTANTS_MAX} représentants au plus par inscription.`,
+    );
+  }
+  const { email, telephone } = coordonneesSaisies(formData, fiche);
+
+  const restantes = event.cap - event._count.participants;
+  if (noms.length > restantes) {
+    redirectWithErreur(
+      fiche,
+      restantes > 0
+        ? `Il ne reste que ${restantes} place${restantes > 1 ? "s" : ""} : inscrivez moins de représentants.`
+        : "Cet événement est complet.",
+    );
+  }
+
+  // Une même adresse ne s'inscrit qu'une fois : un second envoi du
+  // formulaire ne doublerait pas les places.
+  const deja = await prisma.attendee.findFirst({
+    where: {
+      eventId,
+      email: { equals: email, mode: "insensitive" },
+      code: { not: null },
+    },
+    select: { code: true },
+  });
+  if (deja) {
+    redirectWithErreur(
+      fiche,
+      `${email} est déjà inscrite à cet événement : l’e-mail de confirmation contient vos billets.`,
+    );
+  }
+
+  const code = await codeAcces(eventId);
+  const n = noms.length;
+  const aRegler = event.payant ? fmtMoney(event.prix * n) : null;
+  await prisma.$transaction([
+    prisma.attendee.createMany({
+      data: noms.map((nom, i) => ({
+        eventId,
+        nom,
+        entreprise,
+        email,
+        telephone,
+        statut: "confirme" as const,
+        code: codeRepresentant(code, i),
+      })),
+    }),
+    prisma.auditLog.create({
+      data: {
+        action: "inscription_publique",
+        entite: "Event",
+        entiteId: eventId,
+        acteur: noms[0],
+        detail: `« ${event.titre} » · ${entreprise} · ${n} personne${n > 1 ? "s" : ""} · ${email} · ${telephone}${aRegler ? ` · ${aRegler} à régler` : ""}.`,
+      },
+    }),
+  ]);
+
+  const lien = await urlPublique(
+    `/public/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
+  );
+  after(() =>
+    envoyerCourriel(
+      courrielInscriptionEvenement(email, {
+        evenement: event.titre,
+        quand: [
+          fmtDate(toISODate(event.date)),
+          plageHoraire(event.debut, event.fin),
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        lieu: event.lieu,
+        participants: noms.map((nom, i) => ({
+          nom,
+          code: codeRepresentant(code, i),
+        })),
+        lien,
+        aRegler,
+      }),
+    ),
+  );
+
+  revalideTout();
+  redirect(
+    `/public/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
   );
 }
 
@@ -420,6 +610,7 @@ export interface ArriveeAccueil {
   representant: string;
   entreprise: string;
   email: string;
+  telephone: string | null;
   code: string | null;
   /** Heure du pointage, ISO. */
   presentLe: string | null;
@@ -454,6 +645,7 @@ async function decrireArrivees(
     nom: string;
     entreprise: string;
     email: string;
+    telephone: string | null;
     code: string | null;
     presentLe: Date | null;
   }[],
@@ -499,6 +691,7 @@ async function decrireArrivees(
       representant: l.nom,
       entreprise: l.entreprise,
       email: l.email,
+      telephone: l.telephone,
       code: l.code,
       presentLe: l.presentLe?.toISOString() ?? null,
       membre: (base && membres.get(base)) || null,
@@ -528,6 +721,7 @@ export async function historiqueAccueil(
       nom: true,
       entreprise: true,
       email: true,
+      telephone: true,
       code: true,
       presentLe: true,
     },
