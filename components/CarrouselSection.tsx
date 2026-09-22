@@ -19,9 +19,31 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  *
  * Le défilement reste natif — accrochage CSS, molette et doigt fonctionnent
  * sans JavaScript. Flèches et pastilles sont posées par-dessus, et
- * disparaissent quand tout tient sur une page. Pas d'avance automatique : on
- * parcourt un catalogue, on ne subit pas un diaporama.
+ * disparaissent quand tout tient sur une page.
+ *
+ * Tant qu'on n'y touche pas, la piste fait son va-et-vient : elle glisse page
+ * après page vers la gauche, puis revient sur ses pas — le catalogue se
+ * présente tout seul, et l'on voit du premier coup d'œil qu'il continue plus
+ * loin. Elle s'arrête au survol, au focus et au doigt, et ne repart plus dès
+ * qu'on a pris les commandes : on ne se bat pas contre un diaporama.
  */
+
+/** Temps d'arrêt sur chaque page avant de glisser à la suivante. */
+const ARRET_MS = 4500;
+
+/** Le va-et-vient s'abstient quand le système demande moins d'animations. */
+function useMoinsDeMouvement(): boolean {
+  const [reduit, setReduit] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const suivre = () => setReduit(mq.matches);
+    suivre();
+    mq.addEventListener("change", suivre);
+    return () => mq.removeEventListener("change", suivre);
+  }, []);
+  return reduit;
+}
+
 export function CarrouselSection({
   children,
   libelle,
@@ -30,9 +52,19 @@ export function CarrouselSection({
   /** Ce que l'on fait défiler, pour les lecteurs d'écran : « photos des produits ». */
   libelle: string;
 }) {
+  const cadre = useRef<HTMLDivElement>(null);
   const piste = useRef<HTMLDivElement>(null);
   const [pages, setPages] = useState(1);
   const [page, setPage] = useState(0);
+  /** Sens du va-et-vient : +1 vers la gauche, −1 au retour. */
+  const sens = useRef(1);
+  /** Faux dès que quelqu'un prend les commandes : plus d'avance automatique. */
+  const [auto, setAuto] = useState(true);
+  /** Le pointeur ou le focus est dans le carrousel : on laisse regarder. */
+  const [approche, setApproche] = useState(false);
+  /** Le carrousel est à l'écran : rien ne bouge dans une section jamais vue. */
+  const [enVue, setEnVue] = useState(false);
+  const moinsDeMouvement = useMoinsDeMouvement();
 
   /** Nombre de pages et page courante, relus depuis la position réelle. */
   const mesurer = useCallback(() => {
@@ -55,7 +87,38 @@ export function CarrouselSection({
     };
   }, [mesurer]);
 
+  useEffect(() => {
+    const el = cadre.current;
+    if (!el) return;
+    const observateur = new IntersectionObserver(
+      ([entree]) => setEnVue(entree.isIntersecting),
+      { threshold: 0.35 },
+    );
+    observateur.observe(el);
+    return () => observateur.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!auto || approche || !enVue || moinsDeMouvement || pages < 2) return;
+    const minuteur = setInterval(() => {
+      const el = piste.current;
+      if (!el || el.clientWidth === 0) return;
+      const courante = Math.round(el.scrollLeft / el.clientWidth);
+      // Arrivé au bout, on repart dans l'autre sens : le retour se voit, là
+      // où un saut au début passerait pour un bug d'affichage.
+      if (courante >= pages - 1) sens.current = -1;
+      else if (courante <= 0) sens.current = 1;
+      el.scrollTo({
+        left: (courante + sens.current) * el.clientWidth,
+        behavior: "smooth",
+      });
+    }, ARRET_MS);
+    return () => clearInterval(minuteur);
+  }, [auto, approche, enVue, moinsDeMouvement, pages]);
+
+  /** Flèches et pastilles : le va-et-vient s'efface devant un vrai clic. */
   const allerA = (cible: number) => {
+    setAuto(false);
     const el = piste.current;
     if (!el) return;
     el.scrollTo({ left: cible * el.clientWidth, behavior: "smooth" });
@@ -65,9 +128,21 @@ export function CarrouselSection({
     "w-9 h-9 rounded-[10px] border border-line bg-surface text-muted flex items-center justify-center cursor-pointer transition-colors hover:bg-accent hover:text-white hover:border-accent disabled:opacity-30 disabled:cursor-default disabled:hover:bg-surface disabled:hover:text-muted disabled:hover:border-line";
 
   return (
-    <div role="region" aria-roledescription="carrousel" aria-label={libelle}>
+    <div
+      ref={cadre}
+      role="region"
+      aria-roledescription="carrousel"
+      aria-label={libelle}
+      onPointerEnter={() => setApproche(true)}
+      onPointerLeave={() => setApproche(false)}
+      onFocus={() => setApproche(true)}
+      onBlur={() => setApproche(false)}
+    >
       <div
         ref={piste}
+        // Un doigt posé sur la piste, ou une carte ouverte : on a pris les
+        // commandes, et la piste ne repartira pas sous la main.
+        onPointerDown={() => setAuto(false)}
         className="flex items-stretch gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {/*
