@@ -28,6 +28,7 @@ import {
   AjouterServiceButton,
   DeleteMemberButton,
   EditContactButton,
+  ModifierAdhesionButton,
   EditProfileButton,
   ModifierServiceButton,
   RemoveContactButton,
@@ -351,6 +352,15 @@ export default async function AdminMembreDetail({
             ) : null}
 
             <dl className="m-0 mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]">
+              <dt className="text-muted">Membre depuis</dt>
+              <dd className="m-0 text-ink flex items-center justify-end gap-2">
+                {fmtDate(m.adhesion)}
+                <ModifierAdhesionButton
+                  memberId={m.id}
+                  nom={m.nom}
+                  adhesion={m.adhesion}
+                />
+              </dd>
               <dt className="text-muted">Formule</dt>
               <dd className="m-0 text-ink text-right">
                 {libelleFormule(m.formule)}

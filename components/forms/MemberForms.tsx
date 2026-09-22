@@ -33,6 +33,7 @@ import {
   removeContact,
   updateContact,
   deleteMember,
+  modifierDateAdhesion,
   registerPayment,
   rejectCandidature,
   renvoyerInvitation,
@@ -1312,6 +1313,61 @@ export function SupprimerServiceButton({
             <CancelButton onClick={fermer} />
             <SubmitButton pendingLabel="Retrait…" variant="danger">
               <Trash2 size={14} /> Retirer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+/** Correction de la date d'adhésion, réservée à l'équipe. */
+export function ModifierAdhesionButton({
+  memberId,
+  nom,
+  adhesion,
+}: {
+  memberId: string;
+  nom: string;
+  /** Date actuelle, ISO court. */
+  adhesion: string;
+}) {
+  return (
+    <Modal
+      title="Date d’adhésion"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Modifier la date d’adhésion de ${nom}`}
+          title="Modifier la date d’adhésion"
+          className="shrink-0 w-6 h-6 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center text-muted cursor-pointer hover:text-ink hover:border-faint"
+        >
+          <Pencil size={12} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={modifierDateAdhesion}>
+          <input type="hidden" name="memberId" value={memberId} />
+          <ModalBody>
+            <Field
+              label="Membre depuis"
+              hint="Elle fixe l’ancienneté affichée, et le renouvellement tant qu’aucune cotisation n’est réglée."
+            >
+              <input
+                type="date"
+                name="adhesion"
+                required
+                defaultValue={adhesion}
+                className={INPUT}
+              />
+            </Field>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Enregistrement…">
+              <Check size={14} /> Enregistrer
             </SubmitButton>
           </ModalFooter>
         </form>
