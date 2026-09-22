@@ -16,7 +16,12 @@ export async function filEquipe(userId: string): Promise<string> {
     orderBy: { createdAt: "asc" },
     select: { id: true },
   });
-  if (existant) return existant.id;
+  if (existant) {
+    // Les comptes d'équipe ouverts depuis rejoignent la conversation : une
+    // demande arrive à toute l'équipe, pas à celle du jour de sa création.
+    await rattacherEquipe(existant.id);
+    return existant.id;
+  }
 
   const equipe = await prisma.user.findMany({
     where: { role: "admin" },
@@ -37,6 +42,35 @@ export async function filEquipe(userId: string): Promise<string> {
     select: { id: true },
   });
   return fil.id;
+}
+
+/**
+ * Rattache toute l'équipe aux fils d'assistance — un seul, ou tous.
+ *
+ * Un compte d'équipe ouvert après la création d'un fil n'en serait pas, et
+ * la demande du membre lui échapperait. Appelée quand un membre écrit, et à
+ * l'ouverture d'un compte d'équipe.
+ */
+export async function rattacherEquipe(threadId?: string): Promise<void> {
+  const [equipe, fils] = await Promise.all([
+    prisma.user.findMany({ where: { role: "admin" }, select: { id: true } }),
+    prisma.messageThread.findMany({
+      where: { equipe: true, ...(threadId ? { id: threadId } : {}) },
+      select: { id: true, participants: { select: { userId: true } } },
+    }),
+  ]);
+  const manquants = fils.flatMap((f) => {
+    const deja = new Set(f.participants.map((p) => p.userId));
+    return equipe
+      .filter((a) => !deja.has(a.id))
+      .map((a) => ({ threadId: f.id, userId: a.id }));
+  });
+  if (manquants.length) {
+    await prisma.participantFil.createMany({
+      data: manquants,
+      skipDuplicates: true,
+    });
+  }
 }
 
 /**
