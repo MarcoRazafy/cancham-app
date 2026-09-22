@@ -252,7 +252,7 @@ export default async function AdminMembreDetail({
                   </div>
                 )}
                 piedContact={(c) =>
-                  // Le contact principal a « Accéder », dans le panneau ; une
+                  // Le contact principal a « Envoyer l’accès », dans le panneau ; une
                   // candidature se valide d'abord.
                   c.invitationEnAttente &&
                   !candidature &&

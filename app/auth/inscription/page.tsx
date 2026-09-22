@@ -18,7 +18,7 @@ import { utilisateurConnecte } from "@/lib/session";
  * Demande d'adhésion : la fiche d'inscription de la chambre, champ pour
  * champ, sans mot de passe.
  *
- * La demande part à l'équipe. Quand elle la valide (« Accéder »), un e-mail
+ * La demande part à l'équipe. Quand elle la valide (« Envoyer l’accès »), un e-mail
  * apporte le lien pour créer son mot de passe.
  * La suite — fonction, détails de l'entreprise, formule, visuels, produits —
  * se complète à la première connexion, sur `/bienvenue`.

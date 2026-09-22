@@ -52,7 +52,7 @@ const CANDIDATURES_PAR_HEURE = 5;
  *
  * Les champs reprennent la fiche d'inscription de la chambre, sans mot de
  * passe : le compte est créé sans, et c'est l'équipe qui ouvre l'accès en
- * validant la demande (« Accéder »). Le contact reçoit alors un lien pour
+ * validant la demande (« Envoyer l’accès »). Le contact reçoit alors un lien pour
  * créer son mot de passe. On revient à la page de connexion, qui l'explique.
  */
 export async function deposerCandidature(formData: FormData) {
@@ -138,7 +138,7 @@ export async function deposerCandidature(formData: FormData) {
   // La personne qui dépose la demande devient le contact principal : c'est
   // elle que la chambre appellera, et le compte avec lequel elle se
   // connectera. Sans mot de passe : il se crée par le lien que l'équipe
-  // envoie en cliquant sur « Accéder ».
+  // envoie en cliquant sur « Envoyer l’accès ».
   await prisma.user.create({
     data: {
       role: "membre",
