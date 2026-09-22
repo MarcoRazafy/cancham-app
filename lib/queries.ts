@@ -1052,6 +1052,11 @@ export async function getThreads(user: {
         id: m.id,
         de: m.auteur,
         moi: m.userId === user.id,
+        // Qui écrit au nom de la chambre : dans l'assistance, l'équipe se
+        // range d'un seul côté, quel que soit celui qui répond.
+        equipe:
+          t.participants.find((p) => p.userId === m.userId)?.user.role ===
+          "admin",
         texte: m.supprimeLe ? "" : m.texte,
         heure: heureRelative(m.sentAt),
         envoyeLe: m.sentAt.toISOString(),

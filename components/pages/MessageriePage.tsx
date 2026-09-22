@@ -289,6 +289,7 @@ function Conversation({
                       ? "Équipe CanCham"
                       : undefined
                   }
+                  equipeADroite={space === "admin" && fil.equipe}
                   space={space}
                 />
               </Fragment>

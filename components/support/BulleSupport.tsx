@@ -749,7 +749,10 @@ function FilMessages({
           !m.supprime &&
           (nouveauJour || precedent?.de !== m.de || precedent?.moi);
 
-        const cote = m.moi ? "self-end" : "self-start";
+        // Vue de l'équipe, ses messages se rangent tous à droite : en face,
+        // il n'y a que le membre.
+        const aDroite = m.moi || (espace === "admin" && m.equipe);
+        const cote = aDroite ? "self-end" : "self-start";
         return (
           <Fragment key={m.id}>
             {nouveauJour ? (
@@ -758,7 +761,9 @@ function FilMessages({
               </div>
             ) : null}
             {signe ? (
-              <div className="self-start mt-1 -mb-0.5 ml-1 text-[11px] font-semibold text-muted">
+              <div
+                className={`${aDroite ? "self-end mr-1" : "self-start ml-1"} mt-1 -mb-0.5 text-[11px] font-semibold text-muted`}
+              >
                 {espace === "membre" ? "Équipe CanCham" : `${m.de} · équipe`}
               </div>
             ) : null}
@@ -772,11 +777,13 @@ function FilMessages({
               </div>
             ) : (
               <div
-                className={`${cote} max-w-[82%] min-w-0 px-3 py-2 text-[13.3px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere] ${
+                className={`${cote} max-w-[82%] min-w-0 px-3 py-2 text-[13.3px] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere] rounded-[14px] ${
                   m.moi
-                    ? "bg-accent text-white rounded-[14px] rounded-br-[4px]"
-                    : "bg-surface border border-line rounded-[14px] rounded-bl-[4px]"
-                } ${m.pieces.length ? "min-w-[200px]" : ""}`}
+                    ? "bg-accent text-white"
+                    : "bg-surface border border-line"
+                } ${aDroite ? "rounded-br-[4px]" : "rounded-bl-[4px]"} ${
+                  m.pieces.length ? "min-w-[200px]" : ""
+                }`}
               >
                 <PiecesJointes pieces={m.pieces} moi={m.moi} space={espace} />
                 <TexteLie
