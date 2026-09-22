@@ -67,6 +67,19 @@ export async function connexion(formData: FormData) {
     },
   });
 
+  // Un compte sans mot de passe attend son accès : l'inscription n'en
+  // demande pas, c'est le lien envoyé par l'équipe qui le crée. Le dire vaut
+  // mieux qu'un « mot de passe incorrect » qui laisserait chercher en vain —
+  // et l'inscription révèle déjà qu'une adresse a un compte.
+  if (u && u.role === "membre" && !u.motDePasse) {
+    echec(
+      u.member?.statut === "candidature"
+        ? "Votre demande d’adhésion est en cours d’examen. Dès qu’elle sera validée, vous recevrez un e-mail pour créer votre mot de passe."
+        : "Votre accès n’est pas encore ouvert : l’équipe CanCham vous enverra un e-mail pour créer votre mot de passe.",
+      email,
+    );
+  }
+
   if (!u || !verifier(motDePasse, u.motDePasse)) {
     echec("Adresse ou mot de passe incorrect.", email);
   }

@@ -26,9 +26,9 @@ import {
 import {
   addContact,
   ajouterService,
+  donnerAcces,
   modifierService,
   supprimerService,
-  approveCandidature,
   createMember,
   removeContact,
   updateContact,
@@ -125,10 +125,14 @@ export function AddMemberButton() {
               </Field>
             </div>
             <div className="grid gap-3.5 md:grid-cols-2">
-              <Field label="Courriel">
+              <Field
+                label="Courriel"
+                hint="Son accès lui sera envoyé ici, par « Accéder »."
+              >
                 <input
                   type="email"
                   name="email"
+                  required
                   placeholder="contact@entreprise.mg"
                   className={INPUT}
                 />
@@ -257,18 +261,93 @@ export function RegisterPaymentButton({
   );
 }
 
-export function ApproveButton({ memberId }: { memberId: string }) {
-  return (
-    <form action={approveCandidature}>
+/**
+ * « Accéder » : envoie au contact principal le lien pour créer son mot de
+ * passe. Sur une candidature, le clic valide aussi la demande : il passe
+ * par une confirmation. Ailleurs, un clic suffit — et renvoie un lien neuf
+ * quand le précédent attend encore.
+ */
+export function AccederButton({
+  memberId,
+  nom,
+  candidature = false,
+  renvoi = false,
+  retour,
+  large = false,
+}: {
+  memberId: string;
+  nom: string;
+  /** La demande est encore à l'examen : le clic la valide. */
+  candidature?: boolean;
+  /** Un lien est déjà parti : le bouton le renvoie. */
+  renvoi?: boolean;
+  /** Page où revenir : la liste ou la fiche. */
+  retour: string;
+  /** Pleine largeur, dans le panneau de la fiche. */
+  large?: boolean;
+}) {
+  const champs = (
+    <>
       <input type="hidden" name="memberId" value={memberId} />
-      <SubmitButton
-        sm
-        pendingLabel="Approbation…"
-        className="w-full justify-center"
-      >
-        <Check size={14} /> Approuver la demande
-      </SubmitButton>
-    </form>
+      <input type="hidden" name="retour" value={retour} />
+    </>
+  );
+  const largeur = large ? "w-full justify-center" : "";
+
+  if (!candidature) {
+    return (
+      <form action={donnerAcces} className={large ? "w-full" : ""}>
+        {champs}
+        <SubmitButton
+          sm
+          variant={renvoi ? "line" : "primary"}
+          pendingLabel="Envoi…"
+          className={`${largeur} whitespace-nowrap`}
+          title={
+            renvoi
+              ? "Renvoyer le lien pour créer son mot de passe"
+              : "Envoyer le lien pour créer son mot de passe"
+          }
+        >
+          <Send size={13} /> {renvoi ? "Renvoyer" : "Accéder"}
+        </SubmitButton>
+      </form>
+    );
+  }
+
+  return (
+    <Modal
+      title="Valider la demande et donner l’accès"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          className={`btn-action btn-action-sm whitespace-nowrap ${largeur}`}
+        >
+          <Check size={14} /> Accéder
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={donnerAcces}>
+          {champs}
+          <ModalBody>
+            <p className="text-[13.6px] text-muted m-0">
+              La demande de <b className="text-ink">{nom}</b> sera validée :
+              elle passe en adhésion, en attente du règlement de la cotisation.
+              Son contact reçoit un e-mail pour créer son mot de passe et se
+              connecter.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Envoi…">
+              <Check size={14} /> Valider et envoyer l’accès
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
   );
 }
 

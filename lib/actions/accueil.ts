@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { prisma } from "@/lib/db";
-import { hacher, MOT_DE_PASSE_MIN } from "@/lib/auth";
 import {
   ETAPES_ACCUEIL,
   NOMBRE_ETAPES,
@@ -51,9 +50,10 @@ const CANDIDATURES_PAR_HEURE = 5;
 /**
  * Dépôt d'une candidature, depuis la page d'inscription ou la vitrine.
  *
- * Les champs reprennent la fiche d'inscription de la chambre. Le compte est
- * créé, mais la connexion reste fermée tant que l'équipe n'a pas validé la
- * demande : on revient à la page de connexion, qui l'explique.
+ * Les champs reprennent la fiche d'inscription de la chambre, sans mot de
+ * passe : le compte est créé sans, et c'est l'équipe qui ouvre l'accès en
+ * validant la demande (« Accéder »). Le contact reçoit alors un lien pour
+ * créer son mot de passe. On revient à la page de connexion, qui l'explique.
  */
 export async function deposerCandidature(formData: FormData) {
   const retourSaisi = texte(formData, "retour");
@@ -91,8 +91,6 @@ export async function deposerCandidature(formData: FormData) {
   const independant = !nomSaisi || /^n\s*\/?\s*a$/i.test(nomSaisi);
   const motivation = texte(formData, "motivation").slice(0, 1000);
   const formuleSaisie = texte(formData, "formule");
-  const motDePasse = String(formData.get("motDePasse") ?? "");
-  const confirmation = String(formData.get("confirmation") ?? "");
 
   const erreur = (message: string): never =>
     redirectWithErreur(retour, message);
@@ -107,12 +105,6 @@ export async function deposerCandidature(formData: FormData) {
     erreur(
       "Dites-nous en quelques mots pourquoi vous souhaitez rejoindre CanCham.",
     );
-  }
-  if (motDePasse.length < MOT_DE_PASSE_MIN) {
-    erreur(`Le mot de passe fait au moins ${MOT_DE_PASSE_MIN} caractères.`);
-  }
-  if (motDePasse !== confirmation) {
-    erreur("Les deux mots de passe ne correspondent pas.");
   }
   if (
     await prisma.user.findUnique({ where: { email }, select: { id: true } })
@@ -144,7 +136,9 @@ export async function deposerCandidature(formData: FormData) {
   });
 
   // La personne qui dépose la demande devient le contact principal : c'est
-  // elle que la chambre appellera, et le compte avec lequel elle se connecte.
+  // elle que la chambre appellera, et le compte avec lequel elle se
+  // connectera. Sans mot de passe : il se crée par le lien que l'équipe
+  // envoie en cliquant sur « Accéder ».
   await prisma.user.create({
     data: {
       role: "membre",
@@ -152,7 +146,6 @@ export async function deposerCandidature(formData: FormData) {
       fonction: independant ? "Indépendant(e)" : PROVISOIRE.fonction,
       email,
       tel,
-      motDePasse: hacher(motDePasse),
       memberId: membre.id,
       contactPrincipal: true,
     },

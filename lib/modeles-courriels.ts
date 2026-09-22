@@ -66,7 +66,7 @@ export function courrielDemandeRecue(a: string, nom: string): Courriel {
       paragraphes: [
         `Bonjour ${prenom(nom)},`,
         "Merci de votre intérêt pour la Chambre de Commerce et de Coopération Canada–Madagascar. Votre demande d’adhésion est enregistrée, et l’équipe CanCham l’examine.",
-        "Vous recevrez un e-mail dès qu’elle sera validée. Vous pourrez alors vous connecter à CanCham Connect et compléter votre fiche : logo, couverture, produits et services.",
+        "Dès qu’elle sera validée, vous recevrez un e-mail avec un lien pour créer votre mot de passe. Vous pourrez alors vous connecter à CanCham Connect et compléter votre fiche : logo, couverture, produits et services.",
       ],
     }),
   };
@@ -133,6 +133,11 @@ export function courrielDemandeApprouvee(
     montant: string;
     formule: string;
     lien: string;
+    /**
+     * Vrai quand la personne n'a pas encore de mot de passe : le lien mène à
+     * sa création, valable sept jours. Faux : il mène à la connexion.
+     */
+    creerMotDePasse: boolean;
   },
 ): Courriel {
   return {
@@ -143,10 +148,20 @@ export function courrielDemandeApprouvee(
       paragraphes: [
         `Bonjour ${prenom(d.nom)},`,
         `L’équipe CanCham a validé la demande d’adhésion de ${d.entreprise}. Bienvenue dans la chambre !`,
-        "Connectez-vous dès maintenant avec l’adresse et le mot de passe choisis à l’inscription : quelques étapes vous permettent de compléter votre fiche — activité, logo, couverture, produits et services.",
+        d.creerMotDePasse
+          ? "Créez votre mot de passe pour vous connecter à CanCham Connect : quelques étapes vous permettent ensuite de compléter votre fiche — activité, logo, couverture, produits et services."
+          : "Connectez-vous dès maintenant avec votre adresse et votre mot de passe : quelques étapes vous permettent de compléter votre fiche — activité, logo, couverture, produits et services.",
         `Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle (${d.formule}, ${d.montant}), auprès de l’équipe, en espèces, par virement ou par chèque.`,
       ],
-      bouton: { libelle: "Me connecter", url: d.lien },
+      bouton: {
+        libelle: d.creerMotDePasse ? "Créer mon mot de passe" : "Me connecter",
+        url: d.lien,
+      },
+      apres: d.creerMotDePasse
+        ? [
+            "Ce lien est valable sept jours. Passé ce délai, utilisez « Mot de passe oublié ? » sur la page de connexion.",
+          ]
+        : [],
     }),
   };
 }

@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -113,6 +112,14 @@ async function inviter(
   );
 }
 
+/** Le message qui suit « Accéder », selon le sort de l'e-mail. */
+function suiteAcces(envoye: boolean, email: string): string {
+  if (envoye) return `lien de connexion envoyé à ${email}`;
+  return courrielsActifs()
+    ? `l’e-mail n’a pas pu partir vers ${email} : réessayez dans un instant`
+    : "e-mails non configurés : le lien est écrit dans le journal du serveur";
+}
+
 /** La fin du message de confirmation, selon le sort de l'invitation. */
 function suiteInvitation(envoyee: boolean, email: string): string {
   if (envoyee) return `invitation envoyée à ${email}`;
@@ -134,45 +141,103 @@ async function contactDe(memberId: string) {
 
 /* ============================ Candidatures ============================ */
 
-/** Approbation : la demande devient une adhésion en attente de règlement. */
-export async function approveCandidature(formData: FormData) {
+/**
+ * « Accéder » : l'équipe ouvre l'accès d'un membre à la plateforme.
+ *
+ * Personne ne choisit son mot de passe en s'inscrivant : c'est ce clic qui
+ * envoie au contact principal le lien pour le créer. Sur une candidature, il
+ * vaut aussi validation — la demande devient une adhésion en attente de
+ * règlement. Cliquer de nouveau renvoie un lien neuf, qui remplace l'ancien.
+ */
+export async function donnerAcces(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
-  const m = await prisma.member.update({
+  const retour = retourInterne(formData, `/admin/membres/${id}`);
+
+  const m = await prisma.member.findUnique({
     where: { id },
-    data: { statut: "en_attente" },
+    select: { nom: true, type: true, statut: true, formule: true },
   });
-  await journal(
-    "candidature_approuvee",
-    "Member",
-    id,
-    await acteurEquipe(),
-    `${m.nom} · en attente du paiement de la cotisation.`,
-  );
-  const contact = await contactDe(id);
-  if (contact) {
-    // Vers la connexion, l'adresse déjà remplie : la première mène à la
-    // suite de la fiche.
-    const lien = await urlPublique(
-      `/auth?${new URLSearchParams({ email: contact.email })}`,
+  if (!m) redirectWithErreur("/admin/membres", "Membre introuvable.");
+  const contact = await prisma.user.findFirst({
+    where: { memberId: id, role: "membre" },
+    orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
+    select: { id: true, nom: true, email: true, motDePasse: true },
+  });
+  if (!contact) {
+    redirectWithErreur(
+      retour,
+      `${m.nom} n’a aucun contact : il faut une adresse e-mail pour lui envoyer son accès.`,
     );
-    after(() =>
-      envoyerCourriel(
-        courrielDemandeApprouvee(contact.email, {
+  }
+
+  const candidature = m.statut === "candidature";
+  if (!candidature && contact.motDePasse) {
+    redirectWithFlash(
+      retour,
+      `${contact.nom} a déjà son accès : il se connecte avec ${contact.email}`,
+    );
+  }
+
+  const acteur = await acteurEquipe();
+  if (candidature) {
+    await prisma.member.update({
+      where: { id },
+      data: { statut: "en_attente" },
+    });
+    await journal(
+      "candidature_approuvee",
+      "Member",
+      id,
+      acteur,
+      `${m.nom} · en attente du paiement de la cotisation.`,
+    );
+  }
+
+  // Sans mot de passe, le lien mène à sa création ; avec, à la connexion.
+  const lien = contact.motDePasse
+    ? await urlPublique(
+        `/auth?${new URLSearchParams({ email: contact.email })}`,
+      )
+    : `${await urlPublique("/auth/nouveau-mot-de-passe")}?jeton=${await creerJeton(contact.id, "invitation")}`;
+  const envoye = await envoyerCourriel(
+    candidature
+      ? courrielDemandeApprouvee(contact.email, {
           nom: contact.nom,
           entreprise: m.nom,
           formule: libelleFormule(m.formule),
           montant: fmtCotisation(m.formule),
           lien,
-        }),
-      ),
-    );
-  }
-  revalideTout();
-  redirectWithFlash(
-    `/admin/membres/${id}`,
-    `Demande approuvée pour ${m.nom} · en attente du paiement de la cotisation`,
+          creerMotDePasse: !contact.motDePasse,
+        })
+      : courrielInvitation(
+          contact.email,
+          contact.nom,
+          m.type === "morale" ? m.nom : null,
+          lien,
+        ),
   );
+  // Un lien qui n'est jamais parti ne doit pas s'afficher « envoyé » : on
+  // le retire, et « Accéder » revient. Sans service d'e-mails (en local),
+  // il reste : il est écrit dans le journal du serveur.
+  if (!envoye && courrielsActifs() && !contact.motDePasse) {
+    await prisma.jetonCompte.deleteMany({
+      where: { userId: contact.id, usage: "invitation", utiliseLe: null },
+    });
+  }
+  await journal(
+    "acces_envoye",
+    "Member",
+    id,
+    acteur,
+    `Accès envoyé à ${contact.nom} (${contact.email})${envoye ? "" : " · e-mail non parti"}.`,
+  );
+
+  revalideTout();
+  const debut = candidature ? `Demande de ${m.nom} validée · ` : "";
+  const message = `${debut}${suiteAcces(envoye, contact.email)}`;
+  if (!envoye && courrielsActifs()) redirectWithErreur(retour, message);
+  redirectWithFlash(retour, message);
 }
 
 export async function rejectCandidature(formData: FormData) {
@@ -339,21 +404,26 @@ export async function createMember(formData: FormData) {
     redirectWithErreur("/admin/membres", "Le nom de l’entreprise est requis.");
   }
 
-  // L'adresse sert d'identifiant de connexion : une adresse déjà prise ne
-  // recevrait pas d'invitation. On le dit avant de créer quoi que ce soit.
+  // L'adresse sert d'identifiant de connexion, et c'est à elle que partira
+  // l'accès : obligatoire, et libre. On le vérifie avant de créer quoi que
+  // ce soit.
   const email = texte(formData, "email").toLowerCase();
-  if (email && !ADRESSE.test(email)) {
+  if (!email) {
+    redirectWithErreur(
+      "/admin/membres",
+      "Indiquez l’adresse e-mail du contact : c’est à elle que partira son accès.",
+    );
+  }
+  if (!ADRESSE.test(email)) {
     redirectWithErreur(
       "/admin/membres",
       `« ${email} » n’est pas une adresse e-mail valide.`,
     );
   }
-  const occupe = email
-    ? await prisma.user.findUnique({
-        where: { email },
-        select: { role: true, member: { select: { nom: true } } },
-      })
-    : null;
+  const occupe = await prisma.user.findUnique({
+    where: { email },
+    select: { role: true, member: { select: { nom: true } } },
+  });
   if (occupe) {
     redirectWithErreur(
       "/admin/membres",
@@ -383,26 +453,19 @@ export async function createMember(formData: FormData) {
     },
   });
 
-  let invite: boolean | null = null;
-  if (email) {
-    const contact = await prisma.user.create({
-      data: {
-        role: "membre",
-        nom: rep,
-        fonction: texte(formData, "repTitre") || "Représentant(e)",
-        email,
-        tel: texte(formData, "tel") || null,
-        memberId: m.id,
-        contactPrincipal: true,
-      },
-    });
-    invite = await inviter(
-      contact.id,
+  // Le contact principal, sans mot de passe : son accès part quand l'équipe
+  // clique sur « Accéder », depuis la liste ou la fiche.
+  await prisma.user.create({
+    data: {
+      role: "membre",
+      nom: rep,
+      fonction: texte(formData, "repTitre") || "Représentant(e)",
       email,
-      rep,
-      type === "morale" ? nom : null,
-    );
-  }
+      tel: texte(formData, "tel") || null,
+      memberId: m.id,
+      contactPrincipal: true,
+    },
+  });
 
   await journal(
     "membre_cree",
@@ -412,17 +475,9 @@ export async function createMember(formData: FormData) {
     `Ajout manuel de ${nom}.`,
   );
   revalideTout();
-  if (invite === false && courrielsActifs()) {
-    redirectWithErreur(
-      `/admin/membres/${m.id}`,
-      `${nom} a été ajouté · ${suiteInvitation(false, email)}`,
-    );
-  }
   redirectWithFlash(
     `/admin/membres/${m.id}`,
-    invite === null
-      ? `${nom} a été ajouté à l’annuaire · sans contact, personne n’est invité`
-      : `${nom} a été ajouté à l’annuaire · ${suiteInvitation(invite, email)}`,
+    `${nom} a été ajouté · « Accéder » lui envoie son lien de connexion`,
   );
 }
 

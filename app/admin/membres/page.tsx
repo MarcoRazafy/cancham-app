@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FiltresAuto } from "@/components/FiltresAuto";
 import { ChevronRight, Download, Search, Users } from "lucide-react";
+import { EtatAcces } from "@/components/admin/EtatAcces";
 import { EnTeteAdmin, Onglets, Vide } from "@/components/admin/ui";
 import { LogoMark } from "@/components/domain";
 import { AddMemberButton } from "@/components/forms/MemberForms";
@@ -16,6 +17,7 @@ import {
   fmtCotisation,
   libelleFormule,
 } from "@/lib/membership";
+import { getAccesMembres } from "@/lib/acces-membres";
 import { getMembers } from "@/lib/queries";
 import { situation } from "@/lib/situation";
 
@@ -35,6 +37,9 @@ export default async function AdminMembres({
   const membres = await getMembers();
   const retenus = filtrerHorsStatut(membres, filtres);
   const liste = retenus.filter((m) => statut === "tous" || m.statut === statut);
+  // Où en est l'accès de chacun : actif, lien envoyé, ou à envoyer.
+  const acces = await getAccesMembres(liste.map((m) => m.id));
+  const retourListe = `/admin/membres${parametresFiltres(filtres)}`;
 
   const lien = (changes: Parameters<typeof parametresFiltres>[1]) =>
     `/admin/membres${parametresFiltres(filtres, changes)}`;
@@ -62,7 +67,8 @@ export default async function AdminMembres({
         }
       >
         {membres.length} adhérents. Suivez les cotisations, examinez les
-        demandes et tenez les fiches à jour.
+        demandes et ouvrez l’accès des nouveaux inscrits : « Accéder » leur
+        envoie le lien pour créer leur mot de passe.
       </EnTeteAdmin>
 
       <Onglets
@@ -135,7 +141,7 @@ export default async function AdminMembres({
             <table className="w-full border-collapse text-[13.4px]">
               <thead>
                 <tr className="bg-surface-2">
-                  {["Membre", "Formule", "Situation", ""].map((t) => (
+                  {["Membre", "Formule", "Situation", "Accès", ""].map((t) => (
                     <th
                       key={t}
                       className="text-left surtitre text-faint font-semibold px-5 py-3 border-b border-line"
@@ -187,6 +193,15 @@ export default async function AdminMembres({
                           {s.detail}
                         </span>
                       </td>
+                      <td className="px-5 py-3.5">
+                        <EtatAcces
+                          acces={acces[m.id]}
+                          memberId={m.id}
+                          nom={m.nom}
+                          candidature={m.statut === "candidature"}
+                          retour={retourListe}
+                        />
+                      </td>
                       <td className="px-5 py-3.5 text-right">
                         <Link
                           href={`/admin/membres/${m.id}`}
@@ -208,11 +223,11 @@ export default async function AdminMembres({
               const s = situation(m);
               return (
                 <li key={m.id}>
-                  <Link
-                    href={`/admin/membres/${m.id}`}
-                    className="block no-underline"
-                  >
-                    <Card className="carte-filet filet-degrade p-4">
+                  <Card className="carte-filet filet-degrade p-4">
+                    <Link
+                      href={`/admin/membres/${m.id}`}
+                      className="block no-underline"
+                    >
                       <div className="flex items-center gap-3">
                         <LogoMark member={m} size={40} />
                         <span className="min-w-0 flex-1">
@@ -236,8 +251,21 @@ export default async function AdminMembres({
                       >
                         {s.detail}
                       </p>
-                    </Card>
-                  </Link>
+                    </Link>
+                    {/* Hors du lien : un bouton ne se glisse pas dans un <a>. */}
+                    <div className="mt-3 pt-3 border-t border-line flex items-center justify-between gap-3 flex-wrap">
+                      <span className="text-[12px] font-semibold text-muted">
+                        Accès
+                      </span>
+                      <EtatAcces
+                        acces={acces[m.id]}
+                        memberId={m.id}
+                        nom={m.nom}
+                        candidature={m.statut === "candidature"}
+                        retour={retourListe}
+                      />
+                    </div>
+                  </Card>
                 </li>
               );
             })}

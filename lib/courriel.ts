@@ -1,5 +1,6 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { COORDONNEES } from "@/lib/coordonnees";
 
@@ -44,35 +45,50 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
     );
     return false;
   }
-  try {
-    const reponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cle}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: EXPEDITEUR,
-        to: [c.a],
-        subject: c.sujet,
-        html: c.html,
-        text: c.texte,
-        // Une réponse à un e-mail automatique arrive à l'équipe.
-        reply_to: COURRIEL_EQUIPE,
-      }),
-    });
-    if (!reponse.ok) {
-      console.error(
-        `[courriel] échec ${reponse.status} — à ${c.a} — « ${c.sujet} » : ${await reponse.text()}`,
-      );
-      return false;
+  // Une coupure réseau passagère ne doit pas coûter un e-mail : on
+  // réessaie une fois. La clé d'idempotence garantit qu'un premier envoi
+  // arrivé malgré tout chez Resend ne part pas en double.
+  const idempotence = randomUUID();
+  for (let essai = 1; essai <= ESSAIS_ENVOI; essai++) {
+    try {
+      const reponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${cle}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotence,
+        },
+        body: JSON.stringify({
+          from: EXPEDITEUR,
+          to: [c.a],
+          subject: c.sujet,
+          html: c.html,
+          text: c.texte,
+          // Une réponse à un e-mail automatique arrive à l'équipe.
+          reply_to: COURRIEL_EQUIPE,
+        }),
+      });
+      if (!reponse.ok) {
+        // Refus du service (adresse, domaine, clé) : réessayer n'y changerait rien.
+        console.error(
+          `[courriel] échec ${reponse.status} — à ${c.a} — « ${c.sujet} » : ${await reponse.text()}`,
+        );
+        return false;
+      }
+      return true;
+    } catch (e) {
+      if (essai < ESSAIS_ENVOI) {
+        await new Promise((r) => setTimeout(r, 800));
+        continue;
+      }
+      console.error(`[courriel] échec réseau — à ${c.a} — « ${c.sujet} »`, e);
     }
-    return true;
-  } catch (e) {
-    console.error(`[courriel] échec réseau — à ${c.a} — « ${c.sujet} »`, e);
-    return false;
   }
+  return false;
 }
+
+/** Tentatives par e-mail : la première, et une reprise après coupure réseau. */
+const ESSAIS_ENVOI = 2;
 
 /**
  * Adresse complète d'une page, pour les liens des e-mails.
