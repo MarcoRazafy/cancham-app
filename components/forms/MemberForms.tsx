@@ -486,6 +486,7 @@ export function EditProfileButton({
   siteweb = null,
   cover = null,
   logo = null,
+  retour = "/membre/profil",
 }: {
   memberId: string;
   nom: string;
@@ -504,23 +505,29 @@ export function EditProfileButton({
   /** Visuels actuels, affichés en aperçu à côté du sélecteur de fichier. */
   cover?: string | null;
   logo?: string | null;
+  /** Page où revenir : « Mon entreprise », ou la fiche dans le back-office. */
+  retour?: string;
 }) {
+  const titre = retour.startsWith("/admin")
+    ? "Modifier la fiche"
+    : "Modifier ma fiche";
   return (
     <Modal
       wide
-      title="Modifier ma fiche"
+      title={titre}
       trigger={(ouvrir) => (
         <button
           onClick={ouvrir}
           className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5`}
         >
-          Modifier ma fiche
+          <Pencil size={13} /> {titre}
         </button>
       )}
     >
       {(fermer) => (
         <form action={updateMemberProfile}>
           <input type="hidden" name="memberId" value={memberId} />
+          <input type="hidden" name="retour" value={retour} />
           <ModalBody>
             <Field
               label={independant ? "Nom affiché" : "Nom de l’entreprise"}
@@ -1141,7 +1148,13 @@ function ChampsService({ produit }: { produit?: Produit }) {
 }
 
 /** Un besoin de plus dans « Besoins & intérêts », depuis sa fiche. */
-export function AjouterBesoinButton({ memberId }: { memberId: string }) {
+export function AjouterBesoinButton({
+  memberId,
+  retour = "/membre/profil",
+}: {
+  memberId: string;
+  retour?: string;
+}) {
   return (
     <Modal
       title="Ajouter un besoin"
@@ -1157,6 +1170,7 @@ export function AjouterBesoinButton({ memberId }: { memberId: string }) {
       {(fermer) => (
         <form action={ajouterBesoin}>
           <input type="hidden" name="memberId" value={memberId} />
+          <input type="hidden" name="retour" value={retour} />
           <ModalBody>
             <Field
               label="Ce que vous recherchez"
@@ -1185,7 +1199,13 @@ export function AjouterBesoinButton({ memberId }: { memberId: string }) {
   );
 }
 
-export function AjouterServiceButton({ memberId }: { memberId: string }) {
+export function AjouterServiceButton({
+  memberId,
+  retour = "/membre/profil",
+}: {
+  memberId: string;
+  retour?: string;
+}) {
   return (
     <Modal
       wide
@@ -1202,6 +1222,7 @@ export function AjouterServiceButton({ memberId }: { memberId: string }) {
       {(fermer) => (
         <form action={ajouterService}>
           <input type="hidden" name="memberId" value={memberId} />
+          <input type="hidden" name="retour" value={retour} />
           <ModalBody>
             <ChampsService />
           </ModalBody>
@@ -1217,7 +1238,13 @@ export function AjouterServiceButton({ memberId }: { memberId: string }) {
   );
 }
 
-export function ModifierServiceButton({ produit }: { produit: Produit }) {
+export function ModifierServiceButton({
+  produit,
+  retour = "/membre/profil",
+}: {
+  produit: Produit;
+  retour?: string;
+}) {
   return (
     <Modal
       wide
@@ -1234,6 +1261,7 @@ export function ModifierServiceButton({ produit }: { produit: Produit }) {
       {(fermer) => (
         <form action={modifierService}>
           <input type="hidden" name="produitId" value={produit.id} />
+          <input type="hidden" name="retour" value={retour} />
           <ModalBody>
             <ChampsService produit={produit} />
           </ModalBody>
@@ -1252,9 +1280,11 @@ export function ModifierServiceButton({ produit }: { produit: Produit }) {
 export function SupprimerServiceButton({
   produitId,
   label,
+  retour = "/membre/profil",
 }: {
   produitId: string;
   label: string;
+  retour?: string;
 }) {
   return (
     <Modal
@@ -1271,10 +1301,11 @@ export function SupprimerServiceButton({
       {(fermer) => (
         <form action={supprimerService}>
           <input type="hidden" name="produitId" value={produitId} />
+          <input type="hidden" name="retour" value={retour} />
           <ModalBody>
             <p className="m-0 text-[13.6px] leading-relaxed">
-              Retirer <b>{label}</b> de votre catalogue ? Elle disparaîtra de
-              votre fiche et de l’annuaire.
+              Retirer <b>{label}</b> du catalogue ? Elle disparaîtra de la fiche
+              et de l’annuaire.
             </p>
           </ModalBody>
           <ModalFooter>

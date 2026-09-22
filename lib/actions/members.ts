@@ -84,6 +84,27 @@ function retourInterne(fd: FormData, defaut: string): string {
   return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
 }
 
+/**
+ * Une modification de la fiche par l'équipe se trace au journal : le membre
+ * n'en est pas l'auteur, et doit pouvoir savoir qui a changé quoi. Les
+ * siennes, non — c'est sa fiche.
+ */
+async function tracerEquipe(
+  estEquipe: boolean,
+  memberId: string,
+  retour: string,
+  detail: string,
+) {
+  if (!estEquipe) return;
+  await journal(
+    "fiche_modifiee",
+    "Member",
+    memberId,
+    await acteurDepuis(retour),
+    detail,
+  );
+}
+
 /** Qui agit sur un contact : l'équipe depuis le back-office, le membre sinon. */
 async function acteurDepuis(retour: string): Promise<string> {
   return (
@@ -493,7 +514,7 @@ export async function createMember(formData: FormData) {
 export async function updateMemberProfile(formData: FormData) {
   // L'identifiant reçu ne fait pas foi : un membre ne modifie que sa fiche.
   const retour = retourInterne(formData, "/membre/profil");
-  const { memberId: id } = await exigerFiche(
+  const { memberId: id, estEquipe } = await exigerFiche(
     texte(formData, "memberId"),
     retour,
   );
@@ -503,11 +524,11 @@ export async function updateMemberProfile(formData: FormData) {
     where: { id },
     select: { cover: true, logo: true, nom: true, pays: true },
   });
-  if (!actuel) redirectWithErreur("/membre/profil", "Fiche introuvable.");
+  if (!actuel) redirectWithErreur(retour, "Fiche introuvable.");
 
   const nom = texte(formData, "nom").slice(0, 120);
   if (!nom) {
-    redirectWithErreur("/membre/profil", "Le nom de l’entreprise est requis.");
+    redirectWithErreur(retour, "Le nom de l’entreprise est requis.");
   }
   // Un pays de la liste, ou celui déjà enregistré ; sinon, inchangé.
   const paysSaisi = texte(formData, "pays");
@@ -520,7 +541,7 @@ export async function updateMemberProfile(formData: FormData) {
   const siteweb = normaliserSite(siteSaisi);
   if (siteSaisi && !siteweb) {
     redirectWithErreur(
-      "/membre/profil",
+      retour,
       `« ${siteSaisi} » n’est pas une adresse de site valide.`,
     );
   }
@@ -538,8 +559,7 @@ export async function updateMemberProfile(formData: FormData) {
       transparence: true,
     });
   } catch (e) {
-    if (e instanceof ImageRefusee)
-      redirectWithErreur("/membre/profil", e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
@@ -579,8 +599,9 @@ export async function updateMemberProfile(formData: FormData) {
     );
   }
 
+  await tracerEquipe(estEquipe, id, retour, "Présentation de la fiche.");
   revalideTout();
-  redirectWithFlash("/membre/profil", "Fiche mise à jour");
+  redirectWithFlash(retour, "Fiche mise à jour");
 }
 
 /** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */
@@ -588,8 +609,11 @@ const BESOINS_MAX = 15;
 
 /** Ajoute un besoin à la liste « Besoins & intérêts » de sa fiche. */
 export async function ajouterBesoin(formData: FormData) {
-  const retour = "/membre/profil";
-  const { memberId } = await exigerFiche(texte(formData, "memberId"), retour);
+  const retour = retourInterne(formData, "/membre/profil");
+  const { memberId, estEquipe } = await exigerFiche(
+    texte(formData, "memberId"),
+    retour,
+  );
   // Une ligne : c'est un tiret sur la fiche.
   const besoin = texte(formData, "besoin").replace(/\s+/g, " ").slice(0, 200);
   if (!besoin) redirectWithErreur(retour, "Décrivez ce que vous recherchez.");
@@ -607,7 +631,7 @@ export async function ajouterBesoin(formData: FormData) {
   if (lignes.length >= BESOINS_MAX) {
     redirectWithErreur(
       retour,
-      `${BESOINS_MAX} besoins au plus : retirez-en un depuis « Modifier ma fiche ».`,
+      `${BESOINS_MAX} besoins au plus : retirez-en un en modifiant la fiche.`,
     );
   }
 
@@ -615,15 +639,24 @@ export async function ajouterBesoin(formData: FormData) {
     where: { id: memberId },
     data: { besoins: [...lignes, besoin].join("\n"), interets: null },
   });
+  await tracerEquipe(
+    estEquipe,
+    memberId,
+    retour,
+    `Besoin ajouté : « ${besoin} ».`,
+  );
   revalideTout();
-  redirectWithFlash(retour, "Besoin ajouté à votre fiche");
+  redirectWithFlash(retour, "Besoin ajouté à la fiche");
 }
 
 /* ============================ Produits & services ============================ */
 
 export async function ajouterService(formData: FormData) {
   const retour = retourInterne(formData, "/membre/profil");
-  const { memberId } = await exigerFiche(texte(formData, "memberId"), retour);
+  const { memberId, estEquipe } = await exigerFiche(
+    texte(formData, "memberId"),
+    retour,
+  );
   if (!champsProduit(formData).label) {
     redirectWithErreur(retour, "Le titre est obligatoire.");
   }
@@ -636,19 +669,25 @@ export async function ajouterService(formData: FormData) {
     throw e;
   }
 
+  await tracerEquipe(
+    estEquipe,
+    memberId,
+    retour,
+    `Offre ajoutée : « ${label} ».`,
+  );
   revalideTout();
   redirectWithFlash(retour, `« ${label} » ajouté au catalogue.`);
 }
 
 export async function modifierService(formData: FormData) {
   const id = texte(formData, "produitId");
-  await exigerProduit(id, retourInterne(formData, "/membre/profil"));
+  const retour = retourInterne(formData, "/membre/profil");
+  const { estEquipe } = await exigerProduit(id, retour);
   const champs = champsProduit(formData);
-  if (!champs.label)
-    redirectWithErreur("/membre/profil", "Le titre est obligatoire.");
+  if (!champs.label) redirectWithErreur(retour, "Le titre est obligatoire.");
 
   const actuel = await prisma.produit.findUnique({ where: { id } });
-  if (!actuel) redirectWithErreur("/membre/profil", "Offre introuvable.");
+  if (!actuel) redirectWithErreur(retour, "Offre introuvable.");
 
   // On garde ce qui n'a pas été marqué pour retrait, puis on ajoute les
   // nouvelles photos à la suite : la vignette ne change que si la première
@@ -664,8 +703,7 @@ export async function modifierService(formData: FormData) {
       PHOTOS_PAR_PRODUIT - conservees.length,
     );
   } catch (e) {
-    if (e instanceof ImageRefusee)
-      redirectWithErreur("/membre/profil", e.message);
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
     throw e;
   }
 
@@ -674,26 +712,36 @@ export async function modifierService(formData: FormData) {
     data: { ...champs, photos: [...conservees, ...ajoutees] },
   });
 
+  await tracerEquipe(
+    estEquipe,
+    actuel.memberId,
+    retour,
+    `Offre modifiée : « ${champs.label} ».`,
+  );
   revalideTout();
-  redirectWithFlash("/membre/profil", `« ${champs.label} » mis à jour.`);
+  redirectWithFlash(retour, `« ${champs.label} » mis à jour.`);
 }
 
 export async function supprimerService(formData: FormData) {
   const id = texte(formData, "produitId");
-  await exigerProduit(id, retourInterne(formData, "/membre/profil"));
+  const retour = retourInterne(formData, "/membre/profil");
+  const { estEquipe } = await exigerProduit(id, retour);
   const actuel = await prisma.produit.findUnique({
     where: { id },
-    select: { label: true },
+    select: { label: true, memberId: true },
   });
-  if (!actuel) redirectWithErreur("/membre/profil", "Offre introuvable.");
+  if (!actuel) redirectWithErreur(retour, "Offre introuvable.");
 
   await prisma.produit.delete({ where: { id } });
 
-  revalideTout();
-  redirectWithFlash(
-    "/membre/profil",
-    `« ${actuel.label} » retiré du catalogue.`,
+  await tracerEquipe(
+    estEquipe,
+    actuel.memberId,
+    retour,
+    `Offre retirée : « ${actuel.label} ».`,
   );
+  revalideTout();
+  redirectWithFlash(retour, `« ${actuel.label} » retiré du catalogue.`);
 }
 
 export async function deleteMember(formData: FormData) {
