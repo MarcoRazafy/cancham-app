@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, FilePlus2 } from "lucide-react";
+import { Check, FilePlus2, Trash2, TriangleAlert } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -11,7 +11,11 @@ import {
   ModalFooter,
   SubmitButton,
 } from "@/components/form-bits";
-import { creerFacture, marquerFacturePayee } from "@/lib/actions/factures";
+import {
+  creerFacture,
+  marquerFacturePayee,
+  supprimerFacture,
+} from "@/lib/actions/factures";
 import type { Devise } from "@/lib/membership";
 
 const MODES = ["Espèces", "Virement bancaire", "Mobile Money", "Chèque"];
@@ -198,6 +202,75 @@ export function MarquerPayeeButton({
             <CancelButton onClick={fermer} />
             <SubmitButton pendingLabel="Enregistrement…">
               <Check size={14} /> Confirmer le règlement
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+/**
+ * Suppression d'une facture émise par erreur.
+ *
+ * L'alerte dit ce qui disparaît — la pièce et son montant dans les totaux —
+ * et ce qui reste : la trace au journal, avec le numéro et l'auteur.
+ */
+export function SupprimerFactureButton({
+  factureId,
+  numero,
+  montant,
+  membre,
+  payee,
+}: {
+  factureId: string;
+  numero: string;
+  montant: string;
+  membre: string;
+  /** Une facture réglée emporte son encaissement : on le dit. */
+  payee: boolean;
+}) {
+  return (
+    <Modal
+      title="Supprimer la facture"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          className="inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-bad-soft bg-transparent text-bad hover:bg-bad-soft text-[12.4px] px-[11px] py-1.5"
+        >
+          <Trash2 size={14} /> Supprimer
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={supprimerFacture}>
+          <input type="hidden" name="factureId" value={factureId} />
+          <ModalBody>
+            <div
+              role="alert"
+              className="flex gap-3 rounded-[var(--radius-s)] border border-bad-soft bg-bad-soft text-bad px-4 py-3.5"
+            >
+              <TriangleAlert size={20} className="shrink-0 mt-0.5" />
+              <p className="m-0 text-[13.4px] leading-relaxed">
+                <b className="block mb-1">
+                  La facture {numero} sera supprimée définitivement.
+                </b>
+                {montant} · {membre}
+                {payee
+                  ? " — elle est réglée : son encaissement quitte les totaux."
+                  : ""}
+              </p>
+            </div>
+            <p className="m-0 mt-4 text-[13px] text-muted leading-relaxed">
+              Le journal d’activité garde le numéro, le montant et l’objet, avec
+              votre nom. Le membre ne la verra plus dans son historique.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton variant="danger" pendingLabel="Suppression…">
+              <Trash2 size={14} /> Supprimer la facture
             </SubmitButton>
           </ModalFooter>
         </form>
