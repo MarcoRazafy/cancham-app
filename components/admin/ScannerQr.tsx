@@ -1,25 +1,38 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import jsQR from "jsqr";
 import {
   CameraOff,
   CheckCircle2,
+  ChevronDown,
   CircleAlert,
+  Clock,
+  ExternalLink,
   Info,
   Keyboard,
   ScanLine,
+  Users,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
-import { pointerParCode, type ResultatScan } from "@/lib/actions/events";
+import { StatusPill } from "@/components/ui";
+import {
+  historiqueAccueil,
+  pointerParCode,
+  type ArriveeAccueil,
+  type ResultatScan,
+} from "@/lib/actions/events";
+import { initialesDe } from "@/lib/avatars";
 
 /**
  * Scanner de QR codes à l'accueil d'un événement.
  *
  * La caméra du téléphone ou de l'ordinateur lit le QR code du billet d'un
  * membre ; la personne passe « présente » aussitôt, et le scanner reste
- * ouvert pour la suivante. Chaque lecture s'affiche : arrivée enregistrée,
- * déjà pointée, ou code refusé — inconnu, d'un autre événement.
+ * ouvert pour la suivante. Chaque lecture s'annonce deux secondes sur
+ * l'image — logo, entreprise, représentant, ou le motif d'un refus —, puis
+ * rejoint l'historique des arrivées, où un clic montre l'inscription.
  *
  * Le décodage se fait dans le navigateur : le détecteur natif quand il existe
  * (Chrome sur Android, macOS), sinon jsQR sur une image réduite de la vidéo.
@@ -36,6 +49,19 @@ const REPOS_MS = 2500;
 const CADENCE_MS = 160;
 /** Largeur de l'image analysée : assez pour lire, assez petite pour aller vite. */
 const LARGEUR_ANALYSE = 640;
+/** Durée de l'annonce d'une lecture, pendant laquelle on ne lit rien d'autre. */
+const ANNONCE_MS = 2000;
+
+/** « 17 h 42 », à l'heure de la chambre. */
+function heure(iso: string): string {
+  return new Date(iso)
+    .toLocaleTimeString("fr-FR", {
+      timeZone: "Indian/Antananarivo",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    .replace(":", " h ");
+}
 
 interface Detecteur {
   detect(source: CanvasImageSource): Promise<{ rawValue: string }[]>;
@@ -76,49 +102,107 @@ function Lecteur({ eventId }: { eventId: string }) {
     "demarrage",
   );
   const [motif, setMotif] = useState("");
-  const [resultats, setResultats] = useState<(ResultatScan & { id: number })[]>(
-    [],
-  );
   const [saisie, setSaisie] = useState("");
   const [enCours, demarrer] = useTransition();
 
+  /** L'historique : les arrivées de l'événement, la dernière en tête. */
+  const [arrivees, setArrivees] = useState<ArriveeAccueil[] | null>(null);
+  /** Les codes refusés depuis l'ouverture du scanner. */
+  const [refus, setRefus] = useState<
+    { id: number; code: string; message: string }[]
+  >([]);
+  /** La lecture annoncée sur l'image, deux secondes. */
+  const [annonce, setAnnonce] = useState<
+    (ResultatScan & { id: number }) | null
+  >(null);
+  /** La ligne de l'historique dépliée. */
+  const [ouverte, setOuverte] = useState<string | null>(null);
+
   const occupe = useRef(false);
+  /** Vrai pendant l'annonce : la caméra ne lit rien d'autre. */
+  const pause = useRef(false);
+  const minuterieAnnonce = useRef<ReturnType<typeof setTimeout>>(undefined);
   /** Dernier code vu par la caméra, et quand il l'a été pour la dernière fois. */
   const derniere = useRef<{ code: string; vu: number } | null>(null);
   const compteur = useRef(0);
 
-  /** Envoie un code lu ou saisi, et affiche le résultat en tête. */
+  useEffect(() => {
+    let annule = false;
+    historiqueAccueil(eventId)
+      .then((liste) => {
+        if (!annule) setArrivees(liste);
+      })
+      .catch(() => {
+        if (!annule) setArrivees([]);
+      });
+    return () => {
+      annule = true;
+      clearTimeout(minuterieAnnonce.current);
+    };
+  }, [eventId]);
+
+  /** Annonce une lecture sur l'image, puis rend la main à la caméra. */
+  const annoncer = useCallback((r: ResultatScan) => {
+    clearTimeout(minuterieAnnonce.current);
+    pause.current = true;
+    setAnnonce({ ...r, id: ++compteur.current });
+    minuterieAnnonce.current = setTimeout(() => {
+      setAnnonce(null);
+      pause.current = false;
+    }, ANNONCE_MS);
+  }, []);
+
+  /** Envoie un code lu ou saisi, l'annonce, et tient l'historique à jour. */
   const pointer = useCallback(
     (lu: string) => {
       const code = lu.trim();
-      if (!code || occupe.current) return;
+      if (!code || occupe.current || pause.current) return;
       occupe.current = true;
       demarrer(async () => {
+        let r: ResultatScan;
         try {
-          const r = await pointerParCode(eventId, code);
-          setResultats((liste) =>
-            [{ ...r, id: ++compteur.current }, ...liste].slice(0, 6),
-          );
-          if (r.etat === "present") navigator.vibrate?.(90);
-          else if (r.etat === "erreur") navigator.vibrate?.([60, 60, 60]);
+          r = await pointerParCode(eventId, code);
         } catch {
-          setResultats((liste) =>
-            [
-              {
-                etat: "erreur" as const,
-                code,
-                message: "Le pointage n’a pas abouti. Réessayez.",
-                id: ++compteur.current,
-              },
-              ...liste,
-            ].slice(0, 6),
-          );
+          r = {
+            etat: "erreur",
+            code,
+            message: "Le pointage n’a pas abouti. Réessayez.",
+          };
         } finally {
           occupe.current = false;
         }
+        annoncer(r);
+        if (r.etat === "erreur") {
+          navigator.vibrate?.([60, 60, 60]);
+          setRefus((liste) =>
+            [
+              { id: ++compteur.current, code: r.code, message: r.message },
+              ...liste,
+            ].slice(0, 3),
+          );
+          return;
+        }
+        if (r.etat === "present") navigator.vibrate?.(90);
+        const arrivee = r.arrivee;
+        setArrivees((liste) => {
+          const autres = (liste ?? [])
+            .filter((a) => a.id !== arrivee.id)
+            // Ses collègues déjà dans l'historique le voient arriver.
+            .map((a) => ({
+              ...a,
+              inscrits: a.inscrits.map((i) =>
+                i.id === arrivee.id ? { ...i, statut: "present" as const } : i,
+              ),
+            }));
+          const deja = liste?.find((a) => a.id === arrivee.id);
+          // Une personne déjà pointée garde sa place : l'heure est la sienne.
+          return deja && r.etat === "deja"
+            ? (liste ?? [])
+            : [arrivee, ...autres];
+        });
       });
     },
-    [eventId],
+    [eventId, annoncer],
   );
 
   /* ---------- Caméra et lecture ---------- */
@@ -140,7 +224,13 @@ function Lecteur({ eventId }: { eventId: string }) {
     const analyser = async () => {
       if (arrete) return;
       const v = video.current;
-      if (v && v.readyState >= 2 && v.videoWidth && !occupe.current) {
+      if (
+        v &&
+        v.readyState >= 2 &&
+        v.videoWidth &&
+        !occupe.current &&
+        !pause.current
+      ) {
         try {
           let lu: string | null = null;
           if (natif) {
@@ -254,6 +344,17 @@ function Lecteur({ eventId }: { eventId: string }) {
             Pointage…
           </span>
         ) : null}
+        {annonce ? (
+          <Annonce
+            key={annonce.id}
+            resultat={annonce}
+            onFermer={() => {
+              clearTimeout(minuterieAnnonce.current);
+              setAnnonce(null);
+              pause.current = false;
+            }}
+          />
+        ) : null}
       </div>
 
       <p className="m-0 text-[12.8px] text-muted text-center">
@@ -286,55 +387,357 @@ function Lecteur({ eventId }: { eventId: string }) {
         </label>
         <button
           type="submit"
-          disabled={!saisie.trim() || enCours}
+          disabled={!saisie.trim() || enCours || annonce !== null}
           className="btn-contour btn-contour-sm disabled:opacity-50"
         >
           Valider
         </button>
       </form>
 
-      {/* ---------- Dernières lectures ---------- */}
-      {resultats.length ? (
-        <ul aria-live="polite" className="list-none m-0 p-0 flex flex-col gap-2">
-          {resultats.map((r, i) => (
-            <li
-              key={r.id}
-              className={`flex items-start gap-3 rounded-[var(--radius-s)] px-3.5 py-2.5 text-[13px] ${
-                r.etat === "present"
-                  ? "bg-success-soft text-success-strong"
-                  : r.etat === "deja"
-                    ? "bg-warn-soft text-warn"
-                    : "bg-bad-soft text-bad"
-              } ${i ? "opacity-70" : ""}`}
+      {/* ---------- Historique des arrivées ---------- */}
+      <section aria-live="polite">
+        <div className="flex items-baseline justify-between gap-3 mb-2">
+          <h3 className="m-0 text-[14px] font-semibold text-ink">
+            Historique des arrivées
+          </h3>
+          {arrivees ? (
+            <span className="text-[12px] text-muted tabular-nums">
+              {arrivees.length} présent{arrivees.length > 1 ? "s" : ""}
+            </span>
+          ) : null}
+        </div>
+
+        {refus.length ? (
+          <ul className="list-none m-0 mb-2 p-0 flex flex-col gap-1.5">
+            {refus.map((r, i) => (
+              <li
+                key={r.id}
+                className={`flex items-start gap-2.5 rounded-[var(--radius-s)] bg-bad-soft text-bad px-3 py-2 text-[12.5px] ${i ? "opacity-70" : ""}`}
+              >
+                <CircleAlert size={15} className="shrink-0 mt-px" />
+                <span className="min-w-0">
+                  <b className="font-semibold font-[family-name:var(--font-mono)]">
+                    {r.code || "Code illisible"}
+                  </b>{" "}
+                  — {r.message}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {arrivees === null ? (
+          <p className="m-0 py-4 text-center text-[12.8px] text-muted">
+            Chargement de l’historique…
+          </p>
+        ) : arrivees.length === 0 ? (
+          <p className="m-0 py-4 text-center text-[12.8px] text-muted border border-dashed border-line rounded-[var(--radius-s)]">
+            Aucune arrivée pour l’instant : chaque personne pointée s’affichera
+            ici.
+          </p>
+        ) : (
+          <ul className="list-none m-0 p-0 max-h-[340px] overflow-y-auto rounded-[var(--radius-s)] border border-line divide-y divide-line">
+            {arrivees.map((a) => (
+              <LigneArrivee
+                key={a.id}
+                arrivee={a}
+                ouverte={ouverte === a.id}
+                onBasculer={() => setOuverte((o) => (o === a.id ? null : a.id))}
+              />
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/* ============================ Annonce ============================ */
+
+/**
+ * Deux secondes sur l'image : qui vient d'arriver — logo, entreprise,
+ * représentant —, ou pourquoi le code est refusé. Un toucher la ferme plus tôt.
+ */
+function Annonce({
+  resultat: r,
+  onFermer,
+}: {
+  resultat: ResultatScan;
+  onFermer: () => void;
+}) {
+  // Le décompte part plein et se vide : il dit quand la caméra reprend.
+  const [vide, setVide] = useState(false);
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setVide(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+
+  const ton =
+    r.etat === "present"
+      ? {
+          barre: "bg-success-strong",
+          pastille: "bg-success-soft text-success-strong",
+        }
+      : r.etat === "deja"
+        ? { barre: "bg-warn", pastille: "bg-warn-soft text-warn" }
+        : { barre: "bg-bad", pastille: "bg-bad-soft text-bad" };
+
+  return (
+    <button
+      type="button"
+      onClick={onFermer}
+      aria-label="Fermer l’annonce"
+      className="absolute inset-0 z-10 flex items-center justify-center bg-[#0f1d2c]/70 backdrop-blur-[3px] cursor-pointer"
+    >
+      <span
+        className={`relative w-[84%] max-w-[380px] overflow-hidden rounded-2xl bg-white px-5 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-5 text-center shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)] transition-all duration-200 ${
+          vide ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        }`}
+      >
+        {r.etat === "erreur" ? (
+          <>
+            <span className="mx-auto flex h-14 w-14 sm:h-[72px] sm:w-[72px] items-center justify-center rounded-full bg-bad-soft text-bad">
+              <CircleAlert size={36} />
+            </span>
+            <span className="block mt-2.5 sm:mt-3.5 text-[18px] font-bold text-ink">
+              Code refusé
+            </span>
+            <span className="block mt-1 text-[13.5px] text-muted leading-snug">
+              {r.message}
+            </span>
+            {r.code ? (
+              <span className="block mt-2 text-[12px] text-faint font-[family-name:var(--font-mono)]">
+                {r.code}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <LogoArrivee arrivee={r.arrivee} taille="annonce" />
+            <span className="block mt-2.5 sm:mt-3.5 text-[18px] sm:text-[20px] leading-tight font-bold text-ink">
+              {r.arrivee.membre?.nom ?? r.arrivee.entreprise}
+            </span>
+            <span className="block mt-1 text-[14.5px] text-muted">
+              {r.arrivee.representant}
+            </span>
+            <span
+              className={`mt-2.5 sm:mt-3.5 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-bold ${ton.pastille}`}
             >
               {r.etat === "present" ? (
-                <CheckCircle2 size={18} className="shrink-0 mt-px" />
-              ) : r.etat === "deja" ? (
-                <Info size={18} className="shrink-0 mt-px" />
+                <CheckCircle2 size={15} />
               ) : (
-                <CircleAlert size={18} className="shrink-0 mt-px" />
+                <Info size={15} />
               )}
-              <span className="min-w-0">
-                {r.etat === "erreur" ? (
-                  <>
-                    <b className="font-semibold">{r.code || "Code illisible"}</b>{" "}
-                    — {r.message}
-                  </>
-                ) : (
-                  <>
-                    <b className="font-semibold">{r.nom}</b>
-                    {r.entreprise ? ` · ${r.entreprise}` : ""} —{" "}
-                    {r.etat === "present" ? "présent" : "déjà pointé présent"}
-                    <span className="block text-[11.5px] opacity-80 font-[family-name:var(--font-mono)]">
-                      {r.code}
-                    </span>
-                  </>
-                )}
+              {r.etat === "present"
+                ? `Présent${r.arrivee.presentLe ? ` · ${heure(r.arrivee.presentLe)}` : ""}`
+                : `Déjà pointé${r.arrivee.presentLe ? ` à ${heure(r.arrivee.presentLe)}` : ""}`}
+            </span>
+          </>
+        )}
+        <span
+          aria-hidden
+          className={`absolute bottom-0 left-0 h-1 ${ton.barre} transition-[width] ease-linear`}
+          style={{
+            width: vide ? "0%" : "100%",
+            transitionDuration: `${ANNONCE_MS}ms`,
+          }}
+        />
+      </span>
+    </button>
+  );
+}
+
+/* ============================ Historique ============================ */
+
+/** Deux tailles : l'annonce, plus petite sur téléphone, et la ligne d'historique. */
+const TAILLES_LOGO = {
+  annonce: {
+    cadre: "w-16 h-16 text-[22px] sm:w-[88px] sm:h-[88px] sm:text-[30px]",
+    sizes: "88px",
+  },
+  ligne: { cadre: "w-[38px] h-[38px] text-[13px]", sizes: "38px" },
+} as const;
+
+/** Le logo de l'entreprise, le portrait d'un indépendant, sinon les initiales. */
+function LogoArrivee({
+  arrivee: a,
+  taille,
+}: {
+  arrivee: ArriveeAccueil;
+  taille: keyof typeof TAILLES_LOGO;
+}) {
+  const m = a.membre;
+  const { cadre, sizes } = TAILLES_LOGO[taille];
+  if (m?.logo) {
+    return (
+      <span
+        className={`relative mx-auto block shrink-0 overflow-hidden rounded-xl border border-line bg-white ${cadre}`}
+      >
+        <Image
+          src={m.logo}
+          alt=""
+          fill
+          sizes={sizes}
+          className="object-contain p-[8%]"
+        />
+      </span>
+    );
+  }
+  if (m?.photo) {
+    return (
+      <span
+        className={`relative mx-auto block shrink-0 overflow-hidden rounded-full ${cadre}`}
+      >
+        <Image
+          src={m.photo}
+          alt=""
+          fill
+          sizes={sizes}
+          className="object-cover"
+        />
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`mx-auto flex shrink-0 items-center justify-center rounded-xl bg-accent-soft font-bold text-accent-strong ${cadre}`}
+    >
+      {initialesDe(m?.nom ?? a.entreprise)}
+    </span>
+  );
+}
+
+const STATUT_INSCRIT = {
+  present: { libelle: "Présent", classe: "text-success-strong" },
+  confirme: { libelle: "Attendu", classe: "text-muted" },
+  absent: { libelle: "Absent", classe: "text-bad" },
+} as const;
+
+/** Une arrivée de l'historique ; un clic déplie son inscription. */
+function LigneArrivee({
+  arrivee: a,
+  ouverte,
+  onBasculer,
+}: {
+  arrivee: ArriveeAccueil;
+  ouverte: boolean;
+  onBasculer: () => void;
+}) {
+  const m = a.membre;
+  return (
+    <li className={ouverte ? "bg-surface-2" : ""}>
+      <button
+        type="button"
+        onClick={onBasculer}
+        aria-expanded={ouverte}
+        className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left cursor-pointer hover:bg-surface-2"
+      >
+        <LogoArrivee arrivee={a} taille="ligne" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13.5px] font-semibold text-ink">
+            {m?.nom ?? a.entreprise}
+          </span>
+          <span className="block truncate text-[12.3px] text-muted">
+            {a.representant}
+          </span>
+        </span>
+        {a.presentLe ? (
+          <span className="shrink-0 text-[12px] text-muted tabular-nums">
+            {heure(a.presentLe)}
+          </span>
+        ) : null}
+        <ChevronDown
+          size={16}
+          className={`shrink-0 text-faint transition-transform ${ouverte ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {ouverte ? (
+        <div className="px-3.5 pb-3.5 pt-1 text-[12.8px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            {m ? <StatusPill status={m.statut} /> : null}
+            {a.code ? (
+              <span className="rounded-full bg-surface-3 px-2.5 py-[3px] text-[11.3px] font-semibold text-muted font-[family-name:var(--font-mono)]">
+                {a.code}
               </span>
-            </li>
-          ))}
-        </ul>
+            ) : null}
+          </div>
+
+          <dl className="m-0 mt-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+            {m ? (
+              <>
+                <dt className="text-muted">Activité</dt>
+                <dd className="m-0 text-ink">
+                  {m.secteur} · {m.ville}
+                </dd>
+              </>
+            ) : null}
+            <dt className="text-muted">Courriel</dt>
+            <dd className="m-0 min-w-0 truncate">
+              {a.email && a.email !== "—" ? (
+                <a
+                  href={`mailto:${a.email}`}
+                  className="text-accent no-underline hover:underline"
+                >
+                  {a.email}
+                </a>
+              ) : (
+                "—"
+              )}
+            </dd>
+            {a.presentLe ? (
+              <>
+                <dt className="text-muted">Arrivée</dt>
+                <dd className="m-0 text-ink inline-flex items-center gap-1">
+                  <Clock size={12} className="text-faint" />
+                  {heure(a.presentLe)}
+                </dd>
+              </>
+            ) : null}
+          </dl>
+
+          {m && a.inscrits.length > 1 ? (
+            <div className="mt-3">
+              <div className="flex items-center gap-1.5 text-[12px] font-semibold text-muted mb-1">
+                <Users size={13} /> {a.inscrits.length} représentants inscrits
+              </div>
+              <ul className="list-none m-0 p-0 flex flex-col gap-0.5">
+                {a.inscrits.map((i) => (
+                  <li key={i.id} className="flex justify-between gap-3">
+                    <span
+                      className={
+                        i.id === a.id ? "font-semibold text-ink" : "text-ink"
+                      }
+                    >
+                      {i.nom}
+                    </span>
+                    <span
+                      className={`text-[12px] font-semibold ${STATUT_INSCRIT[i.statut].classe}`}
+                    >
+                      {STATUT_INSCRIT[i.statut].libelle}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {m ? (
+            <a
+              href={`/admin/membres/${m.id}`}
+              target="_blank"
+              rel="noopener"
+              className="mt-3 inline-flex items-center gap-1.5 text-[12.8px] font-semibold text-accent no-underline hover:underline"
+            >
+              Ouvrir la fiche du membre <ExternalLink size={13} />
+            </a>
+          ) : (
+            <p className="m-0 mt-2.5 text-[12px] text-faint">
+              Ajouté par l’équipe à l’accueil : pas de fiche membre.
+            </p>
+          )}
+        </div>
       ) : null}
-    </div>
+    </li>
   );
 }

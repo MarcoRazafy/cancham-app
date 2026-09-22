@@ -332,6 +332,9 @@ model Attendee {
   /// scanner le lit à l'entrée et pointe la personne présente. `null` pour
   /// une personne inscrite par l'équipe.
   code       String?        @unique
+  /// Heure du pointage « présent » : l'historique du scanner s'ordonne par
+  /// elle. `null` tant que la personne n'est pas pointée.
+  presentLe  DateTime?
 
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)

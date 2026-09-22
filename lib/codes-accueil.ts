@@ -11,6 +11,11 @@ export function codeRepresentant(code: string, rang: number): string {
   return rang === 0 ? code : `${code}-${rang + 1}`;
 }
 
+/** Le code de l'inscription d'où vient celui d'un représentant : sans son rang. */
+export function codeInscription(code: string): string {
+  return code.replace(/-\d{1,2}$/, "");
+}
+
 /**
  * Le code lu par le scanner ou saisi à la main, même au milieu d'un texte
  * plus long, en majuscules. À défaut de motif reconnu, la saisie telle quelle.

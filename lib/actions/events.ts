@@ -9,7 +9,11 @@ import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { numeroFacture } from "@/lib/factures";
-import { codeRepresentant, extraireCode } from "@/lib/codes-accueil";
+import {
+  codeInscription,
+  codeRepresentant,
+  extraireCode,
+} from "@/lib/codes-accueil";
 import { estTermine } from "@/lib/presences";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
@@ -390,7 +394,13 @@ export async function toggleAttendance(formData: FormData) {
       : a.statut === "present"
         ? "absent"
         : "present";
-  await prisma.attendee.update({ where: { id: attendeeId }, data: { statut } });
+  await prisma.attendee.update({
+    where: { id: attendeeId },
+    data: {
+      statut,
+      presentLe: statut === "present" ? (a.presentLe ?? new Date()) : null,
+    },
+  });
   revalideTout();
   redirectWithFlash(
     retour,
@@ -399,9 +409,131 @@ export async function toggleAttendance(formData: FormData) {
 }
 
 /** Ce que le scanner affiche après la lecture d'un code. */
+/**
+ * Une arrivée à l'accueil, telle que le scanner l'annonce et la garde dans
+ * son historique : qui, pour quelle entreprise, à quelle heure — et de quoi
+ * vérifier l'inscription d'un coup d'œil.
+ */
+export interface ArriveeAccueil {
+  /** La ligne d'accueil. */
+  id: string;
+  representant: string;
+  entreprise: string;
+  email: string;
+  code: string | null;
+  /** Heure du pointage, ISO. */
+  presentLe: string | null;
+  /** Le membre inscrit. `null` pour une personne ajoutée par l'équipe. */
+  membre: {
+    id: string;
+    nom: string;
+    logo: string | null;
+    photo: string | null;
+    type: "morale" | "physique";
+    statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+    secteur: string;
+    ville: string;
+  } | null;
+  /** Tous les représentants de la même inscription, celui-ci compris. */
+  inscrits: {
+    id: string;
+    nom: string;
+    statut: "confirme" | "present" | "absent";
+  }[];
+}
+
 export type ResultatScan =
-  | { etat: "present" | "deja"; code: string; nom: string; entreprise: string }
+  | { etat: "present" | "deja"; code: string; arrivee: ArriveeAccueil }
   | { etat: "erreur"; code: string; message: string };
+
+/** Les lignes d'accueil, complétées de leur membre et de leurs collègues. */
+async function decrireArrivees(
+  eventId: string,
+  lignes: {
+    id: string;
+    nom: string;
+    entreprise: string;
+    email: string;
+    code: string | null;
+    presentLe: Date | null;
+  }[],
+): Promise<ArriveeAccueil[]> {
+  const bases = [
+    ...new Set(
+      lignes.flatMap((l) => (l.code ? [codeInscription(l.code)] : [])),
+    ),
+  ];
+  const [inscriptions, collegues] = bases.length
+    ? await Promise.all([
+        prisma.registration.findMany({
+          where: { code: { in: bases } },
+          select: {
+            code: true,
+            member: {
+              select: {
+                id: true,
+                nom: true,
+                logo: true,
+                photo: true,
+                type: true,
+                statut: true,
+                secteur: true,
+                ville: true,
+              },
+            },
+          },
+        }),
+        prisma.attendee.findMany({
+          where: { eventId, OR: bases.map(lignesDe) },
+          orderBy: { code: "asc" },
+          select: { id: true, nom: true, statut: true, code: true },
+        }),
+      ])
+    : [[], []];
+  const membres = new Map(inscriptions.map((i) => [i.code, i.member]));
+
+  return lignes.map((l) => {
+    const base = l.code ? codeInscription(l.code) : null;
+    return {
+      id: l.id,
+      representant: l.nom,
+      entreprise: l.entreprise,
+      email: l.email,
+      code: l.code,
+      presentLe: l.presentLe?.toISOString() ?? null,
+      membre: (base && membres.get(base)) || null,
+      inscrits: base
+        ? collegues
+            .filter((c) => c.code && codeInscription(c.code) === base)
+            .map(({ id, nom, statut }) => ({ id, nom, statut }))
+        : [{ id: l.id, nom: l.nom, statut: "present" as const }],
+    };
+  });
+}
+
+/**
+ * L'historique du scanner : les personnes pointées présentes, la dernière
+ * arrivée en tête. Il survit à la fermeture du scanner, puisqu'il se lit dans
+ * la liste d'accueil.
+ */
+export async function historiqueAccueil(
+  eventId: string,
+): Promise<ArriveeAccueil[]> {
+  await getCurrentUser("admin");
+  const lignes = await prisma.attendee.findMany({
+    where: { eventId, statut: "present" },
+    orderBy: [{ presentLe: { sort: "desc", nulls: "last" } }, { nom: "asc" }],
+    select: {
+      id: true,
+      nom: true,
+      entreprise: true,
+      email: true,
+      code: true,
+      presentLe: true,
+    },
+  });
+  return decrireArrivees(eventId, lignes);
+}
 
 /**
  * Pointage par QR code, depuis le scanner de la page de l'événement.
@@ -507,15 +639,18 @@ export async function pointerParCode(
     };
   }
 
-  const qui = { code, nom: ligne.nom, entreprise: ligne.entreprise };
-  if (ligne.statut === "present") return { etat: "deja", ...qui };
+  if (ligne.statut === "present") {
+    const [arrivee] = await decrireArrivees(eventId, [ligne]);
+    return { etat: "deja", code, arrivee };
+  }
 
-  await prisma.attendee.update({
+  const pointee = await prisma.attendee.update({
     where: { id: ligne.id },
-    data: { statut: "present" },
+    data: { statut: "present", presentLe: new Date() },
   });
   revalideTout();
-  return { etat: "present", ...qui };
+  const [arrivee] = await decrireArrivees(eventId, [pointee]);
+  return { etat: "present", code, arrivee };
 }
 
 /** Inscription manuelle à l'accueil, y compris pour une arrivée sans inscription. */
@@ -538,6 +673,7 @@ export async function addAttendee(formData: FormData) {
       entreprise: texte(formData, "entreprise") || "Participant individuel",
       email: texte(formData, "email") || "—",
       statut: direct ? "present" : "confirme",
+      presentLe: direct ? new Date() : null,
     },
   });
 
