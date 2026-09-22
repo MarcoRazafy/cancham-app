@@ -10,7 +10,7 @@ import {
 import {
   ajouterJours,
   dateRestriction,
-  echeanceCotisation,
+  renouvellementCotisation,
   echeanceFacture,
   trierElements,
   type ElementAgenda,
@@ -610,15 +610,16 @@ const OBJET_COTISATION = {
   mode: "insensitive",
 } as const;
 
-/** Années dont la cotisation est réglée : une facture de cotisation payée. */
-export async function getAnneesCotisationReglees(
+/** Date du dernier règlement de cotisation, ISO court ; `null` sans facture payée. */
+export async function getDernierReglementCotisation(
   memberId: string,
-): Promise<number[]> {
-  const rows = await prisma.invoice.findMany({
+): Promise<string | null> {
+  const derniere = await prisma.invoice.findFirst({
     where: { memberId, statut: "payee", objet: OBJET_COTISATION },
+    orderBy: { date: "desc" },
     select: { date: true },
   });
-  return [...new Set(rows.map((f) => f.date.getUTCFullYear()))];
+  return derniere ? toISODate(derniere.date) : null;
 }
 
 /**
@@ -637,53 +638,54 @@ export async function getAgenda(
   const aujourdhui = aujourdhuiISO();
   const periode = { gte: jourBase(du), lte: jourBase(au) };
 
-  const [evenements, factures, membre, reglees, rappels] = await Promise.all([
-    prisma.event.findMany({
-      where: { date: periode },
-      select: {
-        id: true,
-        titre: true,
-        date: true,
-        debut: true,
-        fin: true,
-        lieu: true,
-        format: true,
-        inscriptions: memberId
-          ? { where: { memberId }, select: { id: true } }
-          : false,
-      },
-    }),
-    memberId
-      ? prisma.invoice.findMany({
-          where: {
-            memberId,
-            statut: "envoyee",
-            // L'échéance tombe dans la période : la facture a été émise
-            // `DELAI_REGLEMENT_JOURS` jours plus tôt.
-            date: {
-              gte: jourBase(ajouterJours(du, -DELAI_REGLEMENT_JOURS)),
-              lte: jourBase(ajouterJours(au, -DELAI_REGLEMENT_JOURS)),
+  const [evenements, factures, membre, dernierReglement, rappels] =
+    await Promise.all([
+      prisma.event.findMany({
+        where: { date: periode },
+        select: {
+          id: true,
+          titre: true,
+          date: true,
+          debut: true,
+          fin: true,
+          lieu: true,
+          format: true,
+          inscriptions: memberId
+            ? { where: { memberId }, select: { id: true } }
+            : false,
+        },
+      }),
+      memberId
+        ? prisma.invoice.findMany({
+            where: {
+              memberId,
+              statut: "envoyee",
+              // L'échéance tombe dans la période : la facture a été émise
+              // `DELAI_REGLEMENT_JOURS` jours plus tôt.
+              date: {
+                gte: jourBase(ajouterJours(du, -DELAI_REGLEMENT_JOURS)),
+                lte: jourBase(ajouterJours(au, -DELAI_REGLEMENT_JOURS)),
+              },
             },
-          },
-          select: {
-            id: true,
-            numero: true,
-            date: true,
-            objet: true,
-            montant: true,
-            devise: true,
-          },
-        })
-      : [],
-    memberId
-      ? prisma.member.findUnique({
-          where: { id: memberId },
-          select: { statut: true, adhesion: true, retardDepuis: true },
-        })
-      : null,
-    memberId ? getAnneesCotisationReglees(memberId) : ([] as number[]),
-    rappelsAgenda(userId, du, au),
-  ]);
+            select: {
+              id: true,
+              numero: true,
+              date: true,
+              objet: true,
+              montant: true,
+              devise: true,
+            },
+          })
+        : [],
+      memberId
+        ? prisma.member.findUnique({
+            where: { id: memberId },
+            select: { statut: true, adhesion: true, retardDepuis: true },
+          })
+        : null,
+      memberId ? getDernierReglementCotisation(memberId) : null,
+      rappelsAgenda(userId, du, au),
+    ]);
 
   const elements: ElementAgenda[] = [];
 
@@ -718,23 +720,20 @@ export async function getAgenda(
   }
 
   if (membre && !ADHESION_PENDING.includes(membre.statut)) {
-    const premiere = membre.adhesion.getUTCFullYear() + 1;
-    for (
-      let annee = Math.max(Number(du.slice(0, 4)), premiere);
-      annee <= Number(au.slice(0, 4));
-      annee++
-    ) {
-      const jour = echeanceCotisation(annee);
-      if (jour < du || jour > au) continue;
-      // Une échéance passée d'un membre à jour est réglée, même sans facture
-      // enregistrée ici : le statut fait foi.
-      const reglee =
-        reglees.includes(annee) ||
-        (jour < aujourdhui && membre.statut === "a_jour");
+    // Un an après le dernier règlement : c'est lui qui ouvre l'année
+    // d'adhésion, pas la date d'inscription.
+    const jour = renouvellementCotisation({
+      factures: [],
+      adhesion: dernierReglement ?? toISODate(membre.adhesion),
+      aJour: true,
+    });
+    const reglee =
+      jour !== null && jour < aujourdhui && membre.statut === "a_jour";
+    if (jour && jour >= du && jour <= au) {
       elements.push({
-        id: `cotisation-${annee}`,
+        id: "cotisation",
         type: "echeance",
-        titre: `Renouvellement de la cotisation ${annee}`,
+        titre: "Renouvellement de la cotisation",
         jour,
         debut: null,
         fin: null,
@@ -895,25 +894,6 @@ export async function getAgendaEquipe(
       detail: `Cotisation non réglée après ${RETARD_BLOCAGE_JOURS} jours de retard`,
       href: `/admin/membres/${m.id}`,
       urgent: true,
-    });
-  }
-
-  for (
-    let annee = Number(du.slice(0, 4));
-    annee <= Number(au.slice(0, 4));
-    annee++
-  ) {
-    const jour = echeanceCotisation(annee);
-    if (jour < du || jour > au) continue;
-    elements.push({
-      id: `cotisation-${annee}`,
-      type: "echeance",
-      titre: `Échéance des cotisations ${annee}`,
-      jour,
-      debut: null,
-      fin: null,
-      detail: "Renouvellement annuel des adhésions",
-      href: "/admin/paiements",
     });
   }
 
