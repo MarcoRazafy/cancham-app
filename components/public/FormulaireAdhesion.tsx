@@ -5,7 +5,7 @@ import { ChoixFormule, PAYS } from "@/components/public/ChoixFormule";
 import { deposerCandidature } from "@/lib/actions/accueil";
 
 const CHAMP =
-  "w-full min-w-0 rounded-lg border border-line bg-white text-ink placeholder:text-faint px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
+  "w-full min-w-0 rounded-lg border border-line bg-bg text-ink placeholder:text-faint px-3.5 py-3 text-[13.8px] outline-none transition-colors focus:border-marque-vert focus:ring-2 focus:ring-marque-vert/15";
 
 const ETIQUETTE = "block text-[12.5px] font-semibold text-ink mb-1.5";
 

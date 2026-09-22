@@ -1,0 +1,93 @@
+/*
+ * Vitrine publique, en sombre.
+ *
+ * Le bleu nuit de la charte, comme l'en-tête du site cancham.mg. Limité à la
+ * vitrine : les pages de connexion et d'inscription gardent leur fond clair.
+ * Les tokens applicatifs sont redéfinis pour que les primitives de
+ * components/ui.tsx suivent.
+ */
+.vitrine-sombre {
+  --bg: var(--marque-nuit);
+  --surface: #16283c;
+  --surface-2: #1d3450;
+  --surface-3: #24405f;
+  --border: #23384f;
+  --text: #ffffff;
+  --text-muted: rgb(255 255 255 / 0.72);
+  --text-faint: rgb(255 255 255 / 0.5);
+  --accent: #d81f3a;
+  --accent-strong: #ef3350;
+  --accent-soft: #2d0d15;
+  --success: #2fae6a;
+  --success-strong: #56d18c;
+  --success-soft: #0f2a1f;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -24px rgb(0 0 0 / 0.7);
+  /* Barres de défilement : le pouce passe au blanc. */
+  --pouce: rgb(255 255 255 / 0.26);
+  --pouce-survol: rgb(255 255 255 / 0.46);
+
+  background: var(--marque-nuit);
+  color: #ffffff;
+  color-scheme: dark;
+}
+
+.vitrine-sombre :focus-visible {
+  outline-color: #ffffff;
+}
+
+/*
+ * Les teintes de la charte, calculées pour du texte sur blanc, s'éteignent sur
+ * le bleu nuit — le vert #007140 y passe pour du gris foncé. On prend leurs
+ * déclinaisons claires, qui gardent l'identité en restant lisibles.
+ */
+.vitrine-sombre .saillant {
+  color: var(--ton-saillant-sombre, var(--marque-rouge-clair));
+}
+.vitrine-sombre .saillant-vert {
+  --ton-saillant-sombre: #3fc98a;
+}
+.vitrine-sombre .text-marque-rouge {
+  color: #ff5a6e;
+}
+.vitrine-sombre .text-marque-vert {
+  color: #3fc98a;
+}
+
+/* Les listes déroulantes s'ouvrent en sombre, elles aussi. */
+.vitrine-sombre select {
+  color-scheme: dark !important;
+}
+
+/* ---------- Bandeau des annonces ---------- */
+
+@keyframes vitrine-defilement {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* La piste porte deux fois les annonces : à mi-course, elle est revenue au
+   point de départ, et la boucle ne se voit pas. */
+.bandeau-piste {
+  animation-name: vitrine-defilement;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Le temps de lire, ou de cliquer. */
+.bandeau-annonces:hover .bandeau-piste,
+.bandeau-annonces:focus-within .bandeau-piste {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandeau-piste {
+    animation: none;
+  }
+  .bandeau-annonces {
+    overflow-x: auto;
+  }
+}
