@@ -112,6 +112,7 @@ export function Panneau({
   titre,
   sousTitre,
   lien,
+  action,
   teinte = "degrade",
   className = "",
   corpsClassName = "px-6 pb-6",
@@ -120,6 +121,8 @@ export function Panneau({
   titre: ReactNode;
   sousTitre?: ReactNode;
   lien?: { href: string; libelle: string };
+  /** Commande d'en-tête, par exemple « Ajouter ». */
+  action?: ReactNode;
   teinte?: Teinte;
   className?: string;
   corpsClassName?: string;
@@ -137,6 +140,7 @@ export function Panneau({
           ) : null}
         </div>
         {lien ? <LienFleche href={lien.href}>{lien.libelle}</LienFleche> : null}
+        {action}
       </div>
       <div className={corpsClassName}>{children}</div>
     </Card>

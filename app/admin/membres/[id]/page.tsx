@@ -23,7 +23,15 @@ import {
   PuceSecteur,
 } from "@/components/domain";
 import {
+  AddContactButton,
+  AjouterBesoinButton,
+  AjouterServiceButton,
   DeleteMemberButton,
+  EditContactButton,
+  EditProfileButton,
+  ModifierServiceButton,
+  RemoveContactButton,
+  SupprimerServiceButton,
   RegisterPaymentButton,
   RejectButton,
   ReminderButton,
@@ -32,6 +40,7 @@ import {
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { TexteLie } from "@/components/TexteLie";
 import { Card, Pill, Saillant, StatusPill } from "@/components/ui";
+import { PROVISOIRE, saisi } from "@/lib/accueil";
 import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
 import {
@@ -138,6 +147,23 @@ export default async function AdminMembreDetail({
           </div>
 
           <div className="flex gap-2.5 flex-wrap">
+            <EditProfileButton
+              memberId={m.id}
+              nom={saisi(m.nom, PROVISOIRE.entreprise)}
+              independant={m.type === "physique"}
+              ville={m.ville}
+              pays={m.pays}
+              motivation={m.motivation}
+              secteur={saisi(m.secteur, PROVISOIRE.secteur)}
+              activite={m.activite}
+              desc={m.desc}
+              besoins={m.besoins}
+              interets={m.interets}
+              siteweb={m.siteweb}
+              cover={m.cover}
+              logo={m.logo}
+              retour={fiche}
+            />
             <BoutonMessage memberId={m.id} space="admin" />
           </div>
         </div>
@@ -153,7 +179,10 @@ export default async function AdminMembreDetail({
             <p className="m-0 mt-1.5 text-muted text-[14px] leading-relaxed max-w-[75ch] whitespace-pre-line">
               <TexteLie texte={m.desc} />
             </p>
-            <NeedsAndInterests member={m} />
+            <NeedsAndInterests
+              member={m}
+              action={<AjouterBesoinButton memberId={m.id} retour={fiche} />}
+            />
             {dansAnnuaire ? (
               <div className="mt-5">
                 <LienFleche href={`/membre/annuaire/${m.id}`}>
@@ -194,15 +223,34 @@ export default async function AdminMembreDetail({
             </Panneau>
           ) : null}
 
-          {/* La fiche appartient au membre : l'équipe la consulte, elle ne la
-              modifie pas. Présentation, contacts et offres se tiennent depuis
-              « Mon entreprise ». */}
+          {/* L'équipe tient la fiche comme le membre dans « Mon entreprise » :
+              présentation, visuels, contacts, offres. Ses changements sont
+              tracés au journal. */}
           <Card className="carte-filet filet-fixe filet-bleu px-6 pb-6">
             {contacts.length ? (
               <ListeContacts
                 contacts={contacts}
                 titre={m.type === "physique" ? "Contact" : "Contacts"}
                 intro="Les personnes déclarées par le membre. Le contact principal est joint en premier."
+                action={<AddContactButton memberId={m.id} retour={fiche} />}
+                actionContact={(c) => (
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    <EditContactButton
+                      contact={c}
+                      seul={contacts.length === 1}
+                      retour={fiche}
+                    />
+                    {/* Le dernier contact ne se retire pas : l'action le
+                        refuse aussi côté serveur. */}
+                    {contacts.length > 1 ? (
+                      <RemoveContactButton
+                        contactId={c.id}
+                        nom={c.nom}
+                        retour={fiche}
+                      />
+                    ) : null}
+                  </div>
+                )}
                 piedContact={(c) =>
                   // Le contact principal a « Accéder », dans le panneau ; une
                   // candidature se valide d'abord.
@@ -221,7 +269,10 @@ export default async function AdminMembreDetail({
               />
             ) : (
               <div className="pt-5">
-                <h2 className="text-[18px] m-0">Contacts</h2>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <h2 className="text-[18px] m-0">Contacts</h2>
+                  <AddContactButton memberId={m.id} retour={fiche} />
+                </div>
                 <p className="m-0 mt-2 text-[13.4px] text-muted">
                   Aucun contact déclaré par ce membre.
                 </p>
@@ -233,6 +284,7 @@ export default async function AdminMembreDetail({
             titre="Produits & services"
             sousTitre={`${m.produits.length} offre${m.produits.length > 1 ? "s" : ""} au catalogue du membre`}
             teinte="rouge"
+            action={<AjouterServiceButton memberId={m.id} retour={fiche} />}
           >
             {m.produits.length ? (
               <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
@@ -241,12 +293,22 @@ export default async function AdminMembreDetail({
                     key={p.id ?? i}
                     produit={p}
                     seed={m.id + p.label}
+                    actions={
+                      <>
+                        <ModifierServiceButton produit={p} retour={fiche} />
+                        <SupprimerServiceButton
+                          produitId={p.id!}
+                          label={p.label}
+                          retour={fiche}
+                        />
+                      </>
+                    }
                   />
                 ))}
               </CarrouselSection>
             ) : (
               <p className="m-0 text-[13.4px] text-muted">
-                Le membre n’a encore publié aucune offre.
+                Aucune offre au catalogue pour le moment.
               </p>
             )}
           </Panneau>

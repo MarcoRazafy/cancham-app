@@ -50,6 +50,7 @@ const ICONES: Record<string, LucideIcon> = {
   membre_cree: UserPlus,
   membre_supprime: UserMinus,
   membre_renomme: PenLine,
+  fiche_modifiee: PenLine,
   contact_ajoute: UserRoundPlus,
   contact_retire: UserRoundMinus,
   paiement_enregistre: Banknote,

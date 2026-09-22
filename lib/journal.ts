@@ -119,6 +119,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "adhesion",
     ton: "info",
   },
+  fiche_modifiee: {
+    libelle: "Fiche modifiée par l’équipe",
+    famille: "adhesion",
+    ton: "info",
+  },
   acces_envoye: {
     libelle: "Accès envoyé",
     famille: "adhesion",
