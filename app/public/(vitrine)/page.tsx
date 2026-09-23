@@ -464,7 +464,7 @@ export default async function PublicHome() {
       {/* ==================== Événements ==================== */}
       <section id="evenements" className="scroll-mt-[124px]">
         <div className={`${CONTENEUR} pt-10 pb-8`}>
-          <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
+          <div className="apparition-defilement">
             <div className="flex items-end justify-between gap-6 flex-wrap">
               <div>
                 <span className="surtitre text-marque-rouge">
@@ -488,7 +488,7 @@ export default async function PublicHome() {
 
             {evenements.length ? (
               <div className="mt-8">
-                <CarrouselEvenements debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0">
+                <CarrouselEvenements debord="">
                   {evenements.map((e, i) => (
                     <CarteEvenement key={e.id} evenement={e} index={i} />
                   ))}
