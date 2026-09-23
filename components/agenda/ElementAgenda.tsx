@@ -30,10 +30,12 @@ export const TEINTES: Record<
     puce: "bg-accent-soft text-accent",
     bord: "border-l-accent",
   },
+  // Prune écrite en clair : le jeton `bad` vire au rouge dans l'espace membre,
+  // où le rendez-vous se confondrait alors avec une échéance.
   rendezvous: {
-    point: "bg-bad",
-    puce: "bg-bad-soft text-bad",
-    bord: "border-l-bad",
+    point: "bg-[#5b4b8a]",
+    puce: "bg-[#ebe7f5] text-[#463a70]",
+    bord: "border-l-[#5b4b8a]",
   },
   rappel: {
     point: "bg-warn",

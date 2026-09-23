@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { PointType } from "@/components/agenda/ElementAgenda";
 import { NouveauRappel } from "@/components/agenda/Rappels";
 import { VueListe, VueMois, VueSemaine } from "@/components/agenda/Vues";
-import { ViewHead } from "@/components/ui";
+import { BtnLink, ViewHead } from "@/components/ui";
 import {
   ajouterJours,
   debutMois,
@@ -114,15 +114,22 @@ export async function AgendaPage({
       <ViewHead
         title="Agenda"
         action={
-          <NouveauRappel
-            jour={vue === "mois" ? jourChoisi : aujourdhui}
-            retour={retour}
-          />
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* L'agenda montre les rendez-vous ; d'ici, on en prend un. */}
+            <BtnLink href={`/${espace}/rendez-vous`} sm>
+              <CalendarClock size={15} />
+              {espace === "admin" ? "Rendez-vous" : "Prendre rendez-vous"}
+            </BtnLink>
+            <NouveauRappel
+              jour={vue === "mois" ? jourChoisi : aujourdhui}
+              retour={retour}
+            />
+          </div>
         }
       >
         {espace === "admin"
-          ? "Les événements, les factures à encaisser, les accès qui vont se restreindre et vos rappels, au même endroit."
-          : "Les événements de la chambre, vos échéances de cotisation et de factures, et vos rappels, au même endroit."}
+          ? "Les événements, les rendez-vous, les factures à encaisser, les accès qui vont se restreindre et vos rappels, au même endroit."
+          : "Les événements de la chambre, vos rendez-vous avec l’équipe, vos échéances de cotisation et de factures, et vos rappels, au même endroit."}
       </ViewHead>
 
       {/* ==================== Barre d'outils ==================== */}
