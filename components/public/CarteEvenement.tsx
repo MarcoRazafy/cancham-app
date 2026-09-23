@@ -43,7 +43,7 @@ export function CarteEvenement({
       // coupe au bord. Sur téléphone, la suivante dépasse, pour inviter à glisser.
       className="group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-surface border border-line shadow-[var(--shadow)] transition-[border-color,box-shadow] hover:border-faint hover:shadow-[0_18px_40px_-22px_rgb(15_29_44/0.45)]"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-surface-3">
+      <div className="relative shrink-0 aspect-[16/10] overflow-hidden bg-surface-3">
         {visuel ? (
           <Image
             src={visuel.url}
