@@ -127,7 +127,7 @@ export function VueMois({
                       <span
                         key={e.id}
                         className={`w-1.5 h-1.5 rounded-full ${
-                          e.urgent ? "bg-bad" : TEINTES[e.type].point
+                          e.urgent ? "bg-accent-strong" : TEINTES[e.type].point
                         } ${e.fait ? "opacity-40" : ""}`}
                       />
                     ))}
@@ -315,7 +315,7 @@ export function VueSemaine({
                       retour={retour}
                       className={`absolute overflow-hidden rounded-[6px] border-l-[3px] px-1.5 py-1 text-[11.5px] leading-tight no-underline hover:brightness-95 ${
                         e.urgent
-                          ? "bg-bad text-white border-l-bad"
+                          ? "bg-accent-strong text-white border-l-accent-strong"
                           : `${TEINTES[e.type].puce} ${TEINTES[e.type].bord}`
                       } ${e.fait ? "opacity-60" : ""}`}
                       style={{
