@@ -91,3 +91,53 @@
     overflow-x: auto;
   }
 }
+
+/* ============================================================
+   PAGES CLAIRES DANS LA VITRINE SOMBRE
+
+   Un article se lit sur du papier. La vitrine est sombre ; cette classe
+   rend à une page les teintes de la charte sur fond pâle, celles de
+   `.marque`, que `.vitrine-sombre` a remplacées plus haut.
+   ============================================================ */
+
+.vitrine-sombre .vitrine-claire {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f6f9;
+  --surface-3: #e8edf2;
+  --border: #e1e7ee;
+  --text: var(--marque-nuit);
+  --text-muted: #4f6072;
+  --text-faint: #7d8c9b;
+  --accent: var(--marque-rouge);
+  --accent-strong: #8b0512;
+  --accent-soft: #fdeaed;
+  --success: var(--marque-vert);
+  --success-strong: #005c34;
+  --success-soft: #e3f3ea;
+  --shadow:
+    0 1px 2px rgb(15 29 44 / 0.05), 0 14px 32px -20px rgb(15 29 44 / 0.25);
+  --pouce: rgb(15 29 44 / 0.22);
+  --pouce-survol: rgb(15 29 44 / 0.4);
+
+  background: #ffffff;
+  color: var(--marque-nuit);
+  color-scheme: light;
+}
+
+/* Les mots saillants y reprennent les teintes pleines de la charte. */
+.vitrine-sombre .vitrine-claire .saillant {
+  color: var(--ton-saillant, var(--marque-rouge));
+}
+
+.vitrine-sombre .vitrine-claire .saillant-vert {
+  --ton-saillant: var(--marque-vert);
+}
+
+.vitrine-sombre .vitrine-claire .text-marque-rouge {
+  color: var(--marque-rouge);
+}
+
+.vitrine-sombre .vitrine-claire .text-marque-vert {
+  color: var(--marque-vert);
+}

@@ -241,7 +241,7 @@ export default async function EvenementPublic({
 
         {autres.length ? (
           <section className="mt-14">
-            <div className="overflow-hidden rounded-2xl border border-line bg-surface-2 p-5 md:p-8">
+            <div>
               <div className="flex items-end justify-between gap-6 flex-wrap mb-7">
                 <div>
                   <span className="surtitre text-marque-rouge">
@@ -258,10 +258,7 @@ export default async function EvenementPublic({
                 </span>
               </div>
 
-              <CarrouselCartes
-                debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0"
-                libelle="Autres rendez-vous"
-              >
+              <CarrouselCartes debord="" libelle="Autres rendez-vous">
                 {autres.map(({ evenement, rang }) => (
                   <CarteEvenement
                     key={evenement.id}
