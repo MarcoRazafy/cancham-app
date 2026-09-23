@@ -1,7 +1,9 @@
 "use server";
 
+import { after } from "next/server";
 import { prisma } from "@/lib/db";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
+import { inscrireContact } from "@/lib/systeme-io";
 
 /**
  * Inscription à la lettre d'information, depuis la page publique.
@@ -65,6 +67,18 @@ export async function inscrireInfolettre(saisie: {
     where: { email },
     update: { prenom, desabonneLe: null },
     create: { prenom, email, source: "vitrine" },
+  });
+
+  // La liste qui sert aux envois est celle de la chambre, chez systeme.io :
+  // le contact l'y rejoint après la réponse, pour ne pas faire attendre
+  // devant un formulaire. L'inscription est déjà enregistrée ici.
+  after(async () => {
+    if (await inscrireContact({ prenom, email })) {
+      await prisma.abonne.update({
+        where: { id: abonne.id },
+        data: { synchroniseLe: new Date() },
+      });
+    }
   });
 
   await prisma.auditLog.create({
