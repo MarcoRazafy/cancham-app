@@ -5,6 +5,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselCartes } from "@/components/public/CarrouselCartes";
+import { FormulaireInfolettre } from "@/components/public/FormulaireInfolettre";
 import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
@@ -560,10 +561,10 @@ export default async function PublicHome() {
         La bande du site de la chambre, avec son dégradé qui va du rouge au
         vert en passant par le bleu nuit.
 
-        Le formulaire n'enregistre encore rien : la lettre d'information
-        n'existe pas — ni liste d'abonnés, ni envoi, ni désinscription. Le
-        bouton ne soumet donc pas, plutôt que de faire croire à une
-        inscription qui se perdrait.
+        Le formulaire enregistre l'inscription : la plateforme garde sa
+        propre liste d'abonnés, que l'équipe retrouve dans son journal. La
+        chambre tient la sienne chez systeme.io — les deux se rejoindront le
+        jour où la synchronisation sera branchée.
       */}
       <section className="bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_30%,#0f1d2c_55%,#1b7e3e_85%,#0f5028_100%)] text-white">
         <div className={`${CONTENEUR} py-20 text-center`}>
@@ -581,35 +582,7 @@ export default async function PublicHome() {
             moment.
           </p>
 
-          <form className="mt-10 mx-auto flex max-w-[670px] flex-col gap-2.5">
-            <label className="sr-only" htmlFor="infolettre-prenom">
-              Prénom
-            </label>
-            <input
-              id="infolettre-prenom"
-              name="prenom"
-              autoComplete="given-name"
-              placeholder="Prénom"
-              className="h-13 rounded-md bg-white px-5 text-[15px] text-[var(--marque-nuit)] outline-none placeholder:text-[#8797a6] focus:ring-2 focus:ring-white/70"
-            />
-            <label className="sr-only" htmlFor="infolettre-email">
-              E-mail
-            </label>
-            <input
-              id="infolettre-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="E-mail"
-              className="h-13 rounded-md bg-white px-5 text-[15px] text-[var(--marque-nuit)] outline-none placeholder:text-[#8797a6] focus:ring-2 focus:ring-white/70"
-            />
-            <button
-              type="button"
-              className="h-13 rounded-md bg-marque-rouge text-[15px] font-bold text-white transition-colors hover:bg-[#8f0606] cursor-pointer"
-            >
-              S’inscrire
-            </button>
-          </form>
+          <FormulaireInfolettre />
         </div>
       </section>
     </>

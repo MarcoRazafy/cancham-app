@@ -736,3 +736,25 @@ model JetonCompte {
   @@index([userId])
   @@map("jetons_compte")
 }
+
+/// Inscrit à la lettre d'information, depuis la page publique.
+///
+/// La chambre tient sa liste chez systeme.io ; celle-ci recueille ce qui
+/// arrive par la plateforme, à charge pour l'équipe de l'y reporter — ou de
+/// brancher un jour la synchronisation. L'adresse est unique : une seconde
+/// inscription ne crée pas de doublon, elle confirme simplement.
+model Abonne {
+  id     String @id @default(cuid())
+  prenom String
+  /// Toujours en minuscules : deux graphies d'une même adresse sont la même.
+  email  String @unique
+  /// D'où vient l'inscription. « vitrine » aujourd'hui, d'autres demain.
+  source String @default("vitrine")
+
+  /// Retrait de la liste. `null` tant que la personne y est.
+  desabonneLe DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@map("abonnes")
+}
