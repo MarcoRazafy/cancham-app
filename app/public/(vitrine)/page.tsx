@@ -331,19 +331,14 @@ export default async function PublicHome() {
             ))}
           </div>
 
-          {/*
-            Le bouton du modèle, avec son halo rouge. Il ne mène nulle part
-            pour l'instant : la lettre d'information n'existe pas encore —
-            pas de liste d'abonnés, pas d'envoi, pas de désinscription. Le
-            jour où elle existera, il aura sa destination.
-          */}
+          {/* Le bouton du modèle, avec son halo rouge : il descend au formulaire. */}
           <div className="flex justify-center mt-9">
-            <button
-              type="button"
+            <Link
+              href="#newsletter"
               className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
             >
               S’inscrire à notre newsletter <ArrowRight size={17} />
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -566,8 +561,24 @@ export default async function PublicHome() {
         chambre tient la sienne chez systeme.io — les deux se rejoindront le
         jour où la synchronisation sera branchée.
       */}
-      <section className="bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_30%,#0f1d2c_55%,#1b7e3e_85%,#0f5028_100%)] text-white">
-        <div className={`${CONTENEUR} py-20 text-center`}>
+      <section
+        id="newsletter"
+        className="relative overflow-hidden scroll-mt-[124px] bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_30%,#0f1d2c_55%,#1b7e3e_85%,#0f5028_100%)] text-white"
+      >
+        {/*
+          La trame du modèle : deux traits blancs à trois pour cent, tous les
+          cinquante pixels. Elle donne du grain au dégradé sans se voir.
+        */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+            backgroundSize: "50px 50px",
+          }}
+        />
+        <div className={`${CONTENEUR} relative py-20 text-center`}>
           <span className="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-[18px] py-2 text-[12px] font-bold uppercase tracking-[2px]">
             Restons en contact
           </span>
