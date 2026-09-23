@@ -4,7 +4,7 @@ import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
-import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
+import { CarrouselCartes } from "@/components/public/CarrouselCartes";
 import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
@@ -89,7 +89,7 @@ export default async function PublicHome() {
     getStatsPubliques(),
     getProchainsEvenements(8),
     // Seules les actualités diffusées sur la page publique.
-    getActualitesPubliques(3),
+    getActualitesPubliques(8),
   ]);
 
   const chiffres = [
@@ -488,11 +488,11 @@ export default async function PublicHome() {
 
             {evenements.length ? (
               <div className="mt-8">
-                <CarrouselEvenements debord="">
+                <CarrouselCartes debord="" libelle="Prochains rendez-vous">
                   {evenements.map((e, i) => (
                     <CarteEvenement key={e.id} evenement={e} index={i} />
                   ))}
-                </CarrouselEvenements>
+                </CarrouselCartes>
               </div>
             ) : (
               <p className="text-muted mt-8 mb-0">
@@ -535,10 +535,21 @@ export default async function PublicHome() {
                 </p>
               </div>
 
-              <div className="grid gap-6 mt-10 md:grid-cols-2 lg:grid-cols-3">
-                {actualites.map((a) => (
-                  <CarteActualite key={a.id} actualite={a} />
-                ))}
+              <div className="mt-10">
+                <CarrouselCartes
+                  debord=""
+                  libelle="Dernières actualités"
+                  surFondClair
+                >
+                  {actualites.map((a) => (
+                    <div
+                      key={a.id}
+                      className="snap-start shrink-0 flex w-[min(86vw,420px)]"
+                    >
+                      <CarteActualite actualite={a} />
+                    </div>
+                  ))}
+                </CarrouselCartes>
               </div>
             </div>
           </div>
