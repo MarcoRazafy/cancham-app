@@ -279,12 +279,18 @@ export default async function PublicHome() {
             {PROFILS.map((p) => (
               <article
                 key={p.titre}
-                className={`carte-filet ${p.filet} group rounded-xl bg-white p-10 transition-shadow hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]`}
+                className={`carte-filet ${p.filet} group rounded-xl bg-white p-10`}
               >
+                {/*
+                  Quatre dixièmes de seconde et une détente douce, comme le
+                  modèle : la tuile s'allume, s'incline et grandit d'un
+                  vingtième. Rien ne saute — et rien ne bouge non plus si le
+                  système demande moins d'animations (`motion-reduce`).
+                */}
                 <span
-                  className={`w-15 h-15 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform] duration-300 group-hover:-rotate-6 ${p.tuile}`}
+                  className={`w-15 h-15 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform,rotate,scale] duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-hover:-rotate-6 group-hover:scale-[1.06] ${p.tuile}`}
                 >
-                  <p.icone size={24} />
+                  <p.icone size={28} strokeWidth={1.5} />
                 </span>
                 {/*
                   Titre en gras, donc dans la fonte de texte : Hammersmith One
@@ -292,10 +298,10 @@ export default async function PublicHome() {
                   `!` passent devant la règle qui coiffe tous les h3 de la
                   marque.
                 */}
-                <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[23px] leading-snug text-[var(--marque-nuit)] m-0 mt-7">
+                <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[26px] leading-[1.2] text-[var(--marque-nuit)] m-0 mt-6 mb-3.5">
                   {p.titre}
                 </h3>
-                <p className="m-0 mt-3.5 text-[14.5px] leading-relaxed text-[#5b6b7a]">
+                <p className="m-0 text-[15px] leading-[1.6] text-[#6b6b6b]">
                   {p.texte}
                 </p>
               </article>
