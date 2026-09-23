@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Globe, Rocket, Star } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
@@ -13,6 +13,49 @@ import {
   getProchainsEvenements,
   getStatsPubliques,
 } from "@/lib/queries";
+
+/**
+ * À qui la chambre s'adresse, repris du site cancham.mg.
+ *
+ * Chaque carte porte sa couleur : le vert de Madagascar pour ceux qui y sont,
+ * le rouge du Canada pour ceux qui le regardent, et le dégradé qui relie les
+ * deux pour la diaspora. Le trait se déroule au survol, la tuile s'allume et
+ * s'incline — de quoi donner envie de lire la suivante.
+ */
+const PROFILS = [
+  {
+    icone: Building2,
+    titre: "Vous dirigez une entreprise à Madagascar.",
+    texte:
+      "Vous cherchez à explorer le marché canadien, à diversifier vos débouchés, ou simplement à rejoindre un réseau qui parle votre langage business.",
+    filet: "filet-vert",
+    tuile: "group-hover:bg-marque-vert",
+  },
+  {
+    icone: Rocket,
+    titre: "Vous lancez votre projet.",
+    texte:
+      "Vous portez une vision, une ambition, parfois sans le réseau pour la concrétiser. Vous avez votre place dans la conversation Canada–Madagascar.",
+    filet: "filet-vert",
+    tuile: "group-hover:bg-marque-vert",
+  },
+  {
+    icone: Star,
+    titre: "Vous êtes au Canada et regardez Madagascar.",
+    texte:
+      "Vous cherchez des fournisseurs fiables, des partenaires d’affaires, ou des opportunités d’investissement dans un marché émergent francophone.",
+    filet: "filet-rouge",
+    tuile: "group-hover:bg-marque-rouge",
+  },
+  {
+    icone: Globe,
+    titre: "Vous êtes Malagasy au Canada.",
+    texte:
+      "Vous avez construit votre vie au Canada, et Madagascar vous tient toujours à cœur. Nous transformons votre attachement en action.",
+    filet: "filet-degrade",
+    tuile: "group-hover:bg-[linear-gradient(120deg,#ad0707_0%,#007140_100%)]",
+  },
+];
 
 /**
  * Page d'accueil publique, conforme à la charte CanCham.
@@ -208,9 +251,50 @@ export default async function PublicHome() {
         </div>
       </section>
 
+      {/* ==================== À qui nous parlons ==================== */}
+      <section className="max-w-[1120px] mx-auto px-5 pt-10">
+        <div className="apparition-defilement">
+          <span className="surtitre text-marque-rouge inline-flex items-center gap-3">
+            <span aria-hidden="true" className="w-8 h-px bg-marque-rouge" />À
+            qui nous parlons
+          </span>
+          <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
+            <h2 className="titre text-[clamp(28px,4vw,40px)] m-0">
+              Vous avez votre place <Saillant>chez nous.</Saillant>
+            </h2>
+            <p className="m-0 text-[15px] text-muted leading-relaxed">
+              Que vous portiez une grande entreprise ou que vous lanciez votre
+              premier projet, que vous soyez à Antananarivo, à Montréal ou
+              ailleurs — il y a une porte qui s’ouvre pour vous.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 mt-7">
+            {PROFILS.map((p) => (
+              <article
+                key={p.titre}
+                className={`carte-filet ${p.filet} group rounded-2xl bg-white px-6 py-6 transition-shadow hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]`}
+              >
+                <span
+                  className={`w-12 h-12 rounded-[14px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform] duration-300 group-hover:-rotate-6 ${p.tuile}`}
+                >
+                  <p.icone size={20} />
+                </span>
+                <h3 className="titre text-[19px] text-[var(--marque-nuit)] m-0 mt-5">
+                  {p.titre}
+                </h3>
+                <p className="m-0 mt-2.5 text-[14px] leading-relaxed text-[#5b6b7a]">
+                  {p.texte}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ==================== Événements ==================== */}
       <section id="evenements" className="scroll-mt-[124px]">
-        <div className="max-w-[1120px] mx-auto px-5 pt-14 pb-8">
+        <div className="max-w-[1120px] mx-auto px-5 pt-10 pb-8">
           <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
             <div className="flex items-end justify-between gap-6 flex-wrap">
               <div>
