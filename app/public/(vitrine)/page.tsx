@@ -505,21 +505,37 @@ export default async function PublicHome() {
 
       {/* ==================== Actualités ==================== */}
       {actualites.length ? (
-        <section id="actualites" className="scroll-mt-[124px]">
-          <div className={`${CONTENEUR} pb-16`}>
+        /*
+          Bande claire, comme sur le site de la chambre : l'actualité se lit
+          sur du papier, pas sur le bleu nuit. Les teintes y sont écrites en
+          clair — celles de la vitrine sont taillées pour le fond sombre.
+        */
+        <section
+          id="actualites"
+          className="scroll-mt-[124px] bg-[#fafafa] text-[var(--marque-nuit)]"
+        >
+          <div className={`${CONTENEUR} py-16`}>
             <div className="apparition-defilement">
-              <span className="surtitre text-marque-vert">
-                La vie de la chambre
+              <span className="surtitre text-[#ad0707] inline-flex items-center gap-3">
+                <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
+                Actualités récentes
               </span>
-              <h2
-                className={`${TITRE_GRAS} text-[clamp(28px,4vw,40px)] m-0 mt-2.5`}
-              >
-                Les dernières <Saillant ton="vert">actualités</Saillant>
-              </h2>
-              <p className="text-[15px] text-muted m-0 mt-2.5">
-                Ce qui se passe au sein du réseau CanCham.
-              </p>
-              <div className="grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
+                <h2
+                  className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,58px)] leading-[1.1] m-0`}
+                >
+                  Ce qui se passe{" "}
+                  <span className="italic font-semibold text-[#ad0707]">
+                    chez nous.
+                  </span>
+                </h2>
+                <p className="m-0 text-[17px] leading-[1.6] text-[#6b6b6b]">
+                  Bilans, rencontres, prises de parole — la chambre en
+                  mouvement.
+                </p>
+              </div>
+
+              <div className="grid gap-6 mt-10 md:grid-cols-2 lg:grid-cols-3">
                 {actualites.map((a) => (
                   <CarteActualite key={a.id} actualite={a} />
                 ))}
