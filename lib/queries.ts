@@ -281,7 +281,7 @@ export async function getRegistration(
       eventId,
       OR: [{ code: r.code }, { code: { startsWith: `${r.code}-` } }],
     },
-    select: { nom: true, code: true },
+    select: { nom: true, code: true, statut: true },
   });
   // Dans l'ordre des rangs : « -10 » vient après « -2 », pas avant.
   const rang = (c: string | null) =>
@@ -296,6 +296,7 @@ export async function getRegistration(
     representants: lignes.length
       ? lignes.map((l) => ({ nom: l.nom, code: l.code ?? r.code }))
       : [{ nom: "", code: r.code }],
+    aValider: lignes.some((l) => l.statut === "a_valider"),
   };
 }
 

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, CheckCircle2, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  MapPin,
+} from "lucide-react";
 import { CodeAccueil } from "@/components/CodeAccueil";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney } from "@/lib/format";
@@ -34,6 +40,9 @@ export default async function BilletsPublics({
     .filter(Boolean)
     .join(" · ");
   const plusieurs = billets.length > 1;
+  // Événement payant : les billets n'existent qu'une fois le règlement
+  // constaté par l'équipe. D'ici là, cette page dit où l'on en est.
+  const enAttente = billets.some((b) => b.statut === "a_valider");
 
   return (
     <main className="max-w-[760px] mx-auto px-5 py-10 w-full">
@@ -45,9 +54,15 @@ export default async function BilletsPublics({
       </Link>
 
       <div className="rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-6 md:p-8">
-        <span className="inline-flex items-center gap-2 surtitre text-marque-vert">
-          <CheckCircle2 size={15} /> Inscription confirmée
-        </span>
+        {enAttente ? (
+          <span className="inline-flex items-center gap-2 surtitre text-warn">
+            <Clock size={15} /> Inscription en attente de validation
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-2 surtitre text-marque-vert">
+            <CheckCircle2 size={15} /> Inscription confirmée
+          </span>
+        )}
         <h1 className="titre text-[clamp(24px,3.4vw,32px)] m-0 mt-2.5">
           {e.titre}
         </h1>
@@ -61,12 +76,13 @@ export default async function BilletsPublics({
         </div>
 
         <p className="m-0 mt-5 text-[14.5px] text-muted leading-relaxed">
-          {plusieurs
-            ? `${billets.length} participants pour ${billets[0].entreprise}. Chacun présente son QR code à l’accueil.`
-            : `Présentez ce QR code à l’accueil : il vous pointe présent.`}{" "}
-          Un e-mail de confirmation est parti à{" "}
-          <b className="text-ink">{billets[0].email}</b>, avec le lien de cette
-          page.
+          {enAttente
+            ? `${billets.length} inscription${plusieurs ? "s" : ""} enregistrée${plusieurs ? "s" : ""} pour ${billets[0].entreprise}. L’équipe CanCham valide le règlement, puis vos QR codes partent par e-mail.`
+            : plusieurs
+              ? `${billets.length} participants pour ${billets[0].entreprise}. Chacun présente son QR code à l’accueil.`
+              : `Présentez ce QR code à l’accueil : il vous pointe présent.`}{" "}
+          Un e-mail est parti à <b className="text-ink">{billets[0].email}</b>,
+          avec le lien de cette page.
         </p>
         {e.prixPublic > 0 ? (
           <p className="m-0 mt-4 text-[13.5px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3">
@@ -76,30 +92,47 @@ export default async function BilletsPublics({
             </b>
             <br />
             Le règlement se fait auprès de l’équipe CanCham, avant l’événement.
+            {enAttente
+              ? " Sans validation, l’entrée n’est pas assurée : le QR code n’existe pas encore."
+              : ""}
           </p>
         ) : null}
 
-        <div className="grid gap-6 mt-7 sm:grid-cols-2">
-          {billets.map((b) => (
-            <div key={b.code}>
-              <div className="mb-1 text-[14px] font-semibold text-ink">
-                {b.nom}
+        {enAttente ? (
+          <ul className="list-none m-0 mt-7 p-0 border-t border-line">
+            {billets.map((b) => (
+              <li
+                key={b.code}
+                className="flex items-center justify-between gap-3 py-3 border-b border-line text-[14px]"
+              >
+                <span className="text-ink font-semibold">{b.nom}</span>
+                <span className="text-[12.5px] text-faint">Billet à venir</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="grid gap-6 mt-7 sm:grid-cols-2">
+            {billets.map((b) => (
+              <div key={b.code}>
+                <div className="mb-1 text-[14px] font-semibold text-ink">
+                  {b.nom}
+                </div>
+                <CodeAccueil
+                  code={b.code}
+                  {...matriceQr(b.code)}
+                  billet={{
+                    titre: e.titre,
+                    quand,
+                    lieu: e.lieu,
+                    participant: [b.nom, b.entreprise]
+                      .filter(Boolean)
+                      .join(" · "),
+                  }}
+                />
               </div>
-              <CodeAccueil
-                code={b.code}
-                {...matriceQr(b.code)}
-                billet={{
-                  titre: e.titre,
-                  quand,
-                  lieu: e.lieu,
-                  participant: [b.nom, b.entreprise]
-                    .filter(Boolean)
-                    .join(" · "),
-                }}
-              />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

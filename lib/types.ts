@@ -351,6 +351,8 @@ export interface Registration {
   memberId: string;
   code: string;
   date: string;
+  /** Payante et pas encore validée par l'équipe : pas de billet, pas d'entrée. */
+  aValider?: boolean;
   /** Les personnes inscrites par l'entreprise, chacune avec son code d'accueil. */
   representants?: { nom: string; code: string }[];
 }

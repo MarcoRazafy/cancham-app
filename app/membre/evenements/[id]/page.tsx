@@ -205,6 +205,29 @@ export default async function EvenementDetailPage({
               <div className="text-xs text-muted">
                 Cet événement a déjà eu lieu le {fmtDate(e.date)}.
               </div>
+            ) : reg?.aValider ? (
+              /*
+                Événement payant : tant que l'équipe n'a pas constaté le
+                règlement, il n'y a pas de QR code à montrer — ni ici, ni dans
+                la boîte aux lettres. Le dire vaut mieux que laisser chercher.
+              */
+              <>
+                <Banner
+                  tone="warn"
+                  icon={<Clock size={18} />}
+                  title="Inscription en attente de validation"
+                >
+                  {`${fmtMoney(e.prix * (reg.representants?.length ?? 1))} à régler auprès de l’équipe CanCham. Vos billets et vos QR codes partent par e-mail dès que le règlement est constaté.`}
+                </Banner>
+                <ul className="list-none m-0 mt-3.5 p-0 flex flex-col gap-1 text-[13px] text-muted">
+                  {(reg.representants ?? []).map((r) => (
+                    <li key={r.code}>{r.nom}</li>
+                  ))}
+                </ul>
+                <div className="mt-3.5">
+                  <CancelRegistrationButton eventId={e.id} />
+                </div>
+              </>
             ) : reg ? (
               <>
                 <Banner

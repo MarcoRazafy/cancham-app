@@ -7,6 +7,7 @@ import {
   ChevronDown,
   LogIn,
   Plus,
+  TicketCheck,
   Trash2,
   UserPlus,
   X,
@@ -27,6 +28,7 @@ import {
   registerForEvent,
   retirerParticipant,
   toggleAttendance,
+  validerInscription,
 } from "@/lib/actions/events";
 import { fmtMoney } from "@/lib/format";
 import type { CanchamEvent } from "@/lib/types";
@@ -407,6 +409,62 @@ function BoutonPresence({
 }
 
 /** Retrait d'une personne de la liste d'accueil, après confirmation. */
+/**
+ * Validation d'une inscription payante, une fois le règlement constaté.
+ *
+ * L'alerte dit ce que le clic déclenche : toute l'inscription passe inscrite,
+ * et les billets partent par e-mail. C'est la première fois que la personne
+ * reçoit son QR code — on ne le fait pas par mégarde.
+ */
+export function ValiderInscriptionButton({
+  attendeeId,
+  eventId,
+  nom,
+  retour,
+}: {
+  attendeeId: string;
+  eventId: string;
+  nom: string;
+  retour?: string;
+}) {
+  return (
+    <Modal
+      title="Valider l’inscription"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          className="inline-flex items-center gap-1.5 shrink-0 rounded-[var(--radius-s)] border border-line bg-transparent text-ink px-2.5 py-1.5 text-[12.4px] font-semibold cursor-pointer hover:border-faint hover:bg-surface-2"
+        >
+          <TicketCheck size={14} /> Valider
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={validerInscription}>
+          <input type="hidden" name="attendeeId" value={attendeeId} />
+          <input type="hidden" name="eventId" value={eventId} />
+          {retour ? <input type="hidden" name="retour" value={retour} /> : null}
+          <ModalBody>
+            <p className="text-[13.6px] text-muted m-0">
+              Le règlement de <b className="text-ink">{nom}</b> est bien
+              constaté ? L’inscription passe « inscrite » — tous ses
+              représentants avec elle — et les billets partent aussitôt par
+              e-mail, avec leur QR code d’entrée.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Validation…">
+              <TicketCheck size={14} /> Valider et envoyer les billets
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
 export function RetirerParticipantButton({
   attendeeId,
   eventId,

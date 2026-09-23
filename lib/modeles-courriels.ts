@@ -1,6 +1,7 @@
 import "server-only";
 
 import { gabarit, type Courriel } from "@/lib/courriel";
+import { pngQr } from "@/lib/qr";
 
 /**
  * Les e-mails de la plateforme, un par situation. Chacun dit pourquoi il
@@ -190,49 +191,103 @@ export function courrielCompteEquipe(
   };
 }
 
+/** Ce qu'un e-mail dit d'un événement : de quoi s'y rendre sans rien chercher. */
+interface Rendezvous {
+  evenement: string;
+  /** Date et horaire, déjà mis en forme : « mardi 6 octobre 2026 · 17 h 30 – 20 h 00 ». */
+  quand: string;
+  lieu: string;
+  /** Les personnes inscrites, chacune avec son code d'accueil. */
+  participants: { nom: string; code: string }[];
+  /** Page où retrouver l'inscription : billets publics, ou fiche de l'événement. */
+  lien: string;
+}
+
 /**
- * Confirmation d'une inscription à un événement faite depuis la vitrine, sans
- * compte : les codes d'accueil de chacun, et le lien vers les billets à
- * présenter — le QR code s'y affiche et s'y télécharge.
+ * Les billets d'une inscription : un QR code par personne, joint au message.
+ *
+ * Il part dès l'inscription quand l'événement est gratuit, et seulement après
+ * validation du règlement quand il est payant. Le code est aussi écrit en
+ * clair : une messagerie qui n'affiche pas les images laisse quand même de
+ * quoi être accueilli.
  */
-export function courrielInscriptionEvenement(
+export async function courrielBilletsEvenement(
   a: string,
-  d: {
-    evenement: string;
-    quand: string;
-    lieu: string;
-    participants: { nom: string; code: string }[];
-    lien: string;
-    /** Montant à régler auprès de l'équipe, pour un événement payant. */
-    aRegler: string | null;
-  },
-): Courriel {
+  d: Rendezvous,
+): Promise<Courriel> {
   const plusieurs = d.participants.length > 1;
+  const pieces = await Promise.all(
+    d.participants.map(async (p) => ({
+      nom: `billet-${p.code}.png`,
+      contenu: await pngQr(p.code),
+      type: "image/png",
+      cid: `qr-${p.code}`,
+    })),
+  );
   return {
     a,
-    sujet: `Inscription confirmée : ${d.evenement}`,
+    sujet: `Votre billet — ${d.evenement}`,
+    pieces,
     ...gabarit({
       titre: "Votre inscription est confirmée",
       paragraphes: [
         "Bonjour,",
-        `Votre inscription à « ${d.evenement} » est enregistrée : ${d.quand}, ${d.lieu}.`,
+        `Votre inscription à « ${d.evenement} » est confirmée.`,
+        `Quand : ${d.quand}`,
+        `Où : ${d.lieu}`,
         plusieurs
-          ? "Chaque participant a son propre code d’accueil :"
-          : "Votre code d’accueil :",
-        ...d.participants.map((p) => `${p.nom} — ${p.code}`),
-        `Présentez ${plusieurs ? "chacun son" : "votre"} QR code à l’entrée : il s’affiche avec le bouton ci-dessous, et se télécharge pour être montré sans connexion.`,
-        ...(d.aRegler
-          ? [
-              `Événement payant : ${d.aRegler} à régler auprès de l’équipe CanCham avant l’événement.`,
-            ]
-          : []),
+          ? `${d.participants.length} participants, chacun avec son QR code :`
+          : "Votre QR code d’entrée :",
       ],
+      images: d.participants.map((p) => ({
+        cid: `qr-${p.code}`,
+        legende: `${p.nom ? `${p.nom} — ` : ""}${p.code}`,
+      })),
       bouton: {
         libelle: plusieurs ? "Voir les billets" : "Voir mon billet",
         url: d.lien,
       },
       apres: [
-        "Gardez cet e-mail : le lien donne accès à vos billets. Pour toute question, répondez simplement à ce message.",
+        `Présentez ${plusieurs ? "chacun son" : "votre"} QR code à l’accueil : il suffit de le montrer sur un téléphone, ou imprimé. Le code écrit sous l’image fait foi si le QR ne se lit pas.`,
+        "Gardez cet e-mail. Pour toute question, répondez simplement à ce message.",
+      ],
+    }),
+  };
+}
+
+/**
+ * Inscription à un événement payant : elle est enregistrée, elle attend le
+ * règlement. Le QR code ne part qu'ensuite — c'est dit ici, pour que
+ * personne ne se présente à l'accueil sans billet.
+ */
+export function courrielInscriptionEnAttente(
+  a: string,
+  d: Omit<Rendezvous, "participants"> & {
+    participants: { nom: string }[];
+    /** Montant total à régler, déjà mis en forme. */
+    aRegler: string;
+  },
+): Courriel {
+  const plusieurs = d.participants.length > 1;
+  return {
+    a,
+    sujet: `Inscription enregistrée, en attente de validation — ${d.evenement}`,
+    ...gabarit({
+      titre: "Votre inscription attend d’être validée",
+      paragraphes: [
+        "Bonjour,",
+        `Votre inscription à « ${d.evenement} » est enregistrée. L’événement étant payant, elle attend la validation de l’équipe CanCham.`,
+        `Quand : ${d.quand}`,
+        `Où : ${d.lieu}`,
+        plusieurs
+          ? `Inscrits : ${d.participants.map((p) => p.nom).join(", ")}`
+          : `Inscrit : ${d.participants[0]?.nom ?? ""}`,
+        `À régler : ${d.aRegler}, auprès de l’équipe CanCham — en espèces, par virement bancaire ou par chèque.`,
+        `Dès que le règlement est constaté, vous recevez un second e-mail avec ${plusieurs ? "les QR codes d’entrée" : "votre QR code d’entrée"}. C’est lui qui vous ouvre l’accueil : sans lui, l’entrée n’est pas assurée.`,
+      ],
+      bouton: { libelle: "Voir mon inscription", url: d.lien },
+      apres: [
+        "Si vous avez déjà réglé, ne tenez pas compte de ce rappel : l’enregistrement peut prendre quelques heures. Pour toute question, répondez simplement à ce message.",
       ],
     }),
   };

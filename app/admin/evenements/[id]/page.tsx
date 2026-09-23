@@ -28,6 +28,7 @@ import { Compteur, Jauge, Onglets, Panneau, Vide } from "@/components/admin/ui";
 import { ScannerQr } from "@/components/admin/ScannerQr";
 import {
   AddAttendeeButton,
+  ValiderInscriptionButton,
   AttendanceButton,
   DeleteEventButton,
   RetirerParticipantButton,
@@ -43,12 +44,14 @@ import { plat } from "@/lib/texte";
 
 const ONGLETS = [
   { cle: "tous", libelle: "Tous" },
+  { cle: "a_valider", libelle: "À valider" },
   { cle: "attendus", libelle: "À accueillir" },
   { cle: "presents", libelle: "Présents" },
   { cle: "absents", libelle: "Absents" },
 ] as const;
 
 const STATUT_ONGLET = {
+  a_valider: "a_valider",
   attendus: "confirme",
   presents: "present",
   absents: "absent",
@@ -62,6 +65,7 @@ const TAILLES = [
 ] as const;
 
 const PASTILLES = {
+  a_valider: { ton: "muted", libelle: "À valider" },
   confirme: { ton: "warn", libelle: "Inscrit" },
   present: { ton: "ok", libelle: "Présent" },
   absent: { ton: "bad", libelle: "Absent" },
@@ -111,7 +115,7 @@ export default async function EvenementAdmin({
       ? trouves
       : trouves.filter((p) => p.statut === STATUT_ONGLET[onglet]);
 
-  const compte = (s: "confirme" | "present" | "absent") =>
+  const compte = (s: "a_valider" | "confirme" | "present" | "absent") =>
     participants.filter((p) => p.statut === s).length;
   const presents = compte("present");
   const restantes = Math.max(0, e.cap - participants.length);
@@ -404,12 +408,26 @@ export default async function EvenementAdmin({
                     {PASTILLES[p.statut].libelle}
                   </Pill>
                   <span className="flex items-center gap-1">
-                    <AttendanceButton
-                      attendeeId={p.id}
-                      eventId={e.id}
-                      statut={p.statut}
-                      retour={ici}
-                    />
+                    {/*
+                      Tant que le règlement n'est pas constaté, il n'y a rien à
+                      pointer : la seule action est de valider l'inscription,
+                      ce qui envoie enfin les billets.
+                    */}
+                    {p.statut === "a_valider" ? (
+                      <ValiderInscriptionButton
+                        attendeeId={p.id}
+                        eventId={e.id}
+                        nom={p.nom}
+                        retour={ici}
+                      />
+                    ) : (
+                      <AttendanceButton
+                        attendeeId={p.id}
+                        eventId={e.id}
+                        statut={p.statut}
+                        retour={ici}
+                      />
+                    )}
                     <RetirerParticipantButton
                       attendeeId={p.id}
                       eventId={e.id}

@@ -60,14 +60,19 @@ export async function marquerAbsentsPasses(eventId?: string): Promise<void> {
     where: {
       ...(eventId ? { id: eventId } : {}),
       date: { lte: jourBase() },
-      participants: { some: { statut: "confirme" } },
+      participants: { some: { statut: { in: ["a_valider", "confirme"] } } },
     },
     select: { id: true, date: true, fin: true },
   });
   const termines = candidats.filter(estTermine).map((e) => e.id);
   if (!termines.length) return;
+  // Une inscription jamais validée n'a pas eu de billet : elle n'est pas
+  // venue non plus.
   await prisma.attendee.updateMany({
-    where: { eventId: { in: termines }, statut: "confirme" },
+    where: {
+      eventId: { in: termines },
+      statut: { in: ["a_valider", "confirme"] },
+    },
     data: { statut: "absent" },
   });
 }

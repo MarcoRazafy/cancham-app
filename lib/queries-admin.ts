@@ -198,7 +198,7 @@ export interface Participant {
   entreprise: string;
   email: string;
   telephone: string | null;
-  statut: "confirme" | "present" | "absent";
+  statut: "a_valider" | "confirme" | "present" | "absent";
 }
 
 /** Liste d'accueil d'un événement, par ordre alphabétique. */

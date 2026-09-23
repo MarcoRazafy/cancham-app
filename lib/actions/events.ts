@@ -12,7 +12,10 @@ import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtDate, fmtMoney, jourBase } from "@/lib/format";
 import { envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
-import { courrielInscriptionEvenement } from "@/lib/modeles-courriels";
+import {
+  courrielBilletsEvenement,
+  courrielInscriptionEnAttente,
+} from "@/lib/modeles-courriels";
 import { plageHoraire } from "@/lib/agenda";
 import { numeroFacture } from "@/lib/factures";
 import {
@@ -90,6 +93,71 @@ function coordonneesSaisies(
     );
   }
   return { email, telephone };
+}
+
+/** Ce qu'un e-mail doit savoir d'un événement pour y conduire quelqu'un. */
+type EvenementCourriel = {
+  id: string;
+  titre: string;
+  date: Date;
+  debut: string | null;
+  fin: string | null;
+  lieu: string;
+};
+
+/** Date et horaire d'un événement, tels que les e-mails les annoncent. */
+function quandEvenement(e: EvenementCourriel): string {
+  return [fmtDate(toISODate(e.date)), plageHoraire(e.debut, e.fin)]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/**
+ * Les billets d'une inscription : un QR code par participant, envoyés à
+ * l'adresse donnée au moment de s'inscrire.
+ *
+ * L'envoi a lieu après la réponse : une messagerie lente ne doit pas faire
+ * attendre devant un formulaire, et l'inscription, elle, est déjà écrite.
+ */
+function envoyerBillets(
+  e: EvenementCourriel,
+  participants: { nom: string; code: string }[],
+  email: string,
+  lien: string,
+): void {
+  after(async () =>
+    envoyerCourriel(
+      await courrielBilletsEvenement(email, {
+        evenement: e.titre,
+        quand: quandEvenement(e),
+        lieu: e.lieu,
+        participants,
+        lien,
+      }),
+    ),
+  );
+}
+
+/** Événement payant : l'inscription est prise, le billet attend le règlement. */
+function envoyerAttente(
+  e: EvenementCourriel,
+  participants: { nom: string }[],
+  email: string,
+  lien: string,
+  aRegler: string,
+): void {
+  after(() =>
+    envoyerCourriel(
+      courrielInscriptionEnAttente(email, {
+        evenement: e.titre,
+        quand: quandEvenement(e),
+        lieu: e.lieu,
+        participants,
+        lien,
+        aRegler,
+      }),
+    ),
+  );
 }
 
 /* ============================ Côté membre ============================ */
@@ -179,7 +247,8 @@ export async function registerForEvent(formData: FormData) {
         // Les coordonnées données à l'inscription : celles où la joindre.
         email,
         telephone,
-        statut: "confirme" as const,
+        // Payant : l'équipe valide le règlement avant que le billet ne parte.
+        statut: event.payant ? ("a_valider" as const) : ("confirme" as const),
         code: codeRepresentant(code, i),
       })),
     }),
@@ -202,10 +271,24 @@ export async function registerForEvent(formData: FormData) {
   }
 
   await prisma.$transaction(ecritures);
+
+  const participants = representants.map((r, i) => ({
+    nom: r.nom,
+    code: codeRepresentant(code, i),
+  }));
+  const lien = await urlPublique(fiche);
+  if (event.payant) {
+    envoyerAttente(event, participants, email, lien, fmtMoney(event.prix * n));
+  } else {
+    envoyerBillets(event, participants, email, lien);
+  }
+
   revalideTout();
   redirectWithFlash(
     fiche,
-    `Inscription confirmée · ${n} représentant${n > 1 ? "s" : ""}${event.payant ? " · facture générée" : ""}`,
+    event.payant
+      ? `Inscription enregistrée · ${n} représentant${n > 1 ? "s" : ""} · facture générée · billets envoyés dès validation du règlement`
+      : `Inscription confirmée · ${n} représentant${n > 1 ? "s" : ""} · billets envoyés à ${email}`,
   );
 }
 
@@ -318,7 +401,8 @@ export async function inscriptionPublique(formData: FormData) {
         entreprise,
         email,
         telephone,
-        statut: "confirme" as const,
+        // Payant : l'équipe valide le règlement avant que le billet ne parte.
+        statut: aRegler ? ("a_valider" as const) : ("confirme" as const),
         code: codeRepresentant(code, i),
       })),
     }),
@@ -336,26 +420,15 @@ export async function inscriptionPublique(formData: FormData) {
   const lien = await urlPublique(
     `/public/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
   );
-  after(() =>
-    envoyerCourriel(
-      courrielInscriptionEvenement(email, {
-        evenement: event.titre,
-        quand: [
-          fmtDate(toISODate(event.date)),
-          plageHoraire(event.debut, event.fin),
-        ]
-          .filter(Boolean)
-          .join(" · "),
-        lieu: event.lieu,
-        participants: noms.map((nom, i) => ({
-          nom,
-          code: codeRepresentant(code, i),
-        })),
-        lien,
-        aRegler,
-      }),
-    ),
-  );
+  const participants = noms.map((nom, i) => ({
+    nom,
+    code: codeRepresentant(code, i),
+  }));
+  if (aRegler) {
+    envoyerAttente(event, participants, email, lien, aRegler);
+  } else {
+    envoyerBillets(event, participants, email, lien);
+  }
 
   revalideTout();
   redirect(
@@ -579,6 +652,89 @@ export async function deleteEvent(formData: FormData) {
   redirectWithFlash("/admin/evenements", `« ${e.titre} » supprimé`);
 }
 
+/**
+ * Validation d'une inscription payante par l'équipe.
+ *
+ * C'est le moment où le règlement est constaté : toute l'inscription passe
+ * « inscrite » — une entreprise ne valide pas ses représentants un par un —
+ * et les billets partent enfin, un QR code par participant, à l'adresse
+ * donnée à l'inscription.
+ */
+export async function validerInscription(formData: FormData) {
+  await exigerEquipe();
+  const attendeeId = texte(formData, "attendeeId");
+  const eventId = texte(formData, "eventId");
+  const retour = retourListe(formData, eventId);
+
+  const ligne = await prisma.attendee.findUnique({
+    where: { id: attendeeId },
+    include: { event: true },
+  });
+  if (!ligne || ligne.eventId !== eventId) {
+    redirectWithErreur(retour, "Participant introuvable.");
+  }
+  if (ligne.statut !== "a_valider") {
+    redirectWithErreur(
+      retour,
+      `L’inscription de ${ligne.nom} est déjà validée.`,
+    );
+  }
+
+  // Les lignes d'une même inscription partagent la racine de leur code.
+  const racine = ligne.code ? codeInscription(ligne.code) : null;
+  const groupe = racine
+    ? await prisma.attendee.findMany({
+        where: { eventId, statut: "a_valider", ...lignesDe(racine) },
+        orderBy: { createdAt: "asc" },
+      })
+    : [ligne];
+  const n = groupe.length;
+
+  await prisma.$transaction([
+    prisma.attendee.updateMany({
+      where: { id: { in: groupe.map((g) => g.id) } },
+      data: { statut: "confirme" },
+    }),
+    prisma.auditLog.create({
+      data: {
+        action: "inscription_validee",
+        entite: "Event",
+        entiteId: eventId,
+        acteur: await acteurEquipe(),
+        detail: `« ${ligne.event.titre} » · ${ligne.entreprise} · ${n} personne${n > 1 ? "s" : ""} · ${ligne.email} · billets envoyés.`,
+      },
+    }),
+  ]);
+
+  // Un membre retrouve ses billets sur la fiche de l'événement ; une
+  // inscription publique, sur la page de ses billets.
+  const inscriptionMembre = racine
+    ? await prisma.registration.findUnique({
+        where: { code: racine },
+        select: { id: true },
+      })
+    : null;
+  const lien = await urlPublique(
+    inscriptionMembre || !racine
+      ? `/membre/evenements/${eventId}`
+      : `/public/evenements/${eventId}/billet?${new URLSearchParams({ code: racine })}`,
+  );
+  const participants = groupe.flatMap((g) =>
+    g.code ? [{ nom: g.nom, code: g.code }] : [],
+  );
+  if (participants.length && ligne.email.includes("@")) {
+    envoyerBillets(ligne.event, participants, ligne.email, lien);
+  }
+
+  revalideTout();
+  redirectWithFlash(
+    retour,
+    participants.length && ligne.email.includes("@")
+      ? `Inscription validée · billets envoyés à ${ligne.email}`
+      : "Inscription validée",
+  );
+}
+
 /** Pointage à l'accueil : bascule présent / absent. */
 export async function toggleAttendance(formData: FormData) {
   await exigerEquipe();
@@ -644,7 +800,7 @@ export interface ArriveeAccueil {
   inscrits: {
     id: string;
     nom: string;
-    statut: "confirme" | "present" | "absent";
+    statut: "a_valider" | "confirme" | "present" | "absent";
   }[];
 }
 
@@ -845,6 +1001,14 @@ export async function pointerParCode(
       etat: "erreur",
       code,
       message: `Ce code est celui d’un autre événement : « ${autre?.titre ?? "?"} ».`,
+    };
+  }
+
+  if (ligne.statut === "a_valider") {
+    return {
+      etat: "erreur",
+      code,
+      message: `${ligne.nom} : inscription en attente de validation. Le règlement n’a pas encore été constaté.`,
     };
   }
 
