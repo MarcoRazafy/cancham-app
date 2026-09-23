@@ -20,6 +20,7 @@
     "ressources:demo": "tsx --env-file=.env scripts/ressources-demo.ts",
     "messagerie:demo": "tsx --env-file=.env scripts/messagerie-demo.ts",
     "journal:demo": "tsx --env-file=.env scripts/journal-demo.ts",
+    "actualites:demo": "tsx --env-file=.env scripts/actualites-demo.ts",
     "agenda:demo": "tsx --env-file=.env scripts/agenda-demo.ts",
     "motsdepasse:demo": "tsx --env-file=.env scripts/mot-de-passe-demo.ts"
   },
