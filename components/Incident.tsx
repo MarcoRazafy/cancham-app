@@ -10,13 +10,17 @@ import type { ReactNode } from "react";
  */
 export function Incident({
   icone,
+  illustration,
   surtitre,
   titre,
   children,
   actions,
   pleinEcran = false,
 }: {
-  icone: ReactNode;
+  /** Pastille ronde, quand la page n'a pas d'illustration. */
+  icone?: ReactNode;
+  /** Visuel qui remplace la pastille : il occupe la place, et le dit mieux. */
+  illustration?: ReactNode;
   surtitre: string;
   titre: string;
   children: ReactNode;
@@ -30,12 +34,18 @@ export function Incident({
       } flex items-center justify-center px-5 py-14`}
     >
       <div className="max-w-[520px] text-center anim-echelle">
-        <span
-          aria-hidden
-          className="mx-auto mb-5 w-14 h-14 rounded-full bg-accent-soft text-accent flex items-center justify-center"
-        >
-          {icone}
-        </span>
+        {illustration ? (
+          <div aria-hidden className="mb-4">
+            {illustration}
+          </div>
+        ) : icone ? (
+          <span
+            aria-hidden
+            className="mx-auto mb-5 w-14 h-14 rounded-full bg-accent-soft text-accent flex items-center justify-center"
+          >
+            {icone}
+          </span>
+        ) : null}
         <div className="text-[11px] tracking-[0.12em] uppercase text-faint font-semibold mb-2">
           {surtitre}
         </div>
