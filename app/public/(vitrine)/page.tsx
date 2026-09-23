@@ -269,7 +269,7 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== À qui nous parlons ==================== */}
-      <section className={`${CONTENEUR} pt-10`}>
+      <section className={`${CONTENEUR} pt-10 pb-14`}>
         <div className="apparition-defilement">
           <span className="surtitre text-marque-rouge inline-flex items-center gap-3">
             <span aria-hidden="true" className="w-8 h-px bg-marque-rouge" />À
@@ -348,7 +348,7 @@ export default async function PublicHome() {
         reste. Les couleurs y sont écrites en clair — les jetons de la vitrine
         sont taillés pour le bleu nuit.
       */}
-      <section className="bg-[#faf8f3] text-[var(--marque-nuit)]">
+      <section className="bg-white text-[var(--marque-nuit)]">
         <div className={`${CONTENEUR} py-16`}>
           <div className="apparition-defilement grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             {/* ---------- L'invitation ---------- */}
@@ -422,9 +422,17 @@ export default async function PublicHome() {
               */}
               <ul className="list-none m-0 mt-6 p-0 flex flex-col gap-2.5">
                 {ORDRE_FORMULES.map((f, i) => (
+                  /*
+                    La bordure gauche existe déjà au repos, transparente :
+                    elle s'allume sans pousser le texte d'un pixel.
+                  */
                   <li
                     key={f}
-                    className="flex items-baseline justify-between gap-4 rounded-md bg-[#fafafa] px-[18px] py-4 text-[14px]"
+                    className={`flex items-baseline justify-between gap-4 rounded-md bg-[#fafafa] border-l-[3px] border-transparent px-[18px] py-4 text-[14px] transition-[background-color,border-color] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none ${
+                      i % 2 === 0
+                        ? "hover:border-l-[#ad0707] hover:bg-[#ad0707]/[0.05]"
+                        : "hover:border-l-[#007140] hover:bg-[#007140]/[0.05]"
+                    }`}
                   >
                     <span>{libelleFormule(f)}</span>
                     <span
