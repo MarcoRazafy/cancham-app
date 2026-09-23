@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
-import { ArrowRight, Building2, Globe, Rocket, Star } from "lucide-react";
+import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
 import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
@@ -32,7 +32,7 @@ const PROFILS = [
     tuile: "group-hover:bg-marque-vert",
   },
   {
-    icone: Rocket,
+    icone: Box,
     titre: "Vous lancez votre projet.",
     texte:
       "Vous portez une vision, une ambition, parfois sans le réseau pour la concrétiser. Vous avez votre place dans la conversation Canada–Madagascar.",
@@ -273,21 +273,38 @@ export default async function PublicHome() {
             {PROFILS.map((p) => (
               <article
                 key={p.titre}
-                className={`carte-filet ${p.filet} group rounded-2xl bg-white px-6 py-6 transition-shadow hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]`}
+                className={`carte-filet ${p.filet} group rounded-2xl bg-white p-8 transition-shadow hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]`}
               >
                 <span
-                  className={`w-12 h-12 rounded-[14px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform] duration-300 group-hover:-rotate-6 ${p.tuile}`}
+                  className={`w-14 h-14 rounded-[16px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform] duration-300 group-hover:-rotate-6 ${p.tuile}`}
                 >
-                  <p.icone size={20} />
+                  <p.icone size={22} />
                 </span>
-                <h3 className="titre text-[19px] text-[var(--marque-nuit)] m-0 mt-5">
+                {/*
+                  Titre en gras, donc dans la fonte de texte : Hammersmith One
+                  n'a qu'une graisse, et la charte interdit le faux gras. Les
+                  `!` passent devant la règle qui coiffe tous les h3 de la
+                  marque.
+                */}
+                <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[19.5px] leading-snug text-[var(--marque-nuit)] m-0 mt-7">
                   {p.titre}
                 </h3>
-                <p className="m-0 mt-2.5 text-[14px] leading-relaxed text-[#5b6b7a]">
+                <p className="m-0 mt-3.5 text-[14.5px] leading-relaxed text-[#5b6b7a]">
                   {p.texte}
                 </p>
               </article>
             ))}
+          </div>
+
+          {/*
+            Le modèle invite à s'abonner à une lettre d'information ; la
+            plateforme n'en a pas. L'invitation qu'elle sait tenir, c'est
+            l'adhésion.
+          */}
+          <div className="flex justify-center mt-9">
+            <Link href="/auth/inscription" className="btn-action">
+              Devenir membre <ArrowRight size={17} />
+            </Link>
           </div>
         </div>
       </section>
