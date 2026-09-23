@@ -260,7 +260,12 @@ export default async function PublicHome() {
             qui nous parlons
           </span>
           <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
-            <h2 className="titre text-[clamp(28px,4vw,40px)] m-0">
+            {/*
+              Le titre du modèle est gras et tient sur deux lignes. Hammersmith
+              One n'ayant qu'une graisse, il passe comme les cartes à la fonte
+              de texte, en 700 — les `!` devancent la règle des h2 de la marque.
+            */}
+            <h2 className="font-[family-name:var(--font-texte)]! font-bold! text-[clamp(30px,4.4vw,58px)] leading-[1.06] tracking-[-0.015em] m-0">
               Vous avez votre place <Saillant>chez nous.</Saillant>
             </h2>
             <p className="m-0 text-[15px] text-muted leading-relaxed">
