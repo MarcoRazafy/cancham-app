@@ -22,16 +22,13 @@ export interface VisuelPublic {
 export const VISUELS: Record<"hero" | "toronto" | "madagascar", VisuelPublic> =
   {
     /**
-     * Réception de fin de journée, lumière chaude, verres à pied.
-     *
-     * C'est le registre « 5 à 7 » de la chambre. Un premier candidat montrait une
-     * pause-café en plein jour : correct sur le fond, mais il jurait avec les
-     * autres visuels, tous en lumière basse, et lisait « séminaire » plutôt que
-     * « réseau d'affaires international ».
+     * La même photo qu'à la connexion : intervenants et partenaires réunis
+     * devant les kakémonos de la chambre. Une vitrine et sa page de connexion
+     * qui ouvrent sur la même image, c'est une maison, pas deux.
      */
     hero: {
-      url: "/photos/cancham-16.jpg",
-      alt: "Salle comble lors d’une rencontre CanCham à Antananarivo",
+      url: "/photos/auth-rencontre.jpg",
+      alt: "Intervenants et partenaires réunis lors d’une rencontre CanCham",
     },
 
     /** Skyline de Toronto à l'heure bleue — moitié canadienne de la bannière. */
