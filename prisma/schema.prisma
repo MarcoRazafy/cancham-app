@@ -754,6 +754,11 @@ model Abonne {
   /// Retrait de la liste. `null` tant que la personne y est.
   desabonneLe DateTime?
 
+  /// Moment où le contact a rejoint la liste de la chambre chez systeme.io.
+  /// `null` : l'inscription n'y est pas encore arrivée — clé absente, ou
+  /// service injoignable ce jour-là.
+  synchroniseLe DateTime?
+
   createdAt DateTime @default(now())
 
   @@map("abonnes")
