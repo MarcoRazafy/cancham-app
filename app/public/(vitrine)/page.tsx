@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselCartes } from "@/components/public/CarrouselCartes";
 import { FormulaireInfolettre } from "@/components/public/FormulaireInfolettre";
+import { LienAncre } from "@/components/public/LienAncre";
 import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
@@ -214,12 +215,12 @@ export default async function PublicHome() {
                 <Link href="/auth/inscription" className="btn-action">
                   Devenir membre <ArrowRight size={17} />
                 </Link>
-                <Link
+                <LienAncre
                   href="#evenements"
                   className="btn-contour text-white hover:bg-white/10"
                 >
                   Voir les événements
-                </Link>
+                </LienAncre>
               </div>
             </div>
 
@@ -333,12 +334,12 @@ export default async function PublicHome() {
 
           {/* Le bouton du modèle, avec son halo rouge : il descend au formulaire. */}
           <div className="flex justify-center mt-9">
-            <Link
+            <LienAncre
               href="#newsletter"
               className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
             >
               S’inscrire à notre newsletter <ArrowRight size={17} />
-            </Link>
+            </LienAncre>
           </div>
         </div>
       </section>

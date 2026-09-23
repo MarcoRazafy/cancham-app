@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { LienAncre } from "@/components/public/LienAncre";
 import { LogoOfficiel } from "@/components/public/Marque";
 import { chiffres, COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate } from "@/lib/format";
@@ -167,9 +168,9 @@ export async function EnTetePublique() {
             className="order-3 md:order-2 w-full md:w-auto flex items-center gap-1 md:gap-2 mt-1.5 md:mt-0 -mx-1 px-1 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {LIENS.map((l) => (
-              <Link key={l.href} href={l.href} className={lien}>
+              <LienAncre key={l.href} href={l.href} className={lien}>
                 {l.libelle}
-              </Link>
+              </LienAncre>
             ))}
           </nav>
         </div>
@@ -269,9 +270,9 @@ export function PiedPublique() {
             <ul className="list-none m-0 p-0 flex flex-col gap-3">
               {c.liens.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className={lien}>
+                  <LienAncre href={l.href} className={lien}>
                     {l.libelle}
-                  </Link>
+                  </LienAncre>
                 </li>
               ))}
             </ul>
