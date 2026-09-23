@@ -18,11 +18,17 @@ export const VUES_AGENDA: { cle: VueAgenda; libelle: string }[] = [
   { cle: "liste", libelle: "À venir" },
 ];
 
-export type TypeElement = "evenement" | "inscription" | "echeance" | "rappel";
+export type TypeElement =
+  | "evenement"
+  | "inscription"
+  | "rendezvous"
+  | "echeance"
+  | "rappel";
 
 export const TYPES_ELEMENT: { cle: TypeElement; libelle: string }[] = [
   { cle: "evenement", libelle: "Événements" },
   { cle: "inscription", libelle: "Mes inscriptions" },
+  { cle: "rendezvous", libelle: "Rendez-vous" },
   { cle: "echeance", libelle: "Échéances" },
   { cle: "rappel", libelle: "Rappels" },
 ];
@@ -299,9 +305,10 @@ export const dateRestriction = (retardDepuis: string) =>
 
 const ORDRE_TYPES: Record<TypeElement, number> = {
   echeance: 0,
-  inscription: 1,
-  evenement: 2,
-  rappel: 3,
+  rendezvous: 1,
+  inscription: 2,
+  evenement: 3,
+  rappel: 4,
 };
 
 /** Par jour, la journée entière d'abord, puis par heure. */

@@ -134,6 +134,21 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "programme",
     ton: "info",
   },
+  rendezvous_pris: {
+    libelle: "Rendez-vous réservé",
+    famille: "programme",
+    ton: "ok",
+  },
+  rendezvous_annule: {
+    libelle: "Rendez-vous annulé",
+    famille: "programme",
+    ton: "bad",
+  },
+  rendezvous_reglages: {
+    libelle: "Réglages des rendez-vous",
+    famille: "programme",
+    ton: "info",
+  },
   inscription_validee: {
     libelle: "Inscription validée",
     famille: "programme",
@@ -293,6 +308,8 @@ export function lienJournal(
       return "/admin/ressources";
     case "CanchamService":
       return "/admin/offres-cancham";
+    case "Rendezvous":
+      return "/admin/rendez-vous";
     case "MessageThread":
       return `/admin/messagerie?t=${entiteId}`;
     case "User":

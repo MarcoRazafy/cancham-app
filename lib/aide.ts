@@ -158,6 +158,15 @@ export const THEMES: Theme[] = [
         liens: [{ href: "/membre/agenda", libelle: "Ouvrir l’agenda" }],
       },
       {
+        id: "rendez-vous",
+        question: "Comment prendre rendez-vous avec l’équipe ?",
+        reponse:
+          "Ouvrez « Rendez-vous » dans le menu, choisissez le type de rencontre, le jour puis l’heure : seuls les créneaux encore libres sont proposés. Une confirmation part aussitôt par courriel, et le rendez-vous rejoint votre agenda.\n\nLes heures affichées sont celles de Madagascar (UTC+3), là où l’équipe reçoit.\n\nUn empêchement s’annule depuis la même page : le créneau repart aussitôt à quelqu’un d’autre, et l’équipe est prévenue.",
+        liens: [
+          { href: "/membre/rendez-vous", libelle: "Prendre rendez-vous" },
+        ],
+      },
+      {
         id: "code",
         question: "Où retrouver mon code d’accueil ?",
         reponse:

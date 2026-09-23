@@ -32,7 +32,8 @@ export interface Notification {
     | "actualite"
     | "offre"
     | "ressource"
-    | "rappel";
+    | "rappel"
+    | "rendezvous";
 }
 
 /**
@@ -109,11 +110,56 @@ async function rappelsProches(
   });
 }
 
+/**
+ * Rendez-vous d'aujourd'hui et de demain : le membre voit les siens, l'équipe
+ * ceux qu'elle reçoit.
+ */
+async function rendezvousProches(
+  userId: string,
+  espace: "membre" | "admin",
+): Promise<Notification[]> {
+  const aujourdhui = aujourdhuiISO();
+  const rows = await prisma.rendezvous.findMany({
+    where: {
+      ...(espace === "membre" ? { userId } : {}),
+      annuleLe: null,
+      jour: {
+        gte: jourBase(aujourdhui),
+        lte: jourBase(ajouterJours(aujourdhui, 1)),
+      },
+    },
+    orderBy: [{ jour: "asc" }, { debut: "asc" }],
+    select: {
+      id: true,
+      jour: true,
+      debut: true,
+      type: { select: { titre: true } },
+      user: { select: { nom: true } },
+    },
+    take: 3,
+  });
+  return rows.map((r) => {
+    const jour = toISODate(r.jour);
+    return {
+      id: `rendezvous-${r.id}`,
+      titre:
+        espace === "admin"
+          ? `Rendez-vous : ${r.user.nom} · ${r.type.titre}`
+          : `Rendez-vous : ${r.type.titre}`,
+      temps: `${jour === aujourdhui ? "Aujourd’hui" : "Demain"} · ${fmtHeure(r.debut)}`,
+      href: `/${espace}/rendez-vous`,
+      ton: jour === aujourdhui ? "warn" : "info",
+      categorie: "rendezvous",
+    };
+  });
+}
+
 async function notificationsAdmin(userId: string): Promise<Notification[]> {
   const semaine = new Date(Date.now() - 7 * 86_400_000);
-  const [rappels, membres, nonLus, fil, prochain, aRegler, achats] =
+  const [rappels, rendezvous, membres, nonLus, fil, prochain, aRegler, achats] =
     await Promise.all([
       rappelsProches(userId, "admin"),
+      rendezvousProches(userId, "admin"),
       prisma.member.findMany({
         where: { statut: { not: "a_jour" } },
         select: { id: true, nom: true, statut: true },
@@ -140,7 +186,7 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
       }),
     ]);
 
-  const liste: Notification[] = [...rappels];
+  const liste: Notification[] = [...rappels, ...rendezvous];
 
   /** Un seul membre concerné : sa fiche. Plusieurs : la liste filtrée. */
   const versMembres = (statut: "candidature" | "en_retard" | "en_attente") => {
@@ -264,6 +310,7 @@ async function notificationsMembre(
     offre,
     actualite,
     rappels,
+    rendezvous,
     factures,
   ] = await Promise.all([
     prisma.member.findUnique({
@@ -291,6 +338,7 @@ async function notificationsMembre(
       select: { id: true, titre: true, date: true },
     }),
     rappelsProches(userId, "membre"),
+    rendezvousProches(userId, "membre"),
     // Factures dont l'échéance tombe dans la semaine, ou est dépassée.
     prisma.invoice.findMany({
       where: {
@@ -308,7 +356,7 @@ async function notificationsMembre(
 
   const liste: Notification[] = [];
 
-  liste.push(...rappels);
+  liste.push(...rappels, ...rendezvous);
 
   for (const f of factures) {
     const echeance = echeanceFacture(toISODate(f.date));
