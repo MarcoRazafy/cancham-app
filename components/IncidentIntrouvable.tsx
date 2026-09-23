@@ -1,8 +1,15 @@
+import Image from "next/image";
 import Link from "next/link";
-import { House, SearchX } from "lucide-react";
+import { House } from "lucide-react";
 import { Incident } from "@/components/Incident";
 
-/** Page introuvable : lien mort, fiche supprimée, adresse mal recopiée. */
+/**
+ * Page introuvable : lien mort, fiche supprimée, adresse mal recopiée.
+ *
+ * L'illustration porte déjà le « 404 » et les couleurs de la chambre : elle
+ * remplace la pastille, et reste décorative pour les lecteurs d'écran — le
+ * titre dit la même chose, en mots.
+ */
 export function IncidentIntrouvable({
   accueil,
   pleinEcran = false,
@@ -13,7 +20,17 @@ export function IncidentIntrouvable({
   return (
     <Incident
       pleinEcran={pleinEcran}
-      icone={<SearchX size={24} />}
+      illustration={
+        <Image
+          src="/marque/illustration-404.png"
+          alt=""
+          width={880}
+          height={914}
+          priority
+          sizes="(max-width: 460px) 64vw, 280px"
+          className="mx-auto w-[min(280px,64vw)] h-auto"
+        />
+      }
       surtitre="Erreur 404"
       titre="Page introuvable"
       actions={
