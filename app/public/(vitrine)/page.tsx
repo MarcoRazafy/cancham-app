@@ -10,6 +10,11 @@ import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { Compteur } from "@/components/public/Compteur";
 import { VISUELS } from "@/lib/images-publiques";
 import {
+  fmtCotisation,
+  libelleFormule,
+  ORDRE_FORMULES,
+} from "@/lib/membership";
+import {
   getActualitesPubliques,
   getProchainsEvenements,
   getStatsPubliques,
@@ -56,6 +61,17 @@ const PROFILS = [
     filet: "filet-degrade",
     tuile: "group-hover:bg-[linear-gradient(120deg,#ad0707_0%,#007140_100%)]",
   },
+];
+
+/**
+ * Ce que l'adhésion apporte, tel que la chambre l'annonce. Les flèches
+ * alternent ses deux couleurs, comme sur son site.
+ */
+const AVANTAGES = [
+  "Accès prioritaire à nos missions économiques et événements signature",
+  "Tarifs préférentiels sur les formations et événements payants",
+  "Mise en relation qualifiée avec notre réseau bilatéral",
+  "Visibilité institutionnelle au sein de la communauté CanCham",
 ];
 
 /**
@@ -388,6 +404,108 @@ export default async function PublicHome() {
           </div>
         </section>
       ) : null}
+
+      {/* ==================== Devenir membre ==================== */}
+      {/*
+        Une bande claire au bas d'une page sombre, comme sur cancham.mg : la
+        page s'achève sur l'invitation, et le changement de fond la détache du
+        reste. Les couleurs y sont écrites en clair — les jetons de la vitrine
+        sont taillés pour le bleu nuit.
+      */}
+      <section className="bg-[#faf8f3] text-[var(--marque-nuit)]">
+        <div className={`${CONTENEUR} py-16`}>
+          <div className="apparition-defilement grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+            {/* ---------- L'invitation ---------- */}
+            <div>
+              <span className="surtitre text-[#ad0707] inline-flex items-center gap-3">
+                <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
+                Rejoindre la communauté
+              </span>
+              <h2 className="font-[family-name:var(--font-texte)]! font-bold! text-[clamp(30px,4.2vw,54px)] leading-[1.05] tracking-[-0.015em] m-0 mt-3 mb-6">
+                Devenir{" "}
+                <span className="italic font-semibold text-[#ad0707]">
+                  membre,
+                </span>{" "}
+                c’est entrer dans{" "}
+                <span className="italic font-semibold text-[#007140]">
+                  un cercle.
+                </span>
+              </h2>
+              <p className="m-0 text-[18px] leading-[1.6] text-[#6b6b6b] max-w-[48ch]">
+                Un cercle de dirigeants, d’entrepreneurs et d’institutions qui
+                croient au pont entre le Canada et Madagascar. Et qui agissent.
+              </p>
+
+              <ul className="list-none m-0 mt-8 p-0">
+                {AVANTAGES.map((a, i) => (
+                  <li
+                    key={a}
+                    className="flex items-start gap-3.5 py-3.5 border-b border-black/10 text-[15px] leading-relaxed"
+                  >
+                    <ArrowRight
+                      size={16}
+                      aria-hidden="true"
+                      className={`mt-1 shrink-0 ${
+                        i % 2 === 0 ? "text-[#ad0707]" : "text-[#007140]"
+                      }`}
+                    />
+                    {a}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-9">
+                <Link
+                  href="/auth/inscription"
+                  className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
+                >
+                  Devenir membre <ArrowRight size={17} />
+                </Link>
+              </div>
+            </div>
+
+            {/* ---------- Les formules ---------- */}
+            <div className="carte-filet filet-fixe filet-degrade rounded-2xl bg-white p-8 md:p-12 shadow-[0_20px_60px_rgba(15,29,44,0.08)]">
+              <span className="surtitre text-[#ad0707]">
+                Choisissez votre formule
+              </span>
+              <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[30px] leading-[1.15] text-[var(--marque-nuit)] m-0 mt-2.5">
+                Cinq manières
+                <br />
+                de nous rejoindre.
+              </h3>
+              <p className="m-0 mt-3.5 text-[15px] leading-[1.6] text-[#6b6b6b]">
+                Chaque profil a sa formule. Toutes donnent accès au cœur de
+                notre communauté.
+              </p>
+
+              {/*
+                Les tarifs viennent de la grille de `lib/membership.ts`, celle
+                qui facture : la vitrine ne peut pas annoncer un prix que la
+                plateforme ne pratique plus.
+              */}
+              <ul className="list-none m-0 mt-6 p-0 flex flex-col gap-2.5">
+                {ORDRE_FORMULES.map((f, i) => (
+                  <li
+                    key={f}
+                    className="flex items-baseline justify-between gap-4 rounded-md bg-[#fafafa] px-[18px] py-4 text-[14px]"
+                  >
+                    <span>{libelleFormule(f)}</span>
+                    <span
+                      className={`shrink-0 font-bold ${
+                        i % 2 === 0 ? "text-[#ad0707]" : "text-[#007140]"
+                      }`}
+                    >
+                      {fmtCotisation(f)}{" "}
+                      <span className="text-[12px]">/ par an</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
