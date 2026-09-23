@@ -19,3 +19,19 @@ export function matriceQr(texte: string): { taille: number; modules: string } {
     modules: Array.from(modules.data, (m) => (m ? "1" : "0")).join(""),
   };
 }
+
+/**
+ * Le même code, en PNG, pour les e-mails : une image toute faite.
+ *
+ * Une messagerie ne dessine pas de matrice — elle affiche une image jointe.
+ * Six pixels par module, avec la marge blanche que les lecteurs réclament.
+ */
+export async function pngQr(texte: string): Promise<Buffer> {
+  return QRCode.toBuffer(texte, {
+    errorCorrectionLevel: "M",
+    type: "png",
+    scale: 6,
+    margin: 2,
+    color: { dark: "#0f1d2cff", light: "#ffffffff" },
+  });
+}

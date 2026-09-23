@@ -609,6 +609,7 @@ function LogoArrivee({
 
 const STATUT_INSCRIT = {
   present: { libelle: "Présent", classe: "text-success-strong" },
+  a_valider: { libelle: "À valider", classe: "text-faint" },
   confirme: { libelle: "Attendu", classe: "text-muted" },
   absent: { libelle: "Absent", classe: "text-bad" },
 } as const;

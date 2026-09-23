@@ -23,6 +23,20 @@ export interface Courriel {
   sujet: string;
   html: string;
   texte: string;
+  /** Images et fichiers joints au message. */
+  pieces?: PieceCourriel[];
+}
+
+/**
+ * Une pièce jointe. Avec un `cid`, elle s'affiche dans le corps du message
+ * (`<img src="cid:…">`) plutôt qu'en bas : c'est ainsi qu'un QR code arrive
+ * sous les yeux, les messageries refusant les images glissées dans le HTML.
+ */
+export interface PieceCourriel {
+  nom: string;
+  contenu: Buffer;
+  type: string;
+  cid?: string;
 }
 
 /** Adresse d'expédition, sur un domaine vérifié chez Resend. */
@@ -40,8 +54,11 @@ export function courrielsActifs(): boolean {
 export async function envoyerCourriel(c: Courriel): Promise<boolean> {
   const cle = process.env.RESEND_API_KEY;
   if (!cle) {
+    const jointes = c.pieces?.length
+      ? `\n[pièces jointes] ${c.pieces.map((p) => p.nom).join(", ")}`
+      : "";
     console.info(
-      `[courriel] non envoyé (RESEND_API_KEY absente) — à ${c.a} — « ${c.sujet} »\n${c.texte}`,
+      `[courriel] non envoyé (RESEND_API_KEY absente) — à ${c.a} — « ${c.sujet} »\n${c.texte}${jointes}`,
     );
     return false;
   }
@@ -64,6 +81,16 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
           subject: c.sujet,
           html: c.html,
           text: c.texte,
+          ...(c.pieces?.length
+            ? {
+                attachments: c.pieces.map((p) => ({
+                  filename: p.nom,
+                  content: p.contenu.toString("base64"),
+                  content_type: p.type,
+                  ...(p.cid ? { content_id: p.cid } : {}),
+                })),
+              }
+            : {}),
           // Une réponse à un e-mail automatique arrive à l'équipe.
           reply_to: COURRIEL_EQUIPE,
         }),
@@ -166,11 +193,14 @@ export function echapper(texte: string): string {
 export function gabarit({
   titre,
   paragraphes,
+  images = [],
   bouton,
   apres = [],
 }: {
   titre: string;
   paragraphes: string[];
+  /** Images jointes montrées dans le corps, chacune sous son intitulé. */
+  images?: { cid: string; legende: string }[];
   bouton?: { libelle: string; url: string };
   /** Paragraphes sous le bouton, en plus petit. */
   apres?: string[];
@@ -187,6 +217,12 @@ export function gabarit({
 <tr><td style="padding:28px">
 <h1 style="margin:0 0 18px;font-size:21px;color:#0f1d2c">${echapper(titre)}</h1>
 ${paragraphes.map((t) => p(t)).join("\n")}
+${images
+  .map(
+    (i) =>
+      `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 18px"><tr><td style="padding:0 0 6px;font-size:14px;font-weight:bold;color:#0f1d2c">${echapper(i.legende)}</td></tr><tr><td><img src="cid:${echapper(i.cid)}" width="170" height="170" alt="QR code — ${echapper(i.legende)}" style="display:block;border:1px solid #e3e8ee;border-radius:10px;width:170px;height:170px"></td></tr></table>`,
+  )
+  .join("\n")}
 ${
   bouton
     ? `<p style="margin:22px 0"><a href="${echapper(bouton.url)}" style="display:inline-block;background:#ad0707;color:#ffffff;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:8px">${echapper(bouton.libelle)}</a></p>`

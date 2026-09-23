@@ -3,7 +3,12 @@ import { reponseCsv, versCsv } from "@/lib/csv";
 import { marquerAbsentsPasses } from "@/lib/presences";
 import { getParticipants } from "@/lib/queries-admin";
 
-const STATUTS = { confirme: "Inscrit", present: "Présent", absent: "Absent" };
+const STATUTS = {
+  a_valider: "À valider",
+  confirme: "Inscrit",
+  present: "Présent",
+  absent: "Absent",
+};
 
 /** Liste d'accueil d'un événement au format tableur. */
 export async function GET(

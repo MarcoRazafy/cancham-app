@@ -53,8 +53,11 @@ enum EventFormat {
 }
 
 enum AttendeeStatus {
-  confirme @map("confirmé")
-  present  @map("présent")
+  /// Inscription à un événement payant, tant que l'équipe n'a pas constaté le
+  /// règlement : ni QR code envoyé, ni entrée possible.
+  a_valider @map("à valider")
+  confirme  @map("confirmé")
+  present   @map("présent")
   absent
 }
 
