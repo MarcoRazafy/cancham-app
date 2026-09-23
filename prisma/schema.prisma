@@ -179,6 +179,7 @@ model Member {
   offres       Offer[]
   factures     Invoice[]
   inscriptions Registration[]
+  rendezvous   Rendezvous[]
 
   @@index([statut])
   @@map("members")
@@ -220,8 +221,9 @@ model User {
   rappels            Rappel[]
   jetons             JetonCompte[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  rendezvous Rendezvous[]
 
   @@index([memberId])
   @@map("users")
@@ -762,4 +764,88 @@ model Abonne {
   createdAt DateTime @default(now())
 
   @@map("abonnes")
+}
+
+// ============================ Rendez-vous ============================
+
+/// Un type de rendez-vous que la chambre propose à ses membres : conseil
+/// export, accueil d'un nouveau membre, point sur la cotisation…
+///
+/// La durée décide du découpage des créneaux : une plage de 9 h à 12 h offre
+/// six rendez-vous de trente minutes, quatre de quarante-cinq.
+model TypeRendezvous {
+  id     String  @id @default(cuid())
+  titre  String
+  detail String?
+  /// Durée en minutes.
+  duree  Int     @default(30)
+  /// Proposé aux membres. Faux : retiré de la liste sans effacer l'historique.
+  actif  Boolean @default(true)
+  /// Ordre d'affichage.
+  ordre  Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rendezvous Rendezvous[]
+
+  @@map("types_rendezvous")
+}
+
+/// Une plage où l'équipe reçoit, un jour de semaine donné.
+///
+/// Plusieurs plages par jour sont possibles — matin et après-midi séparés par
+/// la pause du midi, par exemple.
+model Disponibilite {
+  id    String @id @default(cuid())
+  /// Jour de la semaine, 1 = lundi à 7 = dimanche (norme ISO).
+  jour  Int
+  /// « HH:MM », heure de Madagascar.
+  debut String
+  fin   String
+
+  createdAt DateTime @default(now())
+
+  @@index([jour])
+  @@map("disponibilites")
+}
+
+/// Un rendez-vous pris par un membre avec l'équipe.
+///
+/// Le créneau est unique tant que le rendez-vous tient : un index partiel, posé
+/// à la main dans la migration, refuse deux réservations à la même heure. C'est
+/// la base qui tranche, et non une vérification préalable — deux personnes
+/// peuvent cliquer dans la même seconde.
+model Rendezvous {
+  id String @id @default(cuid())
+
+  typeId String
+  type   TypeRendezvous @relation(fields: [typeId], references: [id])
+
+  /// Qui a pris le rendez-vous.
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Son entreprise au moment de la prise, pour l'équipe.
+  memberId String?
+  member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  jour  DateTime @db.Date
+  /// « HH:MM », heure de Madagascar.
+  debut String
+  fin   String
+
+  /// Ce que le membre souhaite aborder.
+  motif String?
+
+  /// Annulation. `null` tant que le rendez-vous tient.
+  annuleLe  DateTime?
+  /// Qui a annulé : le membre ou l'équipe.
+  annulePar String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jour])
+  @@index([userId])
+  @@map("rendezvous")
 }

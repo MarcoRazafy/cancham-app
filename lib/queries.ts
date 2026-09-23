@@ -640,7 +640,7 @@ export async function getAgenda(
   const aujourdhui = aujourdhuiISO();
   const periode = { gte: jourBase(du), lte: jourBase(au) };
 
-  const [evenements, factures, membre, dernierReglement, rappels] =
+  const [evenements, factures, membre, dernierReglement, rappels, rendezvous] =
     await Promise.all([
       prisma.event.findMany({
         where: { date: periode },
@@ -687,6 +687,17 @@ export async function getAgenda(
         : null,
       memberId ? getDernierReglementCotisation(memberId) : null,
       rappelsAgenda(userId, du, au),
+      prisma.rendezvous.findMany({
+        where: { userId, annuleLe: null, jour: periode },
+        select: {
+          id: true,
+          jour: true,
+          debut: true,
+          fin: true,
+          motif: true,
+          type: { select: { titre: true } },
+        },
+      }),
     ]);
 
   const elements: ElementAgenda[] = [];
@@ -703,6 +714,19 @@ export async function getAgenda(
       lieu: e.lieu,
       detail: EVENT_FORMAT_LABEL[e.format],
       href: `/membre/evenements/${e.id}`,
+    });
+  }
+
+  for (const r of rendezvous) {
+    elements.push({
+      id: `rendezvous-${r.id}`,
+      type: "rendezvous",
+      titre: r.type.titre,
+      jour: toISODate(r.jour),
+      debut: r.debut,
+      fin: r.fin,
+      detail: r.motif ?? "Avec l’équipe CanCham",
+      href: "/membre/rendez-vous",
     });
   }
 
@@ -816,43 +840,57 @@ export async function getAgendaEquipe(
     lte: jourBase(ajouterJours(au, -jours)),
   });
 
-  const [evenements, factures, retards, rappels] = await Promise.all([
-    prisma.event.findMany({
-      where: { date: periode },
-      select: {
-        id: true,
-        titre: true,
-        date: true,
-        debut: true,
-        fin: true,
-        lieu: true,
-        format: true,
-        cap: true,
-        _count: { select: { participants: true } },
-      },
-    }),
-    prisma.invoice.findMany({
-      where: { statut: "envoyee", date: avant(DELAI_REGLEMENT_JOURS) },
-      select: {
-        id: true,
-        numero: true,
-        date: true,
-        objet: true,
-        montant: true,
-        devise: true,
-        destinataireNom: true,
-        member: { select: { nom: true } },
-      },
-    }),
-    prisma.member.findMany({
-      where: {
-        statut: "en_retard",
-        retardDepuis: avant(RETARD_BLOCAGE_JOURS + 1),
-      },
-      select: { id: true, nom: true, retardDepuis: true },
-    }),
-    rappelsAgenda(userId, du, au),
-  ]);
+  const [evenements, factures, retards, rappels, rendezvous] =
+    await Promise.all([
+      prisma.event.findMany({
+        where: { date: periode },
+        select: {
+          id: true,
+          titre: true,
+          date: true,
+          debut: true,
+          fin: true,
+          lieu: true,
+          format: true,
+          cap: true,
+          _count: { select: { participants: true } },
+        },
+      }),
+      prisma.invoice.findMany({
+        where: { statut: "envoyee", date: avant(DELAI_REGLEMENT_JOURS) },
+        select: {
+          id: true,
+          numero: true,
+          date: true,
+          objet: true,
+          montant: true,
+          devise: true,
+          destinataireNom: true,
+          member: { select: { nom: true } },
+        },
+      }),
+      prisma.member.findMany({
+        where: {
+          statut: "en_retard",
+          retardDepuis: avant(RETARD_BLOCAGE_JOURS + 1),
+        },
+        select: { id: true, nom: true, retardDepuis: true },
+      }),
+      rappelsAgenda(userId, du, au),
+      prisma.rendezvous.findMany({
+        where: { annuleLe: null, jour: periode },
+        select: {
+          id: true,
+          jour: true,
+          debut: true,
+          fin: true,
+          motif: true,
+          type: { select: { titre: true } },
+          user: { select: { nom: true } },
+          member: { select: { nom: true } },
+        },
+      }),
+    ]);
 
   const elements: ElementAgenda[] = [];
 
@@ -882,6 +920,19 @@ export async function getAgendaEquipe(
       detail: `${f.objet} · ${fmtMontant(f.montant, f.devise)}`,
       href: `/admin/paiements/${f.id}`,
       urgent: jour < aujourdhui,
+    });
+  }
+
+  for (const r of rendezvous) {
+    elements.push({
+      id: `rendezvous-${r.id}`,
+      type: "rendezvous",
+      titre: `${r.type.titre} · ${r.user.nom}`,
+      jour: toISODate(r.jour),
+      debut: r.debut,
+      fin: r.fin,
+      detail: [r.member?.nom, r.motif].filter(Boolean).join(" · ") || null,
+      href: "/admin/rendez-vous",
     });
   }
 

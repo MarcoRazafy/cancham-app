@@ -12,6 +12,7 @@ import {
   AlarmClock,
   Bell,
   BellOff,
+  CalendarClock,
   CalendarDays,
   ChevronRight,
   CreditCard,
@@ -34,6 +35,7 @@ const ICONES: Record<Notification["categorie"], LucideIcon> = {
   offre: Tag,
   ressource: FileText,
   rappel: AlarmClock,
+  rendezvous: CalendarClock,
 };
 
 /** Rouge pour ce qui presse, ocre pour ce qui attend, bleu nuit pour ce qui informe. */

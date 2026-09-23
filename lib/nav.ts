@@ -20,6 +20,11 @@ export const NAV_MEMBRE: NavGroup[] = [
       { href: "/membre/annuaire", label: "Annuaire", icon: "users" },
       { href: "/membre/evenements", label: "Événements", icon: "calendar" },
       { href: "/membre/agenda", label: "Agenda", icon: "agenda" },
+      {
+        href: "/membre/rendez-vous",
+        label: "Rendez-vous",
+        icon: "rendezvous",
+      },
       { href: "/membre/actualites", label: "Actualités", icon: "news" },
       { href: "/membre/messagerie", label: "Messagerie", icon: "chat" },
       { href: "/membre/ressources", label: "Ressources", icon: "folder" },
@@ -79,6 +84,7 @@ export const NAV_ADMIN: NavGroup[] = [
     items: [
       { href: "/admin/evenements", label: "Événements", icon: "calendar" },
       { href: "/admin/agenda", label: "Agenda", icon: "agenda" },
+      { href: "/admin/rendez-vous", label: "Rendez-vous", icon: "rendezvous" },
       { href: "/admin/actualites", label: "Actualités", icon: "news" },
       { href: "/admin/ressources", label: "Ressources", icon: "folder" },
       {
@@ -114,6 +120,7 @@ export const TITLES: Record<string, [string, string]> = {
   "/membre/annuaire": ["Espace membre", "Annuaire"],
   "/membre/evenements": ["Espace membre", "Événements"],
   "/membre/agenda": ["Espace membre", "Agenda"],
+  "/membre/rendez-vous": ["Espace membre", "Rendez-vous"],
   "/membre/actualites": ["Espace membre", "Actualités"],
   "/membre/messagerie": ["Espace membre", "Messagerie"],
   "/membre/ressources": ["Espace membre", "Ressources"],
@@ -128,6 +135,7 @@ export const TITLES: Record<string, [string, string]> = {
   "/admin/annuaire": ["Back-office", "Annuaire"],
   "/admin/evenements": ["Back-office", "Événements"],
   "/admin/agenda": ["Back-office", "Agenda"],
+  "/admin/rendez-vous": ["Back-office", "Rendez-vous"],
   "/admin/paiements": ["Back-office", "Paiements & factures"],
   "/admin/offres-cancham": ["Back-office", "Services CanCham"],
   "/admin/messagerie": ["Back-office", "Messagerie"],

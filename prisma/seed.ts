@@ -142,6 +142,10 @@ async function main() {
   await prisma.produit.deleteMany();
   await prisma.user.deleteMany();
   await prisma.member.deleteMany();
+  // Après les comptes : leurs rendez-vous partent en cascade, et les types
+  // n'ont alors plus rien qui les retienne.
+  await prisma.disponibilite.deleteMany();
+  await prisma.typeRendezvous.deleteMany();
 
   console.log("Membres et produits…");
   for (const m of MEMBERS) {
@@ -439,6 +443,27 @@ async function main() {
     });
   }
 
+  console.log("Rendez-vous…");
+  // De quoi ouvrir la prise de rendez-vous dès le premier démarrage :
+  // deux formats, et deux matinées d'accueil.
+  for (const [ordre, t] of [
+    {
+      titre: "Entretien d’accompagnement",
+      detail: "Un point sur votre projet avec l’équipe de la chambre",
+      duree: 30,
+    },
+    { titre: "Point rapide", detail: null, duree: 15 },
+  ].entries()) {
+    await prisma.typeRendezvous.create({ data: { ...t, ordre } });
+  }
+  await prisma.disponibilite.createMany({
+    data: [
+      { jour: 2, debut: "09:00", fin: "12:00" },
+      { jour: 4, debut: "09:00", fin: "12:00" },
+      { jour: 4, debut: "14:00", fin: "16:00" },
+    ],
+  });
+
   console.log("Journal…");
   await prisma.auditLog.create({
     data: {
@@ -469,6 +494,8 @@ main()
       factures: await prisma.invoice.count(),
       fils: await prisma.messageThread.count(),
       messages: await prisma.message.count(),
+      "types de rendez-vous": await prisma.typeRendezvous.count(),
+      "plages d’accueil": await prisma.disponibilite.count(),
     };
     console.table(compte);
     await prisma.$disconnect();

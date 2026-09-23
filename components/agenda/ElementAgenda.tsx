@@ -30,6 +30,11 @@ export const TEINTES: Record<
     puce: "bg-accent-soft text-accent",
     bord: "border-l-accent",
   },
+  rendezvous: {
+    point: "bg-bad",
+    puce: "bg-bad-soft text-bad",
+    bord: "border-l-bad",
+  },
   rappel: {
     point: "bg-warn",
     puce: "bg-warn-soft text-warn",
@@ -41,6 +46,7 @@ export const TEINTES: Record<
 const ETIQUETTES: Record<TypeElement, string> = {
   evenement: "Événement",
   inscription: "Inscrit",
+  rendezvous: "Rendez-vous",
   echeance: "Échéance",
   rappel: "Rappel",
 };

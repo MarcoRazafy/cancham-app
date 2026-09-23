@@ -349,3 +349,84 @@ export function courrielReponseVisiteur(
     }),
   };
 }
+
+/** Ce qu'un e-mail dit d'un rendez-vous : de quoi s'y rendre sans chercher. */
+interface RendezvousCourriel {
+  type: string;
+  /** Jour mis en forme : « mercredi 30 septembre 2026 ». */
+  jour: string;
+  /** « 09 h 00 – 09 h 30 ». */
+  horaire: string;
+  /** Qui l'a pris. */
+  personne: string;
+  entreprise: string | null;
+  motif: string | null;
+  lien: string;
+}
+
+/** Le rendez-vous est pris : la confirmation part au membre. */
+export function courrielRendezvousPris(
+  a: string,
+  d: RendezvousCourriel,
+): Courriel {
+  return {
+    a,
+    sujet: `Rendez-vous confirmé — ${d.jour}`,
+    ...gabarit({
+      titre: "Votre rendez-vous est confirmé",
+      paragraphes: [
+        `Bonjour ${prenom(d.personne)},`,
+        `Votre rendez-vous « ${d.type} » avec l’équipe CanCham est confirmé.`,
+        `Quand : ${d.jour}, ${d.horaire} (heure de Madagascar)`,
+        ...(d.motif ? [`Ce que vous souhaitez aborder : ${d.motif}`] : []),
+        "L’équipe vous recontacte si elle a besoin d’une précision avant la rencontre.",
+      ],
+      bouton: { libelle: "Voir mes rendez-vous", url: d.lien },
+      apres: [
+        "Un empêchement ? Annulez depuis votre espace membre plutôt que de laisser le créneau vide : il repart aussitôt à quelqu’un d’autre.",
+      ],
+    }),
+  };
+}
+
+/** L'équipe est prévenue qu'un créneau vient d'être pris. */
+export function courrielRendezvousEquipe(
+  a: string,
+  d: RendezvousCourriel,
+): Courriel {
+  return {
+    a,
+    sujet: `Nouveau rendez-vous : ${d.personne} — ${d.jour}`,
+    ...gabarit({
+      titre: "Un membre a réservé un créneau",
+      paragraphes: [
+        `${d.personne}${d.entreprise ? ` · ${d.entreprise}` : ""} vient de réserver « ${d.type} ».`,
+        `Quand : ${d.jour}, ${d.horaire} (heure de Madagascar)`,
+        ...(d.motif
+          ? [`Motif indiqué : ${d.motif}`]
+          : ["Aucun motif indiqué."]),
+      ],
+      bouton: { libelle: "Voir les rendez-vous", url: d.lien },
+    }),
+  };
+}
+
+/** Un rendez-vous tombe : celui qui ne l'a pas annulé l'apprend. */
+export function courrielRendezvousAnnule(
+  a: string,
+  d: RendezvousCourriel & { par: string },
+): Courriel {
+  return {
+    a,
+    sujet: `Rendez-vous annulé — ${d.jour}`,
+    ...gabarit({
+      titre: "Un rendez-vous a été annulé",
+      paragraphes: [
+        `Le rendez-vous « ${d.type} » du ${d.jour}, ${d.horaire}, a été annulé par ${d.par}.`,
+        `Il concernait ${d.personne}${d.entreprise ? ` · ${d.entreprise}` : ""}.`,
+        "Le créneau est de nouveau libre.",
+      ],
+      bouton: { libelle: "Prendre un autre rendez-vous", url: d.lien },
+    }),
+  };
+}
