@@ -64,6 +64,13 @@ const ANNONCES_PAR_DEFAUT = [
  */
 const ANNONCES_MIN = 8;
 
+/**
+ * Secondes accordées à chaque annonce pour traverser l'écran. Le bandeau doit
+ * se lire au passage, pas se poursuivre : à sept secondes, l'œil n'avait pas
+ * fini une ligne qu'elle était partie.
+ */
+const SECONDES_PAR_ANNONCE = 13;
+
 export async function EnTetePublique() {
   // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
   // pendant le build, et le bandeau doit suivre la programmation.
@@ -94,7 +101,9 @@ export async function EnTetePublique() {
       >
         <div
           className="bandeau-piste flex w-max"
-          style={{ animationDuration: `${piste.length * 7}s` }}
+          style={{
+            animationDuration: `${piste.length * SECONDES_PAR_ANNONCE}s`,
+          }}
         >
           {[0, 1].map((copie) => (
             <ul
