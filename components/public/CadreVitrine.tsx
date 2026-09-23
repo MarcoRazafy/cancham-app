@@ -1,18 +1,31 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { ArrowUpRight, CircleUserRound } from "lucide-react";
-import { LogoOfficiel, Sigle } from "@/components/public/Marque";
+import { LogoOfficiel } from "@/components/public/Marque";
 import { fmtDate } from "@/lib/format";
-import { aDesActualitesPubliques, getProchainsEvenements } from "@/lib/queries";
+import { getProchainsEvenements } from "@/lib/queries";
 
 /**
  * En-tête et pied de la vitrine, sur le modèle du site cancham.mg.
  *
  * En haut, un bandeau rouge fait défiler les prochains rendez-vous ; dessous,
- * la barre bleu nuit : le sigle et le nom, les liens, et le bloc rouge
- * « Devenir membre » sur toute la hauteur. Les deux restent collés en haut
- * au défilement.
+ * la barre blanche : le logo de la chambre, les liens, et le bouton rouge
+ * « Se connecter ». Les deux restent collés en haut au défilement.
+ *
+ * La barre garde ses propres couleurs, écrites en clair : posée sur la
+ * vitrine sombre, les jetons de teinte de l'application y rendraient le
+ * texte blanc sur blanc.
  */
+
+/** Les liens de la barre, dans l'ordre où on les lit. */
+const LIENS = [
+  { href: "/public", libelle: "Accueil" },
+  { href: "/public#evenements", libelle: "Événements" },
+  { href: "/public#actualites", libelle: "Actualités" },
+  { href: "/auth/inscription", libelle: "Devenir membre" },
+];
+
+const lien =
+  "inline-flex items-center px-2.5 md:px-3 lg:px-3.5 py-1.5 md:py-2 rounded-[6px] text-[13px] md:text-[13.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] hover:bg-[#f3f5f8]";
 
 /** Ce que le bandeau annonce quand aucun événement n'est programmé. */
 const ANNONCES_PAR_DEFAUT = [
@@ -31,10 +44,7 @@ export async function EnTetePublique() {
   // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
   // pendant le build, et le bandeau doit suivre la programmation.
   await connection();
-  const [evenements, actualites] = await Promise.all([
-    getProchainsEvenements(6),
-    aDesActualitesPubliques(),
-  ]);
+  const evenements = await getProchainsEvenements(6);
   const annonces = evenements.length
     ? evenements.map((e) => ({
         texte: [
@@ -50,9 +60,6 @@ export async function EnTetePublique() {
 
   let piste = annonces;
   while (piste.length < ANNONCES_MIN) piste = piste.concat(annonces);
-
-  const lien =
-    "hidden lg:flex items-center px-4 text-[14.5px] text-white/85 no-underline transition-colors hover:text-white";
 
   return (
     <header className="sticky top-0 z-40">
@@ -98,60 +105,40 @@ export async function EnTetePublique() {
       </div>
 
       {/* ---------- Barre de navigation ---------- */}
-      <div className="bg-[var(--marque-nuit)] border-b border-white/10">
-        <div className="max-w-[1240px] mx-auto pl-4 sm:pl-5 flex items-stretch justify-between h-[58px] md:h-[64px]">
+      <div className="bg-white/95 backdrop-blur-sm border-b border-[#e3e8ee]">
+        {/*
+          Sur téléphone, les liens passent d'eux-mêmes sous le logo : cinq
+          entrées et un logo ne tiennent pas sur 390 pixels, et les cacher
+          rendrait le site impraticable là où on le consulte le plus.
+        */}
+        <div className="max-w-[1240px] mx-auto px-4 sm:px-5 flex flex-wrap items-center justify-between gap-x-4 py-2.5 md:py-0 md:h-[72px]">
           <Link
             href="/public"
             aria-label="Accueil CanCham Connect"
-            className="flex items-center gap-2.5 no-underline shrink-0"
+            className="order-1 shrink-0"
           >
-            <Sigle size={38} className="shrink-0" />
-            <span className="leading-none">
-              <span className="titre block text-[18px] md:text-[20px] font-bold text-white">
-                CanCham
-              </span>
-              <span className="block mt-1 text-[9.5px] md:text-[10.5px] font-semibold tracking-[0.16em] text-white/60">
-                CANADA · MADAGASCAR
-              </span>
-            </span>
+            <LogoOfficiel
+              className="w-[150px] sm:w-[200px] md:w-[230px] h-auto"
+              priority
+            />
+          </Link>
+
+          <Link
+            href="/auth"
+            className="order-2 md:order-3 inline-flex items-center rounded-[6px] bg-marque-rouge px-4 sm:px-5 py-2.5 text-[12px] sm:text-[12.5px] font-bold uppercase tracking-[0.05em] text-white no-underline whitespace-nowrap transition-colors hover:bg-[#8f0606]"
+          >
+            Se connecter
           </Link>
 
           <nav
             aria-label="Navigation principale"
-            className="flex items-stretch min-w-0"
+            className="order-3 md:order-2 w-full md:w-auto flex items-center gap-1 md:gap-2 mt-1.5 md:mt-0 -mx-1 px-1 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            <Link href="/public#evenements" className={lien}>
-              Événements
-            </Link>
-            {actualites ? (
-              <Link href="/public#actualites" className={lien}>
-                Actualités
+            {LIENS.map((l) => (
+              <Link key={l.href} href={l.href} className={lien}>
+                {l.libelle}
               </Link>
-            ) : null}
-            <a
-              href="https://cancham.mg"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${lien} gap-1`}
-            >
-              Site CanCham <ArrowUpRight size={14} />
-            </a>
-            {/* Sur téléphone, l'icône seule : la barre tient sur une ligne. */}
-            <Link
-              href="/auth"
-              aria-label="Espace membre"
-              className="flex items-center gap-2 px-3 sm:px-4 text-[14.5px] font-semibold text-white/85 no-underline transition-colors hover:text-white whitespace-nowrap"
-            >
-              <CircleUserRound size={22} className="sm:hidden" />
-              <span className="hidden sm:inline">Espace membre</span>
-            </Link>
-            <Link
-              href="/auth/inscription"
-              className="flex items-center px-4 sm:px-7 bg-marque-rouge text-white text-[12.5px] sm:text-[14px] font-bold uppercase tracking-[0.04em] no-underline whitespace-nowrap transition-colors hover:bg-[#8f0606] shadow-[0_10px_24px_-12px_rgb(173_7_7/0.9)]"
-            >
-              <span className="sm:hidden">Adhérer</span>
-              <span className="hidden sm:inline">Devenir membre</span>
-            </Link>
+            ))}
           </nav>
         </div>
       </div>
