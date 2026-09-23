@@ -269,16 +269,16 @@ export default async function PublicHome() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 mt-7">
+          <div className="grid gap-6 sm:grid-cols-2 mt-7">
             {PROFILS.map((p) => (
               <article
                 key={p.titre}
-                className={`carte-filet ${p.filet} group rounded-2xl bg-white p-8 transition-shadow hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]`}
+                className={`carte-filet ${p.filet} group rounded-xl bg-white p-10 transition-shadow hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]`}
               >
                 <span
-                  className={`w-14 h-14 rounded-[16px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform] duration-300 group-hover:-rotate-6 ${p.tuile}`}
+                  className={`w-15 h-15 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform] duration-300 group-hover:-rotate-6 ${p.tuile}`}
                 >
-                  <p.icone size={22} />
+                  <p.icone size={24} />
                 </span>
                 {/*
                   Titre en gras, donc dans la fonte de texte : Hammersmith One
@@ -286,7 +286,7 @@ export default async function PublicHome() {
                   `!` passent devant la règle qui coiffe tous les h3 de la
                   marque.
                 */}
-                <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[19.5px] leading-snug text-[var(--marque-nuit)] m-0 mt-7">
+                <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[23px] leading-snug text-[var(--marque-nuit)] m-0 mt-7">
                   {p.titre}
                 </h3>
                 <p className="m-0 mt-3.5 text-[14.5px] leading-relaxed text-[#5b6b7a]">
