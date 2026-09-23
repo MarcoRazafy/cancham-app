@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CONTENEUR } from "@/components/public/CadreVitrine";
+import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -42,7 +42,7 @@ export default async function ActualitePubliquePage({
           <span className="surtitre text-marque-vert">{a.cat}</span>
           <span className="text-[13px] text-faint">· {fmtDate(a.date)}</span>
         </div>
-        <h1 className="titre text-[clamp(28px,4vw,42px)] m-0 mt-2.5">
+        <h1 className={`${TITRE_GRAS} text-[clamp(28px,4vw,42px)] m-0 mt-2.5`}>
           {a.titre}
         </h1>
         <p className="m-0 mt-4 text-[17px] leading-relaxed text-ink">
@@ -113,7 +113,7 @@ export default async function ActualitePubliquePage({
 
       {autres.length ? (
         <section className="mt-14">
-          <h2 className="titre text-[24px] m-0">À lire aussi</h2>
+          <h2 className={`${TITRE_GRAS} text-[24px] m-0`}>À lire aussi</h2>
           <div className="grid gap-5 mt-6 md:grid-cols-2 lg:grid-cols-3">
             {autres.map((r) => (
               <CarteActualite key={r.id} actualite={r} />

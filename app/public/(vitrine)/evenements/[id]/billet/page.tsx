@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -63,7 +64,9 @@ export default async function BilletsPublics({
             <CheckCircle2 size={15} /> Inscription confirmée
           </span>
         )}
-        <h1 className="titre text-[clamp(24px,3.4vw,32px)] m-0 mt-2.5">
+        <h1
+          className={`${TITRE_GRAS} text-[clamp(24px,3.4vw,32px)] m-0 mt-2.5`}
+        >
           {e.titre}
         </h1>
         <div className="flex gap-x-5 gap-y-2 flex-wrap text-[14px] text-muted mt-3">

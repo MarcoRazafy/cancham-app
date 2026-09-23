@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { ArrowRight, Newspaper } from "lucide-react";
 import { fmtDate } from "@/lib/format";
@@ -46,7 +47,9 @@ export function CarteActualite({
           <span className="surtitre text-marque-vert">{a.cat}</span>
           <span className="text-[12.5px] text-faint">· {fmtDate(a.date)}</span>
         </div>
-        <h3 className="titre text-[19px] leading-snug m-0 mt-2 text-ink">
+        <h3
+          className={`${TITRE_GRAS} text-[19px] leading-snug m-0 mt-2 text-ink`}
+        >
           {a.titre}
         </h3>
         <p className="m-0 mt-2 text-[14px] text-muted leading-relaxed line-clamp-3 flex-1">

@@ -28,6 +28,18 @@ import { getProchainsEvenements } from "@/lib/queries";
  */
 export const CONTENEUR = "max-w-[1400px] mx-auto px-5 md:px-10";
 
+/**
+ * Les titres de la vitrine, en vrai gras.
+ *
+ * Hammersmith One, la fonte des titres de la charte, n'existe qu'en une seule
+ * graisse : l'appeler en gras produirait un faux gras fabriqué par le
+ * navigateur, épais et flou. Les titres prennent donc la fonte de texte de
+ * l'espace public en 700 — même épaisseur à l'œil, dessin net. Les `!`
+ * passent devant la règle qui coiffe tous les titres de la marque.
+ */
+export const TITRE_GRAS =
+  "font-[family-name:var(--font-texte)]! font-bold! tracking-[-0.015em]";
+
 /** Les liens de la barre, dans l'ordre où on les lit. */
 const LIENS = [
   { href: "/public", libelle: "Accueil" },
@@ -244,9 +256,7 @@ export function PiedPublique() {
         {/* ---------- Les colonnes de liens ---------- */}
         {COLONNES.map((c) => (
           <nav key={c.titre} aria-label={c.titre}>
-            <h2 className="m-0 mb-4 text-[11.5px] font-bold uppercase tracking-[0.14em] text-white/55">
-              {c.titre}
-            </h2>
+            <h2 className="surtitre m-0 mb-4 text-white/55">{c.titre}</h2>
             <ul className="list-none m-0 p-0 flex flex-col gap-3">
               {c.liens.map((l) => (
                 <li key={l.href}>
@@ -261,9 +271,7 @@ export function PiedPublique() {
 
         {/* ---------- Joindre la chambre ---------- */}
         <div>
-          <h2 className="m-0 mb-4 text-[11.5px] font-bold uppercase tracking-[0.14em] text-white/55">
-            Contact
-          </h2>
+          <h2 className="surtitre m-0 mb-4 text-white/55">Contact</h2>
           <ul className="list-none m-0 p-0 flex flex-col gap-3 text-[13.5px] text-white/70">
             <li className="flex items-start gap-2.5">
               <MapPin size={15} className="mt-0.5 shrink-0 text-marque-rouge" />
