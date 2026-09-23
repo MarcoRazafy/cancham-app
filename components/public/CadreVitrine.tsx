@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { LogoOfficiel } from "@/components/public/Marque";
+import { chiffres, COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate } from "@/lib/format";
 import { getProchainsEvenements } from "@/lib/queries";
 
@@ -143,42 +145,147 @@ export async function EnTetePublique() {
   );
 }
 
-/** Pied de la vitrine, sur le même fond sombre. */
+/** Les colonnes de liens du pied, dans l'ordre où on les lit. */
+const COLONNES = [
+  {
+    titre: "Navigation",
+    liens: [
+      { libelle: "Accueil", href: "/public" },
+      { libelle: "Événements", href: "/public#evenements" },
+      { libelle: "Actualités", href: "/public#actualites" },
+    ],
+  },
+  {
+    titre: "Membre",
+    liens: [
+      { libelle: "Devenir membre", href: "/auth/inscription" },
+      { libelle: "Espace membre", href: "/auth" },
+    ],
+  },
+];
+
+/**
+ * Pied de la vitrine, sur le modèle du site cancham.mg.
+ *
+ * Quatre colonnes : la marque et ses réseaux, la navigation, l'espace
+ * membre, et de quoi joindre la chambre. Seules les pages qui existent y
+ * figurent — un pied de page plein de liens morts dessert plus qu'il ne sert.
+ */
 export function PiedPublique() {
-  const lien = "text-muted hover:text-ink no-underline";
+  const lien =
+    "text-[13.5px] text-white/70 no-underline transition-colors hover:text-white";
+  const reseau =
+    "w-9 h-9 rounded-[8px] bg-white/8 border border-white/12 text-white/80 text-[13px] font-bold flex items-center justify-center no-underline transition-colors hover:bg-white/15 hover:text-white";
+
   return (
-    <footer className="border-t border-line bg-surface mt-auto">
-      <div className="max-w-[1120px] mx-auto px-5 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex flex-col gap-3">
-          <Link href="/public" aria-label="Accueil CanCham Connect">
-            <LogoOfficiel version="blanc" className="w-[180px] h-auto" />
+    <footer className="border-t border-white/10 bg-[var(--marque-nuit)] mt-auto">
+      <div className="max-w-[1240px] mx-auto px-5 py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]">
+        {/* ---------- La marque ---------- */}
+        <div>
+          <Link
+            href="/public"
+            aria-label="Accueil CanCham Connect"
+            className="inline-block"
+          >
+            <LogoOfficiel version="blanc" className="w-[210px] h-auto" />
           </Link>
-          <span className="text-[12.5px] text-faint">
-            © {new Date().getFullYear()} CanCham · Le réseau Canada–Madagascar
-          </span>
+          <p className="m-0 mt-4 text-[13.5px] leading-relaxed text-white/70 max-w-[34ch]">
+            Chambre de Commerce et de Coopération Canada–Madagascar. Le pont
+            entre nos deux pays depuis 2016.
+          </p>
+          <div className="flex gap-2 mt-5">
+            <a
+              href={COORDONNEES.reseaux.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="CanCham sur LinkedIn"
+              className={reseau}
+            >
+              {/* Lucide n'a plus d'icônes de marques : le sigle du réseau
+                  fait l'affaire, et rien n'est à embarquer. */}
+              <span aria-hidden="true">in</span>
+            </a>
+            <a
+              href={COORDONNEES.reseaux.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="CanCham sur Facebook"
+              className={reseau}
+            >
+              <span aria-hidden="true">f</span>
+            </a>
+          </div>
         </div>
-        <nav
-          aria-label="Liens du pied de page"
-          className="flex flex-wrap gap-x-6 gap-y-3 text-[13px]"
-        >
-          <Link href="/public#evenements" className={lien}>
-            Événements
-          </Link>
-          <Link href="/auth/inscription" className={lien}>
+
+        {/* ---------- Les colonnes de liens ---------- */}
+        {COLONNES.map((c) => (
+          <nav key={c.titre} aria-label={c.titre}>
+            <h2 className="m-0 mb-4 text-[11.5px] font-bold uppercase tracking-[0.14em] text-white/55">
+              {c.titre}
+            </h2>
+            <ul className="list-none m-0 p-0 flex flex-col gap-3">
+              {c.liens.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className={lien}>
+                    {l.libelle}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
+
+        {/* ---------- Joindre la chambre ---------- */}
+        <div>
+          <h2 className="m-0 mb-4 text-[11.5px] font-bold uppercase tracking-[0.14em] text-white/55">
+            Contact
+          </h2>
+          <ul className="list-none m-0 p-0 flex flex-col gap-3 text-[13.5px] text-white/70">
+            <li className="flex items-start gap-2.5">
+              <MapPin size={15} className="mt-0.5 shrink-0 text-marque-rouge" />
+              {COORDONNEES.adresse}
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Mail size={15} className="mt-0.5 shrink-0 text-marque-rouge" />
+              <a href={`mailto:${COORDONNEES.email}`} className={lien}>
+                {COORDONNEES.email}
+              </a>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Phone size={15} className="mt-0.5 shrink-0 text-marque-rouge" />
+              <a
+                href={`tel:${chiffres(COORDONNEES.telephone)}`}
+                className={lien}
+              >
+                {COORDONNEES.telephone}
+              </a>
+            </li>
+          </ul>
+          <Link href="/auth/inscription" className="btn-action mt-6">
             Devenir membre
           </Link>
-          <Link href="/auth" className={lien}>
-            Espace membre
-          </Link>
+        </div>
+      </div>
+
+      {/* ---------- Bas de page ---------- */}
+      <div className="border-t border-white/10">
+        {/* Sur téléphone, la bulle d'assistance flotte au-dessus du coin
+            droit : on lui laisse la place plutôt que de la voir masquer le
+            copyright. */}
+        <div className="max-w-[1240px] mx-auto px-5 py-5 pb-20 sm:pb-5 flex flex-wrap items-center justify-between gap-3 text-[12.5px] text-white/50">
+          <span>
+            © {new Date().getFullYear()} CanCham Madagascar — Tous droits
+            réservés
+          </span>
           <a
-            href="https://cancham.mg"
+            href={COORDONNEES.site}
             target="_blank"
             rel="noopener noreferrer"
-            className={lien}
+            className="text-white/50 no-underline hover:text-white/80"
           >
             cancham.mg
           </a>
-        </nav>
+        </div>
       </div>
     </footer>
   );
