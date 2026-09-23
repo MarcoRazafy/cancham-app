@@ -1,13 +1,19 @@
 import Image from "next/image";
-import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
-import { ArrowRight, Newspaper } from "lucide-react";
+import { Newspaper } from "lucide-react";
+import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import { fmtDate } from "@/lib/format";
+import { dureeLecture } from "@/lib/texte";
 import type { ActualitePublique } from "@/lib/queries";
 
 /**
- * Une actualité sur la page publique : sa photo de couverture, sa catégorie,
- * sa date, son titre et son résumé. Toute la carte mène à l'article.
+ * Une actualité sur la page publique, sur le modèle du site de la chambre :
+ * la photo coiffe la carte, sa catégorie s'y pose en pastille, puis la date
+ * et le temps de lecture, le titre et le résumé. Toute la carte mène à
+ * l'article.
+ *
+ * La carte est claire : elle vit dans une bande blanche, non sur le bleu nuit
+ * du reste de la vitrine. Ses teintes sont donc écrites en clair.
  */
 export function CarteActualite({
   actualite: a,
@@ -15,53 +21,46 @@ export function CarteActualite({
   actualite: ActualitePublique;
 }) {
   const couverture = a.images[0];
+  const minutes = dureeLecture(a.corps || a.extrait);
   return (
     <Link
       href={`/public/actualites/${a.id}`}
-      className="group flex flex-col no-underline rounded-xl overflow-hidden bg-surface border border-line shadow-[var(--shadow)] transition-[border-color,box-shadow] hover:border-faint hover:shadow-[0_18px_40px_-22px_rgb(0_0_0/0.6)]"
+      className="group flex flex-col no-underline rounded-xl overflow-hidden bg-white transition-shadow duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:shadow-[0_20px_60px_rgba(15,29,44,0.12)]"
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-surface-3">
+      <div className="relative aspect-[16/9] overflow-hidden bg-[#e9edf2]">
         {couverture ? (
           <Image
             src={couverture}
             alt=""
             fill
-            sizes="(max-width: 768px) 100vw, 360px"
+            sizes="(max-width: 768px) 100vw, 420px"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
           <div
             aria-hidden
-            className="absolute inset-0 flex items-center justify-center text-white/70"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--marque-nuit-2), var(--marque-nuit-3))",
-            }}
+            className="absolute inset-0 flex items-center justify-center text-[#8797a6]"
           >
             <Newspaper size={34} />
           </div>
         )}
+        <span className="absolute left-4 bottom-4 rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--marque-nuit)] shadow-[0_2px_10px_rgba(15,29,44,0.18)]">
+          {a.cat}
+        </span>
       </div>
-      <div className="flex flex-col flex-1 p-5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="surtitre text-marque-vert">{a.cat}</span>
-          <span className="text-[12.5px] text-faint">· {fmtDate(a.date)}</span>
-        </div>
+
+      <div className="flex flex-col flex-1 p-6">
+        <span className="text-[12px] font-semibold uppercase tracking-[1px] text-[#6b6b6b]">
+          {fmtDate(a.date)} · {minutes} min de lecture
+        </span>
         <h3
-          className={`${TITRE_GRAS} text-[19px] leading-snug m-0 mt-2 text-ink`}
+          className={`${TITRE_GRAS} text-[22px] leading-[1.3] text-[var(--marque-nuit)] m-0 mt-3 mb-3.5`}
         >
           {a.titre}
         </h3>
-        <p className="m-0 mt-2 text-[14px] text-muted leading-relaxed line-clamp-3 flex-1">
+        <p className="m-0 text-[14px] leading-[1.6] text-[#6b6b6b] line-clamp-3">
           {a.extrait}
         </p>
-        <span className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-marque-vert">
-          Lire l’article{" "}
-          <ArrowRight
-            size={15}
-            className="transition-transform group-hover:translate-x-0.5"
-          />
-        </span>
       </div>
     </Link>
   );
