@@ -555,6 +555,63 @@ export default async function PublicHome() {
           </div>
         </section>
       ) : null}
+      {/* ==================== Newsletter ==================== */}
+      {/*
+        La bande du site de la chambre, avec son dégradé qui va du rouge au
+        vert en passant par le bleu nuit.
+
+        Le formulaire n'enregistre encore rien : la lettre d'information
+        n'existe pas — ni liste d'abonnés, ni envoi, ni désinscription. Le
+        bouton ne soumet donc pas, plutôt que de faire croire à une
+        inscription qui se perdrait.
+      */}
+      <section className="bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_30%,#0f1d2c_55%,#1b7e3e_85%,#0f5028_100%)] text-white">
+        <div className={`${CONTENEUR} py-20 text-center`}>
+          <span className="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-[18px] py-2 text-[12px] font-bold uppercase tracking-[2px]">
+            Restons en contact
+          </span>
+          <h2
+            className={`${TITRE_GRAS} text-[clamp(30px,4.2vw,52px)] leading-[1.05] m-0 mt-7`}
+          >
+            S’inscrire à notre newsletter
+          </h2>
+          <p className="m-0 mt-5 mx-auto max-w-[62ch] text-[16px] leading-[1.6] text-white/85">
+            Nos actualités, nos invitations en avant-première et nos ressources
+            exclusives, directement dans votre boîte mail. Désinscription à tout
+            moment.
+          </p>
+
+          <form className="mt-10 mx-auto flex max-w-[670px] flex-col gap-2.5">
+            <label className="sr-only" htmlFor="infolettre-prenom">
+              Prénom
+            </label>
+            <input
+              id="infolettre-prenom"
+              name="prenom"
+              autoComplete="given-name"
+              placeholder="Prénom"
+              className="h-13 rounded-md bg-white px-5 text-[15px] text-[var(--marque-nuit)] outline-none placeholder:text-[#8797a6] focus:ring-2 focus:ring-white/70"
+            />
+            <label className="sr-only" htmlFor="infolettre-email">
+              E-mail
+            </label>
+            <input
+              id="infolettre-email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="E-mail"
+              className="h-13 rounded-md bg-white px-5 text-[15px] text-[var(--marque-nuit)] outline-none placeholder:text-[#8797a6] focus:ring-2 focus:ring-white/70"
+            />
+            <button
+              type="button"
+              className="h-13 rounded-md bg-marque-rouge text-[15px] font-bold text-white transition-colors hover:bg-[#8f0606] cursor-pointer"
+            >
+              S’inscrire
+            </button>
+          </form>
+        </div>
+      </section>
     </>
   );
 }
