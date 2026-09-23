@@ -124,6 +124,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "programme",
     ton: "info",
   },
+  question_visiteur: {
+    libelle: "Question depuis le site",
+    famille: "programme",
+    ton: "info",
+  },
   inscription_validee: {
     libelle: "Inscription validée",
     famille: "programme",

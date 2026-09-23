@@ -1,3 +1,4 @@
+import { BulleAssistance } from "@/components/public/BulleAssistance";
 import { EnTetePublique, PiedPublique } from "@/components/public/CadreVitrine";
 import "./vitrine.css";
 
@@ -10,6 +11,9 @@ import "./vitrine.css";
  * Elles ne sont plus reliées à la connexion : l'espace public se limite
  * désormais à s'identifier ou à demander son adhésion. Elles restent en place,
  * atteignables par leur adresse, prêtes à resservir.
+ *
+ * La bulle d'assistance les accompagne toutes : une question se pose d'où
+ * qu'on la lise, sans compte.
  */
 export default function VitrineLayout({
   children,
@@ -21,6 +25,8 @@ export default function VitrineLayout({
       <EnTetePublique />
       {children}
       <PiedPublique />
+      {/* Qui n'a pas de compte pose sa question ici, sans quitter la page. */}
+      <BulleAssistance />
     </div>
   );
 }

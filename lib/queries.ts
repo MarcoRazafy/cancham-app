@@ -19,6 +19,7 @@ import {
 import { PROVISOIRE } from "@/lib/accueil";
 import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
 import { codeInscription, extraireCode } from "@/lib/codes-accueil";
+import { visiteurDuFil } from "@/lib/support-visiteur";
 import { prisma } from "@/lib/db";
 import { nomFacture } from "@/lib/factures";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
@@ -971,6 +972,19 @@ export async function getThreads(user: {
         nom: t.nom ?? EQUIPE,
         sousTitre: "Support membres",
         avatar: LOGO_EQUIPE,
+        membre: null,
+        contact: null,
+      };
+    } else if (visiteurDuFil(t.visiteur)) {
+      // Fil ouvert depuis la vitrine : la personne en face n'a pas de compte.
+      // Sans cela, l'équipe verrait le nom d'un collègue, faute de membre.
+      const v = visiteurDuFil(t.visiteur)!;
+      entete = {
+        nom: v.nom,
+        sousTitre: ["Visiteur du site", v.email, v.telephone]
+          .filter(Boolean)
+          .join(" · "),
+        avatar: null,
         membre: null,
         contact: null,
       };
