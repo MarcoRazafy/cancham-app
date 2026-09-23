@@ -18,6 +18,16 @@ import { getProchainsEvenements } from "@/lib/queries";
  * texte blanc sur blanc.
  */
 
+/**
+ * Le conteneur de la vitrine, mesuré sur cancham.mg : 1 320 pixels de contenu
+ * à 40 des bords. Notre page s'arrêtait à 1 120, centrés dans 1 400 — deux
+ * fois plus de vide sur les côtés que sur le site de la chambre.
+ *
+ * Toutes les sections publiques le partagent, en-tête et pied compris : un
+ * logo aligné sur un bord et un titre sur un autre se voit tout de suite.
+ */
+export const CONTENEUR = "max-w-[1400px] mx-auto px-5 md:px-10";
+
 /** Les liens de la barre, dans l'ordre où on les lit. */
 const LIENS = [
   { href: "/public", libelle: "Accueil" },
@@ -113,7 +123,9 @@ export async function EnTetePublique() {
           entrées et un logo ne tiennent pas sur 390 pixels, et les cacher
           rendrait le site impraticable là où on le consulte le plus.
         */}
-        <div className="max-w-[1240px] mx-auto px-4 sm:px-5 flex flex-wrap items-center justify-between gap-x-4 py-2.5 md:py-0 md:h-[72px]">
+        <div
+          className={`${CONTENEUR} flex flex-wrap items-center justify-between gap-x-4 py-2.5 md:py-0 md:h-[72px]`}
+        >
           <Link
             href="/public"
             aria-label="Accueil CanCham Connect"
@@ -189,7 +201,9 @@ export function PiedPublique() {
 
   return (
     <footer className="border-t border-white/10 bg-[var(--marque-nuit)] mt-auto">
-      <div className="max-w-[1240px] mx-auto px-5 py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]">
+      <div
+        className={`${CONTENEUR} py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]`}
+      >
         {/* ---------- La marque ---------- */}
         <div>
           <Link
@@ -282,7 +296,9 @@ export function PiedPublique() {
         {/* Sur téléphone, la bulle d'assistance flotte au-dessus du coin
             droit : on lui laisse la place plutôt que de la voir masquer le
             copyright. */}
-        <div className="max-w-[1240px] mx-auto px-5 py-5 pb-20 sm:pb-5 flex flex-wrap items-center justify-between gap-3 text-[12.5px] text-white/50">
+        <div
+          className={`${CONTENEUR} py-5 pb-20 sm:pb-5 flex flex-wrap items-center justify-between gap-3 text-[12.5px] text-white/50`}
+        >
           <span>
             © {new Date().getFullYear()} CanCham Madagascar — Tous droits
             réservés

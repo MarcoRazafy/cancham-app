@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { CONTENEUR } from "@/components/public/CadreVitrine";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -147,7 +148,7 @@ export default async function PublicHome() {
           <div className="absolute inset-0 bg-[var(--marque-nuit)]/22" />
         </div>
 
-        <div className="relative max-w-[1120px] mx-auto px-5 pt-10 md:pt-14 pb-0">
+        <div className={`relative ${CONTENEUR} pt-10 md:pt-14 pb-0`}>
           <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center">
             <div>
               <span
@@ -252,7 +253,7 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== À qui nous parlons ==================== */}
-      <section className="max-w-[1120px] mx-auto px-5 pt-10">
+      <section className={`${CONTENEUR} pt-10`}>
         <div className="apparition-defilement">
           <span className="surtitre text-marque-rouge inline-flex items-center gap-3">
             <span aria-hidden="true" className="w-8 h-px bg-marque-rouge" />À
@@ -311,7 +312,7 @@ export default async function PublicHome() {
 
       {/* ==================== Événements ==================== */}
       <section id="evenements" className="scroll-mt-[124px]">
-        <div className="max-w-[1120px] mx-auto px-5 pt-10 pb-8">
+        <div className={`${CONTENEUR} pt-10 pb-8`}>
           <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
             <div className="flex items-end justify-between gap-6 flex-wrap">
               <div>
@@ -352,7 +353,7 @@ export default async function PublicHome() {
       {/* ==================== Actualités ==================== */}
       {actualites.length ? (
         <section id="actualites" className="scroll-mt-[124px]">
-          <div className="max-w-[1120px] mx-auto px-5 pb-16">
+          <div className={`${CONTENEUR} pb-16`}>
             <div className="apparition-defilement">
               <span className="surtitre text-marque-vert">
                 La vie de la chambre
