@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
+import { visiteurDuFil } from "@/lib/support-visiteur";
 import type { PieceJointe } from "@/lib/types";
 
 /**
@@ -195,9 +196,10 @@ export async function supportEquipe(userId: string): Promise<{
 
   const fils = lignes
     .map((t): ResumeSupport => {
+      const visiteur = visiteurDuFil(t.visiteur);
       const membre = membreDuFil(t.participants);
       const dernier = t.messages[0];
-      const nom = membre?.nom ?? "Conversation";
+      const nom = visiteur?.nom ?? membre?.nom ?? "Conversation";
       let apercu = "Nouvelle conversation";
       if (dernier) {
         const corps = dernier.supprimeLe
@@ -206,15 +208,21 @@ export async function supportEquipe(userId: string): Promise<{
         apercu =
           dernier.userId === userId
             ? `Vous : ${corps}`
-            : dernier.userId === membre?.id
+            : // Le visiteur n'a pas de compte : ses messages n'ont pas d'auteur
+              // connu, et c'est bien lui qui parle.
+              dernier.userId === null || dernier.userId === membre?.id
               ? corps
               : `${dernier.auteur.split(" ")[0]} : ${corps}`;
       }
       return {
         id: t.id,
         nom,
-        sousTitre: membre?.member?.nom ?? "",
-        avatar: membre?.photo ?? null,
+        sousTitre: visiteur
+          ? ["Visiteur du site", visiteur.email, visiteur.telephone]
+              .filter(Boolean)
+              .join(" · ")
+          : (membre?.member?.nom ?? ""),
+        avatar: visiteur ? null : (membre?.photo ?? null),
         init: initialesDe(nom),
         nonLus: compte.get(t.id) ?? 0,
         apercu,
@@ -244,17 +252,22 @@ export async function conversationEquipe(
   });
   if (!t) return null;
 
+  const visiteur = visiteurDuFil(t.visiteur);
   const membre = membreDuFil(t.participants);
   const [compte, messages] = await Promise.all([
     nonLusParFil(userId),
     messagesDe(t.id, userId),
   ]);
-  const nom = membre?.nom ?? "Conversation";
+  const nom = visiteur?.nom ?? membre?.nom ?? "Conversation";
   return {
     id: t.id,
     nom,
-    sousTitre: membre?.member?.nom ?? "",
-    avatar: membre?.photo ?? null,
+    sousTitre: visiteur
+      ? ["Visiteur du site", visiteur.email, visiteur.telephone]
+          .filter(Boolean)
+          .join(" · ")
+      : (membre?.member?.nom ?? ""),
+    avatar: visiteur ? null : (membre?.photo ?? null),
     init: initialesDe(nom),
     membreId: membre?.member?.id ?? null,
     nonLus: compte.get(t.id) ?? 0,

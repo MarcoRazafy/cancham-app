@@ -292,3 +292,60 @@ export function courrielInscriptionEnAttente(
     }),
   };
 }
+
+/**
+ * Une personne sans compte vient d'écrire depuis la vitrine.
+ *
+ * L'équipe n'est pas forcément devant le back-office : l'alerte porte la
+ * question et de quoi rappeler, sans avoir à ouvrir quoi que ce soit.
+ */
+export function courrielQuestionVisiteur(
+  a: string,
+  d: {
+    nom: string;
+    email: string;
+    telephone: string;
+    question: string;
+    lien: string;
+  },
+): Courriel {
+  return {
+    a,
+    sujet: `Question depuis le site : ${d.nom}`,
+    ...gabarit({
+      titre: "Une question posée depuis le site",
+      paragraphes: [
+        `${d.nom} vient d’écrire à l’équipe depuis la page publique.`,
+        `Pour la rappeler : ${d.telephone} · ${d.email}`,
+        "Sa question :",
+        d.question,
+        "La réponse écrite dans l’assistance lui parvient aussitôt, et un e-mail la prévient.",
+      ],
+      bouton: { libelle: "Répondre dans l’assistance", url: d.lien },
+    }),
+  };
+}
+
+/** L'équipe a répondu à un visiteur : il n'a pas de compte, on l'en avertit. */
+export function courrielReponseVisiteur(
+  a: string,
+  d: { nom: string; reponse: string; lien: string },
+): Courriel {
+  return {
+    a,
+    sujet: "L’équipe CanCham vous a répondu",
+    ...gabarit({
+      titre: "L’équipe CanCham vous a répondu",
+      paragraphes: [
+        `Bonjour ${prenom(d.nom)},`,
+        "Voici la réponse de l’équipe à votre question :",
+        d.reponse,
+        "Vous pouvez poursuivre la conversation depuis le site, dans la bulle d’assistance en bas de page.",
+      ],
+      bouton: { libelle: "Poursuivre la conversation", url: d.lien },
+      apres: [
+        "Vous pouvez aussi répondre directement à ce message : il arrive à l’équipe CanCham.",
+      ],
+    }),
+  };
+}

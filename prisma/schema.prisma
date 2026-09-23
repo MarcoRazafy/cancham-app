@@ -601,6 +601,14 @@ model MessageThread {
   /// Toute l'équipe y participe, et chacun de ses membres y voit le membre.
   equipe Boolean    @default(false)
 
+  /// Fil ouvert depuis la vitrine par une personne sans compte : ce qu'elle a
+  /// donné d'elle — nom, adresse et téléphone (voir `Visiteur`). `null` pour
+  /// un fil de membre.
+  visiteur    Json?
+  /// Clé du visiteur, gardée dans son navigateur. Elle seule rouvre son fil :
+  /// sans compte, c'est ce qui tient lieu de session.
+  visiteurCle String? @unique
+
   createdAt DateTime @default(now())
 
   messages     Message[]

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { MOTIFS_CONTACT } from "@/lib/coordonnees";
 import { prisma } from "@/lib/db";
+import { prevenirVisiteur } from "@/lib/support-visiteur";
 import { ecrireAEquipe } from "@/lib/fil-equipe";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtMoney } from "@/lib/format";
@@ -138,6 +140,9 @@ export async function sendMessage(formData: FormData) {
     where: { threadId_userId: { threadId, userId: user.id } },
     data: { luLe: maintenant },
   });
+
+  // Un visiteur du site n'a pas de plateforme où lire la réponse.
+  after(() => prevenirVisiteur(threadId, contenu));
 
   revalidatePath("/", "layout");
   redirect(retour);
@@ -725,6 +730,8 @@ export async function ecrireAuSupport(
     where: { threadId_userId: { threadId: fil.id, userId: user.id } },
     data: { luLe: maintenant },
   });
+
+  after(() => prevenirVisiteur(fil.id, contenu));
 
   revalidatePath("/", "layout");
   return { ok: true, threadId: fil.id };
