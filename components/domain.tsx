@@ -16,7 +16,7 @@ import {
   User as UserIcon,
   Users,
 } from "lucide-react";
-import { Card, Pill, StatusPill } from "@/components/ui";
+import { Card, Pill } from "@/components/ui";
 import { Partage } from "@/components/Partage";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
@@ -350,13 +350,15 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
             <PuceSecteur secteur={member.secteur} />
           </div>
         </div>
-        <div className="flex gap-1.5 flex-wrap px-4 pb-3">
-          <Pill icon={<MapPin size={10} />}>{member.ville}</Pill>
-          {member.type === "physique" ? (
+        {/*
+          Ni la ville ni l'état de la cotisation : l'annuaire présente des
+          entreprises, pas leur situation vis-à-vis de la chambre.
+        */}
+        {member.type === "physique" ? (
+          <div className="flex gap-1.5 flex-wrap px-4 pb-3">
             <Pill icon={<UserIcon size={10} />}>Indépendant</Pill>
-          ) : null}
-          <StatusPill status={member.statut} />
-        </div>
+          </div>
+        ) : null}
         <p className="px-4 text-[12.8px] text-muted flex-1 m-0">
           {/* La carte entière est un lien : pas de `<a>` dans le `<a>`. */}
           <TexteLie texte={member.activite} dansUnLien />
