@@ -25,7 +25,7 @@ const LIENS = [
 ];
 
 const lien =
-  "inline-flex items-center px-2.5 md:px-3 lg:px-3.5 py-1.5 md:py-2 rounded-[6px] text-[13px] md:text-[13.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] hover:bg-[#f3f5f8]";
+  "inline-flex items-center px-2.5 md:px-3 lg:px-4 py-1.5 md:py-2 rounded-[6px] text-[13.5px] md:text-[14.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] hover:bg-[#f3f5f8]";
 
 /** Ce que le bandeau annonce quand aucun événement n'est programmé. */
 const ANNONCES_PAR_DEFAUT = [
@@ -105,7 +105,7 @@ export async function EnTetePublique() {
       </div>
 
       {/* ---------- Barre de navigation ---------- */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-[#e3e8ee]">
+      <div className="bg-white/95 backdrop-blur-sm border-b border-[#e3e8ee] text-[#3d4b5c]">
         {/*
           Sur téléphone, les liens passent d'eux-mêmes sous le logo : cinq
           entrées et un logo ne tiennent pas sur 390 pixels, et les cacher
@@ -123,10 +123,7 @@ export async function EnTetePublique() {
             />
           </Link>
 
-          <Link
-            href="/auth"
-            className="order-2 md:order-3 inline-flex items-center rounded-[6px] bg-marque-rouge px-4 sm:px-5 py-2.5 text-[12px] sm:text-[12.5px] font-bold uppercase tracking-[0.05em] text-white no-underline whitespace-nowrap transition-colors hover:bg-[#8f0606]"
-          >
+          <Link href="/auth" className="btn-action order-2 md:order-3 shrink-0">
             Se connecter
           </Link>
 
