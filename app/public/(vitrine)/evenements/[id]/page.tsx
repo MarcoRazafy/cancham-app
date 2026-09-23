@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { CONTENEUR } from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -62,7 +63,7 @@ export default async function EvenementPublic({
 
   return (
     <>
-      <main className="max-w-[1120px] mx-auto px-5 py-10 w-full">
+      <main className={`${CONTENEUR} py-10 w-full`}>
         <Link
           href="/public#evenements"
           className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
