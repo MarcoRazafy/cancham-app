@@ -10,7 +10,7 @@ import {
   MapPin,
   Users,
 } from "lucide-react";
-import { CarrouselEvenements } from "@/components/public/CarrouselEvenements";
+import { CarrouselCartes } from "@/components/public/CarrouselCartes";
 import { CarteEvenement } from "@/components/public/CarteEvenement";
 import { InscriptionPublique } from "@/components/public/InscriptionPublique";
 import { visuelEvenement } from "@/lib/images-publiques";
@@ -258,7 +258,10 @@ export default async function EvenementPublic({
                 </span>
               </div>
 
-              <CarrouselEvenements debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0">
+              <CarrouselCartes
+                debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0"
+                libelle="Autres rendez-vous"
+              >
                 {autres.map(({ evenement, rang }) => (
                   <CarteEvenement
                     key={evenement.id}
@@ -266,7 +269,7 @@ export default async function EvenementPublic({
                     index={rang}
                   />
                 ))}
-              </CarrouselEvenements>
+              </CarrouselCartes>
             </div>
           </section>
         ) : null}
