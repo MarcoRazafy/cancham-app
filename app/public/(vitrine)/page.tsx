@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CONTENEUR } from "@/components/public/CadreVitrine";
+import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -174,7 +174,9 @@ export default async function PublicHome() {
                 Le réseau Canada–Madagascar
               </span>
 
-              <h1 className="text-[clamp(34px,5.2vw,58px)] leading-[1.08] m-0 mt-5">
+              <h1
+                className={`${TITRE_GRAS} text-[clamp(34px,5.2vw,58px)] leading-[1.08] m-0 mt-5`}
+              >
                 <span
                   className="apparition block"
                   style={{ animationDelay: "0.16s" }}
@@ -281,7 +283,9 @@ export default async function PublicHome() {
               One n'ayant qu'une graisse, il passe comme les cartes à la fonte
               de texte, en 700 — les `!` devancent la règle des h2 de la marque.
             */}
-            <h2 className="font-[family-name:var(--font-texte)]! font-bold! text-[clamp(30px,4.4vw,58px)] leading-[1.06] tracking-[-0.015em] m-0">
+            <h2
+              className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,58px)] leading-[1.06] m-0`}
+            >
               Vous avez votre place <Saillant>chez nous.</Saillant>
             </h2>
             <p className="m-0 text-[15px] text-muted leading-relaxed">
@@ -314,7 +318,9 @@ export default async function PublicHome() {
                   `!` passent devant la règle qui coiffe tous les h3 de la
                   marque.
                 */}
-                <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[26px] leading-[1.2] text-[var(--marque-nuit)] m-0 mt-6 mb-3.5">
+                <h3
+                  className={`${TITRE_GRAS} text-[26px] leading-[1.2] text-[var(--marque-nuit)] m-0 mt-6 mb-3.5`}
+                >
                   {p.titre}
                 </h3>
                 <p className="m-0 text-[15px] leading-[1.6] text-[#6b6b6b]">
@@ -357,7 +363,9 @@ export default async function PublicHome() {
                 <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
                 Rejoindre la communauté
               </span>
-              <h2 className="font-[family-name:var(--font-texte)]! font-bold! text-[clamp(30px,4.2vw,54px)] leading-[1.05] tracking-[-0.015em] m-0 mt-3 mb-6">
+              <h2
+                className={`${TITRE_GRAS} text-[clamp(30px,4.2vw,54px)] leading-[1.05] m-0 mt-3 mb-6`}
+              >
                 Devenir{" "}
                 <span className="italic font-semibold text-[#ad0707]">
                   membre,
@@ -405,7 +413,9 @@ export default async function PublicHome() {
               <span className="surtitre text-[#ad0707]">
                 Choisissez votre formule
               </span>
-              <h3 className="font-[family-name:var(--font-texte)]! font-bold! text-[30px] leading-[1.15] text-[var(--marque-nuit)] m-0 mt-2.5">
+              <h3
+                className={`${TITRE_GRAS} text-[30px] leading-[1.15] text-[var(--marque-nuit)] m-0 mt-2.5`}
+              >
                 Cinq manières
                 <br />
                 de nous rejoindre.
@@ -460,7 +470,9 @@ export default async function PublicHome() {
                 <span className="surtitre text-marque-rouge">
                   Rencontrons-nous
                 </span>
-                <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
+                <h2
+                  className={`${TITRE_GRAS} text-[clamp(28px,4vw,40px)] m-0 mt-2.5`}
+                >
                   Les prochains <Saillant>rendez-vous</Saillant>
                 </h2>
                 <p className="text-[15px] text-muted m-0 mt-2.5">
@@ -499,7 +511,9 @@ export default async function PublicHome() {
               <span className="surtitre text-marque-vert">
                 La vie de la chambre
               </span>
-              <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
+              <h2
+                className={`${TITRE_GRAS} text-[clamp(28px,4vw,40px)] m-0 mt-2.5`}
+              >
                 Les dernières <Saillant ton="vert">actualités</Saillant>
               </h2>
               <p className="text-[15px] text-muted m-0 mt-2.5">

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { ArrowRight, Clock, MapPin } from "lucide-react";
 import { plageHoraire } from "@/lib/agenda";
@@ -62,7 +63,7 @@ export function CarteEvenement({
           <span className="surtitre text-faint">{categorie(evenement)}</span>
         </div>
 
-        <h3 className="titre text-[19px] m-0 mb-2.5 text-ink">
+        <h3 className={`${TITRE_GRAS} text-[19px] m-0 mb-2.5 text-ink`}>
           {evenement.titre}
         </h3>
 
