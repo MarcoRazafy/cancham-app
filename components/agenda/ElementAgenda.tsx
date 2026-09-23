@@ -8,8 +8,11 @@ import {
 } from "@/lib/agenda";
 
 /**
- * Teintes par type d'élément. Classes écrites en entier : Tailwind ne voit
- * pas les noms composés à l'exécution.
+ * Teintes par type d'élément : des aplats francs, lisibles d'un coup d'œil
+ * dans une case de calendrier — un pastel se confond avec le fond.
+ *
+ * Classes écrites en entier : Tailwind ne voit pas les noms composés à
+ * l'exécution.
  */
 export const TEINTES: Record<
   TypeElement,
@@ -17,32 +20,35 @@ export const TEINTES: Record<
 > = {
   evenement: {
     point: "bg-navy",
-    puce: "bg-navy-soft text-navy",
+    puce: "bg-navy text-white",
     bord: "border-l-navy",
   },
   inscription: {
     point: "bg-success",
-    puce: "bg-success-soft text-success-strong",
+    puce: "bg-success text-white",
     bord: "border-l-success",
   },
   echeance: {
     point: "bg-accent",
-    puce: "bg-accent-soft text-accent",
+    puce: "bg-accent text-white",
     bord: "border-l-accent",
   },
-  // Prune écrite en clair : le jeton `bad` vire au rouge dans l'espace membre,
+  // Prune écrite en clair : le jeton `bad` vire au rouge dans le back-office,
   // où le rendez-vous se confondrait alors avec une échéance.
   rendezvous: {
     point: "bg-[#5b4b8a]",
-    puce: "bg-[#ebe7f5] text-[#463a70]",
+    puce: "bg-[#5b4b8a] text-white",
     bord: "border-l-[#5b4b8a]",
   },
   rappel: {
     point: "bg-warn",
-    puce: "bg-warn-soft text-warn",
+    puce: "bg-warn text-white",
     bord: "border-l-warn",
   },
 };
+
+/** Une échéance dépassée : le rouge de la charte, poussé plus sombre. */
+const URGENT = "bg-accent-strong text-white";
 
 /** Étiquette d'un élément sur sa carte. */
 const ETIQUETTES: Record<TypeElement, string> = {
@@ -62,7 +68,7 @@ export function PuceAgenda({ element: e }: { element: ElementAgenda }) {
     <span
       title={e.titre}
       className={`block truncate text-[11.5px] leading-[1.35] font-semibold px-1.5 py-[2px] rounded-[5px] ${
-        e.urgent ? "bg-bad text-white" : TEINTES[e.type].puce
+        e.urgent ? URGENT : TEINTES[e.type].puce
       } ${effacement(e)} ${e.fait ? "line-through" : ""}`}
     >
       {e.debut ? (
@@ -97,7 +103,9 @@ export function CarteElement({
             {ETIQUETTES[e.type]}
           </span>
           {e.urgent ? (
-            <span className="inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-[0.04em] px-2 py-[2px] rounded-full bg-bad text-white">
+            <span
+              className={`inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-[0.04em] px-2 py-[2px] rounded-full ${URGENT}`}
+            >
               <AlertTriangle size={11} /> Dépassée
             </span>
           ) : null}
@@ -133,7 +141,7 @@ export function CarteElement({
   );
 
   const cadre = `flex items-start gap-3 p-3 pl-3.5 rounded-[var(--radius-s)] border border-line border-l-4 bg-surface ${
-    e.urgent ? "border-l-bad" : TEINTES[e.type].bord
+    e.urgent ? "border-l-accent-strong" : TEINTES[e.type].bord
   }`;
 
   if (e.href) {

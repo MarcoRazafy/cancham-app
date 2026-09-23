@@ -26,14 +26,15 @@ export function CarteRendezvous({
     // Sur un téléphone, le bouton passe sous le contenu plutôt que de lui
     // voler sa largeur : le motif se lit en entier.
     <Card className="p-3.5 flex flex-wrap items-start gap-3.5">
-      <div className="w-[58px] shrink-0 text-center rounded-[var(--radius-s)] border border-line bg-surface-2 py-1.5">
-        <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-accent">
+      {/* La prune des rendez-vous dans l'agenda : même couleur, même lecture. */}
+      <div className="w-[58px] shrink-0 text-center rounded-[var(--radius-s)] bg-[#5b4b8a] text-white py-1.5">
+        <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-white/75">
           {fmtJour(rdv.jour, { month: "short" }).replace(".", "")}
         </div>
         <div className="text-[21px] font-semibold leading-none my-[3px] tabular-nums">
           {fmtJour(rdv.jour, { day: "numeric" })}
         </div>
-        <div className="text-[10.5px] text-faint">
+        <div className="text-[10.5px] text-white/70">
           {fmtJour(rdv.jour, { weekday: "short" }).replace(".", "")}
         </div>
       </div>

@@ -27,13 +27,21 @@ const lien = (c: { type?: string; jour?: string; h?: string }) => {
   return s ? `${BASE}?${s}` : BASE;
 };
 
-/** Cadre commun d'un choix : sélectionné, il porte la couleur de la chambre. */
+/**
+ * Cadre commun d'un choix. Sélectionné, il prend le rouge plein de la
+ * chambre : à côté d'une dizaine de cases claires, un aplat se voit d'un coup
+ * d'œil là où un pastel se devine.
+ */
 const choix = (actif: boolean) =>
   `no-underline rounded-[var(--radius-s)] border transition-colors ${
     actif
-      ? "border-accent bg-accent-soft text-accent"
+      ? "border-accent bg-accent text-white"
       : "border-line bg-surface text-ink hover:border-faint hover:bg-surface-2"
   }`;
+
+/** Les lignes secondaires d'un choix, lisibles sur l'aplat comme sur le blanc. */
+const secondaire = (actif: boolean) => (actif ? "text-white/85" : "text-muted");
+const tertiaire = (actif: boolean) => (actif ? "text-white/70" : "text-faint");
 
 function Etape({
   n,
@@ -50,7 +58,7 @@ function Etape({
     <div className="flex gap-3">
       <div
         aria-hidden
-        className="w-7 h-7 shrink-0 rounded-full bg-accent-soft text-accent text-[12.5px] font-bold flex items-center justify-center"
+        className="w-7 h-7 shrink-0 rounded-full bg-accent text-white text-[12.5px] font-bold flex items-center justify-center"
       >
         {n}
       </div>
@@ -95,25 +103,30 @@ export function Reservation({
     <Card className="p-4 sm:p-5 flex flex-col gap-5">
       <Etape n={1} titre="Choisissez le type de rendez-vous">
         <div className="grid gap-2.5 sm:grid-cols-2">
-          {types.map((t) => (
-            <Link
-              key={t.id}
-              href={lien({ type: t.id })}
-              scroll={false}
-              aria-current={t.id === type?.id ? "true" : undefined}
-              className={`${choix(t.id === type?.id)} block p-3`}
-            >
-              <div className="text-[13.8px] font-semibold">{t.titre}</div>
-              {t.detail ? (
-                <div className="text-[12.4px] text-muted mt-0.5">
-                  {t.detail}
+          {types.map((t) => {
+            const actif = t.id === type?.id;
+            return (
+              <Link
+                key={t.id}
+                href={lien({ type: t.id })}
+                scroll={false}
+                aria-current={actif ? "true" : undefined}
+                className={`${choix(actif)} block p-3`}
+              >
+                <div className="text-[13.8px] font-semibold">{t.titre}</div>
+                {t.detail ? (
+                  <div className={`text-[12.4px] mt-0.5 ${secondaire(actif)}`}>
+                    {t.detail}
+                  </div>
+                ) : null}
+                <div
+                  className={`text-[12px] mt-1 inline-flex items-center gap-1 ${tertiaire(actif)}`}
+                >
+                  <Clock size={12} /> {t.duree} minutes
                 </div>
-              ) : null}
-              <div className="text-[12px] text-faint mt-1 inline-flex items-center gap-1">
-                <Clock size={12} /> {t.duree} minutes
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </Etape>
 
@@ -125,25 +138,28 @@ export function Reservation({
         >
           {jours.length ? (
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {jours.map((j) => (
-                <Link
-                  key={j.jour}
-                  href={lien({ type: type.id, jour: j.jour })}
-                  scroll={false}
-                  aria-current={j.jour === jour ? "true" : undefined}
-                  className={`${choix(j.jour === jour)} shrink-0 w-[68px] text-center px-2 py-2`}
-                >
-                  <div className="text-[10.5px] font-bold uppercase tracking-[0.05em]">
-                    {fmtJour(j.jour, { weekday: "short" }).replace(".", "")}
-                  </div>
-                  <div className="text-[18px] font-semibold leading-tight tabular-nums">
-                    {fmtJour(j.jour, { day: "numeric" })}
-                  </div>
-                  <div className="text-[10.5px] text-faint">
-                    {fmtJour(j.jour, { month: "short" }).replace(".", "")}
-                  </div>
-                </Link>
-              ))}
+              {jours.map((j) => {
+                const actif = j.jour === jour;
+                return (
+                  <Link
+                    key={j.jour}
+                    href={lien({ type: type.id, jour: j.jour })}
+                    scroll={false}
+                    aria-current={actif ? "true" : undefined}
+                    className={`${choix(actif)} shrink-0 w-[68px] text-center px-2 py-2`}
+                  >
+                    <div className="text-[10.5px] font-bold uppercase tracking-[0.05em]">
+                      {fmtJour(j.jour, { weekday: "short" }).replace(".", "")}
+                    </div>
+                    <div className="text-[18px] font-semibold leading-tight tabular-nums">
+                      {fmtJour(j.jour, { day: "numeric" })}
+                    </div>
+                    <div className={`text-[10.5px] ${tertiaire(actif)}`}>
+                      {fmtJour(j.jour, { month: "short" }).replace(".", "")}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <p className="m-0 text-[13px] text-muted flex items-start gap-2">
