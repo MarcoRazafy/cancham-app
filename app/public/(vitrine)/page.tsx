@@ -309,14 +309,18 @@ export default async function PublicHome() {
           </div>
 
           {/*
-            Le modèle invite à s'abonner à une lettre d'information ; la
-            plateforme n'en a pas. L'invitation qu'elle sait tenir, c'est
-            l'adhésion.
+            Le bouton du modèle, avec son halo rouge. Il ne mène nulle part
+            pour l'instant : la lettre d'information n'existe pas encore —
+            pas de liste d'abonnés, pas d'envoi, pas de désinscription. Le
+            jour où elle existera, il aura sa destination.
           */}
           <div className="flex justify-center mt-9">
-            <Link href="/auth/inscription" className="btn-action">
-              Devenir membre <ArrowRight size={17} />
-            </Link>
+            <button
+              type="button"
+              className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
+            >
+              S’inscrire à notre newsletter <ArrowRight size={17} />
+            </button>
           </div>
         </div>
       </section>
