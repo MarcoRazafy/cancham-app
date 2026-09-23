@@ -341,70 +341,6 @@ export default async function PublicHome() {
         </div>
       </section>
 
-      {/* ==================== Événements ==================== */}
-      <section id="evenements" className="scroll-mt-[124px]">
-        <div className={`${CONTENEUR} pt-10 pb-8`}>
-          <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
-            <div className="flex items-end justify-between gap-6 flex-wrap">
-              <div>
-                <span className="surtitre text-marque-rouge">
-                  Rencontrons-nous
-                </span>
-                <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
-                  Les prochains <Saillant>rendez-vous</Saillant>
-                </h2>
-                <p className="text-[15px] text-muted m-0 mt-2.5">
-                  Des rencontres pour apprendre, échanger et créer des liens.
-                </p>
-              </div>
-              {evenements.length ? (
-                <span className="text-[13px] text-faint">
-                  {evenements.length} à venir
-                </span>
-              ) : null}
-            </div>
-
-            {evenements.length ? (
-              <div className="mt-8">
-                <CarrouselEvenements debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0">
-                  {evenements.map((e, i) => (
-                    <CarteEvenement key={e.id} evenement={e} index={i} />
-                  ))}
-                </CarrouselEvenements>
-              </div>
-            ) : (
-              <p className="text-muted mt-8 mb-0">
-                Aucun rendez-vous programmé pour le moment.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== Actualités ==================== */}
-      {actualites.length ? (
-        <section id="actualites" className="scroll-mt-[124px]">
-          <div className={`${CONTENEUR} pb-16`}>
-            <div className="apparition-defilement">
-              <span className="surtitre text-marque-vert">
-                La vie de la chambre
-              </span>
-              <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
-                Les dernières <Saillant ton="vert">actualités</Saillant>
-              </h2>
-              <p className="text-[15px] text-muted m-0 mt-2.5">
-                Ce qui se passe au sein du réseau CanCham.
-              </p>
-              <div className="grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
-                {actualites.map((a) => (
-                  <CarteActualite key={a.id} actualite={a} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       {/* ==================== Devenir membre ==================== */}
       {/*
         Une bande claire au bas d'une page sombre, comme sur cancham.mg : la
@@ -506,6 +442,70 @@ export default async function PublicHome() {
           </div>
         </div>
       </section>
+
+      {/* ==================== Événements ==================== */}
+      <section id="evenements" className="scroll-mt-[124px]">
+        <div className={`${CONTENEUR} pt-10 pb-8`}>
+          <div className="apparition-defilement overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow)] p-5 md:p-10">
+            <div className="flex items-end justify-between gap-6 flex-wrap">
+              <div>
+                <span className="surtitre text-marque-rouge">
+                  Rencontrons-nous
+                </span>
+                <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
+                  Les prochains <Saillant>rendez-vous</Saillant>
+                </h2>
+                <p className="text-[15px] text-muted m-0 mt-2.5">
+                  Des rencontres pour apprendre, échanger et créer des liens.
+                </p>
+              </div>
+              {evenements.length ? (
+                <span className="text-[13px] text-faint">
+                  {evenements.length} à venir
+                </span>
+              ) : null}
+            </div>
+
+            {evenements.length ? (
+              <div className="mt-8">
+                <CarrouselEvenements debord="-mx-5 px-5 scroll-px-5 md:mx-0 md:px-0 md:scroll-px-0">
+                  {evenements.map((e, i) => (
+                    <CarteEvenement key={e.id} evenement={e} index={i} />
+                  ))}
+                </CarrouselEvenements>
+              </div>
+            ) : (
+              <p className="text-muted mt-8 mb-0">
+                Aucun rendez-vous programmé pour le moment.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== Actualités ==================== */}
+      {actualites.length ? (
+        <section id="actualites" className="scroll-mt-[124px]">
+          <div className={`${CONTENEUR} pb-16`}>
+            <div className="apparition-defilement">
+              <span className="surtitre text-marque-vert">
+                La vie de la chambre
+              </span>
+              <h2 className="titre text-[clamp(28px,4vw,40px)] m-0 mt-2.5">
+                Les dernières <Saillant ton="vert">actualités</Saillant>
+              </h2>
+              <p className="text-[15px] text-muted m-0 mt-2.5">
+                Ce qui se passe au sein du réseau CanCham.
+              </p>
+              <div className="grid gap-5 mt-8 md:grid-cols-2 lg:grid-cols-3">
+                {actualites.map((a) => (
+                  <CarteActualite key={a.id} actualite={a} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }
