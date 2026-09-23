@@ -164,6 +164,16 @@ const COLONNES = [
   },
 ];
 
+/** Les pages légales de la chambre, et son site : elles vivent ailleurs. */
+const LEGAL = [
+  { libelle: "Mentions légales", href: COORDONNEES.legal.mentions },
+  {
+    libelle: "Politique de confidentialité",
+    href: COORDONNEES.legal.confidentialite,
+  },
+  { libelle: "cancham.mg", href: COORDONNEES.site },
+];
+
 /**
  * Pied de la vitrine, sur le modèle du site cancham.mg.
  *
@@ -277,14 +287,22 @@ export function PiedPublique() {
             © {new Date().getFullYear()} CanCham Madagascar — Tous droits
             réservés
           </span>
-          <a
-            href={COORDONNEES.site}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white/50 no-underline hover:text-white/80"
+          <nav
+            aria-label="Informations légales"
+            className="flex flex-wrap gap-x-6 gap-y-2"
           >
-            cancham.mg
-          </a>
+            {LEGAL.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/50 no-underline hover:text-white/80"
+              >
+                {l.libelle}
+              </a>
+            ))}
+          </nav>
         </div>
       </div>
     </footer>

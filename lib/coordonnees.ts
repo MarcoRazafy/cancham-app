@@ -24,6 +24,18 @@ export const COORDONNEES = {
   /** Non publiés sur le site. `null` masque l'entrée. */
   horaires: null as string | null,
 
+  /**
+   * Pages légales de la chambre, hébergées avec son site de formation.
+   *
+   * Vérifiées en HTTP 200 le 23 septembre 2026. L'adresse annoncée pour la
+   * confidentialité, sur `cancham.systeme.io`, ne répond pas — ce domaine
+   * n'existe pas ; la page vit sur `formation.cancham.mg`, au chemin donné.
+   */
+  legal: {
+    mentions: "https://www.formation.cancham.mg/mentionslegales",
+    confidentialite: "https://www.formation.cancham.mg/contidentialite",
+  },
+
   reseaux: {
     linkedin:
       "https://www.linkedin.com/company/cancham-madagascar-chambre-de-commerce-et-de-coop%C3%A9ration-canada-madagascar/",
