@@ -65,13 +65,16 @@ const nextConfig: NextConfig = {
   },
 
   /**
-   * Anciennes adresses, avant que la connexion passe sous `/auth`.
+   * Anciennes adresses.
    *
-   * Des e-mails déjà envoyés les portent — liens de réinitialisation,
-   * d'invitation, de connexion : ils doivent continuer de fonctionner. Les
-   * paramètres (`?jeton=`, `?email=`) suivent la redirection. `/public` seul
-   * est désormais la vitrine ; avec un paramètre de connexion, c'était la
-   * page de connexion.
+   * Deux déménagements se cumulent ici. D'abord la connexion, passée sous
+   * `/auth` ; ensuite la vitrine, montée de `/public` à la racine du domaine
+   * — `cancham.mg/actualites/…` plutôt que `cancham.mg/public/actualites/…`.
+   *
+   * Des e-mails déjà envoyés portent les anciennes : liens de
+   * réinitialisation, d'invitation, billets d'événement. Ils doivent
+   * continuer de fonctionner, paramètres compris (`?jeton=`, `?code=`).
+   * L'ordre compte : les adresses précises passent avant la règle générale.
    */
   async redirects() {
     const versAuth = (sous: string) => ({
@@ -92,7 +95,10 @@ const nextConfig: NextConfig = {
       ...["email", "erreur", "suite", "attente", "demande", "inscrit"].map(
         connexionAvec,
       ),
-      { source: "/public/vitrine", destination: "/public", permanent: true },
+      { source: "/public/vitrine", destination: "/", permanent: true },
+      // La vitrine a quitté `/public` : tout ce qui y menait suit.
+      { source: "/public", destination: "/", permanent: true },
+      { source: "/public/:chemin*", destination: "/:chemin*", permanent: true },
     ];
   },
 

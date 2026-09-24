@@ -187,7 +187,7 @@ export async function prevenirVisiteur(
     courrielReponseVisiteur(v.email, {
       nom: v.nom,
       reponse,
-      lien: await urlPublique("/public"),
+      lien: await urlPublique("/"),
     }),
   );
 }

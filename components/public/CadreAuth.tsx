@@ -65,7 +65,7 @@ export function CadreAuth({
 
         <div className="sur-sombre relative h-full flex flex-col justify-between p-10 xl:p-14">
           <Link
-            href="/public"
+            href="/"
             aria-label="CanCham Connect"
             className="apparition inline-block"
           >
@@ -140,7 +140,7 @@ export function CadreAuth({
                 il est déjà sur la photo, et le répéter ferait doublon. */}
             <div className="carte-filet filet-fixe filet-degrade rounded-[var(--radius-l)] border border-line bg-surface shadow-[0_18px_44px_-24px_rgb(15_29_44/0.35)] px-6 py-8 sm:px-10 sm:py-11">
               <Link
-                href="/public"
+                href="/"
                 aria-label="CanCham Connect"
                 className="lg:hidden block mb-6"
               >

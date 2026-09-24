@@ -48,7 +48,7 @@ export default async function BilletsPublics({
   return (
     <main className="max-w-[760px] mx-auto px-5 py-10 w-full">
       <Link
-        href={`/public/evenements/${e.id}`}
+        href={`/evenements/${e.id}`}
         className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
       >
         <ArrowLeft size={15} /> L’événement

@@ -237,7 +237,7 @@ export default async function EvenementAdmin({
                   membre, lui, est fermé à l'équipe. */}
               {e.public ? (
                 <a
-                  href={`/public/evenements/${e.id}`}
+                  href={`/evenements/${e.id}`}
                   target="_blank"
                   rel="noopener"
                   className="btn-contour btn-contour-sm text-ink no-underline hover:bg-surface-2"

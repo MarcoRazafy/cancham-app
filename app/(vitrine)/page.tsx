@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
 import { Saillant } from "@/components/ui";
@@ -75,6 +76,15 @@ const AVANTAGES = [
   "Mise en relation qualifiée avec notre réseau bilatéral",
   "Visibilité institutionnelle au sein de la communauté CanCham",
 ];
+
+/** L'accueil porte le titre du site, sans suffixe : il l'est déjà. */
+export const metadata: Metadata = {
+  title: {
+    absolute:
+      "CanCham — Chambre de Commerce et de Coopération Canada–Madagascar",
+  },
+  alternates: { canonical: "/" },
+};
 
 /**
  * Page d'accueil publique, conforme à la charte CanCham.

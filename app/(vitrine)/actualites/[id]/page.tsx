@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
@@ -13,6 +14,30 @@ import {
   getActualitesPubliques,
   getDernieresOffres,
 } from "@/lib/queries";
+
+/** Ce qu'un partage affiche : le titre de l'article, son résumé, sa photo. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const a = await getActualitePublique(id);
+  if (!a) return { title: "Actualité introuvable" };
+
+  return {
+    title: a.titre,
+    description: a.extrait.slice(0, 200),
+    alternates: { canonical: `/actualites/${a.id}` },
+    openGraph: {
+      title: a.titre,
+      description: a.extrait.slice(0, 200),
+      type: "article",
+      publishedTime: a.date,
+      images: a.images[0] ? [a.images[0]] : undefined,
+    },
+  };
+}
 
 /**
  * Une actualité diffusée sur la page publique, lisible sans compte. Celles
@@ -41,7 +66,7 @@ export default async function ActualitePubliquePage({
     <main className="vitrine-claire w-full flex-1">
       <div className={`${CONTENEUR} py-10`}>
         <Link
-          href="/public#actualites"
+          href="/#actualites"
           className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
         >
           <ArrowLeft size={15} /> Toutes les actualités

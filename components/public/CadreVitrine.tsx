@@ -6,6 +6,7 @@ import { LogoOfficiel } from "@/components/public/Marque";
 import { chiffres, COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate } from "@/lib/format";
 import { getProchainsEvenements } from "@/lib/queries";
+import { utilisateurConnecte } from "@/lib/session";
 
 /**
  * En-tête et pied de la vitrine, sur le modèle du site cancham.mg.
@@ -43,9 +44,9 @@ export const TITRE_GRAS =
 
 /** Les liens de la barre, dans l'ordre où on les lit. */
 const LIENS = [
-  { href: "/public", libelle: "Accueil" },
-  { href: "/public#evenements", libelle: "Événements" },
-  { href: "/public#actualites", libelle: "Actualités" },
+  { href: "/", libelle: "Accueil" },
+  { href: "/#evenements", libelle: "Événements" },
+  { href: "/#actualites", libelle: "Actualités" },
   { href: "/auth/inscription", libelle: "Devenir membre" },
 ];
 
@@ -76,7 +77,11 @@ export async function EnTetePublique() {
   // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
   // pendant le build, et le bandeau doit suivre la programmation.
   await connection();
-  const evenements = await getProchainsEvenements(6);
+  const [evenements, u] = await Promise.all([
+    getProchainsEvenements(6),
+    utilisateurConnecte(),
+  ]);
+  const espace = u ? { href: u.role === "admin" ? "/admin" : "/membre" } : null;
   const annonces = evenements.length
     ? evenements.map((e) => ({
         texte: [
@@ -86,7 +91,7 @@ export async function EnTetePublique() {
         ]
           .filter(Boolean)
           .join(" — "),
-        href: `/public/evenements/${e.id}`,
+        href: `/evenements/${e.id}`,
       }))
     : ANNONCES_PAR_DEFAUT;
 
@@ -149,7 +154,7 @@ export async function EnTetePublique() {
           className={`${CONTENEUR} flex flex-wrap items-center justify-between gap-x-4 py-2.5 md:py-0 md:h-[72px]`}
         >
           <Link
-            href="/public"
+            href="/"
             aria-label="Accueil CanCham Connect"
             className="order-1 shrink-0"
           >
@@ -159,8 +164,15 @@ export async function EnTetePublique() {
             />
           </Link>
 
-          <Link href="/auth" className="btn-action order-2 md:order-3 shrink-0">
-            Se connecter
+          {/*
+            Le site et la plateforme partagent une adresse : qui est déjà
+            connecté n'a pas à se reconnecter, on lui ouvre son espace.
+          */}
+          <Link
+            href={espace?.href ?? "/auth"}
+            className="btn-action order-2 md:order-3 shrink-0"
+          >
+            {espace ? "Mon espace" : "Se connecter"}
           </Link>
 
           <nav
@@ -184,9 +196,9 @@ const COLONNES = [
   {
     titre: "Navigation",
     liens: [
-      { libelle: "Accueil", href: "/public" },
-      { libelle: "Événements", href: "/public#evenements" },
-      { libelle: "Actualités", href: "/public#actualites" },
+      { libelle: "Accueil", href: "/" },
+      { libelle: "Événements", href: "/#evenements" },
+      { libelle: "Actualités", href: "/#actualites" },
     ],
   },
   {
@@ -229,7 +241,7 @@ export function PiedPublique() {
         {/* ---------- La marque ---------- */}
         <div>
           <Link
-            href="/public"
+            href="/"
             aria-label="Accueil CanCham Connect"
             className="inline-block"
           >

@@ -24,7 +24,7 @@ export function CarteActualite({
   const minutes = dureeLecture(a.corps || a.extrait);
   return (
     <Link
-      href={`/public/actualites/${a.id}`}
+      href={`/actualites/${a.id}`}
       className="group flex flex-col no-underline rounded-xl overflow-hidden bg-white transition-shadow duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:shadow-[0_20px_60px_rgba(15,29,44,0.12)]"
     >
       <div className="relative shrink-0 aspect-[16/9] overflow-hidden bg-[#e9edf2]">
