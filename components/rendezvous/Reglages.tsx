@@ -13,24 +13,28 @@ import {
   SubmitButton,
 } from "@/components/form-bits";
 import {
-  ajouterPlage,
   enregistrerTypeRendezvous,
-  supprimerPlage,
   supprimerTypeRendezvous,
 } from "@/lib/actions/rendezvous";
+import { enMinutes, estHeure } from "@/lib/agenda";
 import { JOURS_SEMAINE } from "@/lib/rendezvous";
 import type { TypeRendezvous } from "@/lib/rendezvous-donnees";
 
 /**
- * Réglages des rendez-vous, côté équipe : ce qu'elle propose, et quand elle
- * reçoit.
+ * Réglages des rendez-vous, côté équipe.
  *
- * Les deux se tiennent : un type sans plage d'accueil ne donne aucun créneau,
- * et une plage sans type n'a rien à offrir. La page le dit ; ces boîtes de
- * dialogue ne font que saisir.
+ * Un type porte ses propres heures d'accueil : c'est le couple durée +
+ * plages qui donne des créneaux, et il se règle donc d'un seul geste. Un
+ * entretien d'une heure peut ainsi demander une matinée dégagée, là où un
+ * point rapide se glisse en fin de journée.
  */
 
-/* ============================ Types ============================ */
+/** Une plage en cours de saisie. */
+interface Ligne {
+  jour: number;
+  debut: string;
+  fin: string;
+}
 
 export function NouveauType() {
   return (
@@ -80,6 +84,18 @@ function FormulaireType({
   fermer: () => void;
 }) {
   const [confirmer, setConfirmer] = useState(false);
+  const [duree, setDuree] = useState(type?.duree ?? 30);
+  // Un type neuf arrive avec une matinée : plus rapide à corriger qu'à créer.
+  const [plages, setPlages] = useState<Ligne[]>(
+    type?.plages.length
+      ? type.plages.map((p) => ({ jour: p.jour, debut: p.debut, fin: p.fin }))
+      : [{ jour: 1, debut: "09:00", fin: "12:00" }],
+  );
+
+  const changer = (i: number, champ: keyof Ligne, valeur: string | number) =>
+    setPlages((l) =>
+      l.map((p, n) => (n === i ? { ...p, [champ]: valeur } : p)),
+    );
 
   if (confirmer && type) {
     return (
@@ -108,6 +124,8 @@ function FormulaireType({
   return (
     <form action={enregistrerTypeRendezvous}>
       {type ? <input type="hidden" name="typeId" value={type.id} /> : null}
+      {/* Les plages partent en JSON : le formulaire en ajoute et en retire. */}
+      <input type="hidden" name="plages" value={JSON.stringify(plages)} />
       <FermerApresEnvoi fermer={fermer} />
       <ModalBody>
         <Field label="Titre">
@@ -134,7 +152,7 @@ function FormulaireType({
         </Field>
         <Field
           label="Durée (minutes)"
-          hint="Elle découpe les plages d’accueil en créneaux."
+          hint="Elle découpe les heures d’accueil en créneaux."
         >
           <input
             type="number"
@@ -143,10 +161,92 @@ function FormulaireType({
             min={10}
             max={240}
             step={5}
-            defaultValue={type?.duree ?? 30}
+            value={duree}
+            onChange={(e) => setDuree(Number(e.target.value))}
             className={INPUT}
           />
         </Field>
+
+        {/* ==================== Heures d'accueil ==================== */}
+        <div>
+          <span className="block text-[12.3px] font-semibold text-muted mb-1.5">
+            Heures d’accueil pour ce rendez-vous
+          </span>
+          <div className="flex flex-col gap-2">
+            {plages.map((p, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <select
+                  aria-label="Jour de la semaine"
+                  value={p.jour}
+                  onChange={(e) => changer(i, "jour", Number(e.target.value))}
+                  className={`${INPUT} flex-1 min-w-0`}
+                >
+                  {JOURS_SEMAINE.map((j) => (
+                    <option key={j.cle} value={j.cle}>
+                      {j.libelle}
+                    </option>
+                  ))}
+                </select>
+                <div className="w-[104px] shrink-0">
+                  <input
+                    type="time"
+                    aria-label="Début"
+                    value={p.debut}
+                    onChange={(e) => changer(i, "debut", e.target.value)}
+                    className={INPUT}
+                  />
+                </div>
+                <span aria-hidden className="text-muted text-[13px]">
+                  –
+                </span>
+                <div className="w-[104px] shrink-0">
+                  <input
+                    type="time"
+                    aria-label="Fin"
+                    value={p.fin}
+                    onChange={(e) => changer(i, "fin", e.target.value)}
+                    className={INPUT}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPlages((l) => l.filter((_, n) => n !== i))}
+                  aria-label="Retirer cette plage"
+                  title="Retirer"
+                  className="w-8 h-8 shrink-0 rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:text-bad hover:border-bad flex items-center justify-center cursor-pointer"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between gap-3 flex-wrap mt-2">
+            <button
+              type="button"
+              onClick={() =>
+                setPlages((l) => [
+                  ...l,
+                  { jour: l.at(-1)?.jour ?? 1, debut: "14:00", fin: "16:00" },
+                ])
+              }
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent bg-transparent border-0 p-0 cursor-pointer hover:underline"
+            >
+              <Plus size={14} /> Ajouter une plage
+            </button>
+            <span className="text-[11.5px] text-faint">
+              {resume(plages, duree)}
+            </span>
+          </div>
+
+          {plages.length ? null : (
+            <p className="m-0 mt-2 text-[12px] text-warn">
+              Sans heure d’accueil, ce rendez-vous n’a aucun créneau à proposer
+              — les membres ne le verront pas.
+            </p>
+          )}
+        </div>
+
         <label className="flex items-center gap-2.5 text-[13.4px] cursor-pointer w-fit">
           <input
             type="checkbox"
@@ -177,90 +277,15 @@ function FormulaireType({
   );
 }
 
-/* ============================ Plages ============================ */
-
-export function NouvellePlage({ jour }: { jour?: number }) {
-  return (
-    <Modal
-      title="Ouvrir une plage d’accueil"
-      trigger={(ouvrir) => (
-        <button
-          type="button"
-          onClick={ouvrir}
-          className="inline-flex items-center gap-1.5 rounded-[var(--radius-s)] border border-line bg-surface text-ink text-[12.4px] font-semibold px-[11px] py-1.5 cursor-pointer hover:bg-surface-2"
-        >
-          <Plus size={14} /> Ouvrir une plage
-        </button>
-      )}
-    >
-      {(fermer) => (
-        <form action={ajouterPlage}>
-          <FermerApresEnvoi fermer={fermer} />
-          <ModalBody>
-            <Field label="Jour de la semaine">
-              <select
-                name="jour"
-                required
-                defaultValue={jour ?? 1}
-                className={INPUT}
-              >
-                {JOURS_SEMAINE.map((j) => (
-                  <option key={j.cle} value={j.cle}>
-                    {j.libelle}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid gap-3.5 grid-cols-2">
-              <Field label="De">
-                <input
-                  type="time"
-                  name="debut"
-                  required
-                  defaultValue="09:00"
-                  className={INPUT}
-                />
-              </Field>
-              <Field label="À">
-                <input
-                  type="time"
-                  name="fin"
-                  required
-                  defaultValue="12:00"
-                  className={INPUT}
-                />
-              </Field>
-            </div>
-            <p className="m-0 text-[12.4px] text-muted">
-              La plage revient chaque semaine, à l’heure de Madagascar. Une
-              matinée et un après-midi se déclarent en deux plages.
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <CancelButton onClick={fermer} />
-            <SubmitButton pendingLabel="Ouverture…">Ouvrir</SubmitButton>
-          </ModalFooter>
-        </form>
-      )}
-    </Modal>
-  );
-}
-
-/** Fermeture d'une plage : un geste simple, sans boîte de dialogue. */
-export function FermerPlage({ id, libelle }: { id: string; libelle: string }) {
-  return (
-    <form action={supprimerPlage}>
-      <input type="hidden" name="plageId" value={id} />
-      <SubmitButton
-        variant="ghost"
-        sm
-        aria-label={`Fermer la plage ${libelle}`}
-        title="Fermer cette plage"
-        pendingLabel=""
-        className="hover:text-bad!"
-      >
-        <Trash2 size={14} />
-      </SubmitButton>
-    </form>
-  );
+/** « 14 créneaux de 30 min par semaine » : ce que les réglages donnent. */
+function resume(plages: Ligne[], duree: number): string {
+  if (!duree || duree <= 0) return "";
+  const total = plages.reduce((n, p) => {
+    if (!estHeure(p.debut) || !estHeure(p.fin)) return n;
+    const minutes = enMinutes(p.fin) - enMinutes(p.debut);
+    return n + (minutes > 0 ? Math.floor(minutes / duree) : 0);
+  }, 0);
+  return total
+    ? `${total} créneau${total > 1 ? "x" : ""} de ${duree} min par semaine`
+    : "aucun créneau";
 }

@@ -444,25 +444,34 @@ async function main() {
   }
 
   console.log("Rendez-vous…");
-  // De quoi ouvrir la prise de rendez-vous dès le premier démarrage :
-  // deux formats, et deux matinées d'accueil.
+  // De quoi ouvrir la prise de rendez-vous dès le premier démarrage : deux
+  // formats, chacun avec ses heures d'accueil. Un entretien demande une
+  // matinée dégagée ; un point rapide se glisse en fin de journée.
   for (const [ordre, t] of [
     {
       titre: "Entretien d’accompagnement",
       detail: "Un point sur votre projet avec l’équipe de la chambre",
       duree: 30,
+      plages: [
+        { jour: 2, debut: "09:00", fin: "12:00" },
+        { jour: 4, debut: "09:00", fin: "12:00" },
+      ],
     },
-    { titre: "Point rapide", detail: null, duree: 15 },
+    {
+      titre: "Point rapide",
+      detail: null,
+      duree: 15,
+      plages: [
+        { jour: 2, debut: "16:00", fin: "17:00" },
+        { jour: 4, debut: "14:00", fin: "16:00" },
+      ],
+    },
   ].entries()) {
-    await prisma.typeRendezvous.create({ data: { ...t, ordre } });
+    const { plages, ...type } = t;
+    await prisma.typeRendezvous.create({
+      data: { ...type, ordre, plages: { create: plages } },
+    });
   }
-  await prisma.disponibilite.createMany({
-    data: [
-      { jour: 2, debut: "09:00", fin: "12:00" },
-      { jour: 4, debut: "09:00", fin: "12:00" },
-      { jour: 4, debut: "14:00", fin: "16:00" },
-    ],
-  });
 
   console.log("Journal…");
   await prisma.auditLog.create({

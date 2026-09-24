@@ -15,7 +15,13 @@ import {
   courrielRendezvousPris,
 } from "@/lib/modeles-courriels";
 import { maintenant } from "@/lib/presences";
-import { creneauxLibres, finCreneau, JOURS_SEMAINE } from "@/lib/rendezvous";
+import {
+  chevauche,
+  creneauxLibres,
+  finCreneau,
+  JOURS_SEMAINE,
+  type Plage,
+} from "@/lib/rendezvous";
 import { getCurrentUser } from "@/lib/session";
 
 /**
@@ -117,6 +123,7 @@ export async function reserverRendezvous(formData: FormData) {
   // contre ceux qu'affichait la page : elle a pu vieillir.
   const [plages, pris] = await Promise.all([
     prisma.disponibilite.findMany({
+      where: { typeId: type.id },
       select: { jour: true, debut: true, fin: true },
     }),
     prisma.rendezvous.findMany({
@@ -292,7 +299,69 @@ async function tracerReglage(acteur: string, detail: string) {
   });
 }
 
-/** Création ou modification d'un type de rendez-vous. */
+/** Nombre de plages qu'un type peut porter : de quoi couvrir une semaine. */
+const PLAGES_MAX = 20;
+
+/**
+ * Les heures d'accueil saisies dans le formulaire d'un type.
+ *
+ * Elles arrivent en JSON — le formulaire en ajoute et en retire des lignes,
+ * ce qu'un champ répété rendrait illisible. Tout est revérifié ici : le
+ * navigateur ne prouve rien.
+ */
+function lirePlages(formData: FormData): Plage[] {
+  const brut = texte(formData, "plages");
+  if (!brut) return [];
+
+  let lignes: unknown;
+  try {
+    lignes = JSON.parse(brut);
+  } catch {
+    redirectWithErreur(EQUIPE, "Les heures d’accueil n’ont pas été comprises.");
+  }
+  if (!Array.isArray(lignes)) {
+    redirectWithErreur(EQUIPE, "Les heures d’accueil n’ont pas été comprises.");
+  }
+  if (lignes.length > PLAGES_MAX) {
+    redirectWithErreur(EQUIPE, `${PLAGES_MAX} plages au plus par type.`);
+  }
+
+  const plages: Plage[] = [];
+  for (const l of lignes as {
+    jour?: unknown;
+    debut?: unknown;
+    fin?: unknown;
+  }[]) {
+    const jour = Number(l?.jour);
+    const debut = String(l?.debut ?? "");
+    const fin = String(l?.fin ?? "");
+    const libelle = JOURS_SEMAINE.find((j) => j.cle === jour)?.libelle;
+
+    if (!libelle)
+      redirectWithErreur(EQUIPE, "Choisissez un jour de la semaine.");
+    if (!estHeure(debut) || !estHeure(fin)) {
+      redirectWithErreur(EQUIPE, "Les heures s’écrivent HH:MM.");
+    }
+    if (fin <= debut) {
+      redirectWithErreur(
+        EQUIPE,
+        `${libelle} : la fin doit venir après le début.`,
+      );
+    }
+    // Deux plages qui se recouvrent offriraient deux fois le même créneau.
+    if (plages.some((p) => p.jour === jour && chevauche(p, { debut, fin }))) {
+      redirectWithErreur(EQUIPE, `${libelle} : deux plages se chevauchent.`);
+    }
+    plages.push({ jour, debut, fin });
+  }
+  return plages;
+}
+
+/**
+ * Création ou modification d'un type de rendez-vous, avec ses heures
+ * d'accueil : c'est le couple durée + plages qui donne des créneaux, et il se
+ * règle donc d'un seul geste.
+ */
 export async function enregistrerTypeRendezvous(formData: FormData) {
   const user = await exigerEquipe();
   const id = texte(formData, "typeId");
@@ -300,6 +369,7 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
   const detail = texte(formData, "detail").slice(0, DETAIL_MAX);
   const duree = nombre(formData, "duree");
   const actif = texte(formData, "actif") === "1";
+  const plages = lirePlages(formData);
 
   if (!titre) redirectWithErreur(EQUIPE, "Donnez un titre à ce rendez-vous.");
   if (!Number.isInteger(duree) || duree < DUREE_MIN || duree > DUREE_MAX) {
@@ -316,7 +386,15 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
       select: { id: true },
     });
     if (!existant) redirectWithErreur(EQUIPE, "Ce type n’existe plus.");
-    await prisma.typeRendezvous.update({ where: { id }, data });
+    // Les plages sont réécrites en bloc : le formulaire porte la liste
+    // entière, et les rendez-vous déjà pris ne dépendent pas d'elles.
+    await prisma.$transaction([
+      prisma.disponibilite.deleteMany({ where: { typeId: id } }),
+      prisma.typeRendezvous.update({
+        where: { id },
+        data: { ...data, plages: { create: plages } },
+      }),
+    ]);
   } else {
     // Le nouveau type passe en dernier : l'ordre reste celui de l'équipe.
     const dernier = await prisma.typeRendezvous.findFirst({
@@ -324,15 +402,26 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
       select: { ordre: true },
     });
     await prisma.typeRendezvous.create({
-      data: { ...data, ordre: (dernier?.ordre ?? 0) + 1 },
+      data: {
+        ...data,
+        ordre: (dernier?.ordre ?? 0) + 1,
+        plages: { create: plages },
+      },
     });
   }
 
   await tracerReglage(
     user.nom,
-    `${id ? "Type modifié" : "Type ajouté"} : « ${titre} » · ${duree} minutes${
-      actif ? "" : " · masqué"
-    }.`,
+    `${id ? "Type modifié" : "Type ajouté"} : « ${titre} » · ${duree} minutes · ${
+      plages.length
+        ? plages
+            .map(
+              (p) =>
+                `${JOURS_SEMAINE.find((j) => j.cle === p.jour)?.libelle} ${p.debut}–${p.fin}`,
+            )
+            .join(", ")
+        : "aucune heure d’accueil"
+    }${actif ? "" : " · masqué"}.`,
   );
   revalider();
   redirectWithFlash(
@@ -371,58 +460,4 @@ export async function supprimerTypeRendezvous(formData: FormData) {
   await tracerReglage(user.nom, `Type supprimé : « ${type.titre} ».`);
   revalider();
   redirectWithFlash(EQUIPE, `Type « ${type.titre} » supprimé`);
-}
-
-/** Ouverture d'une plage d'accueil, un jour de la semaine. */
-export async function ajouterPlage(formData: FormData) {
-  const user = await exigerEquipe();
-  const jour = nombre(formData, "jour");
-  const debut = texte(formData, "debut");
-  const fin = texte(formData, "fin");
-
-  const libelle = JOURS_SEMAINE.find((j) => j.cle === jour)?.libelle;
-  if (!libelle) redirectWithErreur(EQUIPE, "Choisissez un jour de la semaine.");
-  if (!estHeure(debut) || !estHeure(fin)) {
-    redirectWithErreur(EQUIPE, "Les heures s’écrivent HH:MM.");
-  }
-  if (fin <= debut) {
-    redirectWithErreur(EQUIPE, "La fin doit venir après le début.");
-  }
-
-  const doublon = await prisma.disponibilite.findFirst({
-    where: { jour, debut, fin },
-    select: { id: true },
-  });
-  if (doublon) redirectWithErreur(EQUIPE, "Cette plage est déjà ouverte.");
-
-  await prisma.disponibilite.create({ data: { jour, debut, fin } });
-  await tracerReglage(
-    user.nom,
-    `Plage ouverte : ${libelle} ${debut} – ${fin}.`,
-  );
-  revalider();
-  redirectWithFlash(EQUIPE, `Plage ajoutée : ${libelle} ${debut} – ${fin}`);
-}
-
-/**
- * Fermeture d'une plage. Les rendez-vous déjà pris dedans ne bougent pas :
- * ils ont été confirmés, et l'équipe les annule une par une si besoin.
- */
-export async function supprimerPlage(formData: FormData) {
-  const user = await exigerEquipe();
-  const plage = await prisma.disponibilite.findUnique({
-    where: { id: texte(formData, "plageId") },
-    select: { id: true, jour: true, debut: true, fin: true },
-  });
-  if (!plage) redirectWithErreur(EQUIPE, "Cette plage n’existe plus.");
-
-  await prisma.disponibilite.delete({ where: { id: plage.id } });
-  const libelle =
-    JOURS_SEMAINE.find((j) => j.cle === plage.jour)?.libelle ?? "";
-  await tracerReglage(
-    user.nom,
-    `Plage fermée : ${libelle} ${plage.debut} – ${plage.fin}.`,
-  );
-  revalider();
-  redirectWithFlash(EQUIPE, "Plage retirée");
 }

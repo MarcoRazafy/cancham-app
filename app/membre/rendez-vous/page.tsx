@@ -33,7 +33,7 @@ export default async function RendezvousPage({
   ]);
 
   const type = types.find((t) => t.id === p.type) ?? null;
-  const jours = type ? await getCreneaux(type.duree) : [];
+  const jours = type ? await getCreneaux(type) : [];
   const jour =
     estJourISO(p.jour) && jours.some((j) => j.jour === p.jour) ? p.jour : null;
   const heure = estHeure(p.h) ? p.h : null;
