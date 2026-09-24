@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { connection } from "next/server";
 import { getActualitesPubliques, getProchainsEvenements } from "@/lib/queries";
 import { baseSite } from "@/lib/site";
 
@@ -10,6 +11,11 @@ import { baseSite } from "@/lib/site";
  * rendent que ce qui est diffusé publiquement.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
+  // pendant la construction de l'image, et le plan doit suivre les
+  // publications sans attendre un déploiement.
+  await connection();
+
   const base = baseSite();
   const [actualites, evenements] = await Promise.all([
     getActualitesPubliques(100),
