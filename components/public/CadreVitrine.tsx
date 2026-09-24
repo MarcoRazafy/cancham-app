@@ -6,7 +6,6 @@ import { LogoOfficiel } from "@/components/public/Marque";
 import { chiffres, COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate } from "@/lib/format";
 import { getProchainsEvenements } from "@/lib/queries";
-import { utilisateurConnecte } from "@/lib/session";
 
 /**
  * En-tête et pied de la vitrine, sur le modèle du site cancham.mg.
@@ -77,11 +76,7 @@ export async function EnTetePublique() {
   // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
   // pendant le build, et le bandeau doit suivre la programmation.
   await connection();
-  const [evenements, u] = await Promise.all([
-    getProchainsEvenements(6),
-    utilisateurConnecte(),
-  ]);
-  const espace = u ? { href: u.role === "admin" ? "/admin" : "/membre" } : null;
+  const evenements = await getProchainsEvenements(6);
   const annonces = evenements.length
     ? evenements.map((e) => ({
         texte: [
@@ -165,14 +160,11 @@ export async function EnTetePublique() {
           </Link>
 
           {/*
-            Le site et la plateforme partagent une adresse : qui est déjà
-            connecté n'a pas à se reconnecter, on lui ouvre son espace.
+            Toujours « Se connecter », même pour qui l'est déjà : `/auth`
+            renvoie alors directement vers son espace.
           */}
-          <Link
-            href={espace?.href ?? "/auth"}
-            className="btn-action order-2 md:order-3 shrink-0"
-          >
-            {espace ? "Mon espace" : "Se connecter"}
+          <Link href="/auth" className="btn-action order-2 md:order-3 shrink-0">
+            Se connecter
           </Link>
 
           <nav
