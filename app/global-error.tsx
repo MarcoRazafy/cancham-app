@@ -37,6 +37,21 @@ export default function ErreurGlobale({
       >
         <title>Incident — CanCham Connect</title>
         <main style={{ maxWidth: 480, textAlign: "center" }}>
+          {/*
+            Une balise `img` ordinaire : à ce stade, rien de l'application
+            n'est garanti, mais un fichier du dossier public reste servi.
+          */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/marque/illustration-incident.png"
+            alt=""
+            width={240}
+            style={{
+              width: "min(240px, 62vw)",
+              height: "auto",
+              margin: "0 auto 18px",
+            }}
+          />
           <div
             style={{
               fontSize: 11,
