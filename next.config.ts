@@ -19,7 +19,11 @@ function politiqueContenu(dev: boolean): string {
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    // `'self'` et non `'none'` : le certificat s'imprime depuis un cadre
+    // invisible qui charge notre propre page. Interdire tout cadre bloquait
+    // ce cadre-là aussi, et l'export PDF ne rendait qu'une page vide. Un site
+    // tiers, lui, ne peut toujours pas nous enfermer dans une iframe.
+    "frame-ancestors 'self'",
     "form-action 'self'",
     "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com",
     "media-src 'self' blob:",
@@ -45,7 +49,9 @@ const nextConfig: NextConfig = {
     const entetes = [
       { key: "Content-Security-Policy", value: politiqueContenu(dev) },
       { key: "X-Content-Type-Options", value: "nosniff" },
-      { key: "X-Frame-Options", value: "DENY" },
+      // Même raison que `frame-ancestors` : « DENY » bloque jusqu'à nos
+      // propres cadres, y compris celui qui imprime le certificat.
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       {
         key: "Permissions-Policy",
