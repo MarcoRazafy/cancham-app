@@ -1,11 +1,16 @@
-import { Award } from "lucide-react";
-import { Card } from "@/components/ui";
+import Image from "next/image";
+import { LogoOfficiel } from "@/components/public/Marque";
 import { COORDONNEES } from "@/lib/coordonnees";
-import { fmtDate, statusLabel } from "@/lib/format";
+import { fmtDate } from "@/lib/format";
 import type { Member } from "@/lib/types";
 
 /**
  * Certificat d'adhésion, tel qu'il s'imprime.
+ *
+ * Il reprend le modèle de la chambre : le logo en tête, le nom de l'entreprise
+ * au centre sur son filet, la période couverte, la signature de la présidence,
+ * et le sceau en bas à gauche. Pas de génération de PDF — la page est conçue
+ * pour l'impression, et le navigateur fait l'export.
  *
  * Partagé par la fenêtre ouverte depuis « Mon entreprise » et par la page
  * d'impression : ce qu'on voit à l'écran est exactement ce qui sort sur le
@@ -13,56 +18,102 @@ import type { Member } from "@/lib/types";
  */
 export function CertificatAdhesion({
   membre: m,
+  debut,
+  fin,
 }: {
-  membre: Pick<Member, "nom" | "adhesion" | "statut">;
+  membre: Pick<Member, "nom" | "adhesion">;
+  /** Début de la période couverte, ISO court. Par défaut, l'adhésion. */
+  debut?: string | null;
+  /** Fin de la période, ISO court. Absente, la mention s'efface. */
+  fin?: string | null;
 }) {
+  const du = debut ?? m.adhesion;
+
   return (
-    // Sur papier, sans marge de page (voir `@page`), le certificat prend
-    // lui-même ses distances avec le bord de la feuille.
-    <Card className="p-0 max-w-[720px] mx-auto print:mt-[22mm] print:border-0 print:shadow-none">
-      <div className="relative border-2 border-navy rounded-[14px] m-2 px-8 py-9 text-center">
-        <div
-          className="absolute inset-2 border border-accent rounded-[9px] opacity-40 pointer-events-none"
-          aria-hidden="true"
-        />
-        <div className="w-[74px] h-[74px] mx-auto mb-3.5 rounded-full border-2 border-navy text-navy flex items-center justify-center">
-          <Award size={30} />
-        </div>
-        <span className="text-[11.3px] font-bold tracking-[0.09em] uppercase text-accent">
-          CanCham Madagascar
-        </span>
-        <h1 className="text-[22px] m-0 mt-1 mb-1">Certificat d’adhésion</h1>
-        <div className="text-[12.8px] text-muted mb-4">
-          Chambre de Commerce et de Coopération Canada–Madagascar
-        </div>
+    <div className="certificat relative mx-auto w-full max-w-[860px] overflow-hidden rounded-[14px] border border-line bg-white text-[#0f1d2c] print:max-w-none print:rounded-none print:border-0">
+      {/* Les deux couleurs de la charte, en équerre, comme sur le modèle. */}
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 h-[7px] w-[42%] bg-[#ad0707]"
+      />
+      <span
+        aria-hidden
+        className="absolute right-0 top-0 h-[7px] w-[16%] bg-[#007140]"
+      />
+      <span
+        aria-hidden
+        className="absolute bottom-0 right-0 h-[7px] w-[42%] bg-[#007140]"
+      />
+      <span
+        aria-hidden
+        className="absolute bottom-0 left-0 h-[7px] w-[16%] bg-[#ad0707]"
+      />
 
-        <div className="text-[13px] text-muted">Ce certificat atteste que</div>
-        <div className="font-[family-name:var(--font-display)] text-[26px] font-semibold my-3.5">
-          {m.nom}
-        </div>
-        <div className="text-[12.8px] text-muted mb-5">
-          est membre en règle de la chambre depuis le {fmtDate(m.adhesion)}
-        </div>
+      {/* Le sigle en filigrane : présent, jamais gênant. */}
+      <Image
+        src="/marque/sigle.png"
+        alt=""
+        aria-hidden
+        width={1888}
+        height={1159}
+        sizes="700px"
+        className="pointer-events-none absolute left-1/2 top-1/2 w-[78%] -translate-x-1/2 -translate-y-1/2 opacity-[0.045]"
+      />
 
-        <div className="flex justify-between items-end text-left text-[11.8px] text-muted mt-7 gap-6 flex-wrap">
-          <div>
-            Statut
-            <br />
-            <b className="block text-ink text-[13px] font-[family-name:var(--font-display)]">
-              {statusLabel(m.statut)}
-            </b>
+      <div className="relative px-8 py-9 text-center sm:px-14">
+        <LogoOfficiel className="mx-auto h-auto w-[180px]" />
+
+        <h1 className="m-0 mt-6 text-[clamp(26px,4.4vw,38px)] leading-tight font-bold">
+          Certificat d’adhésion
+        </h1>
+
+        <p className="mx-auto mt-5 max-w-[56ch] text-[14.5px] leading-relaxed text-[#243447]">
+          La Chambre de Commerce et de Coopération Canada Madagascar (CanCham
+          Madagascar) certifie par la présente que :
+        </p>
+
+        <div className="mx-auto mt-5 max-w-[46ch]">
+          <div className="text-[clamp(22px,3.4vw,30px)] font-bold leading-tight break-words">
+            {m.nom}
           </div>
-          <div className="text-right">
+          <div aria-hidden className="mt-3 h-px w-full bg-[#0f1d2c]/70" />
+        </div>
+
+        <p className="mx-auto mt-5 max-w-[58ch] text-[14.5px] leading-relaxed text-[#243447]">
+          est dûment enregistré(e) en qualité de membre de la CanCham Madagascar
+          {fin ? " pour la période allant du :" : " depuis le :"}
+        </p>
+        <p className="m-0 mt-2 text-[16px] font-bold">
+          {fin ? `${fmtDate(du)} au ${fmtDate(fin)}` : fmtDate(du)}
+        </p>
+
+        <p className="mx-auto mt-5 max-w-[58ch] text-[14.5px] leading-relaxed text-[#243447]">
+          Le présent certificat est délivré à l’intéressé(e) pour servir et
+          valoir ce que de droit.
+        </p>
+
+        {/* La signature à droite, le sceau à gauche, comme sur le modèle. */}
+        <div className="mt-9 flex items-end justify-between gap-6">
+          <Image
+            src="/marque/badge-certificat.png"
+            alt=""
+            aria-hidden
+            width={254}
+            height={339}
+            sizes="110px"
+            className="h-auto w-[84px] shrink-0 sm:w-[104px]"
+          />
+          <div className="text-right text-[14px] leading-snug">
             Ando Lalaina Ratovomanana
             <br />
-            <b className="block text-ink text-[13px] font-[family-name:var(--font-display)]">
-              Présidente du Conseil d’Administration
-            </b>
+            <b className="font-bold">Présidente du Conseil d’Administration</b>
           </div>
         </div>
 
-        <div className="mt-6 text-[11px] text-muted">{COORDONNEES.site}</div>
+        <div className="mt-6 text-[12.5px] text-[#4a5a6b]">
+          {COORDONNEES.site}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
