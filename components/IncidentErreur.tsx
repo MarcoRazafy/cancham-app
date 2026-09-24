@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { House, RotateCw, TriangleAlert } from "lucide-react";
+import { House, RotateCw } from "lucide-react";
 import { Incident } from "@/components/Incident";
 
 /**
  * Incident dans une page : le contenu a planté, la coquille tient.
+ *
+ * L'illustration dit la panne avant le texte — comme sur la page introuvable,
+ * et elle reste décorative pour les lecteurs d'écran : « Incident · Cette page
+ * n'a pas pu s'afficher » le dit déjà en mots.
  *
  * En production, le message d'origine ne quitte pas le serveur — il pourrait
  * contenir des détails internes. On affiche à la place sa référence
@@ -31,7 +36,17 @@ export function IncidentErreur({
   return (
     <Incident
       pleinEcran={pleinEcran}
-      icone={<TriangleAlert size={24} />}
+      illustration={
+        <Image
+          src="/marque/illustration-incident.png"
+          alt=""
+          width={880}
+          height={756}
+          priority
+          sizes="(max-width: 460px) 64vw, 280px"
+          className="mx-auto w-[min(280px,64vw)] h-auto"
+        />
+      }
       surtitre="Incident"
       titre="Cette page n’a pas pu s’afficher"
       actions={
