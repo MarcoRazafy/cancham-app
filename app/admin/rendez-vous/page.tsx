@@ -1,11 +1,6 @@
 import { AlertTriangle, CalendarClock, Clock } from "lucide-react";
 import { CarteRendezvous } from "@/components/rendezvous/CarteRendezvous";
-import {
-  FermerPlage,
-  ModifierType,
-  NouveauType,
-  NouvellePlage,
-} from "@/components/rendezvous/Reglages";
+import { ModifierType, NouveauType } from "@/components/rendezvous/Reglages";
 import {
   Banner,
   Card,
@@ -18,7 +13,6 @@ import { fmtHeure } from "@/lib/agenda";
 import { aujourdhuiISO } from "@/lib/format";
 import { JOURS_SEMAINE, MENTION_FUSEAU } from "@/lib/rendezvous";
 import {
-  getPlages,
   getRendezvousEquipe,
   getTypesRendezvous,
 } from "@/lib/rendezvous-donnees";
@@ -35,14 +29,14 @@ import { getCurrentUser } from "@/lib/session";
 export default async function RendezvousEquipePage() {
   await getCurrentUser("admin");
 
-  const [rendezvous, types, plages] = await Promise.all([
+  const [rendezvous, types] = await Promise.all([
     getRendezvousEquipe(),
     getTypesRendezvous(true),
-    getPlages(),
   ]);
 
-  const proposes = types.filter((t) => t.actif);
-  const manque = !proposes.length || !plages.length;
+  // Un type ne donne des créneaux que s'il porte des heures d'accueil.
+  const proposes = types.filter((t) => t.actif && t.plages.length);
+  const manque = !proposes.length;
 
   return (
     <>
@@ -58,9 +52,9 @@ export default async function RendezvousEquipePage() {
             icon={<AlertTriangle size={17} />}
             title="Aucun rendez-vous ne peut être pris pour l’instant"
           >
-            {!proposes.length
-              ? "Aucun type de rendez-vous n’est proposé aux membres."
-              : "Aucune plage d’accueil n’est ouverte : les types n’ont aucun créneau à offrir."}
+            {types.some((t) => t.actif)
+              ? "Les types proposés n’ont aucune heure d’accueil : ils n’ont donc aucun créneau à offrir."
+              : "Aucun type de rendez-vous n’est proposé aux membres."}
           </Banner>
         </div>
       ) : null}
@@ -93,85 +87,64 @@ export default async function RendezvousEquipePage() {
         </section>
 
         {/* ==================== Les réglages ==================== */}
-        <aside className="flex flex-col gap-6">
-          <section>
-            <SectionTitle>Ce que vous proposez</SectionTitle>
-            <Card className="p-3.5 flex flex-col gap-2.5">
-              {types.length ? (
-                types.map((t) => (
-                  <div key={t.id} className="flex items-start gap-2.5">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[13.6px] font-semibold text-ink">
-                          {t.titre}
-                        </span>
-                        {t.actif ? null : <Pill tone="muted">Masqué</Pill>}
-                      </div>
-                      <div className="text-[12.3px] text-muted mt-0.5 flex items-center gap-1">
-                        <Clock size={12} /> {t.duree} minutes
-                      </div>
-                      {t.detail ? (
-                        <div className="text-[12.3px] text-faint mt-0.5">
-                          {t.detail}
-                        </div>
-                      ) : null}
+        <aside>
+          <SectionTitle>Ce que vous proposez</SectionTitle>
+          <Card className="p-3.5 flex flex-col gap-3.5">
+            {types.length ? (
+              types.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-start gap-2.5 [&+div]:border-t [&+div]:border-line [&+div]:pt-3.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[13.6px] font-semibold text-ink">
+                        {t.titre}
+                      </span>
+                      {t.actif ? null : <Pill tone="muted">Masqué</Pill>}
                     </div>
-                    <ModifierType type={t} />
-                  </div>
-                ))
-              ) : (
-                <p className="m-0 text-[13px] text-muted">
-                  Aucun type pour l’instant. « Nouveau type » en crée un — «
-                  Entretien d’accompagnement », par exemple.
-                </p>
-              )}
-            </Card>
-          </section>
+                    <div className="text-[12.3px] text-muted mt-0.5 flex items-center gap-1">
+                      <Clock size={12} /> {t.duree} minutes
+                    </div>
+                    {t.detail ? (
+                      <div className="text-[12.3px] text-faint mt-0.5">
+                        {t.detail}
+                      </div>
+                    ) : null}
 
-          <section>
-            <SectionTitle>Heures d’accueil</SectionTitle>
-            <Card className="p-3.5 flex flex-col gap-3">
-              {plages.length ? (
-                <div className="flex flex-col gap-2">
-                  {JOURS_SEMAINE.filter((j) =>
-                    plages.some((p) => p.jour === j.cle),
-                  ).map((j) => (
-                    <div key={j.cle}>
-                      <div className="text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted mb-1">
-                        {j.libelle}
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        {plages
-                          .filter((p) => p.jour === j.cle)
-                          .map((p) => (
-                            <div
-                              key={p.id}
-                              className="flex items-center gap-2 text-[13.2px] tabular-nums"
-                            >
-                              <span className="flex-1">
-                                {fmtHeure(p.debut)} – {fmtHeure(p.fin)}
-                              </span>
-                              <FermerPlage
-                                id={p.id}
-                                libelle={`${j.libelle} ${p.debut} – ${p.fin}`}
-                              />
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  ))}
+                    {t.plages.length ? (
+                      <ul className="list-none p-0 m-0 mt-2 flex flex-col gap-0.5">
+                        {t.plages.map((p) => (
+                          <li
+                            key={p.id}
+                            className="text-[12.5px] text-ink tabular-nums"
+                          >
+                            <span className="font-semibold">
+                              {JOURS_SEMAINE.find((j) => j.cle === p.jour)
+                                ?.libelle ?? ""}
+                            </span>{" "}
+                            {fmtHeure(p.debut)} – {fmtHeure(p.fin)}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="m-0 mt-2 text-[12.3px] text-warn">
+                        Aucune heure d’accueil : ce rendez-vous n’apparaît pas
+                        aux membres.
+                      </p>
+                    )}
+                  </div>
+                  <ModifierType type={t} />
                 </div>
-              ) : (
-                <p className="m-0 text-[13px] text-muted">
-                  Aucune plage ouverte. Déclarez celles où l’équipe reçoit : les
-                  créneaux s’y découpent tout seuls.
-                </p>
-              )}
-              <div>
-                <NouvellePlage />
-              </div>
-            </Card>
-          </section>
+              ))
+            ) : (
+              <p className="m-0 text-[13px] text-muted">
+                Aucun type pour l’instant. « Nouveau type » en crée un — «
+                Entretien d’accompagnement », par exemple —, avec les heures où
+                vous recevez.
+              </p>
+            )}
+          </Card>
         </aside>
       </div>
     </>

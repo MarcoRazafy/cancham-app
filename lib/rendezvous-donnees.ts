@@ -24,6 +24,8 @@ export interface TypeRendezvous {
   detail: string | null;
   duree: number;
   actif: boolean;
+  /** Les heures d'accueil ouvertes pour ce type, dans l'ordre de la semaine. */
+  plages: (Plage & { id: string })[];
 }
 
 export interface RendezvousPris {
@@ -79,20 +81,38 @@ function versRendezvous(r: {
   };
 }
 
-/** Les types proposés aux membres, dans l'ordre choisi par l'équipe. */
+/**
+ * Les types proposés aux membres, dans l'ordre choisi par l'équipe, avec
+ * leurs heures d'accueil : c'est le couple qui donne des créneaux.
+ *
+ * `tous` inclut les types masqués — la vue de l'équipe.
+ */
 export async function getTypesRendezvous(
   tous = false,
 ): Promise<TypeRendezvous[]> {
   return prisma.typeRendezvous.findMany({
     where: tous ? undefined : { actif: true },
     orderBy: [{ ordre: "asc" }, { createdAt: "asc" }],
-    select: { id: true, titre: true, detail: true, duree: true, actif: true },
+    select: {
+      id: true,
+      titre: true,
+      detail: true,
+      duree: true,
+      actif: true,
+      plages: {
+        orderBy: [{ jour: "asc" }, { debut: "asc" }],
+        select: { id: true, jour: true, debut: true, fin: true },
+      },
+    },
   });
 }
 
-/** Les plages d'accueil déclarées par l'équipe. */
-export async function getPlages(): Promise<(Plage & { id: string })[]> {
+/** Les heures d'accueil d'un type. */
+export async function getPlages(
+  typeId: string,
+): Promise<(Plage & { id: string })[]> {
   return prisma.disponibilite.findMany({
+    where: { typeId },
     orderBy: [{ jour: "asc" }, { debut: "asc" }],
     select: { id: true, jour: true, debut: true, fin: true },
   });
@@ -129,8 +149,14 @@ export interface JourProposable {
  * Les jours sans créneau libre disparaissent : mieux vaut ne pas les montrer
  * que d'ouvrir une journée vide.
  */
-export async function getCreneaux(duree: number): Promise<JourProposable[]> {
-  const plages = await getPlages();
+export async function getCreneaux(type: {
+  id: string;
+  duree: number;
+  /** Déjà chargées par l'appelant, le plus souvent. */
+  plages?: Plage[];
+}): Promise<JourProposable[]> {
+  const plages = type.plages ?? (await getPlages(type.id));
+  const duree = type.duree;
   const depuis = aujourdhuiISO();
   const jours = joursOuverts(depuis, plages);
   if (!jours.length) return [];

@@ -788,6 +788,8 @@ model TypeRendezvous {
   updatedAt DateTime @updatedAt
 
   rendezvous Rendezvous[]
+  /// Les heures d'accueil ouvertes pour ce type de rendez-vous.
+  plages     Disponibilite[]
 
   @@map("types_rendezvous")
 }
@@ -804,9 +806,14 @@ model Disponibilite {
   debut String
   fin   String
 
+  /// Chaque type a ses propres heures : on ne reçoit pas pour un entretien
+  /// d'une heure aux heures réservées aux points rapides.
+  typeId String
+  type   TypeRendezvous @relation(fields: [typeId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
-  @@index([jour])
+  @@index([typeId, jour])
   @@map("disponibilites")
 }
 
