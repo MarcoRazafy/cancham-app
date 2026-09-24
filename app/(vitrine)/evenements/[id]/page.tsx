@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
@@ -20,6 +21,33 @@ import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { estTermine } from "@/lib/presences";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
+
+/**
+ * Ce qu'un partage affiche : le titre de l'événement, sa date et son lieu,
+ * et sa photo. Sans cela, un lien collé dans une conversation n'annonce que
+ * le nom du site.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const e = await getEvent(id);
+  if (!e?.public) return { title: "Événement introuvable" };
+
+  return {
+    title: e.titre,
+    description: `${fmtDate(e.date)} · ${e.lieu} — ${e.desc}`.slice(0, 200),
+    alternates: { canonical: `/evenements/${e.id}` },
+    openGraph: {
+      title: e.titre,
+      description: `${fmtDate(e.date)} · ${e.lieu}`,
+      type: "article",
+      images: e.photo ? [e.photo] : undefined,
+    },
+  };
+}
 
 /**
  * Fiche publique d'un événement.
@@ -65,7 +93,7 @@ export default async function EvenementPublic({
     <>
       <main className={`${CONTENEUR} py-10 w-full`}>
         <Link
-          href="/public#evenements"
+          href="/#evenements"
           className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
         >
           <ArrowLeft size={15} /> Tous les rendez-vous

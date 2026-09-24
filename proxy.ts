@@ -25,6 +25,45 @@ const TOUJOURS_OUVERT = PAGES_TOUJOURS_OUVERTES;
 const REPLI = "/membre/profil";
 const CONNEXION = "/auth";
 
+/**
+ * Domaine principal du site, une fois le nom branché sur l'hébergeur.
+ *
+ * Posé (`DOMAINE_PRINCIPAL=cancham.mg`), il devient l'adresse unique :
+ * `www.cancham.mg` et `app.cancham.mg` y renvoient en gardant le chemin, si
+ * bien que les liens déjà envoyés — réinitialisations, invitations, billets —
+ * continuent d'aboutir. Vide, rien ne bouge : c'est l'état du développement,
+ * et celui d'avant la bascule.
+ */
+const DOMAINE = process.env.DOMAINE_PRINCIPAL?.trim().toLowerCase() || null;
+
+/** Renvoie vers le domaine principal, ou `null` si l'on y est déjà. */
+function versDomainePrincipal(request: NextRequest): NextResponse | null {
+  if (!DOMAINE) return null;
+  const hote = (
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("host") ??
+    ""
+  )
+    .toLowerCase()
+    .split(":")[0];
+  // Ni en développement, ni derrière une adresse IP : on ne redirige que des
+  // noms de domaine, et seulement s'ils diffèrent du principal.
+  if (
+    !hote ||
+    hote === DOMAINE ||
+    hote === "localhost" ||
+    /^[\d.]+$/.test(hote)
+  ) {
+    return null;
+  }
+
+  const url = request.nextUrl.clone();
+  url.protocol = "https:";
+  url.host = DOMAINE;
+  url.port = "";
+  return NextResponse.redirect(url, 308);
+}
+
 const ACCUEIL: Record<string, string> = {
   membre: "/membre",
   admin: "/admin",
@@ -32,6 +71,10 @@ const ACCUEIL: Record<string, string> = {
 };
 
 export default async function proxy(request: NextRequest) {
+  // Une seule adresse pour le site : tout le reste y renvoie.
+  const canonique = versDomainePrincipal(request);
+  if (canonique) return canonique;
+
   const { pathname } = request.nextUrl;
   const espace = pathname.startsWith("/admin")
     ? "admin"
@@ -99,5 +142,14 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/membre/:path*", "/admin/:path*"],
+  /**
+   * Le proxy voit toutes les pages — il lui faut la vitrine pour ramener les
+   * visiteurs sur le domaine principal —, mais jamais un fichier servi tel
+   * quel : une redirection sur une feuille de style ou une image casserait la
+   * page. `api` en est exclu aussi, pour que la sonde de santé de
+   * l'hébergeur réponde sans détour.
+   */
+  matcher: [
+    "/((?!api|_next/static|_next/image|televersements|favicon.ico|apple-icon.png).*)",
+  ],
 };

@@ -9,6 +9,7 @@ import {
   IBM_Plex_Sans,
   Inter,
 } from "next/font/google";
+import { baseSite } from "@/lib/site";
 import "./globals.css";
 
 /**
@@ -67,10 +68,22 @@ const inter = Inter({
   display: "swap",
 });
 
+/**
+ * Métadonnées communes.
+ *
+ * `metadataBase` donne aux adresses relatives — canoniques, images de partage
+ * — le domaine réel du site : sans elle, un lien partagé pointerait vers
+ * `localhost`. Le gabarit de titre suffixe chaque page du nom de la chambre.
+ */
 export const metadata: Metadata = {
-  title: "CanCham Connect",
+  metadataBase: new URL(baseSite()),
+  title: {
+    default:
+      "CanCham — Chambre de Commerce et de Coopération Canada–Madagascar",
+    template: "%s · CanCham",
+  },
   description:
-    "Portail membre et back-office de la Chambre de Commerce et de Coopération Canada–Madagascar.",
+    "Le réseau des entreprises du Canada et de Madagascar : événements, mises en relation et accompagnement à l’export.",
 };
 
 export default function RootLayout({

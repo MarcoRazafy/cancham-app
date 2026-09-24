@@ -21,7 +21,7 @@ export function LienAncre({
   className,
   children,
 }: {
-  /** « #section » sur la page même, ou « /public#section » depuis ailleurs. */
+  /** « #section » sur la page même, ou « /#section » depuis ailleurs. */
   href: string;
   className?: string;
   children: ReactNode;

@@ -4,7 +4,7 @@ import type { Space, User } from "../../lib/types";
  * Un utilisateur de démonstration par espace.
  *
  * Il n'y a volontairement AUCUNE authentification à ce stade : l'espace est
- * déterminé par l'URL (`/public`, `/membre`, `/admin`) et l'utilisateur courant
+ * déterminé par l’URL (`/`, `/membre`, `/admin`) et l'utilisateur courant
  * est simplement celui qui correspond à cet espace.
  *
  * Quand l'authentification arrivera, seule `getCurrentUser()` changera : elle

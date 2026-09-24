@@ -308,7 +308,7 @@ const INSCRIPTIONS_PUBLIQUES_PAR_HEURE = 10;
  */
 export async function inscriptionPublique(formData: FormData) {
   const eventId = texte(formData, "eventId");
-  const fiche = `/public/evenements/${eventId}`;
+  const fiche = `/evenements/${eventId}`;
 
   // Une même origine n'inscrit pas des foules à la chaîne.
   const attente = tentative(
@@ -328,7 +328,7 @@ export async function inscriptionPublique(formData: FormData) {
     include: { _count: { select: { participants: true } } },
   });
   if (!event?.public) {
-    redirectWithErreur("/public", "Événement introuvable.");
+    redirectWithErreur("/", "Événement introuvable.");
   }
   if (estTermine(event)) {
     redirectWithErreur(fiche, "Cet événement est terminé.");
@@ -418,7 +418,7 @@ export async function inscriptionPublique(formData: FormData) {
   ]);
 
   const lien = await urlPublique(
-    `/public/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
+    `/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
   );
   const participants = noms.map((nom, i) => ({
     nom,
@@ -432,7 +432,7 @@ export async function inscriptionPublique(formData: FormData) {
 
   revalideTout();
   redirect(
-    `/public/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
+    `/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
   );
 }
 
@@ -717,7 +717,7 @@ export async function validerInscription(formData: FormData) {
   const lien = await urlPublique(
     inscriptionMembre || !racine
       ? `/membre/evenements/${eventId}`
-      : `/public/evenements/${eventId}/billet?${new URLSearchParams({ code: racine })}`,
+      : `/evenements/${eventId}/billet?${new URLSearchParams({ code: racine })}`,
   );
   const participants = groupe.flatMap((g) =>
     g.code ? [{ nom: g.nom, code: g.code }] : [],
