@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { OptionsFormules } from "@/components/OptionsFormules";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { PAYS } from "@/lib/accueil";
 import { useState } from "react";
@@ -34,6 +35,7 @@ import {
   updateContact,
   deleteMember,
   modifierDateAdhesion,
+  modifierFormule,
   registerPayment,
   rejectCandidature,
   renvoyerInvitation,
@@ -154,6 +156,20 @@ export function AddMemberButton() {
                 placeholder="Courte description de l’activité…"
                 className={INPUT}
               />
+            </Field>
+            {/* Sur sa propre ligne : le libellé d'une formule et son tarif
+                n'entrent pas dans une demi-largeur. */}
+            <Field
+              label="Formule d’adhésion"
+              hint="Elle fixe le montant attendu et la devise de ses factures."
+            >
+              <select
+                name="formule"
+                className={INPUT}
+                defaultValue="mg_entreprise"
+              >
+                <OptionsFormules />
+              </select>
             </Field>
             <Field label="Statut à la création">
               <select name="statut" className={INPUT} defaultValue="en_attente">
@@ -1322,6 +1338,61 @@ export function SupprimerServiceButton({
 }
 
 /** Correction de la date d'adhésion, réservée à l'équipe. */
+export function ModifierFormuleButton({
+  memberId,
+  nom,
+  formule,
+}: {
+  memberId: string;
+  nom: string;
+  /** Formule actuelle, présélectionnée. */
+  formule: FormuleId;
+}) {
+  return (
+    <Modal
+      title="Formule d’adhésion"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Modifier la formule de ${nom}`}
+          title="Modifier la formule"
+          className="shrink-0 w-6 h-6 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center text-muted cursor-pointer hover:text-ink hover:border-faint"
+        >
+          <Pencil size={12} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={modifierFormule}>
+          <input type="hidden" name="memberId" value={memberId} />
+          <ModalBody>
+            <Field
+              label="Formule"
+              hint="Elle fixe le montant attendu et la devise des prochaines factures. Les factures déjà émises ne bougent pas."
+            >
+              <select
+                name="formule"
+                required
+                defaultValue={formule}
+                className={INPUT}
+              >
+                <OptionsFormules />
+              </select>
+            </Field>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Enregistrement…">
+              <Check size={14} /> Enregistrer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
 export function ModifierAdhesionButton({
   memberId,
   nom,

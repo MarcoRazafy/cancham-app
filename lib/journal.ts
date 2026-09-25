@@ -164,6 +164,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "adhesion",
     ton: "info",
   },
+  formule_modifiee: {
+    libelle: "Formule d’adhésion modifiée",
+    famille: "adhesion",
+    ton: "info",
+  },
   facture_supprimee: {
     libelle: "Facture supprimée",
     famille: "finance",

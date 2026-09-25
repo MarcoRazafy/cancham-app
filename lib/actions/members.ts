@@ -17,6 +17,7 @@ import {
   fmtMontant,
   libelleFormule,
   type Devise,
+  type FormuleId,
 } from "@/lib/membership";
 import {
   courrielDemandeApprouvee,
@@ -319,6 +320,48 @@ export async function modifierDateAdhesion(formData: FormData) {
   redirectWithFlash(retour, "Date d’adhésion mise à jour");
 }
 
+/**
+ * Changement de formule par l'équipe.
+ *
+ * La formule fixe le montant attendu et la devise : c'est elle qu'on corrige
+ * quand un membre a été créé à la main, ou quand une entreprise change de
+ * catégorie. Les factures déjà émises ne bougent pas — ce sont des pièces
+ * comptables, et leur montant a été celui du jour.
+ */
+export async function modifierFormule(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "memberId");
+  const retour = `/admin/membres/${id}`;
+  const choix = texte(formData, "formule");
+  if (!(choix in FORMULES)) {
+    redirectWithErreur(retour, "Choisissez une formule de la grille.");
+  }
+  const formule = choix as FormuleId;
+
+  const avant = await prisma.member.findUnique({
+    where: { id },
+    select: { nom: true, formule: true },
+  });
+  if (!avant) redirectWithErreur("/admin/membres", "Membre introuvable.");
+  if (avant.formule === formule) {
+    redirectWithFlash(retour, "Formule inchangée");
+  }
+
+  await prisma.member.update({ where: { id }, data: { formule } });
+  await journal(
+    "formule_modifiee",
+    "Member",
+    id,
+    await acteurEquipe(),
+    `${avant.nom} · ${libelleFormule(avant.formule)} → ${libelleFormule(formule)} (${fmtCotisation(formule)} par an).`,
+  );
+  revalideTout();
+  redirectWithFlash(
+    retour,
+    `Formule mise à jour : ${libelleFormule(formule)} · ${fmtCotisation(formule)} par an`,
+  );
+}
+
 /* ============================ Cotisations ============================ */
 
 /** Enregistrement d'un règlement encaissé par l'équipe. Génère la facture. */
@@ -494,10 +537,18 @@ export async function createMember(formData: FormData) {
     );
   }
 
+  // Sans choix explicite, la grille s'applique par défaut : « Madagascar —
+  // Entreprise ». Une valeur inventée est ignorée plutôt que refusée — le
+  // champ est une liste fermée, seule une requête forgée peut en sortir.
+  const formuleSaisie = texte(formData, "formule");
+  const formule =
+    formuleSaisie in FORMULES ? (formuleSaisie as FormuleId) : undefined;
+
   const m = await prisma.member.create({
     data: {
       type,
       nom,
+      ...(formule ? { formule } : {}),
       secteur: secteurOuProvisoire(
         texte(formData, "secteur"),
         PROVISOIRE.secteur,
