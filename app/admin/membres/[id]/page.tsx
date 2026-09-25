@@ -29,6 +29,7 @@ import {
   DeleteMemberButton,
   EditContactButton,
   ModifierAdhesionButton,
+  ModifierFormuleButton,
   EditProfileButton,
   ModifierServiceButton,
   RemoveContactButton,
@@ -362,8 +363,13 @@ export default async function AdminMembreDetail({
                 />
               </dd>
               <dt className="text-muted">Formule</dt>
-              <dd className="m-0 text-ink text-right">
+              <dd className="m-0 text-ink flex items-center justify-end gap-2">
                 {libelleFormule(m.formule)}
+                <ModifierFormuleButton
+                  memberId={m.id}
+                  nom={m.nom}
+                  formule={m.formule}
+                />
               </dd>
               <dt className="text-muted">Cotisation</dt>
               <dd className="m-0 text-ink text-right font-semibold tabular-nums">
