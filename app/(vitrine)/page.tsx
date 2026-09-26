@@ -77,6 +77,22 @@ const AVANTAGES = [
   "Visibilité institutionnelle au sein de la communauté CanCham",
 ];
 
+/**
+ * Décalage de l'apparition d'un élément dans une rangée.
+ *
+ * Les apparitions au défilement suivent la position dans la page, pas une
+ * horloge : un délai en secondes n'y ferait rien. C'est donc la plage de
+ * déclenchement qu'on décale — chaque carte entre un peu après la
+ * précédente, et la rangée se dévoile en cascade.
+ *
+ * La plage s'achève pendant l'entrée, jamais plus tard : un bloc situé tout
+ * en bas de page ne peut pas toujours défiler jusqu'au bout, et resterait
+ * alors à demi transparent.
+ */
+const cascade = (i: number) => ({
+  animationRange: `entry ${10 + i * 9}% entry ${64 + i * 9}%`,
+});
+
 /** L'accueil porte le titre du site, sans suffixe : il l'est déjà. */
 export const metadata: Metadata = {
   title: {
@@ -319,12 +335,12 @@ export default async function PublicHome() {
 
       {/* ==================== À qui nous parlons ==================== */}
       <section className={`${CONTENEUR} pt-10 pb-14`}>
-        <div className="apparition-defilement">
-          <span className="surtitre text-marque-rouge inline-flex items-center gap-3">
+        <div>
+          <span className="apparition-defilement surtitre text-marque-rouge inline-flex items-center gap-3">
             <span aria-hidden="true" className="w-8 h-px bg-marque-rouge" />À
             qui nous parlons
           </span>
-          <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
+          <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
             {/*
               Le titre du modèle est gras et tient sur deux lignes. Hammersmith
               One n'ayant qu'une graisse, il passe comme les cartes à la fonte
@@ -343,10 +359,11 @@ export default async function PublicHome() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 mt-7">
-            {PROFILS.map((p) => (
+            {PROFILS.map((p, i) => (
               <article
                 key={p.titre}
-                className={`carte-filet ${p.filet} group rounded-xl bg-white p-10`}
+                style={cascade(i)}
+                className={`apparition-defilement carte-filet ${p.filet} group rounded-xl bg-white p-10`}
               >
                 {/*
                   Quatre dixièmes de seconde et une détente douce, comme le
@@ -378,7 +395,7 @@ export default async function PublicHome() {
           </div>
 
           {/* Le bouton du modèle, avec son halo rouge : il descend au formulaire. */}
-          <div className="flex justify-center mt-9">
+          <div className="apparition-defilement flex justify-center mt-9">
             <LienAncre
               href="#newsletter"
               className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
@@ -398,9 +415,9 @@ export default async function PublicHome() {
       */}
       <section className="bg-white text-[var(--marque-nuit)]">
         <div className={`${CONTENEUR} py-16`}>
-          <div className="apparition-defilement grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             {/* ---------- L'invitation ---------- */}
-            <div>
+            <div className="apparition-defilement">
               <span className="surtitre text-[#ad0707] inline-flex items-center gap-3">
                 <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
                 Rejoindre la communauté
@@ -426,7 +443,8 @@ export default async function PublicHome() {
                 {AVANTAGES.map((a, i) => (
                   <li
                     key={a}
-                    className="flex items-start gap-3.5 py-3.5 border-b border-black/10 text-[15px] leading-relaxed"
+                    style={cascade(i)}
+                    className="apparition-defilement flex items-start gap-3.5 py-3.5 border-b border-black/10 text-[15px] leading-relaxed"
                   >
                     <ArrowRight
                       size={16}
@@ -451,7 +469,10 @@ export default async function PublicHome() {
             </div>
 
             {/* ---------- Les formules ---------- */}
-            <div className="carte-filet filet-fixe filet-degrade rounded-2xl bg-white p-8 md:p-12 shadow-[0_20px_60px_rgba(15,29,44,0.08)]">
+            <div
+              style={cascade(1)}
+              className="apparition-defilement carte-filet filet-fixe filet-degrade rounded-2xl bg-white p-8 md:p-12 shadow-[0_20px_60px_rgba(15,29,44,0.08)]"
+            >
               <span className="surtitre text-[#ad0707]">
                 Choisissez votre formule
               </span>
@@ -506,8 +527,8 @@ export default async function PublicHome() {
       {/* ==================== Événements ==================== */}
       <section id="evenements" className="scroll-mt-[124px]">
         <div className={`${CONTENEUR} pt-10 pb-8`}>
-          <div className="apparition-defilement">
-            <div className="flex items-end justify-between gap-6 flex-wrap">
+          <div>
+            <div className="apparition-defilement flex items-end justify-between gap-6 flex-wrap">
               <div>
                 <span className="surtitre text-marque-rouge">
                   Rencontrons-nous
@@ -529,7 +550,12 @@ export default async function PublicHome() {
             </div>
 
             {evenements.length ? (
-              <div className="mt-8">
+              /*
+                Le carrousel entre d'un bloc : ses cartes défilent à
+                l'horizontale, et une apparition posée sur chacune suivrait ce
+                défilement-là plutôt que celui de la page.
+              */
+              <div style={cascade(1)} className="apparition-defilement mt-8">
                 <CarrouselCartes debord="" libelle="Prochains rendez-vous">
                   {evenements.map((e, i) => (
                     <CarteEvenement key={e.id} evenement={e} index={i} />
@@ -557,12 +583,12 @@ export default async function PublicHome() {
           className="scroll-mt-[124px] bg-[#fafafa] text-[var(--marque-nuit)]"
         >
           <div className={`${CONTENEUR} py-16`}>
-            <div className="apparition-defilement">
-              <span className="surtitre text-[#ad0707] inline-flex items-center gap-3">
+            <div>
+              <span className="apparition-defilement surtitre text-[#ad0707] inline-flex items-center gap-3">
                 <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
                 Actualités récentes
               </span>
-              <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
+              <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
                 <h2
                   className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,58px)] leading-[1.1] m-0`}
                 >
@@ -577,7 +603,7 @@ export default async function PublicHome() {
                 </p>
               </div>
 
-              <div className="mt-10">
+              <div style={cascade(1)} className="apparition-defilement mt-10">
                 <CarrouselCartes
                   debord=""
                   libelle="Dernières actualités"
@@ -625,21 +651,27 @@ export default async function PublicHome() {
           }}
         />
         <div className={`${CONTENEUR} relative py-20 text-center`}>
-          <span className="inline-flex items-center rounded-full border border-white/30 bg-white/15 px-[18px] py-2 text-[12px] font-bold uppercase tracking-[2px]">
+          <span className="apparition-defilement inline-flex items-center rounded-full border border-white/30 bg-white/15 px-[18px] py-2 text-[12px] font-bold uppercase tracking-[2px]">
             Restons en contact
           </span>
           <h2
-            className={`${TITRE_GRAS} text-[clamp(30px,4.2vw,52px)] leading-[1.05] m-0 mt-7`}
+            style={cascade(1)}
+            className={`${TITRE_GRAS} apparition-defilement text-[clamp(30px,4.2vw,52px)] leading-[1.05] m-0 mt-7`}
           >
             S’inscrire à notre newsletter
           </h2>
-          <p className="m-0 mt-5 mx-auto max-w-[62ch] text-[16px] leading-[1.6] text-white/85">
+          <p
+            style={cascade(2)}
+            className="apparition-defilement m-0 mt-5 mx-auto max-w-[62ch] text-[16px] leading-[1.6] text-white/85"
+          >
             Nos actualités, nos invitations en avant-première et nos ressources
             exclusives, directement dans votre boîte mail. Désinscription à tout
             moment.
           </p>
 
-          <FormulaireInfolettre />
+          <div style={cascade(3)} className="apparition-defilement">
+            <FormulaireInfolettre />
+          </div>
         </div>
       </section>
     </>
