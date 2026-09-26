@@ -161,7 +161,7 @@ export default async function ActualitePubliquePage({
             que l'écran, un bloc collant garderait son bas hors d'atteinte.
           */}
           {offres.length ? (
-            <aside className="w-full min-w-0 xl:flex-1 xl:sticky xl:top-[124px] xl:max-h-[calc(100dvh-140px)] xl:overflow-y-auto">
+            <aside className="apparition-defilement w-full min-w-0 xl:flex-1 xl:sticky xl:top-[124px] xl:max-h-[calc(100dvh-140px)] xl:overflow-y-auto">
               <span className="surtitre text-marque-vert">Entre membres</span>
               <h2 className={`${TITRE_GRAS} text-[20px] m-0 mt-2`}>
                 Offres &amp; promotions
@@ -186,7 +186,7 @@ export default async function ActualitePubliquePage({
         </div>
 
         {autres.length ? (
-          <section className="mt-14">
+          <section className="apparition-defilement mt-14">
             <h2 className={`${TITRE_GRAS} text-[24px] m-0`}>À lire aussi</h2>
             <div className="grid gap-5 mt-6 md:grid-cols-2 lg:grid-cols-3">
               {autres.map((r) => (
