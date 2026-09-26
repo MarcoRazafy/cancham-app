@@ -183,30 +183,30 @@ export default async function PublicHome() {
                 className="surtitre apparition inline-block px-3.5 py-1.5 rounded-full border border-white/30 text-white/85"
                 style={{ animationDelay: "0.08s" }}
               >
-                Le réseau Canada–Madagascar
+                CanCham • 10 ans
               </span>
 
-              <h1
-                className={`${TITRE_GRAS} text-[clamp(34px,5.2vw,58px)] leading-[1.08] m-0 mt-5`}
-              >
-                <span
-                  className="apparition block"
+              {/*
+                Le « 10 ans » doré est une image : c'est un logotype
+                anniversaire, dessiné, que nulle police ne reproduirait. Il
+                porte l'annonce, et le titre passe dessous en une ligne.
+              */}
+              <h1 className="m-0 mt-6">
+                <Image
+                  src="/marque/10-ans.png"
+                  alt="CanCham — 10 ans"
+                  width={1100}
+                  height={386}
+                  priority
+                  sizes="(max-width: 640px) 80vw, 520px"
+                  className="apparition w-[min(520px,80%)] h-auto"
                   style={{ animationDelay: "0.16s" }}
-                >
-                  Deux pays.
-                </span>
+                />
                 <span
-                  className="apparition block"
-                  style={{ animationDelay: "0.26s" }}
+                  className={`${TITRE_GRAS} apparition block text-[clamp(22px,2.9vw,36px)] leading-[1.15] mt-5`}
+                  style={{ animationDelay: "0.3s" }}
                 >
-                  Un réseau.
-                </span>
-                {/* Insécable : « Des opportunités. » ne doit jamais se couper. */}
-                <span
-                  className="apparition block whitespace-nowrap"
-                  style={{ animationDelay: "0.36s" }}
-                >
-                  Des <Saillant ton="vert">opportunités.</Saillant>
+                  Deux pays. Un réseau. Des opportunités.
                 </span>
               </h1>
 
