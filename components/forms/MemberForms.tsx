@@ -161,14 +161,10 @@ export function AddMemberButton() {
                 n'entrent pas dans une demi-largeur. */}
             <Field
               label="Formule d’adhésion"
-              hint="Elle fixe le montant attendu et la devise de ses factures."
+              hint="Elle fixe le montant attendu et la devise de ses factures. Laissée à définir, aucune cotisation n’est réclamée."
             >
-              <select
-                name="formule"
-                className={INPUT}
-                defaultValue="mg_entreprise"
-              >
-                <OptionsFormules />
+              <select name="formule" className={INPUT} defaultValue="">
+                <OptionsFormules vide="À définir — le membre choisira" />
               </select>
             </Field>
             <Field label="Statut à la création">
@@ -201,9 +197,47 @@ export function RegisterPaymentButton({
   premier: boolean;
   nom: string;
   /** La formule du membre fixe le montant attendu et sa devise. */
-  formule: FormuleId;
+  formule: FormuleId | null;
 }) {
   const aujourdhui = new Date().toISOString().slice(0, 10);
+
+  // Sans formule, il n'y a ni montant ni devise à proposer : le formulaire
+  // n'aurait rien à préremplir, et l'action refuserait de toute façon.
+  if (!formule) {
+    return (
+      <Modal
+        title="Enregistrer le paiement"
+        trigger={(ouvrir) => (
+          <button
+            onClick={ouvrir}
+            className={`${BTN_PRIMARY} w-full justify-center text-[12.4px] px-[11px] py-1.5`}
+          >
+            <CreditCard size={14} /> Enregistrer le paiement
+          </button>
+        )}
+      >
+        {(fermer) => (
+          <>
+            <ModalBody>
+              <p className="m-0 text-[14px]">
+                Aucune formule n’est encore choisie pour <strong>{nom}</strong>.
+              </p>
+              <p className="m-0 text-[13px] text-muted">
+                C’est elle qui donne le montant attendu et la devise de la
+                facture. Choisissez-la d’abord — le crayon à côté de « Formule
+                », plus haut sur cette fiche — puis revenez enregistrer le
+                règlement.
+              </p>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={fermer} />
+            </ModalFooter>
+          </>
+        )}
+      </Modal>
+    );
+  }
+
   const { montant, devise } = FORMULES[formule];
   return (
     <Modal
@@ -1345,8 +1379,8 @@ export function ModifierFormuleButton({
 }: {
   memberId: string;
   nom: string;
-  /** Formule actuelle, présélectionnée. */
-  formule: FormuleId;
+  /** Formule actuelle, présélectionnée. `null` quand rien n'a été choisi. */
+  formule: FormuleId | null;
 }) {
   return (
     <Modal
@@ -1374,10 +1408,10 @@ export function ModifierFormuleButton({
               <select
                 name="formule"
                 required
-                defaultValue={formule}
+                defaultValue={formule ?? ""}
                 className={INPUT}
               >
-                <OptionsFormules />
+                <OptionsFormules vide="Aucune formule choisie" />
               </select>
             </Field>
           </ModalBody>

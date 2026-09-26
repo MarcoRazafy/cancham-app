@@ -47,6 +47,7 @@ import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
 import {
   RETARD_BLOCAGE_JOURS,
+  cotisationAnnuelle,
   fmtCotisation,
   fmtMontant,
   joursDeRetard,
@@ -214,9 +215,17 @@ export default async function AdminMembreDetail({
               <div className="grid gap-4 mb-4 sm:grid-cols-3">
                 <Donnee libelle="Statut juridique" valeur={m.statutJuridique} />
                 <Donnee libelle="Pays d’implantation" valeur={m.pays} />
+                {/*
+                  Une demande déposée sur la vitrine n'indique pas de
+                  formule : le candidat la choisit en complétant son dossier.
+                */}
                 <Donnee
                   libelle="Formule demandée"
-                  valeur={`${libelleFormule(m.formule)} · ${fmtCotisation(m.formule)}`}
+                  valeur={
+                    m.formule
+                      ? `${libelleFormule(m.formule)} · ${fmtCotisation(m.formule)}`
+                      : "Pas encore choisie"
+                  }
                 />
               </div>
               {m.motivation ? (
@@ -373,7 +382,7 @@ export default async function AdminMembreDetail({
               </dd>
               <dt className="text-muted">Cotisation</dt>
               <dd className="m-0 text-ink text-right font-semibold tabular-nums">
-                {fmtCotisation(m.formule)} / an
+                {cotisationAnnuelle(m.formule)}
               </dd>
               {m.paiementNote ? (
                 <>

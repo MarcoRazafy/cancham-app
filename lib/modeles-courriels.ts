@@ -100,8 +100,9 @@ export function courrielRelanceCotisation(
   d: {
     nom: string;
     entreprise: string;
-    montant: string;
-    formule: string;
+    /** Absents tant qu'aucune formule n'a été choisie. */
+    montant: string | null;
+    formule: string | null;
     retardJours: number | null;
     lien: string;
   },
@@ -113,9 +114,15 @@ export function courrielRelanceCotisation(
       titre: "Votre cotisation CanCham",
       paragraphes: [
         `Bonjour ${prenom(d.nom)},`,
-        d.retardJours
-          ? `La cotisation de ${d.entreprise} (${d.formule}, ${d.montant} par an) est en attente de règlement depuis ${d.retardJours} jour${d.retardJours > 1 ? "s" : ""}.`
-          : `La cotisation de ${d.entreprise} (${d.formule}, ${d.montant} par an) est en attente de règlement.`,
+        // La formule entre parenthèses, quand elle est connue : sinon la
+        // phrase annoncerait un montant « à définir ».
+        `La cotisation de ${d.entreprise}${
+          d.formule && d.montant ? ` (${d.formule}, ${d.montant} par an)` : ""
+        } est en attente de règlement${
+          d.retardJours
+            ? ` depuis ${d.retardJours} jour${d.retardJours > 1 ? "s" : ""}`
+            : ""
+        }.`,
         "Vous pouvez la régler auprès de l’équipe CanCham, en espèces, par virement ou par chèque. Votre espace membre indique votre situation et vos factures.",
       ],
       bouton: { libelle: "Voir mes cotisations", url: d.lien },
@@ -131,8 +138,9 @@ export function courrielDemandeApprouvee(
   d: {
     nom: string;
     entreprise: string;
-    montant: string;
-    formule: string;
+    /** Absents tant qu'aucune formule n'a été choisie. */
+    montant: string | null;
+    formule: string | null;
     lien: string;
     /**
      * Vrai quand la personne n'a pas encore de mot de passe : le lien mène à
@@ -152,7 +160,9 @@ export function courrielDemandeApprouvee(
         d.creerMotDePasse
           ? "Créez votre mot de passe pour vous connecter à CanCham Connect : quelques étapes vous permettent ensuite de compléter votre fiche — activité, logo, couverture, produits et services."
           : "Connectez-vous dès maintenant avec votre adresse et votre mot de passe : quelques étapes vous permettent de compléter votre fiche — activité, logo, couverture, produits et services.",
-        `Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle (${d.formule}, ${d.montant}), auprès de l’équipe, en espèces, par virement ou par chèque.`,
+        d.formule && d.montant
+          ? `Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle (${d.formule}, ${d.montant}), auprès de l’équipe, en espèces, par virement ou par chèque.`
+          : "Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle. Choisissez d’abord votre formule en complétant votre dossier : c’est elle qui en fixe le montant.",
       ],
       bouton: {
         libelle: d.creerMotDePasse ? "Créer mon mot de passe" : "Me connecter",

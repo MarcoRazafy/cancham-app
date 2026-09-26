@@ -32,7 +32,9 @@ export function situation(m: Member): Situation {
       };
     case "en_attente":
       return {
-        detail: `Approuvée · cotisation attendue : ${fmtCotisation(m.formule)}`,
+        detail: m.formule
+          ? `Approuvée · cotisation attendue : ${fmtCotisation(m.formule)}`
+          : "Approuvée · formule à choisir avant toute cotisation",
         action: "Encaisser",
         urgent: false,
       };

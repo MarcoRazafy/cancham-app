@@ -376,10 +376,15 @@ function EtapeFormule({ membre }: { membre: Member }) {
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
           {ORDRE_FORMULES.map((f) => (
+            /*
+              Une formule est obligatoire ici : c'est l'étape où le membre la
+              choisit, et rien n'est facturé tant qu'elle manque.
+            */
             <Choix
               key={f}
               name="formule"
               value={f}
+              requis
               defaultChecked={membre.formule === f}
               titre={libelleFormule(f)}
               prix={fmtCotisation(f)}
@@ -577,6 +582,7 @@ function Choix({
   name,
   value,
   defaultChecked,
+  requis = false,
   titre,
   detail,
   prix,
@@ -585,6 +591,8 @@ function Choix({
   name: string;
   value: string;
   defaultChecked: boolean;
+  /** Le groupe doit être renseigné : le navigateur bloque l'envoi à vide. */
+  requis?: boolean;
   titre: string;
   detail?: string;
   prix?: string;
@@ -597,6 +605,7 @@ function Choix({
         name={name}
         value={value}
         defaultChecked={defaultChecked}
+        required={requis}
         className="sr-only"
       />
       {/* Le rond de sélection, dessiné : le bouton natif est masqué. */}

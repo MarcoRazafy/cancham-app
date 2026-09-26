@@ -22,6 +22,7 @@ import {
   joursDeRetard,
   retardBloque,
   RETARD_BLOCAGE_JOURS,
+  type Devise,
 } from "@/lib/membership";
 import { getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
@@ -52,8 +53,9 @@ export default async function CotisationsPage() {
   const jours = joursDeRetard(m);
 
   // Le total se compte dans la devise de la formule : additionner des Ariary
-  // et des dollars donnerait un nombre sans unité et sans aucun sens.
-  const { devise } = FORMULES[m.formule];
+  // et des dollars donnerait un nombre sans unité et sans aucun sens. Sans
+  // formule choisie, rien n'a encore été facturé : l'Ariary fait l'affaire.
+  const devise: Devise = m.formule ? FORMULES[m.formule].devise : "MGA";
   const totalPaye = factures
     .filter((f) => f.statut === "payee" && f.devise === devise)
     .reduce((somme, f) => somme + f.montant, 0);
@@ -94,7 +96,7 @@ export default async function CotisationsPage() {
               </h2>
               <p className="text-[13.5px] text-muted m-0 mt-1">
                 {m.paiementNote ??
-                  `${libelleFormule(m.formule)} · ${fmtCotisation(m.formule)} par an`}
+                  `${libelleFormule(m.formule)} · ${m.formule ? `${fmtCotisation(m.formule)} par an` : "cotisation à définir"}`}
               </p>
             </div>
             <StatusPill status={m.statut} />

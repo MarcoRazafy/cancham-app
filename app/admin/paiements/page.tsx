@@ -79,12 +79,13 @@ export default async function AdminPaiements({
               <Download size={14} /> Exporter
             </a>
             <NouvelleFactureButton
+              /* Sans formule, la devise reste celle de la chambre : l'Ariary. */
               membres={membres
                 .filter((m) => m.statut !== "candidature")
                 .map((m) => ({
                   id: m.id,
                   nom: m.nom,
-                  devise: FORMULES[m.formule].devise,
+                  devise: m.formule ? FORMULES[m.formule].devise : "MGA",
                 }))}
             />
           </>

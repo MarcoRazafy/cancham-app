@@ -95,8 +95,15 @@ export const FORMULES: Record<FormuleId, Formule> = {
  */
 export const ORDRE_FORMULES = Object.keys(FORMULES) as FormuleId[];
 
-/** « Madagascar — Entreprise ». */
-export function libelleFormule(id: FormuleId): string {
+/**
+ * « Madagascar — Entreprise », ou l'aveu qu'aucune formule n'est choisie.
+ *
+ * Une demande d'adhésion arrive sans formule : le candidat la choisit en
+ * complétant son dossier. Tant qu'il ne l'a pas fait, la chambre n'attend
+ * aucun montant de lui, et l'écrire vaut mieux que d'en inventer un.
+ */
+export function libelleFormule(id: FormuleId | null): string {
+  if (!id) return "Formule à choisir";
   const f = FORMULES[id];
   return `${f.pays} — ${f.profil}`;
 }
@@ -110,10 +117,21 @@ export function fmtMontant(montant: number, devise: Devise): string {
   return devise === "CAD" ? `${nombre} $` : `${nombre} Ar`;
 }
 
-/** Cotisation annuelle d'une formule, mise en forme. */
-export function fmtCotisation(id: FormuleId): string {
+/** Cotisation annuelle d'une formule, mise en forme. « À définir » sans formule. */
+export function fmtCotisation(id: FormuleId | null): string {
+  if (!id) return "à définir";
   const f = FORMULES[id];
   return fmtMontant(f.montant, f.devise);
+}
+
+/**
+ * Cotisation annuelle telle qu'on l'annonce : « 500 000 Ar / an ».
+ *
+ * Sans formule, il n'y a pas de montant à annoncer — et surtout pas un « / an »
+ * accolé à « à définir ».
+ */
+export function cotisationAnnuelle(id: FormuleId | null): string {
+  return id ? `${fmtCotisation(id)} / an` : "Cotisation à définir";
 }
 
 /**
