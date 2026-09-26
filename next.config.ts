@@ -116,7 +116,16 @@ const nextConfig: NextConfig = {
    * site s'affichait mais restait inerte : le menu ne s'ouvrait pas, aucun
    * bouton ne répondait. Sans effet en production.
    */
-  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "100.*.*.*", "172.16.*.*"],
+  allowedDevOrigins: [
+    "192.168.*.*",
+    "10.*.*.*",
+    "100.*.*.*",
+    "172.16.*.*",
+    // Tunnel Cloudflare : montrer le serveur de développement à distance, le
+    // temps d'une démonstration. Sans cette entrée, la page s'affiche mais
+    // reste inerte — Next bloque ses propres ressources de développement.
+    "*.trycloudflare.com",
+  ],
 
   experimental: {
     serverActions: {
