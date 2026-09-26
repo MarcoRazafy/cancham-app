@@ -24,6 +24,7 @@ import {
   ModalFooter,
   SubmitButton,
 } from "@/components/form-bits";
+import { modifierDateReglement } from "@/lib/actions/factures";
 import {
   addContact,
   ajouterService,
@@ -1372,6 +1373,60 @@ export function SupprimerServiceButton({
 }
 
 /** Correction de la date d'adhésion, réservée à l'équipe. */
+export function ModifierReglementButton({
+  memberId,
+  nom,
+  date,
+}: {
+  memberId: string;
+  nom: string;
+  /** Date actuelle du dernier règlement de cotisation, ISO court. */
+  date: string;
+}) {
+  return (
+    <Modal
+      title="Date du dernier règlement"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Modifier la date du dernier règlement de ${nom}`}
+          title="Modifier la date du règlement"
+          className="shrink-0 w-6 h-6 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center text-muted cursor-pointer hover:text-ink hover:border-faint"
+        >
+          <Pencil size={12} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={modifierDateReglement}>
+          <input type="hidden" name="memberId" value={memberId} />
+          <ModalBody>
+            <Field
+              label="Cotisation réglée le"
+              hint="Le renouvellement suit : un an après cette date, jour pour jour. La facture correspondante est corrigée avec elle."
+            >
+              <input
+                type="date"
+                name="date"
+                required
+                defaultValue={date}
+                className={INPUT}
+              />
+            </Field>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Enregistrement…">
+              <Check size={14} /> Enregistrer
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
 export function ModifierFormuleButton({
   memberId,
   nom,
