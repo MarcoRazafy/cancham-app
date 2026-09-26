@@ -327,8 +327,16 @@ export default async function ProfilPage() {
                 {libelleFormule(m.formule)}
               </span>
               <span className="text-[13px] text-accent-strong font-semibold">
-                {fmtCotisation(m.formule)}{" "}
-                <span className="text-muted font-normal">/ par an</span>
+                {m.formule ? (
+                  <>
+                    {fmtCotisation(m.formule)}{" "}
+                    <span className="text-muted font-normal">/ par an</span>
+                  </>
+                ) : (
+                  <span className="text-muted font-normal">
+                    Choisissez votre formule pour connaître votre cotisation.
+                  </span>
+                )}
               </span>
             </span>
           }

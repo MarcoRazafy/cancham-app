@@ -14,7 +14,7 @@ import {
 } from "@/lib/filtres-membres";
 import {
   ORDRE_FORMULES,
-  fmtCotisation,
+  cotisationAnnuelle,
   libelleFormule,
 } from "@/lib/membership";
 import { getAccesMembres } from "@/lib/acces-membres";
@@ -182,7 +182,7 @@ export default async function AdminMembres({
                           {libelleFormule(m.formule)}
                         </span>
                         <span className="block text-[12.5px] text-muted tabular-nums">
-                          {fmtCotisation(m.formule)} / an
+                          {cotisationAnnuelle(m.formule)}
                         </span>
                       </td>
                       <td className="px-5 py-3.5">

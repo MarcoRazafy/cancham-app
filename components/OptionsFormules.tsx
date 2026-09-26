@@ -13,9 +13,15 @@ import {
  * Les formules viennent de `ORDRE_FORMULES`, donc de la grille elle-même :
  * une formule ajoutée à la grille apparaît ici sans rien à recopier.
  */
-export function OptionsFormules() {
+export function OptionsFormules({
+  vide,
+}: {
+  /** Libellé d'une option vide, pour une formule pas encore choisie. */
+  vide?: string;
+}) {
   return (
     <>
+      {vide ? <option value="">{vide}</option> : null}
       {ORDRE_FORMULES.map((f) => (
         <option key={f} value={f}>
           {libelleFormule(f)} — {fmtCotisation(f)} / an

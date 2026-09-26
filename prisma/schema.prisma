@@ -133,7 +133,10 @@ model Member {
   ville        String
   statut       MemberStatus @default(candidature)
   /// Formule choisie à l'inscription. Elle fixe le montant de la cotisation.
-  formule      Formule      @default(mg_entreprise)
+  /// Choisie par le membre en complétant son dossier, ou par l'équipe.
+  /// `null` tant que personne ne l'a choisie : aucune cotisation n'est alors
+  /// attendue, et rien n'est facturé.
+  formule      Formule?
   /// Date d'adhésion.
   adhesion     DateTime     @db.Date
   /// Date de bascule en retard. Le nombre de jours s'en déduit.

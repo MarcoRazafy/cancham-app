@@ -68,7 +68,7 @@ type MembreRow = {
   secteur: string;
   ville: string;
   statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
-  formule: FormuleId;
+  formule: FormuleId | null;
   adhesion: Date;
   retardDepuis: Date | null;
   activite: string;

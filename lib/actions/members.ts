@@ -227,8 +227,8 @@ export async function donnerAcces(formData: FormData) {
       ? courrielDemandeApprouvee(contact.email, {
           nom: contact.nom,
           entreprise: m.nom,
-          formule: libelleFormule(m.formule),
-          montant: fmtCotisation(m.formule),
+          formule: m.formule ? libelleFormule(m.formule) : null,
+          montant: m.formule ? fmtCotisation(m.formule) : null,
           lien,
           creerMotDePasse: !contact.motDePasse,
         })
@@ -379,6 +379,15 @@ export async function registerPayment(formData: FormData) {
   });
   if (!avant) redirectWithErreur("/admin/membres", "Membre introuvable.");
 
+  // Sans formule, il n'y a ni montant attendu ni devise : on ne facture pas
+  // au hasard. L'équipe la choisit depuis la fiche, puis revient encaisser.
+  if (!avant.formule) {
+    redirectWithErreur(
+      `/admin/membres/${id}`,
+      "Choisissez d’abord la formule de ce membre : c’est elle qui donne le montant et la devise.",
+    );
+  }
+
   // Montant saisi, sinon celui de la formule. La devise suit toujours la
   // formule : un montant canadien enregistré en Ariary vaudrait mille fois moins.
   const tarif = FORMULES[avant.formule];
@@ -465,8 +474,8 @@ export async function sendReminder(formData: FormData) {
     courrielRelanceCotisation(contact.email, {
       nom: contact.nom,
       entreprise: m.nom,
-      formule: libelleFormule(m.formule),
-      montant: fmtCotisation(m.formule),
+      formule: m.formule ? libelleFormule(m.formule) : null,
+      montant: m.formule ? fmtCotisation(m.formule) : null,
       retardJours: retardJours || null,
       lien: await urlPublique("/membre/cotisations"),
     }),

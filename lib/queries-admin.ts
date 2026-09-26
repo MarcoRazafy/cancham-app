@@ -172,9 +172,11 @@ export async function getAnneesFactures(): Promise<number[]> {
 export async function getRepartitionFormules(): Promise<
   { formule: FormuleId; n: number }[]
 > {
+  // Les fiches sans formule n'entrent pas dans la répartition : elles n'ont
+  // pas encore de camp.
   const rows = await prisma.member.groupBy({
     by: ["formule"],
-    where: { statut: { not: "candidature" } },
+    where: { statut: { not: "candidature" }, formule: { not: null } },
     _count: { _all: true },
   });
   return rows

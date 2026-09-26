@@ -83,7 +83,8 @@ export interface Member {
   ville: string;
   statut: MemberStatus;
   /** Formule choisie à l'inscription. Elle fixe la cotisation. */
-  formule: FormuleId;
+  /** `null` tant qu'aucune formule n'a été choisie : rien n'est attendu. */
+  formule: FormuleId | null;
   /** Date d'adhésion, ISO court (YYYY-MM-DD). */
   adhesion: string;
   /** Date de bascule en retard. Sert à calculer les jours de retard à la volée. */
