@@ -30,6 +30,7 @@ import {
   EditContactButton,
   ModifierAdhesionButton,
   ModifierFormuleButton,
+  ModifierReglementButton,
   EditProfileButton,
   ModifierServiceButton,
   RemoveContactButton,
@@ -53,7 +54,11 @@ import {
   joursDeRetard,
   libelleFormule,
 } from "@/lib/membership";
-import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
+import {
+  dernierReglementCotisation,
+  fmtJour,
+  renouvellementCotisation,
+} from "@/lib/agenda";
 import { getAccesMembre } from "@/lib/acces-membres";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getHistoriqueMembre } from "@/lib/queries-admin";
@@ -75,6 +80,8 @@ export default async function AdminMembreDetail({
     getAccesMembre(m.id),
   ]);
   const candidature = m.statut === "candidature";
+  // La date qui ouvre l'année d'adhésion : celle du dernier règlement.
+  const dernierReglement = dernierReglementCotisation(factures);
   // Un an après le dernier règlement de cotisation, pas après l'inscription.
   const renouvellement = renouvellementCotisation({
     factures,
@@ -384,11 +391,26 @@ export default async function AdminMembreDetail({
               <dd className="m-0 text-ink text-right font-semibold tabular-nums">
                 {cotisationAnnuelle(m.formule)}
               </dd>
-              {m.paiementNote ? (
+              {m.paiementNote || dernierReglement ? (
                 <>
                   <dt className="text-muted">Dernier règlement</dt>
-                  <dd className="m-0 text-ink text-right">
-                    {m.paiementNote.replace(/^Payé par /, "")}
+                  <dd className="m-0 text-ink flex items-center justify-end gap-2 text-right">
+                    <span>
+                      {m.paiementNote
+                        ? m.paiementNote.replace(/^Payé par /, "")
+                        : fmtDate(dernierReglement!)}
+                    </span>
+                    {/*
+                      La date se corrige ici : c'est elle qui ouvre l'année
+                      d'adhésion, et donc le renouvellement affiché dessous.
+                    */}
+                    {dernierReglement ? (
+                      <ModifierReglementButton
+                        memberId={m.id}
+                        nom={m.nom}
+                        date={dernierReglement}
+                      />
+                    ) : null}
                   </dd>
                 </>
               ) : null}

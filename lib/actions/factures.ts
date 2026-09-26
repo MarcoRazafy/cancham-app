@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { nomFacture, numeroFacture } from "@/lib/factures";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtMontant, type Devise } from "@/lib/membership";
+import { ajouterAns } from "@/lib/agenda";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 
@@ -194,4 +195,113 @@ export async function supprimerFacture(formData: FormData) {
 
   revalidatePath("/", "layout");
   redirectWithFlash("/admin/paiements", `Facture ${f.numero} supprimée`);
+}
+
+/**
+ * Correction de la date du dernier règlement de cotisation d'un membre.
+ *
+ * C'est cette date qui ouvre l'année d'adhésion : le renouvellement tombe un
+ * an après, jour pour jour. Une date saisie de travers décalait donc toute
+ * l'échéance, sans moyen de la reprendre.
+ *
+ * La date vit sur la facture, et nulle part ailleurs : une copie sur la fiche
+ * du membre finirait par contredire la pièce comptable. La mention « Dernier
+ * règlement » de la fiche n'est qu'un libellé — on y remplace le jour pour
+ * qu'elle ne raconte pas autre chose.
+ */
+export async function modifierDateReglement(formData: FormData) {
+  const memberId = texte(formData, "memberId");
+  const retour = `/admin/membres/${memberId}`;
+  const jour = jourSaisi(texte(formData, "date"));
+  if (!jour) redirectWithErreur(retour, "Indiquez une date valide.");
+
+  const acteur = (await getCurrentUser("admin")).nom;
+
+  const derniere = await prisma.invoice.findFirst({
+    where: {
+      memberId,
+      statut: "payee",
+      objet: { startsWith: "Cotisation", mode: "insensitive" },
+    },
+    // À dates égales, la dernière émise : l'ordre doit être le même d'un
+    // appel à l'autre, sinon le crayon corrigerait une fois l'une, une fois
+    // l'autre.
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      numero: true,
+      date: true,
+      member: { select: { nom: true, paiementNote: true } },
+    },
+  });
+  if (!derniere) {
+    redirectWithErreur(
+      retour,
+      "Aucun règlement de cotisation n’est enregistré pour ce membre : enregistrez-en un, ou modifiez sa date d’adhésion.",
+    );
+  }
+
+  const ancienne = derniere.date.toISOString().slice(0, 10);
+  if (ancienne === jour)
+    redirectWithFlash(retour, "Date de règlement inchangée");
+
+  const lisible = (iso: string) =>
+    new Date(`${iso}T00:00:00Z`).toLocaleDateString("fr-FR", {
+      timeZone: "UTC",
+    });
+
+  // Le libellé de la fiche porte la date en toutes lettres : on y reprend la
+  // nouvelle, sans toucher au mode ni au montant qu'il annonce.
+  const note = derniere.member?.paiementNote ?? null;
+  const noteAJour = note
+    ? /le \d{1,2}\/\d{1,2}\/\d{4}/.test(note)
+      ? note.replace(/le \d{1,2}\/\d{1,2}\/\d{4}/, `le ${lisible(jour)}`)
+      : `${note} · le ${lisible(jour)}`
+    : null;
+
+  await prisma.$transaction([
+    prisma.invoice.update({
+      where: { id: derniere.id },
+      data: { date: jourBase(jour) },
+    }),
+    ...(noteAJour
+      ? [
+          prisma.member.update({
+            where: { id: memberId },
+            data: { paiementNote: noteAJour },
+          }),
+        ]
+      : []),
+    prisma.auditLog.create({
+      data: {
+        action: "reglement_modifie",
+        entite: "Member",
+        entiteId: memberId,
+        acteur,
+        detail: `${derniere.member?.nom ?? "Membre"} · règlement ${derniere.numero} : du ${lisible(ancienne)} au ${lisible(jour)}.`,
+      },
+    }),
+  ]);
+
+  // Un membre peut porter plusieurs cotisations réglées : c'est la plus
+  // récente qui fixe le renouvellement. Si une autre reste devant, le
+  // renouvellement ne bouge pas — autant le dire que de laisser croire.
+  const devant = await prisma.invoice.findFirst({
+    where: {
+      memberId,
+      statut: "payee",
+      objet: { startsWith: "Cotisation", mode: "insensitive" },
+      date: { gt: jourBase(jour) },
+    },
+    orderBy: { date: "desc" },
+    select: { numero: true, date: true },
+  });
+
+  revalidatePath("/", "layout");
+  redirectWithFlash(
+    retour,
+    devant
+      ? `Règlement du ${lisible(jour)} · le renouvellement ne bouge pas : la cotisation ${devant.numero} du ${lisible(devant.date.toISOString().slice(0, 10))} reste la plus récente`
+      : `Règlement du ${lisible(jour)} · renouvellement le ${lisible(ajouterAns(jour, 1))}`,
+  );
 }
