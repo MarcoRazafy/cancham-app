@@ -206,7 +206,8 @@ export default async function PublicHome() {
                   className={`${TITRE_GRAS} apparition block text-[clamp(22px,2.9vw,36px)] leading-[1.15] mt-5`}
                   style={{ animationDelay: "0.3s" }}
                 >
-                  Deux pays. Un réseau. Des opportunités.
+                  Deux pays. Un réseau. Des{" "}
+                  <Saillant ton="vert">opportunités.</Saillant>
                 </span>
               </h1>
 
@@ -235,24 +236,58 @@ export default async function PublicHome() {
             </div>
 
             {VISUELS.hero.url ? (
+              /*
+                La photo n'est pas posée à plat : elle est montée, comme sur
+                les visuels de la chambre. Deux formes arrondies la calent —
+                le bleu nuit et le rouge —, une bande verticale rappelle les
+                deux pays, et la légende déborde en bas sur une pastille
+                blanche. Tout l'habillage est décoratif : seul le lien de la
+                photo compte pour la navigation.
+              */
               <figure
-                className="apparition relative m-0 rounded-xl overflow-hidden border border-white/15 aspect-[16/11] group"
+                className="apparition relative m-0 mb-10 group"
                 style={{ animationDelay: "0.3s" }}
               >
-                <Link
-                  href="#evenements"
-                  className="absolute inset-0 z-10"
-                  aria-label="Voir les prochains rendez-vous"
+                <span
+                  aria-hidden
+                  className="absolute -left-5 -top-5 w-[58%] h-[64%] rounded-[34px] bg-[var(--marque-nuit-3)]"
                 />
-                <Image
-                  src={VISUELS.hero.url}
-                  alt={VISUELS.hero.alt}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 540px"
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                <span
+                  aria-hidden
+                  className="absolute -left-9 top-14 w-[34%] h-[38%] rounded-[30px] bg-[var(--marque-rouge)]"
                 />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent px-4 pt-10 pb-3.5 text-[13px] text-white/90">
+                <span
+                  aria-hidden
+                  className="absolute -left-14 -bottom-8 w-[46%] h-[42%] rounded-[34px] border border-white/20"
+                />
+
+                <div className="relative rounded-[22px] overflow-hidden border border-white/15 aspect-[16/11] shadow-[0_30px_70px_-30px_rgba(0,0,0,0.75)]">
+                  <Link
+                    href="#evenements"
+                    className="absolute inset-0 z-10"
+                    aria-label="Voir les prochains rendez-vous"
+                  />
+                  <Image
+                    src={VISUELS.hero.url}
+                    alt={VISUELS.hero.alt}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 540px"
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                  />
+                </div>
+
+                {/* Les deux pays, sur la tranche. */}
+                <span
+                  aria-hidden
+                  className="hidden sm:flex absolute -right-4 top-10 bottom-16 w-[42px] rounded-[16px] bg-[var(--marque-rouge)] items-center justify-center"
+                >
+                  <span className="[writing-mode:vertical-rl] rotate-180 text-white text-[10.5px] font-bold uppercase tracking-[0.28em] whitespace-nowrap">
+                    Canada × Madagascar
+                  </span>
+                </span>
+
+                <figcaption className="absolute -bottom-6 -left-6 right-16 sm:right-24 rounded-[14px] bg-white px-5 py-3.5 text-[14.5px] font-semibold text-[var(--marque-nuit)] shadow-[0_18px_40px_-20px_rgba(0,0,0,0.6)]">
                   Des échanges qui font grandir vos projets
                 </figcaption>
               </figure>
