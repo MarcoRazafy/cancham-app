@@ -137,7 +137,7 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
                 <OfferCard
                   key={o.id}
                   offer={o}
-                  href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
+                  href={`/${space}/offres/${o.id}`}
                 />
               ))}
             </div>

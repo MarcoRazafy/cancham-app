@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
-import { getActualitesPubliques, getProchainsEvenements } from "@/lib/queries";
+import {
+  getActualitesPubliques,
+  getOffers,
+  getProchainsEvenements,
+} from "@/lib/queries";
 import { baseSite } from "@/lib/site";
 
 /**
@@ -17,9 +21,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
 
   const base = baseSite();
-  const [actualites, evenements] = await Promise.all([
+  const [actualites, evenements, offres] = await Promise.all([
     getActualitesPubliques(100),
     getProchainsEvenements(100),
+    getOffers(),
   ]);
 
   return [
@@ -40,6 +45,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(a.date),
       changeFrequency: "monthly" as const,
       priority: 0.6,
+    })),
+    ...offres.map((o) => ({
+      url: `${base}/offres/${o.id}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
     })),
   ];
 }

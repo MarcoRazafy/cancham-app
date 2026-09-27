@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Tag } from "lucide-react";
 import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import type { Offer } from "@/lib/types";
@@ -6,15 +7,16 @@ import type { Offer } from "@/lib/types";
 /**
  * Une offre entre membres, telle que la vitrine la montre.
  *
- * Sur la plateforme, la carte mène à la fiche de l'entreprise qui propose
- * l'avantage. Ici, il n'y a pas de fiche à ouvrir : l'annuaire est réservé
- * aux adhérents. La carte ne cherche donc pas à conduire quelque part — elle
- * montre ce qui se passe entre membres, et c'est le bouton de la section qui
- * propose d'en être.
+ * Un clic ouvre la fiche de l'offre : ce qu'elle est, et comment joindre
+ * l'entreprise qui la propose. L'annuaire complet, lui, reste réservé aux
+ * adhérents.
  */
 export function CarteOffre({ offre }: { offre: Offer }) {
   return (
-    <article className="flex flex-col rounded-xl overflow-hidden bg-white shadow-[0_2px_14px_rgba(15,29,44,0.06)]">
+    <Link
+      href={`/offres/${offre.id}`}
+      className="group flex flex-col no-underline rounded-xl overflow-hidden bg-white shadow-[0_2px_14px_rgba(15,29,44,0.06)] transition-shadow duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:shadow-[0_20px_60px_rgba(15,29,44,0.12)]"
+    >
       <div className="relative shrink-0 aspect-[16/9] overflow-hidden bg-[#e9edf2]">
         {offre.cover ? (
           <Image
@@ -22,7 +24,7 @@ export function CarteOffre({ offre }: { offre: Offer }) {
             alt=""
             fill
             sizes="(max-width: 768px) 100vw, 300px"
-            className="object-cover"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
           <div
@@ -47,6 +49,6 @@ export function CarteOffre({ offre }: { offre: Offer }) {
           {offre.desc}
         </p>
       </div>
-    </article>
+    </Link>
   );
 }
