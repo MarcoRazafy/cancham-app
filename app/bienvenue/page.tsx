@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { ChampAuth, CHAMP_AUTH, Saisie } from "@/components/public/CadreAuth";
 import { BoutonPilule } from "@/components/public/BoutonMarque";
+import { ChoixCarte, ChoixFormules } from "@/components/public/ChoixCarte";
 import { LogoOfficiel } from "@/components/public/Marque";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import {
@@ -23,12 +24,7 @@ import {
   type EtapeAccueil,
 } from "@/lib/accueil";
 import { enregistrerEtape, terminerAccueil } from "@/lib/actions/accueil";
-import {
-  ORDRE_FORMULES,
-  PHOTOS_PAR_PRODUIT,
-  fmtCotisation,
-  libelleFormule,
-} from "@/lib/membership";
+import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import { getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import type { Member, User as Utilisateur } from "@/lib/types";
@@ -267,7 +263,7 @@ function EtapeEntreprise({ membre }: { membre: Member }) {
           Vous adhérez en tant que
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Choix
+          <ChoixCarte
             name="type"
             value="morale"
             defaultChecked={membre.type !== "physique"}
@@ -275,7 +271,7 @@ function EtapeEntreprise({ membre }: { membre: Member }) {
             detail="Personne morale : société, association, ONG"
             icone={<Building2 size={26} strokeWidth={1.6} />}
           />
-          <Choix
+          <ChoixCarte
             name="type"
             value="physique"
             defaultChecked={membre.type === "physique"}
@@ -374,23 +370,11 @@ function EtapeFormule({ membre }: { membre: Member }) {
         <legend className="block text-[13px] font-semibold text-ink mb-2">
           Formule d’adhésion
         </legend>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {ORDRE_FORMULES.map((f) => (
-            /*
-              Une formule est obligatoire ici : c'est l'étape où le membre la
-              choisit, et rien n'est facturé tant qu'elle manque.
-            */
-            <Choix
-              key={f}
-              name="formule"
-              value={f}
-              requis
-              defaultChecked={membre.formule === f}
-              titre={libelleFormule(f)}
-              prix={fmtCotisation(f)}
-            />
-          ))}
-        </div>
+        {/*
+          Une formule est obligatoire ici : c'est l'étape où le membre
+          confirme la sienne, et rien n'est facturé tant qu'elle manque.
+        */}
+        <ChoixFormules actuelle={membre.formule} />
       </fieldset>
       <ChampAuth
         label="Motivation à rejoindre CanCham"
@@ -568,66 +552,5 @@ function EtapeProduits({ membre }: { membre: Member }) {
         <Plus size={16} aria-hidden /> Ajouter et en saisir une autre
       </button>
     </>
-  );
-}
-
-/* ============================ Choix en carte ============================ */
-
-/**
- * Bouton radio présenté en carte, comme les choix d'Upwork : une icône en
- * haut à gauche, le rond de sélection en haut à droite. Choisie, la carte
- * prend une bordure verte et un fond vert pâle.
- */
-function Choix({
-  name,
-  value,
-  defaultChecked,
-  requis = false,
-  titre,
-  detail,
-  prix,
-  icone,
-}: {
-  name: string;
-  value: string;
-  defaultChecked: boolean;
-  /** Le groupe doit être renseigné : le navigateur bloque l'envoi à vide. */
-  requis?: boolean;
-  titre: string;
-  detail?: string;
-  prix?: string;
-  icone?: React.ReactNode;
-}) {
-  return (
-    <label className="group relative flex flex-col gap-3 rounded-2xl border-2 border-line bg-white p-5 cursor-pointer transition-[background-color,border-color] hover:border-faint has-checked:border-marque-vert has-checked:bg-marque-vert/[0.05] has-focus-visible:ring-4 has-focus-visible:ring-marque-vert/20">
-      <input
-        type="radio"
-        name={name}
-        value={value}
-        defaultChecked={defaultChecked}
-        required={requis}
-        className="sr-only"
-      />
-      {/* Le rond de sélection, dessiné : le bouton natif est masqué. */}
-      <span
-        aria-hidden
-        className="absolute top-4 right-4 w-5 h-5 rounded-full border-2 border-line bg-white transition-colors group-has-checked:border-marque-vert group-has-checked:bg-[radial-gradient(circle,var(--marque-vert)_45%,white_50%)]"
-      />
-      {icone ? <span className="text-ink">{icone}</span> : null}
-      <span className="min-w-0 pr-7">
-        <span className="block text-[16px] font-semibold text-ink leading-snug">
-          {titre}
-        </span>
-        {detail ? (
-          <span className="block text-[13px] text-muted mt-0.5">{detail}</span>
-        ) : null}
-      </span>
-      {prix ? (
-        <span className="text-[20px] font-bold text-marque-vert whitespace-nowrap mt-auto">
-          {prix}{" "}
-          <span className="text-[13px] font-semibold text-muted">/ an</span>
-        </span>
-      ) : null}
-    </label>
   );
 }

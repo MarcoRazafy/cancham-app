@@ -8,6 +8,7 @@ import {
   Saisie,
 } from "@/components/public/CadreAuth";
 import { BoutonEnvoi, EcranPassage } from "@/components/public/BoutonMarque";
+import { ChoixFormules } from "@/components/public/ChoixCarte";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { Saillant } from "@/components/ui";
 import { INDICATIFS, PAYS } from "@/lib/accueil";
@@ -169,6 +170,22 @@ export default async function InscriptionPage() {
             <OptionsSecteurs vide="Choisissez un secteur" />
           </select>
         </ChampAuth>
+
+        {/*
+          La formule se choisit ici, et non plus à la première connexion : le
+          candidat doit savoir ce qu'il demande, et pour quel montant. Le
+          profil écrit sous chaque pays dit qui paie quoi.
+        */}
+        <fieldset className="m-0 p-0 border-0">
+          <legend className="block text-[13px] font-semibold text-ink mb-1.5">
+            Formule d’adhésion
+          </legend>
+          <p className="m-0 mb-3 text-[12.8px] text-muted">
+            Choisissez celle qui correspond à votre profil. La cotisation se
+            règle après validation de votre demande, jamais avant.
+          </p>
+          <ChoixFormules />
+        </fieldset>
 
         <ChampAuth label="Vos motivations à nous rejoindre">
           <textarea
