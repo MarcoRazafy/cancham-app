@@ -264,6 +264,25 @@ export function OffreButton({
                 className={INPUT}
               />
             </Field>
+            <Field
+              label="Lien « En profiter »"
+              hint="Page de commande, formulaire, offre détaillée. Sans lien, le membre écrit au contact de l’entreprise."
+            >
+              {/*
+                En texte, comme le site web d'une fiche membre : `type="url"`
+                refuserait « exemple.mg/offre » tant que « https:// » n'est pas
+                tapé, alors que l'enregistrement complète l'adresse lui-même.
+              */}
+              <input
+                name="lien"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
+                defaultValue={offre?.lien ?? ""}
+                placeholder="exemple.mg/offre-cancham"
+                className={INPUT}
+              />
+            </Field>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />

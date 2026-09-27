@@ -122,7 +122,6 @@ export const TITLES: Record<string, [string, string]> = {
   "/membre/agenda": ["Espace membre", "Agenda"],
   "/membre/rendez-vous": ["Espace membre", "Rendez-vous"],
   "/membre/actualites": ["Espace membre", "Actualités"],
-  "/membre/offres": ["Espace membre", "Offre entre membres"],
   "/membre/messagerie": ["Espace membre", "Messagerie"],
   "/membre/ressources": ["Espace membre", "Ressources"],
   "/membre/contact": ["Espace membre", "Contacter l’équipe"],
@@ -141,7 +140,6 @@ export const TITLES: Record<string, [string, string]> = {
   "/admin/offres-cancham": ["Back-office", "Services CanCham"],
   "/admin/messagerie": ["Back-office", "Messagerie"],
   "/admin/actualites": ["Back-office", "Actualités"],
-  "/admin/offres": ["Back-office", "Offre entre membres"],
   "/admin/ressources": ["Back-office", "Ressources"],
 };
 

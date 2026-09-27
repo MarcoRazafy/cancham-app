@@ -112,11 +112,11 @@ export async function ActualitesPage({ space }: { space: Space }) {
                     offer={o}
                     carre
                     className="xl:max-h-[max(220px,calc((100dvh-160px)/3))]"
-                    href={`/${space}/offres/${o.id}`}
                   />
                 );
                 // Les commandes sous la carte, et non dedans : la carte
-                // entière est un lien, qui ne peut pas contenir de bouton.
+                // entière ouvre l'offre, et un bouton n'en contient pas un
+                // autre.
                 return admin ? (
                   <div key={o.id} className="flex flex-col gap-1.5">
                     {carte}

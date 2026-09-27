@@ -134,11 +134,7 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
           {offres.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
               {offres.map((o) => (
-                <OfferCard
-                  key={o.id}
-                  offer={o}
-                  href={`/${space}/offres/${o.id}`}
-                />
+                <OfferCard key={o.id} offer={o} />
               ))}
             </div>
           ) : (

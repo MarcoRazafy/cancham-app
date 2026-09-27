@@ -525,6 +525,9 @@ model Offer {
   desc  String
   /// Visuel de l'offre. `null` = la couverture de l'entreprise qui la propose.
   image String?
+  /// Où l'on en profite : page de commande, formulaire, offre détaillée.
+  /// `null` = pas de lien, on écrit alors au contact de l'entreprise.
+  lien  String?
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
