@@ -78,6 +78,73 @@ const AVANTAGES = [
 ];
 
 /**
+ * Celles et ceux qui dirigent la chambre.
+ *
+ * Écrits ici et non en base : le conseil ne change qu'à l'assemblée générale,
+ * et le back-office n'a pas d'écran pour le tenir. Le jour où il en aura un,
+ * cette constante partira ; en attendant, une élection se reporte en
+ * modifiant ces lignes et en déposant les portraits dans `public/equipe/`.
+ */
+const PRESIDENTE = {
+  nom: "Ando Lalaina RATOVOMANANA",
+  role: "Présidente du Conseil d’Administration",
+  photo: "/equipe/ando-ratovomanana.jpg",
+  citation:
+    "Dix ans après sa création, la CanCham continue d’évoluer, portée par la motivation de celles et ceux qui la font vivre. Nous innovons dans nos formats, nos missions et nos outils, avec une seule boussole : ouvrir de vraies portes entre le Canada et Madagascar.",
+};
+
+/**
+ * Le bureau et la direction. `direction` distingue la salariée des élus : son
+ * filet et son intitulé passent au vert, comme sur le modèle de la chambre.
+ */
+const BUREAU = [
+  {
+    nom: "Rojonirina Patrick ANDRIANTSOAMANALINA",
+    role: "Vice-Président",
+    photo: "/equipe/patrick-andriantsoamanalina.jpg",
+    direction: false,
+  },
+  {
+    nom: "Lalaina Alfred ANDRIANJATOVO",
+    role: "Trésorier",
+    photo: "/equipe/alfred-andrianjatovo.jpg",
+    direction: false,
+  },
+  {
+    nom: "Danie RABODOVOLOLONIAINA",
+    role: "Secrétaire",
+    photo: "/equipe/danie-rabodovololoniaina.jpg",
+    direction: false,
+  },
+  {
+    nom: "Alice RATISBONNE",
+    role: "Directrice Exécutive",
+    photo: "/equipe/alice-ratisbonne.jpg",
+    direction: true,
+  },
+];
+
+const CONSEILLERES = [
+  { nom: "Tiana RAKOTOMALALA", photo: "/equipe/tiana-rakotomalala.jpg" },
+  { nom: "Hope TARVERDIAN", photo: "/equipe/hope-tarverdian.jpg" },
+  {
+    nom: "Anna Josée RANDRIAMAROLAHY",
+    photo: "/equipe/anna-josee-randriamarolahy.jpg",
+  },
+  { nom: "Elodie RAHARINIRINA", photo: "/equipe/elodie-raharinirina.jpg" },
+];
+
+/**
+ * Le filet rouge-vert de la charte, posé sur le bleu nuit.
+ *
+ * Les teintes pleines y perdent : le vert #007140 passe pour du gris foncé.
+ * On prend leurs déclinaisons claires, celles que la vitrine sombre réserve
+ * déjà au texte de marque.
+ */
+const FILET =
+  "bg-[linear-gradient(90deg,var(--marque-rouge-clair),var(--marque-vert-clair))]";
+
+/**
  * Décalage de l'apparition d'un élément dans une rangée.
  *
  * Les apparitions au défilement suivent la position dans la page, pas une
@@ -623,6 +690,171 @@ export default async function PublicHome() {
           </div>
         </section>
       ) : null}
+      {/* ==================== Conseil d'administration ==================== */}
+      {/*
+        Les visages de la chambre, juste avant qu'on propose de s'inscrire :
+        on rejoint des personnes autant qu'une organisation, et la parole de
+        la présidente dit mieux que nos arguments pourquoi la maison existe.
+
+        Le filet en haut détache la section de la bande claire des actualités.
+        En bas, rien : l'infolettre ouvre déjà sur son propre dégradé, et deux
+        dégradés qui se touchent ne feraient que du bruit.
+      */}
+      <section id="conseil" className="relative scroll-mt-[124px]">
+        <span
+          aria-hidden
+          className={`absolute inset-x-0 top-0 h-2.5 ${FILET}`}
+        />
+
+        <div className={`${CONTENEUR} py-16 md:py-24`}>
+          <div className="apparition-defilement max-w-[780px]">
+            <h2
+              className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,52px)] leading-[1.1] m-0`}
+            >
+              Celles et ceux qui portent la chambre.
+            </h2>
+            <span
+              aria-hidden
+              className={`block w-[140px] h-1.5 rounded-full mt-6 ${FILET}`}
+            />
+            <p className="m-0 mt-6 text-[17px] leading-[1.6] text-white/72">
+              Notre Conseil d’Administration et notre direction exécutive,
+              engagés entre le Canada et Madagascar, orientent notre action et
+              veillent à ce que chaque membre y trouve sa place.
+            </p>
+          </div>
+
+          {/* ---------- La présidente ---------- */}
+          <div className="mt-14 grid gap-10 lg:gap-16 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-center">
+            <div
+              style={cascade(1)}
+              className={`apparition-defilement rounded-[26px] p-1.5 ${FILET}`}
+            >
+              <Image
+                src={PRESIDENTE.photo}
+                alt={`Portrait d’${PRESIDENTE.nom}`}
+                width={880}
+                height={1100}
+                sizes="(max-width: 1024px) 92vw, 420px"
+                className="block w-full aspect-[4/5] object-cover rounded-[20px]"
+              />
+            </div>
+
+            <figure
+              style={cascade(2)}
+              className="apparition-defilement m-0 min-w-0"
+            >
+              {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à cette taille. */}
+              <svg
+                width="84"
+                height="60"
+                viewBox="0 0 64 46"
+                aria-hidden="true"
+                className="block fill-white/90"
+              >
+                <path d="M0 31C0 15 9 4 24 0l2.5 5C18 8.5 13.5 14 12.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S21.9 45 15 45C6.2 45 0 39.5 0 31zM34 31c0-16 9-27 24-31l2.5 5C52 8.5 47.5 14 46.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S55.9 45 49 45c-8.8 0-15-5.5-15-14z" />
+              </svg>
+
+              <blockquote className="m-0 mt-7 font-[family-name:var(--font-display)] italic font-medium text-[clamp(20px,2.2vw,30px)] leading-[1.45]">
+                {PRESIDENTE.citation}
+              </blockquote>
+
+              <figcaption className="mt-7">
+                <span className="block font-[family-name:var(--font-display)] font-semibold text-[clamp(19px,1.9vw,26px)] leading-[1.25]">
+                  {PRESIDENTE.nom}
+                </span>
+                <span className="block mt-1.5 text-[15px] text-white/72">
+                  {PRESIDENTE.role}
+                </span>
+              </figcaption>
+            </figure>
+          </div>
+
+          {/* ---------- Le bureau et la direction ---------- */}
+          <div className="mt-16">
+            <span aria-hidden className={`block h-0.5 ${FILET}`} />
+            <div className="apparition-defilement surtitre text-white/72 mt-7">
+              Le bureau exécutif et la direction
+            </div>
+
+            <div className="mt-6 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
+              {BUREAU.map((m, i) => (
+                <article
+                  key={m.nom}
+                  style={cascade(i + 1)}
+                  className="apparition-defilement"
+                >
+                  <Image
+                    src={m.photo}
+                    alt={`Portrait de ${m.nom}`}
+                    width={520}
+                    height={520}
+                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 300px"
+                    className="block w-full aspect-square object-cover object-top rounded-2xl"
+                  />
+                  <span
+                    aria-hidden
+                    className={`block w-12 h-1 rounded-full mt-4 ${
+                      m.direction
+                        ? "bg-[linear-gradient(90deg,var(--marque-vert),var(--marque-vert-clair))]"
+                        : FILET
+                    }`}
+                  />
+                  <div
+                    className={`surtitre mt-4 ${
+                      m.direction ? "text-marque-vert" : "text-white"
+                    }`}
+                  >
+                    {m.role}
+                  </div>
+                  <h3 className="m-0 mt-2 font-[family-name:var(--font-display)]! font-semibold text-[19px] leading-[1.3]">
+                    {m.nom}
+                  </h3>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          {/* ---------- Les conseillères ---------- */}
+          <div className="mt-14">
+            <div className="apparition-defilement surtitre text-white/72">
+              Les conseillères
+            </div>
+
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {CONSEILLERES.map((c, i) => (
+                <article
+                  key={c.nom}
+                  style={cascade(i + 1)}
+                  className="apparition-defilement relative flex flex-col items-center gap-4 overflow-hidden rounded-2xl bg-surface px-4 pt-8 pb-6 text-center"
+                >
+                  <span
+                    aria-hidden
+                    className={`absolute inset-x-0 top-0 h-[3px] ${FILET}`}
+                  />
+                  <Image
+                    src={c.photo}
+                    alt={`Portrait de ${c.nom}`}
+                    width={520}
+                    height={520}
+                    sizes="104px"
+                    className="block w-[104px] h-[104px] shrink-0 rounded-full object-cover object-top"
+                  />
+                  <div>
+                    <h3 className="m-0 font-[family-name:var(--font-display)]! font-semibold text-[18px] leading-[1.3]">
+                      {c.nom}
+                    </h3>
+                    <p className="m-0 mt-1 text-[14px] text-white/72">
+                      Conseillère
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ==================== Newsletter ==================== */}
       {/*
         La bande du site de la chambre, avec son dégradé qui va du rouge au
