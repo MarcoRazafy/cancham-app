@@ -90,10 +90,22 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
-      <body
-        className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} ${hammersmith.variable} ${inter.variable}`}
-      >
+    /*
+      Les variables de polices vont sur `<html>`, pas sur `<body>`.
+
+      La charte les compose — `--font-display: var(--font-fraunces), …` —, et
+      ces compositions sont déclarées sur `:root`, c'est-à-dire sur `<html>`.
+      Une propriété personnalisée se résout là où elle est déclarée : posées un
+      cran plus bas, sur `<body>`, les polices restaient invisibles à
+      `--font-display`, qui devenait invalide et entraînait tout le site dans
+      la police système. Fraunces, Hammersmith One et Inter étaient chargées et
+      jamais utilisées.
+    */
+    <html
+      lang="fr"
+      className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} ${hammersmith.variable} ${inter.variable}`}
+    >
+      <body>
         {children}
         <Suspense>
           <Toast />
