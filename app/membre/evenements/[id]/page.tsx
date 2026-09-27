@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  Building2,
   CalendarDays,
   CheckCheck,
   Clock,
@@ -23,7 +22,6 @@ import {
   RegisterButton,
 } from "@/components/forms/EventForms";
 import {
-  getEntreprisesInscrites,
   getEvent,
   getEvents,
   getMember,
@@ -46,9 +44,8 @@ export default async function EvenementDetailPage({
   const horaire = plageHoraire(e.debut, e.fin);
 
   const user = await getCurrentUser("membre");
-  const [reg, entreprises, tous, membre, contacts] = await Promise.all([
+  const [reg, tous, membre, contacts] = await Promise.all([
     getRegistration(e.id, user.memberId),
-    getEntreprisesInscrites(e.id),
     getEvents(),
     user.memberId ? getMember(user.memberId) : null,
     user.memberId ? getContacts(user.memberId) : [],

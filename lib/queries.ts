@@ -510,11 +510,30 @@ export async function getResourceCounts() {
 
 /* ============================ Offres & services ============================ */
 
+/**
+ * Ce qu'une offre emporte de son entreprise : de quoi la présenter et la
+ * joindre depuis la fenêtre de l'offre, sans ouvrir sa fiche d'annuaire. Seul
+ * le référent vient — c'est à lui qu'on écrit.
+ */
+const CHAMPS_MEMBRE_OFFRE = {
+  nom: true,
+  cover: true,
+  secteur: true,
+  ville: true,
+  logo: true,
+  siteweb: true,
+  users: {
+    where: { contactPrincipal: true },
+    take: 1,
+    select: { nom: true, fonction: true, email: true, tel: true },
+  },
+} as const;
+
 export async function getOffers(): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
     // La vignette de l'offre reprend la couverture de l'entreprise : c'est elle
     // qui donne le contexte, avant même d'avoir lu le nom.
-    include: { member: { select: { nom: true, cover: true, photo: true } } },
+    include: { member: { select: CHAMPS_MEMBRE_OFFRE } },
     orderBy: { createdAt: "asc" },
   });
   return rows.map(versOffre);
@@ -523,7 +542,7 @@ export async function getOffers(): Promise<Offer[]> {
 /** Les offres les plus récentes, pour le tableau de bord. */
 export async function getDernieresOffres(n = 3): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
-    include: { member: { select: { nom: true, cover: true, photo: true } } },
+    include: { member: { select: CHAMPS_MEMBRE_OFFRE } },
     orderBy: { createdAt: "desc" },
     take: n,
   });
@@ -536,7 +555,21 @@ function versOffre(o: {
   titre: string;
   desc: string;
   image: string | null;
-  member: { nom: string; cover: string | null };
+  lien: string | null;
+  member: {
+    nom: string;
+    cover: string | null;
+    secteur: string;
+    ville: string;
+    logo: string | null;
+    siteweb: string | null;
+    users: {
+      nom: string;
+      fonction: string;
+      email: string;
+      tel: string | null;
+    }[];
+  };
 }): Offer {
   return {
     id: o.id,
@@ -546,68 +579,12 @@ function versOffre(o: {
     desc: o.desc,
     image: o.image,
     cover: o.image ?? o.member.cover,
-  };
-}
-
-/** Une offre, telle qu'une fiche la présente : ce qu'elle est, et qui la propose. */
-export interface OffreDetaillee {
-  id: string;
-  titre: string;
-  desc: string;
-  /** Visuel de l'offre ; à défaut, la couverture de l'entreprise. */
-  visuel: string | null;
-  membre: {
-    id: string;
-    nom: string;
-    activite: string;
-    secteur: string;
-    ville: string;
-    siteweb: string | null;
-    logo: string | null;
-  };
-  /** Qui la propose : le référent d'abord. */
-  contacts: Contact[];
-}
-
-/**
- * Une offre et son entreprise, pour sa fiche.
- *
- * Les coordonnées viennent avec : une offre sans moyen de joindre celui qui
- * la propose ne sert à rien. Les candidatures n'y paraissent pas — une
- * entreprise dont l'adhésion n'est pas effective ne met rien en avant.
- */
-export async function getOffre(id: string): Promise<OffreDetaillee | null> {
-  const o = await prisma.offer.findFirst({
-    where: { id, member: { statut: { notIn: ADHESION_PENDING } } },
-    select: {
-      id: true,
-      titre: true,
-      desc: true,
-      image: true,
-      member: {
-        select: {
-          id: true,
-          nom: true,
-          activite: true,
-          secteur: true,
-          ville: true,
-          siteweb: true,
-          logo: true,
-          cover: true,
-        },
-      },
-    },
-  });
-  if (!o) return null;
-
-  const { cover, ...membre } = o.member;
-  return {
-    id: o.id,
-    titre: o.titre,
-    desc: o.desc,
-    visuel: o.image ?? cover,
-    membre,
-    contacts: await getContacts(o.member.id),
+    lien: o.lien,
+    membreSecteur: o.member.secteur,
+    membreVille: o.member.ville,
+    membreLogo: o.member.logo,
+    membreSite: o.member.siteweb,
+    contact: o.member.users[0] ?? null,
   };
 }
 

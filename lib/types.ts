@@ -225,6 +225,19 @@ export interface Offer {
   image?: string | null;
   /** Ce que la carte affiche : le visuel de l'offre, sinon la couverture de l'entreprise. */
   cover?: string | null;
+  /** Où en profiter. `null` = on écrit au contact de l'entreprise. */
+  lien?: string | null;
+  /** De quoi présenter l'entreprise et la joindre, sans ouvrir sa fiche. */
+  membreSecteur?: string;
+  membreVille?: string;
+  membreLogo?: string | null;
+  membreSite?: string | null;
+  contact?: {
+    nom: string;
+    fonction: string;
+    email: string;
+    tel: string | null;
+  } | null;
 }
 
 /** Service proposé PAR la chambre à ses membres. À ne pas confondre avec Offer. */

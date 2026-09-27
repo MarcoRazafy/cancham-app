@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase, jourSaisi } from "@/lib/format";
+import { normaliserSite } from "@/lib/liens";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -533,6 +534,16 @@ export async function enregistrerOffre(formData: FormData) {
   if (!titre || !desc) {
     redirectWithErreur(retour, "Le titre et la description sont requis.");
   }
+  // Le lien du bouton « En profiter ». Il reste facultatif : sans lui, la
+  // fenêtre de l'offre s'arrête aux coordonnées de l'entreprise.
+  const saisieLien = texte(formData, "lien");
+  const lien = saisieLien ? normaliserSite(saisieLien) : null;
+  if (saisieLien && !lien) {
+    redirectWithErreur(
+      retour,
+      "Le lien « En profiter » n’est pas une adresse web valide.",
+    );
+  }
   const membre = await prisma.member.findUnique({
     where: { id: memberId },
     select: { nom: true },
@@ -559,11 +570,12 @@ export async function enregistrerOffre(formData: FormData) {
         titre,
         desc,
         memberId,
+        lien,
         ...(image ? { image } : retirerImage ? { image: null } : {}),
       },
     });
   } else {
-    await prisma.offer.create({ data: { titre, desc, memberId, image } });
+    await prisma.offer.create({ data: { titre, desc, memberId, lien, image } });
   }
   revalideTout();
   redirectWithFlash(

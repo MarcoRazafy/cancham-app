@@ -20,6 +20,7 @@ import { Card, Pill } from "@/components/ui";
 import { Partage } from "@/components/Partage";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
+import { ModaleOffre } from "@/components/ModaleOffre";
 import { filetDe } from "@/lib/filets";
 import { initialesDe } from "@/lib/avatars";
 import {
@@ -788,14 +789,19 @@ export function NewsFeedItem({
 
 /* ==================== Offres & services ==================== */
 
+/**
+ * Une offre entre membres.
+ *
+ * La carte ne dit que l'essentiel ; le détail et les coordonnées de
+ * l'entreprise s'ouvrent en fenêtre, pour ne pas faire quitter la page en
+ * cours de lecture.
+ */
 export function OfferCard({
   offer,
-  href,
   carre = false,
   className = "",
 }: {
   offer: Offer;
-  href?: string;
   /**
    * Carte carrée : la photo prend tout le haut, le texte se resserre dessous
    * en deux lignes au plus. Pour un rail assez large, où le bandeau de 88 px
@@ -809,50 +815,40 @@ export function OfferCard({
    */
   className?: string;
 }) {
-  const corps = (
-    <Card
-      className={`carte-filet filet-bas filet-degrade ${
-        href ? "" : "filet-fixe"
-      } p-0 ${carre ? "w-full aspect-square" : "h-full"} flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] ${className}`}
-    >
-      <div className={`overflow-hidden ${carre ? "flex-1 min-h-0" : ""}`}>
-        <Visuel
-          src={offer.cover}
-          alt={offer.titre}
-          seed={offer.id}
-          className={`${carre ? "h-full" : "h-[88px]"} w-full transition-transform duration-500 group-hover:scale-[1.04]`}
-          sizes={
-            carre
-              ? "(max-width: 640px) 100vw, 460px"
-              : "(max-width: 640px) 100vw, 240px"
-          }
-          iconSize={carre ? 28 : 18}
-        />
-      </div>
-      <div className={`p-4 flex flex-col ${carre ? "shrink-0" : "flex-1"}`}>
-        <Pill className="self-start">{offer.membre}</Pill>
-        <div
-          className={`font-semibold text-[13.2px] mt-2 mb-1 ${carre ? "line-clamp-2" : ""}`}
-        >
-          {offer.titre}
-        </div>
-        <div
-          className={`text-[12.4px] text-muted leading-relaxed ${carre ? "line-clamp-2" : ""}`}
-        >
-          <TexteLie texte={offer.desc} dansUnLien={Boolean(href)} />
-        </div>
-      </div>
-    </Card>
-  );
-
-  // Sans destination — l'entreprise n'a pas de fiche consultable ici — la carte
-  // reste un bloc inerte plutôt qu'un lien qui ne mènerait nulle part.
-  if (!href) return corps;
-
   return (
-    <Link href={href} className="no-underline block h-full group">
-      {corps}
-    </Link>
+    <ModaleOffre offre={offer}>
+      <Card
+        className={`group carte-filet filet-bas filet-degrade p-0 ${carre ? "w-full aspect-square" : "h-full"} flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] ${className}`}
+      >
+        <div className={`overflow-hidden ${carre ? "flex-1 min-h-0" : ""}`}>
+          <Visuel
+            src={offer.cover}
+            alt={offer.titre}
+            seed={offer.id}
+            className={`${carre ? "h-full" : "h-[88px]"} w-full transition-transform duration-500 group-hover:scale-[1.04]`}
+            sizes={
+              carre
+                ? "(max-width: 640px) 100vw, 460px"
+                : "(max-width: 640px) 100vw, 240px"
+            }
+            iconSize={carre ? 28 : 18}
+          />
+        </div>
+        <div className={`p-4 flex flex-col ${carre ? "shrink-0" : "flex-1"}`}>
+          <Pill className="self-start">{offer.membre}</Pill>
+          <div
+            className={`font-semibold text-[13.2px] mt-2 mb-1 ${carre ? "line-clamp-2" : ""}`}
+          >
+            {offer.titre}
+          </div>
+          <div
+            className={`text-[12.4px] text-muted leading-relaxed ${carre ? "line-clamp-2" : ""}`}
+          >
+            <TexteLie texte={offer.desc} dansUnLien />
+          </div>
+        </div>
+      </Card>
+    </ModaleOffre>
   );
 }
 
