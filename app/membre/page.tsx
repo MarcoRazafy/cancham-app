@@ -140,11 +140,7 @@ export default async function VueDEnsemble() {
 
         <div className="cascade grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {offres.map((o) => (
-            <OfferCard
-              key={o.id}
-              offer={o}
-              href={`/membre/annuaire/${o.membreId}`}
-            />
+            <OfferCard key={o.id} offer={o} href={`/membre/offres/${o.id}`} />
           ))}
         </div>
       </Card>

@@ -549,6 +549,68 @@ function versOffre(o: {
   };
 }
 
+/** Une offre, telle qu'une fiche la présente : ce qu'elle est, et qui la propose. */
+export interface OffreDetaillee {
+  id: string;
+  titre: string;
+  desc: string;
+  /** Visuel de l'offre ; à défaut, la couverture de l'entreprise. */
+  visuel: string | null;
+  membre: {
+    id: string;
+    nom: string;
+    activite: string;
+    secteur: string;
+    ville: string;
+    siteweb: string | null;
+    logo: string | null;
+  };
+  /** Qui la propose : le référent d'abord. */
+  contacts: Contact[];
+}
+
+/**
+ * Une offre et son entreprise, pour sa fiche.
+ *
+ * Les coordonnées viennent avec : une offre sans moyen de joindre celui qui
+ * la propose ne sert à rien. Les candidatures n'y paraissent pas — une
+ * entreprise dont l'adhésion n'est pas effective ne met rien en avant.
+ */
+export async function getOffre(id: string): Promise<OffreDetaillee | null> {
+  const o = await prisma.offer.findFirst({
+    where: { id, member: { statut: { notIn: ADHESION_PENDING } } },
+    select: {
+      id: true,
+      titre: true,
+      desc: true,
+      image: true,
+      member: {
+        select: {
+          id: true,
+          nom: true,
+          activite: true,
+          secteur: true,
+          ville: true,
+          siteweb: true,
+          logo: true,
+          cover: true,
+        },
+      },
+    },
+  });
+  if (!o) return null;
+
+  const { cover, ...membre } = o.member;
+  return {
+    id: o.id,
+    titre: o.titre,
+    desc: o.desc,
+    visuel: o.image ?? cover,
+    membre,
+    contacts: await getContacts(o.member.id),
+  };
+}
+
 export async function getServices(): Promise<CanchamService[]> {
   const rows = await prisma.canchamService.findMany({
     orderBy: { ordre: "asc" },

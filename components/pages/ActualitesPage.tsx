@@ -112,7 +112,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
                     offer={o}
                     carre
                     className="xl:max-h-[max(220px,calc((100dvh-160px)/3))]"
-                    href={`/${space}/${admin ? "membres" : "annuaire"}/${o.membreId}`}
+                    href={`/${space}/offres/${o.id}`}
                   />
                 );
                 // Les commandes sous la carte, et non dedans : la carte
