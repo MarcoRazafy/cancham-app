@@ -51,11 +51,7 @@ import {
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { affichageSite } from "@/lib/liens";
-import {
-  dernierReglementCotisation,
-  fmtJour,
-  renouvellementCotisation,
-} from "@/lib/agenda";
+import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
 import { fmtDate, fmtDateShort } from "@/lib/format";
 import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
 import {
@@ -109,11 +105,7 @@ export default async function ProfilPage() {
             />
             {!pending ? (
               <BoutonCertificat>
-                <CertificatAdhesion
-                  membre={m}
-                  debut={dernierReglementCotisation(myInvoices) ?? m.adhesion}
-                  fin={renouvellement}
-                />
+                <CertificatAdhesion membre={m} fin={renouvellement} />
               </BoutonCertificat>
             ) : null}
           </div>
