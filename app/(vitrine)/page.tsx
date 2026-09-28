@@ -822,26 +822,33 @@ export default async function PublicHome() {
               Les conseillères
             </div>
 
+            {/*
+              Le portrait remplit la carte, à la hauteur de ceux de l'équipe
+              plus bas : une vignette ronde perdue dans un grand cadre laissait
+              ces quatre-là plus effacées que le reste de la page.
+            */}
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {CONSEILLERES.map((c, i) => (
                 <article
                   key={c.nom}
                   style={cascade(i + 1)}
-                  className="apparition-defilement relative flex flex-col items-center gap-4 overflow-hidden rounded-2xl bg-surface px-4 pt-8 pb-7 text-center"
+                  className="apparition-defilement relative flex flex-col overflow-hidden rounded-2xl bg-surface"
                 >
                   <span
                     aria-hidden
-                    className={`absolute inset-x-0 top-0 h-[3px] ${FILET}`}
+                    className={`absolute inset-x-0 top-0 z-10 h-[3px] ${FILET}`}
                   />
                   <Image
                     src={c.photo}
                     alt={`Portrait de ${c.nom}`}
                     width={520}
                     height={520}
-                    sizes="104px"
-                    className="block w-[104px] h-[104px] shrink-0 rounded-full object-cover object-top"
+                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
+                    className="block h-[clamp(210px,20vw,260px)] w-full object-cover object-[center_20%]"
                   />
-                  <h3 className={`${TITRE_GRAS} m-0 text-[18px] leading-[1.3]`}>
+                  <h3
+                    className={`${TITRE_GRAS} m-0 px-4 py-5 text-center text-[18px] leading-[1.3]`}
+                  >
                     {c.nom}
                   </h3>
                 </article>
