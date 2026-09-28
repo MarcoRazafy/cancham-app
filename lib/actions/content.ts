@@ -1129,3 +1129,61 @@ export async function mettreUneAuPressePapier(
     `Ressource ${mode === "couper" ? "à déplacer" : "à copier"} · ouvrez un dossier puis « Coller ici »`,
   );
 }
+
+/**
+ * Ouvre ou retire un accès depuis la fenêtre d'une ressource.
+ *
+ * Appelées avec des arguments, sans formulaire : la fenêtre vit à
+ * l'intérieur du formulaire de sélection de la liste, et un formulaire ne
+ * s'imbrique pas dans un autre.
+ *
+ * Pas de redirection ni de bandeau : la page se rafraîchit sur place et la
+ * fenêtre reste ouverte, ce qui permet d'ouvrir plusieurs accès à la suite.
+ */
+export async function ouvrirAccesPour(resourceId: string, membreIds: string[]) {
+  const user = await exigerEquipe();
+  if (!membreIds.length) return;
+
+  const r = await prisma.resource.findUnique({
+    where: { id: resourceId },
+    select: { id: true, titre: true, type: true },
+  });
+  if (!r || r.type !== "payant") return;
+
+  await prisma.accesRessource.createMany({
+    data: membreIds.map((memberId) => ({
+      resourceId: r.id,
+      memberId,
+      ouvertPar: user.nom,
+    })),
+    skipDuplicates: true,
+  });
+  await journal(
+    "acces_ouvert",
+    "Resource",
+    r.id,
+    `${membreIds.length} entreprise${membreIds.length > 1 ? "s" : ""} · ${r.titre}`,
+  );
+  revalideTout();
+}
+
+export async function retirerAccesPour(resourceId: string, memberId: string) {
+  await exigerEquipe();
+  const acces = await prisma.accesRessource.findUnique({
+    where: { resourceId_memberId: { resourceId, memberId } },
+    include: {
+      member: { select: { nom: true } },
+      resource: { select: { titre: true } },
+    },
+  });
+  if (!acces) return;
+
+  await prisma.accesRessource.delete({ where: { id: acces.id } });
+  await journal(
+    "acces_retire",
+    "Resource",
+    resourceId,
+    `${acces.member.nom} · ${acces.resource.titre}`,
+  );
+  revalideTout();
+}

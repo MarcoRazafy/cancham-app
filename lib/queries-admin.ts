@@ -486,3 +486,32 @@ export async function getMembresPourAcces(): Promise<
   });
   return rows;
 }
+
+/**
+ * Les accès de plusieurs ressources d'un coup.
+ *
+ * Une requête pour toute la page plutôt qu'une par carte : la fenêtre « qui
+ * y a accès » s'ouvre alors sans attendre, et la bibliothèque ne coûte pas
+ * une requête par ressource payante affichée.
+ */
+export async function getAccesDesRessources(
+  ids: string[],
+): Promise<Record<string, AccesOuvert[]>> {
+  if (!ids.length) return {};
+  await exigerEquipe();
+  const rows = await prisma.accesRessource.findMany({
+    where: { resourceId: { in: ids } },
+    include: { member: { select: { nom: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  const par: Record<string, AccesOuvert[]> = {};
+  for (const a of rows) {
+    (par[a.resourceId] ??= []).push({
+      memberId: a.memberId,
+      nom: a.member.nom,
+      ouvertPar: a.ouvertPar,
+      date: a.createdAt.toISOString(),
+    });
+  }
+  return par;
+}
