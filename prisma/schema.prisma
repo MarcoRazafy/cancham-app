@@ -125,6 +125,18 @@ enum Devise {
   CAD
 }
 
+/// Où en est une tentative de règlement en ligne.
+enum PaiementStatut {
+  /// Ouverte : le membre est parti sur la page du prestataire.
+  en_cours
+  /// Encaissée, notification signée reçue et vérifiée.
+  reussie
+  /// Refusée par la banque ou le prestataire.
+  echouee
+  /// Restée sans réponse : le membre a fermé la page.
+  abandonnee
+}
+
 model Member {
   id           String       @id @default(cuid())
   type         MemberType   @default(morale)
@@ -583,11 +595,55 @@ model Invoice {
   /// la facture à l'identique (voir `DestinataireFige` dans `lib/factures.ts`).
   destinataire    Json?
 
+  /// Tentatives de règlement en ligne de cette facture.
+  paiements Paiement[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([memberId])
   @@map("invoices")
+}
+
+/// Tentative de règlement en ligne d'une facture, chez Vanilla Pay.
+///
+/// Une ligne par tentative, pas une par facture : un membre dont la carte est
+/// refusée recommence, et l'on doit pouvoir dire ce qui s'est passé à chaque
+/// fois. C'est aussi ce qui rend la notification du prestataire rejouable
+/// sans danger — elle retrouve sa tentative par la référence, et une
+/// tentative déjà réussie ne se règle pas deux fois.
+model Paiement {
+  id String @id @default(cuid())
+
+  /// Référence envoyée au prestataire, et qu'il nous renvoie. Unique : c'est
+  /// la seule clé qui relie une notification à sa tentative.
+  reference String         @unique
+  statut    PaiementStatut @default(en_cours)
+
+  /// Montant et devise figés à l'ouverture. Une facture corrigée après coup
+  /// ne doit pas changer ce qui a été demandé au membre.
+  montant Int
+  devise  Devise @default(MGA)
+
+  /// `international` (carte bancaire) ou `mobile_money`.
+  mode String
+
+  /// Identifiant de la transaction chez le prestataire, connu à la réponse.
+  transaction  String?
+  /// Dernière charge utile reçue, telle quelle : de quoi retrouver ce qui
+  /// s'est dit le jour où un membre conteste.
+  notification Json?
+  /// Horodatage de l'encaissement confirmé.
+  regleLe      DateTime?
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@map("paiements")
 }
 
 // ============================ Messagerie ============================

@@ -68,6 +68,16 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "ok",
   },
+  paiement_en_ligne: {
+    libelle: "Paiement en ligne encaissé",
+    famille: "finance",
+    ton: "ok",
+  },
+  paiement_refuse: {
+    libelle: "Paiement en ligne refusé",
+    famille: "finance",
+    ton: "bad",
+  },
   relance_envoyee: {
     libelle: "Relance de cotisation",
     famille: "finance",
