@@ -98,34 +98,22 @@ const PRESIDENTE = {
     "Dix ans après sa création, la CanCham continue d’évoluer, portée par la motivation de celles et ceux qui la font vivre. Nous innovons dans nos formats, nos missions et nos outils, avec une seule boussole : ouvrir de vraies portes entre le Canada et Madagascar.",
 };
 
-/**
- * Le bureau et la direction. `direction` distingue la salariée des élus : son
- * filet et son intitulé passent au vert, comme sur le modèle de la chambre.
- */
+/** Le bureau du Conseil : les élus, autour de la présidente. */
 const BUREAU = [
   {
     nom: "Rojonirina Patrick ANDRIANTSOAMANALINA",
     role: "Vice-Président",
     photo: "/equipe/patrick-andriantsoamanalina.jpg",
-    direction: false,
   },
   {
     nom: "Lalaina Alfred ANDRIANJATOVO",
     role: "Trésorier",
     photo: "/equipe/alfred-andrianjatovo.jpg",
-    direction: false,
   },
   {
     nom: "Danie RABODOVOLOLONIAINA",
     role: "Secrétaire",
     photo: "/equipe/danie-rabodovololoniaina.jpg",
-    direction: false,
-  },
-  {
-    nom: "Alice RATISBONNE",
-    role: "Directrice Exécutive",
-    photo: "/equipe/alice-ratisbonne.jpg",
-    direction: true,
   },
 ];
 
@@ -140,6 +128,34 @@ const CONSEILLERES = [
 ];
 
 /**
+ * L'équipe permanente, salariée — à ne pas confondre avec le Conseil, qui est
+ * élu. D'où le bloc à part et le vert : ce sont les personnes qu'un membre a
+ * au téléphone.
+ */
+const EQUIPE = [
+  {
+    nom: "Alice RATISBONNE",
+    role: "Directrice Exécutive",
+    photo: "/equipe/alice-ratisbonne.jpg",
+  },
+  {
+    nom: "Tahina RAZAFIMAMONJY",
+    role: "Représentant au Canada",
+    photo: "/equipe/tahina-razafimamonjy.jpg",
+  },
+  {
+    nom: "Rindra RAZAFINDRAKOTO",
+    role: "Adjointe de direction",
+    photo: "/equipe/rindra-razafindrakoto.jpg",
+  },
+  {
+    nom: "Onja RANDRIANARISOA",
+    role: "Chargée administrative",
+    photo: "/equipe/onja-randrianarisoa.jpg",
+  },
+];
+
+/**
  * Le filet rouge-vert de la charte, posé sur le bleu nuit.
  *
  * Les teintes pleines y perdent : le vert #007140 passe pour du gris foncé.
@@ -148,6 +164,10 @@ const CONSEILLERES = [
  */
 const FILET =
   "bg-[linear-gradient(90deg,var(--marque-rouge-clair),var(--marque-vert-clair))]";
+
+/** Le même filet, tout en vert : il signale l'équipe salariée, pas les élus. */
+const FILET_VERT =
+  "bg-[linear-gradient(90deg,var(--marque-vert-clair),#3fc98a)]";
 
 /**
  * Décalage de l'apparition d'un élément dans une rangée.
@@ -698,18 +718,18 @@ export default async function PublicHome() {
           </div>
 
           {/* ---------- La présidente ---------- */}
-          <div className="mt-14 grid gap-10 lg:gap-16 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:items-center">
+          <div className="mt-14 grid gap-9 lg:gap-14 lg:grid-cols-[minmax(0,330px)_minmax(0,1fr)] lg:items-center">
             <div
               style={cascade(1)}
-              className={`apparition-defilement rounded-[26px] p-1.5 ${FILET}`}
+              className={`apparition-defilement rounded-[22px] p-1.5 ${FILET}`}
             >
               <Image
                 src={PRESIDENTE.photo}
                 alt={`Portrait d’${PRESIDENTE.nom}`}
                 width={880}
                 height={1100}
-                sizes="(max-width: 1024px) 92vw, 420px"
-                className="block w-full aspect-[4/5] object-cover rounded-[20px]"
+                sizes="(max-width: 1024px) 80vw, 330px"
+                className="block w-full aspect-[4/5] object-cover rounded-[17px]"
               />
             </div>
 
@@ -719,8 +739,8 @@ export default async function PublicHome() {
             >
               {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à cette taille. */}
               <svg
-                width="84"
-                height="60"
+                width="62"
+                height="44"
                 viewBox="0 0 64 46"
                 aria-hidden="true"
                 className="block fill-white/90"
@@ -729,64 +749,58 @@ export default async function PublicHome() {
               </svg>
 
               {/*
-                  En italique d'Inter, comme les mots saillants des titres : la
-                  vitrine n'a que deux fontes, et Hammersmith One n'existe
-                  qu'en romain.
-                */}
-              <blockquote className="m-0 mt-7 text-[clamp(20px,2.2vw,30px)] font-medium italic leading-[1.45]">
+                En italique d'Inter, comme les mots saillants des titres : la
+                vitrine n'a que deux fontes, et Hammersmith One n'existe
+                qu'en romain.
+              */}
+              <blockquote className="m-0 mt-5 max-w-[62ch] text-[clamp(17px,1.65vw,23px)] font-medium italic leading-[1.5]">
                 {PRESIDENTE.citation}
               </blockquote>
 
-              <figcaption className="mt-7">
+              <figcaption className="mt-6">
                 <span
-                  className={`${TITRE_GRAS} block text-[clamp(19px,1.9vw,26px)] leading-[1.25]`}
+                  className={`${TITRE_GRAS} block text-[clamp(17px,1.5vw,21px)] leading-[1.25]`}
                 >
                   {PRESIDENTE.nom}
                 </span>
-                <span className="block mt-1.5 text-[15px] text-white/72">
+                <span className="block mt-1 text-[14px] text-white/72">
                   {PRESIDENTE.role}
                 </span>
               </figcaption>
             </figure>
           </div>
 
-          {/* ---------- Le bureau et la direction ---------- */}
+          {/* ---------- Le bureau du Conseil ---------- */}
           <div className="mt-16">
             <span aria-hidden className={`block h-0.5 ${FILET}`} />
             <div className="apparition-defilement surtitre text-white/72 mt-7">
-              Le bureau exécutif et la direction
+              Le bureau du Conseil
             </div>
 
-            <div className="mt-6 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid gap-x-9 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
               {BUREAU.map((m, i) => (
                 <article
                   key={m.nom}
                   style={cascade(i + 1)}
                   className="apparition-defilement"
                 >
+                  {/*
+                    Cadrage haut : ces portraits sont des photos d'identité, et
+                    un cadre centré leur couperait le front.
+                  */}
                   <Image
                     src={m.photo}
                     alt={`Portrait de ${m.nom}`}
                     width={520}
                     height={520}
-                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 300px"
-                    className="block w-full aspect-square object-cover object-top rounded-2xl"
+                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 400px"
+                    className="block w-full h-[clamp(240px,24vw,320px)] object-cover object-[center_20%] rounded-2xl"
                   />
                   <span
                     aria-hidden
-                    className={`block w-12 h-1 rounded-full mt-4 ${
-                      m.direction
-                        ? "bg-[linear-gradient(90deg,var(--marque-vert),var(--marque-vert-clair))]"
-                        : FILET
-                    }`}
+                    className={`block w-12 h-1 rounded-full mt-4 ${FILET}`}
                   />
-                  <div
-                    className={`surtitre mt-4 ${
-                      m.direction ? "text-marque-vert" : "text-white"
-                    }`}
-                  >
-                    {m.role}
-                  </div>
+                  <div className="surtitre mt-4 text-white">{m.role}</div>
                   <h3
                     className={`${TITRE_GRAS} m-0 mt-2 text-[19px] leading-[1.3]`}
                   >
@@ -808,7 +822,7 @@ export default async function PublicHome() {
                 <article
                   key={c.nom}
                   style={cascade(i + 1)}
-                  className="apparition-defilement relative flex flex-col items-center gap-4 overflow-hidden rounded-2xl bg-surface px-4 pt-8 pb-6 text-center"
+                  className="apparition-defilement relative flex flex-col items-center gap-4 overflow-hidden rounded-2xl bg-surface px-4 pt-8 pb-7 text-center"
                 >
                   <span
                     aria-hidden
@@ -822,16 +836,62 @@ export default async function PublicHome() {
                     sizes="104px"
                     className="block w-[104px] h-[104px] shrink-0 rounded-full object-cover object-top"
                   />
-                  <div>
-                    <h3
-                      className={`${TITRE_GRAS} m-0 text-[18px] leading-[1.3]`}
-                    >
-                      {c.nom}
-                    </h3>
-                    <p className="m-0 mt-1 text-[14px] text-white/72">
-                      Conseillère
-                    </p>
-                  </div>
+                  <h3 className={`${TITRE_GRAS} m-0 text-[18px] leading-[1.3]`}>
+                    {c.nom}
+                  </h3>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          {/* ---------- L'équipe permanente ---------- */}
+          {/*
+            Dans son propre cadre, et en vert : le Conseil est élu, l'équipe
+            est salariée. Ce sont deux choses différentes, et ce sont ces
+            personnes-là qu'un membre a au téléphone.
+          */}
+          <div className="apparition-defilement relative mt-16 overflow-hidden rounded-3xl bg-[var(--marque-nuit-2)] p-7 md:p-12">
+            <span
+              aria-hidden
+              className={`absolute inset-x-0 top-0 h-1 ${FILET_VERT}`}
+            />
+
+            <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
+              <div>
+                <div className="surtitre text-marque-vert">
+                  L’équipe exécutive
+                </div>
+                <h3 className={`${TITRE_BLOC} mt-2.5`}>
+                  Au quotidien, à vos côtés.
+                </h3>
+              </div>
+              <p className="m-0 max-w-[52ch] text-[15.5px] leading-[1.6] text-white/72">
+                L’équipe permanente met en œuvre les orientations du Conseil et
+                accompagne chaque membre dans ses projets.
+              </p>
+            </div>
+
+            <div className="mt-8 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
+              {EQUIPE.map((m, i) => (
+                <article key={m.nom} style={cascade(i + 1)}>
+                  <Image
+                    src={m.photo}
+                    alt={`Portrait de ${m.nom}`}
+                    width={520}
+                    height={520}
+                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
+                    className="block w-full h-[clamp(210px,20vw,260px)] object-cover object-[center_20%] rounded-2xl"
+                  />
+                  <span
+                    aria-hidden
+                    className={`block w-12 h-1 rounded-full mt-4 ${FILET_VERT}`}
+                  />
+                  <div className="surtitre mt-4 text-marque-vert">{m.role}</div>
+                  <h3
+                    className={`${TITRE_GRAS} m-0 mt-2 text-[19px] leading-[1.3]`}
+                  >
+                    {m.nom}
+                  </h3>
                 </article>
               ))}
             </div>
