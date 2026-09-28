@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
+import {
+  CONTENEUR,
+  TITRE_BLOC,
+  TITRE_GRAS,
+  TITRE_SECTION,
+} from "@/components/public/CadreVitrine";
 import { Saillant } from "@/components/ui";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -131,7 +136,7 @@ const CONSEILLERES = [
     nom: "Anna Josée RANDRIAMAROLAHY",
     photo: "/equipe/anna-josee-randriamarolahy.jpg",
   },
-  { nom: "Elodie RAHARINIRINA", photo: "/equipe/elodie-raharinirina.jpg" },
+  { nom: "Elodie RABENIVO", photo: "/equipe/elodie-rabenivo.jpg" },
 ];
 
 /**
@@ -408,14 +413,7 @@ export default async function PublicHome() {
             qui nous parlons
           </span>
           <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
-            {/*
-              Le titre du modèle est gras et tient sur deux lignes. Hammersmith
-              One n'ayant qu'une graisse, il passe comme les cartes à la fonte
-              de texte, en 700 — les `!` devancent la règle des h2 de la marque.
-            */}
-            <h2
-              className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,58px)] leading-[1.06] m-0`}
-            >
+            <h2 className={TITRE_SECTION}>
               Vous avez votre place <Saillant>chez nous.</Saillant>
             </h2>
             <p className="m-0 text-[15px] text-muted leading-relaxed">
@@ -443,14 +441,8 @@ export default async function PublicHome() {
                 >
                   <p.icone size={28} strokeWidth={1.5} />
                 </span>
-                {/*
-                  Titre en gras, donc dans la fonte de texte : Hammersmith One
-                  n'a qu'une graisse, et la charte interdit le faux gras. Les
-                  `!` passent devant la règle qui coiffe tous les h3 de la
-                  marque.
-                */}
                 <h3
-                  className={`${TITRE_GRAS} text-[26px] leading-[1.2] text-[var(--marque-nuit)] m-0 mt-6 mb-3.5`}
+                  className={`${TITRE_BLOC} text-[var(--marque-nuit)] mt-6 mb-3.5`}
                 >
                   {p.titre}
                 </h3>
@@ -480,7 +472,7 @@ export default async function PublicHome() {
         reste. Les couleurs y sont écrites en clair — les jetons de la vitrine
         sont taillés pour le bleu nuit.
       */}
-      <section className="bg-white text-[var(--marque-nuit)]">
+      <section className="vitrine-claire">
         <div className={`${CONTENEUR} py-16`}>
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             {/* ---------- L'invitation ---------- */}
@@ -489,17 +481,9 @@ export default async function PublicHome() {
                 <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
                 Rejoindre la communauté
               </span>
-              <h2
-                className={`${TITRE_GRAS} text-[clamp(30px,4.2vw,54px)] leading-[1.05] m-0 mt-3 mb-6`}
-              >
-                Devenir{" "}
-                <span className="italic font-semibold text-[#ad0707]">
-                  membre,
-                </span>{" "}
-                c’est entrer dans{" "}
-                <span className="italic font-semibold text-[#007140]">
-                  un cercle.
-                </span>
+              <h2 className={`${TITRE_SECTION} mt-3 mb-6`}>
+                Devenir <Saillant>membre,</Saillant> c’est entrer dans{" "}
+                <Saillant ton="vert">un cercle.</Saillant>
               </h2>
               <p className="m-0 text-[18px] leading-[1.6] text-[#6b6b6b] max-w-[48ch]">
                 Un cercle de dirigeants, d’entrepreneurs et d’institutions qui
@@ -543,9 +527,7 @@ export default async function PublicHome() {
               <span className="surtitre text-[#ad0707]">
                 Choisissez votre formule
               </span>
-              <h3
-                className={`${TITRE_GRAS} text-[30px] leading-[1.15] text-[var(--marque-nuit)] m-0 mt-2.5`}
-              >
+              <h3 className={`${TITRE_BLOC} text-[var(--marque-nuit)] mt-2.5`}>
                 Cinq manières
                 <br />
                 de nous rejoindre.
@@ -600,9 +582,7 @@ export default async function PublicHome() {
                 <span className="surtitre text-marque-rouge">
                   Rencontrons-nous
                 </span>
-                <h2
-                  className={`${TITRE_GRAS} text-[clamp(28px,4vw,40px)] m-0 mt-2.5`}
-                >
+                <h2 className={`${TITRE_SECTION} mt-2.5`}>
                   Les prochains <Saillant>rendez-vous</Saillant>
                 </h2>
                 <p className="text-[15px] text-muted m-0 mt-2.5">
@@ -647,7 +627,7 @@ export default async function PublicHome() {
         */
         <section
           id="actualites"
-          className="scroll-mt-[124px] bg-[#fafafa] text-[var(--marque-nuit)]"
+          className="vitrine-claire scroll-mt-[124px] bg-[#fafafa]!"
         >
           <div className={`${CONTENEUR} py-16`}>
             <div>
@@ -656,13 +636,8 @@ export default async function PublicHome() {
                 Actualités récentes
               </span>
               <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
-                <h2
-                  className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,58px)] leading-[1.1] m-0`}
-                >
-                  Ce qui se passe{" "}
-                  <span className="italic font-semibold text-[#ad0707]">
-                    chez nous.
-                  </span>
+                <h2 className={TITRE_SECTION}>
+                  Ce qui se passe <Saillant>chez nous.</Saillant>
                 </h2>
                 <p className="m-0 text-[17px] leading-[1.6] text-[#6b6b6b]">
                   Bilans, rencontres, prises de parole — la chambre en
@@ -708,9 +683,7 @@ export default async function PublicHome() {
 
         <div className={`${CONTENEUR} py-16 md:py-24`}>
           <div className="apparition-defilement max-w-[780px]">
-            <h2
-              className={`${TITRE_GRAS} text-[clamp(30px,4.4vw,52px)] leading-[1.1] m-0`}
-            >
+            <h2 className={TITRE_SECTION}>
               Celles et ceux qui portent la chambre.
             </h2>
             <span
@@ -755,12 +728,19 @@ export default async function PublicHome() {
                 <path d="M0 31C0 15 9 4 24 0l2.5 5C18 8.5 13.5 14 12.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S21.9 45 15 45C6.2 45 0 39.5 0 31zM34 31c0-16 9-27 24-31l2.5 5C52 8.5 47.5 14 46.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S55.9 45 49 45c-8.8 0-15-5.5-15-14z" />
               </svg>
 
-              <blockquote className="m-0 mt-7 font-[family-name:var(--font-display)] italic font-medium text-[clamp(20px,2.2vw,30px)] leading-[1.45]">
+              {/*
+                  En italique d'Inter, comme les mots saillants des titres : la
+                  vitrine n'a que deux fontes, et Hammersmith One n'existe
+                  qu'en romain.
+                */}
+              <blockquote className="m-0 mt-7 text-[clamp(20px,2.2vw,30px)] font-medium italic leading-[1.45]">
                 {PRESIDENTE.citation}
               </blockquote>
 
               <figcaption className="mt-7">
-                <span className="block font-[family-name:var(--font-display)] font-semibold text-[clamp(19px,1.9vw,26px)] leading-[1.25]">
+                <span
+                  className={`${TITRE_GRAS} block text-[clamp(19px,1.9vw,26px)] leading-[1.25]`}
+                >
                   {PRESIDENTE.nom}
                 </span>
                 <span className="block mt-1.5 text-[15px] text-white/72">
@@ -807,7 +787,9 @@ export default async function PublicHome() {
                   >
                     {m.role}
                   </div>
-                  <h3 className="m-0 mt-2 font-[family-name:var(--font-display)]! font-semibold text-[19px] leading-[1.3]">
+                  <h3
+                    className={`${TITRE_GRAS} m-0 mt-2 text-[19px] leading-[1.3]`}
+                  >
                     {m.nom}
                   </h3>
                 </article>
@@ -841,7 +823,9 @@ export default async function PublicHome() {
                     className="block w-[104px] h-[104px] shrink-0 rounded-full object-cover object-top"
                   />
                   <div>
-                    <h3 className="m-0 font-[family-name:var(--font-display)]! font-semibold text-[18px] leading-[1.3]">
+                    <h3
+                      className={`${TITRE_GRAS} m-0 text-[18px] leading-[1.3]`}
+                    >
                       {c.nom}
                     </h3>
                     <p className="m-0 mt-1 text-[14px] text-white/72">
@@ -888,7 +872,7 @@ export default async function PublicHome() {
           </span>
           <h2
             style={cascade(1)}
-            className={`${TITRE_GRAS} apparition-defilement text-[clamp(30px,4.2vw,52px)] leading-[1.05] m-0 mt-7`}
+            className={`${TITRE_SECTION} apparition-defilement mt-7`}
           >
             S’inscrire à notre newsletter
           </h2>
