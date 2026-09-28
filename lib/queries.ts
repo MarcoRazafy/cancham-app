@@ -21,6 +21,7 @@ import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
 import { codeInscription, extraireCode } from "@/lib/codes-accueil";
 import { visiteurDuFil } from "@/lib/support-visiteur";
 import { prisma } from "@/lib/db";
+import { utilisateurConnecte } from "@/lib/session";
 import { nomFacture } from "@/lib/factures";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
 import { critereJoignable } from "@/lib/messagerie";
@@ -484,15 +485,37 @@ export async function getResources(
    * `null` = la racine seulement ; une chaîne = ce dossier seulement.
    */
   dossierId?: string | null,
+  /** Recherche sur le titre. Une recherche traverse tous les dossiers. */
+  recherche?: string,
 ): Promise<Resource[]> {
+  const q = recherche?.trim();
   const rows = await prisma.resource.findMany({
     where: {
       ...(type ? { type } : {}),
-      ...(dossierId !== undefined ? { dossierId } : {}),
+      // Chercher dans un seul dossier n'aurait pas de sens : on cherche
+      // précisément ce qu'on ne sait plus où l'on a rangé.
+      ...(dossierId !== undefined && !q ? { dossierId } : {}),
+      ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
     },
     include: { commentaires: commentairesInclude() },
     orderBy: { date: "desc" },
   });
+
+  // Ce que la personne connectée peut ouvrir : l'équipe voit tout, un membre
+  // ne lit une ressource facturée que si son accès a été ouvert.
+  const user = await utilisateurConnecte();
+  const payantes = rows.filter((r) => r.type === "payant").map((r) => r.id);
+  const ouverts =
+    user && user.role !== "admin" && user.memberId && payantes.length
+      ? new Set(
+          (
+            await prisma.accesRessource.findMany({
+              where: { memberId: user.memberId, resourceId: { in: payantes } },
+              select: { resourceId: true },
+            })
+          ).map((a) => a.resourceId),
+        )
+      : new Set<string>();
   return rows.map((r) => ({
     id: r.id,
     titre: r.titre,
@@ -506,12 +529,21 @@ export async function getResources(
     cover: r.cover,
     dossierId: r.dossierId,
     pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
+    accessible:
+      r.type === "gratuit" || user?.role === "admin" || ouverts.has(r.id),
   }));
 }
 
 /** Compte des ressources par tarif, dans le dossier ouvert. */
-export async function getResourceCounts(dossierId?: string | null) {
-  const ou = dossierId !== undefined ? { dossierId } : {};
+export async function getResourceCounts(
+  dossierId?: string | null,
+  recherche?: string,
+) {
+  const q = recherche?.trim();
+  const ou = {
+    ...(dossierId !== undefined && !q ? { dossierId } : {}),
+    ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
+  };
   const [tout, gratuit, payant] = await Promise.all([
     prisma.resource.count({ where: ou }),
     prisma.resource.count({ where: { ...ou, type: "gratuit" } }),

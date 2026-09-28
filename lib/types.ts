@@ -289,6 +289,11 @@ export interface Resource {
   dossierId?: string | null;
   /** Fichier converti et lisible dans la plateforme. */
   pret?: boolean;
+  /**
+   * Ouvrable par la personne connectée : gratuite, ou payante dont l'accès a
+   * été ouvert à son entreprise. L'équipe ouvre tout.
+   */
+  accessible?: boolean;
 }
 
 /**

@@ -441,3 +441,48 @@ export async function chercherComptes(
   });
   return rows.map(versCompteMembre);
 }
+
+/* ---------------------- Accès aux ressources payantes ---------------------- */
+
+export interface AccesOuvert {
+  memberId: string;
+  nom: string;
+  ouvertPar: string;
+  date: string;
+}
+
+/** Les entreprises à qui une ressource payante a été ouverte. */
+export async function getAccesRessource(
+  resourceId: string,
+): Promise<AccesOuvert[]> {
+  await exigerEquipe();
+  const rows = await prisma.accesRessource.findMany({
+    where: { resourceId },
+    include: { member: { select: { nom: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((a) => ({
+    memberId: a.memberId,
+    nom: a.member.nom,
+    ouvertPar: a.ouvertPar,
+    date: a.createdAt.toISOString(),
+  }));
+}
+
+/**
+ * Les entreprises à qui l'on peut ouvrir un accès.
+ *
+ * Les candidatures en sont écartées : on n'ouvre pas une ressource payante à
+ * une entreprise dont l'adhésion n'est pas encore acceptée.
+ */
+export async function getMembresPourAcces(): Promise<
+  { id: string; nom: string; statut: string }[]
+> {
+  await exigerEquipe();
+  const rows = await prisma.member.findMany({
+    where: { statut: { notIn: ["candidature", "en_attente"] } },
+    orderBy: { nom: "asc" },
+    select: { id: true, nom: true, statut: true },
+  });
+  return rows;
+}

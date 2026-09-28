@@ -196,6 +196,7 @@ model Member {
   inscriptions Registration[]
   rendezvous   Rendezvous[]
   notes        NoteMembre[]
+  acces        AccesRessource[]
 
   @@index([statut])
   @@map("members")
@@ -487,10 +488,40 @@ model Resource {
   updatedAt DateTime @updatedAt
 
   commentaires Comment[]
+  acces        AccesRessource[]
 
   @@index([type])
   @@index([dossierId])
   @@map("resources")
+}
+
+/// Accès d'une entreprise membre à une ressource payante.
+///
+/// Une ressource incluse dans l'adhésion n'a pas de liste : tout membre à
+/// jour la lit. Une ressource facturée, elle, ne s'ouvre qu'à celles qui
+/// l'ont acquise — et c'est l'équipe qui le constate, le paiement en ligne
+/// des ressources n'étant pas branché.
+///
+/// L'accès est donné à l'entreprise, pas à la personne : la cotisation est
+/// celle de l'entreprise, et ses collaborateurs travaillent sur les mêmes
+/// documents.
+model AccesRessource {
+  id String @id @default(cuid())
+
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  /// Qui de l'équipe a ouvert l'accès. Recopié : un compte supprimé ne doit
+  /// pas rendre la décision anonyme.
+  ouvertPar String
+
+  createdAt DateTime @default(now())
+
+  @@unique([resourceId, memberId])
+  @@index([memberId])
+  @@map("acces_ressources")
 }
 
 /// Dossier de la bibliothèque : un classeur, et des classeurs dedans.

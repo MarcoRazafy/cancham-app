@@ -945,9 +945,12 @@ export function ServiceCard({
 export function ResourceCard({
   resource,
   footer,
+  coin,
 }: {
   resource: Resource;
   footer?: ReactNode;
+  /** Posé sur le visuel, en haut à droite : la case de sélection. */
+  coin?: ReactNode;
 }) {
   const video = resource.fmt === "Vidéo";
   return (
@@ -973,6 +976,7 @@ export function ResourceCard({
             {resource.taille}
           </div>
         </div>
+        {coin ? <div className="absolute top-2.5 right-2.5">{coin}</div> : null}
       </div>
 
       <div className="p-4 flex-1 flex flex-col">

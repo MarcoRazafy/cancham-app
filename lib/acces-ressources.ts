@@ -51,14 +51,23 @@ export async function verifierAcces(id: string): Promise<Acces> {
     return { ok: false, statut: 404, message: "Ressource introuvable." };
   }
 
-  // Le paiement en ligne n'est pas branché : une ressource payante ne se lit
-  // pas tant qu'un achat ne peut pas être constaté.
+  // Une ressource facturée ne s'ouvre qu'aux entreprises à qui l'équipe l'a
+  // ouverte. L'accès est donné à l'entreprise, pas à la personne : la
+  // cotisation est celle de l'entreprise, et ses collaborateurs travaillent
+  // sur les mêmes documents.
   if (r.type === "payant" && !equipe) {
-    return {
-      ok: false,
-      statut: 403,
-      message: "Ressource payante : accès après achat.",
-    };
+    const ouvert = user.memberId
+      ? await prisma.accesRessource.count({
+          where: { resourceId: r.id, memberId: user.memberId },
+        })
+      : 0;
+    if (!ouvert) {
+      return {
+        ok: false,
+        statut: 403,
+        message: "Ressource payante : accès après achat.",
+      };
+    }
   }
 
   return {

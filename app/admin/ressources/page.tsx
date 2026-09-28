@@ -3,8 +3,8 @@ import { RessourcesPage } from "@/components/pages/RessourcesPage";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; dossier?: string }>;
+  searchParams: Promise<{ type?: string; dossier?: string; q?: string }>;
 }) {
-  const { type, dossier } = await searchParams;
-  return <RessourcesPage space="admin" type={type} dossier={dossier} />;
+  const { type, dossier, q } = await searchParams;
+  return <RessourcesPage space="admin" type={type} dossier={dossier} q={q} />;
 }
