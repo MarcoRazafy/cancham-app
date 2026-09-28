@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ChevronRight,
-  Eye,
   Library,
   Pencil,
   Plus,
@@ -12,15 +11,20 @@ import { SupprimerRessourceButton } from "@/components/forms/AdminContenuForms";
 import {
   BarrePressePapier,
   BarreSelection,
+  BoutonAcces,
   MenuRessource,
 } from "@/components/forms/BibliothequeOutils";
 import {
   BoutonNouveauDossier,
   CarteDossier,
 } from "@/components/forms/DossiersRessources";
+import { FiltreTarif } from "@/components/forms/FiltreTarif";
 import { copierRessources } from "@/lib/actions/content";
 import { lirePressePapier } from "@/lib/presse-papier";
-import { getMembresPourAcces } from "@/lib/queries-admin";
+import {
+  getAccesDesRessources,
+  getMembresPourAcces,
+} from "@/lib/queries-admin";
 import { ResourceCard } from "@/components/domain";
 import { EmptyState, ViewHead } from "@/components/ui";
 import { DownloadResourceButton } from "@/components/forms/ContentForms";
@@ -81,8 +85,13 @@ export async function RessourcesPage({
       admin ? lirePressePapier() : Promise.resolve(null),
     ]);
 
-  const lien = (t: Filtre) =>
-    `/${space}/ressources?type=${t}${dossierId ? `&dossier=${dossierId}` : ""}${recherche ? `&q=${encodeURIComponent(recherche)}` : ""}`;
+  // Les accès de toutes les ressources payantes affichées, en une requête :
+  // la fenêtre « qui y a accès » s'ouvre alors sans attendre.
+  const acces = admin
+    ? await getAccesDesRessources(
+        list.filter((r) => r.type === "payant").map((r) => r.id),
+      )
+    : {};
 
   return (
     <>
@@ -139,22 +148,6 @@ export async function RessourcesPage({
         </nav>
       ) : null}
 
-      <div className="mb-[18px] flex flex-wrap gap-1 border-b border-line">
-        {TABS.map((t) => (
-          <Link
-            key={t.key}
-            href={lien(t.key)}
-            className={`mr-[18px] border-b-2 px-1 py-2.5 text-[13.5px] font-semibold no-underline ${
-              actif === t.key
-                ? "border-accent text-accent"
-                : "border-transparent text-faint hover:text-ink"
-            }`}
-          >
-            {t.label} ({counts[t.key]})
-          </Link>
-        ))}
-      </div>
-
       {/*
         Un formulaire GET : la recherche vit dans l'adresse, donc elle se
         partage, se met en favori et survit au rechargement.
@@ -164,7 +157,6 @@ export async function RessourcesPage({
         action={`/${space}/ressources`}
         className="mb-4 flex flex-wrap items-center gap-2"
       >
-        <input type="hidden" name="type" value={actif} />
         {dossierId ? (
           <input type="hidden" name="dossier" value={dossierId} />
         ) : null}
@@ -181,9 +173,23 @@ export async function RessourcesPage({
             className="w-full rounded-[var(--radius-s)] border border-line bg-surface py-2 pl-9 pr-3 text-[13.4px] text-ink placeholder:text-faint"
           />
         </label>
-        {recherche ? (
+        {/*
+          Le filtre est une liste déroulante et non des onglets : il tient à
+          côté de la recherche, où l'on cherche déjà, et il dit son compte.
+          Il se soumet tout seul — un bouton « Filtrer » de plus n'apprendrait
+          rien à personne.
+        */}
+        <FiltreTarif
+          actif={actif}
+          options={TABS.map((t) => ({
+            key: t.key,
+            label: t.label,
+            compte: counts[t.key],
+          }))}
+        />
+        {recherche || actif !== "tout" ? (
           <Link
-            href={`/${space}/ressources`}
+            href={`/${space}/ressources${dossierId ? `?dossier=${dossierId}` : ""}`}
             className="text-[12.8px] font-semibold text-muted no-underline hover:text-accent"
           >
             Effacer
@@ -270,14 +276,12 @@ export async function RessourcesPage({
                       {/* L'œil ne vaut que pour une ressource facturée : une
                           ressource incluse n'a pas de liste d'accès. */}
                       {r.type === "payant" ? (
-                        <Link
-                          href={`/admin/ressources/${r.id}/acces`}
-                          aria-label={`Qui a accès à « ${r.titre} »`}
-                          title="Qui y a accès"
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink"
-                        >
-                          <Eye size={15} />
-                        </Link>
+                        <BoutonAcces
+                          resourceId={r.id}
+                          titre={r.titre}
+                          acces={acces[r.id] ?? []}
+                          membres={membres}
+                        />
                       ) : null}
                       <Link
                         href={`/admin/ressources/${r.id}/modifier`}
@@ -290,7 +294,6 @@ export async function RessourcesPage({
                       <MenuRessource
                         id={r.id}
                         titre={r.titre}
-                        payant={r.type === "payant"}
                         dossierId={dossierId}
                       />
                       <SupprimerRessourceButton

@@ -3,13 +3,17 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
+  CheckSquare,
   ClipboardPaste,
   Copy,
   Eye,
   MoreVertical,
+  Pencil,
   Scissors,
   Search,
+  Trash2,
   UserPlus,
+  Users,
   X,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
@@ -20,19 +24,37 @@ import {
   ModalFooter,
   SubmitButton,
 } from "@/components/form-bits";
+import { ilYa } from "@/components/admin/LigneJournal";
 import {
   annulerPressePapier,
   collerRessources,
   couperRessources,
   mettreUneAuPressePapier,
+  ouvrirAccesPour,
   ouvrirAccesRessources,
+  retirerAccesPour,
 } from "@/lib/actions/content";
 
 /** Une entreprise, telle que la liste de choix l'affiche. */
 export type MembreChoisissable = { id: string; nom: string; statut: string };
 
+/** Un accès déjà ouvert. */
+export type AccesOuvert = {
+  memberId: string;
+  nom: string;
+  ouvertPar: string;
+  date: string;
+};
+
+const BTN_CARTE =
+  "flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink";
+
 /**
- * Le menu d'une ressource : couper, copier, et le reste.
+ * Le menu d'une ressource.
+ *
+ * En fenêtre et non en liste déroulante : la carte est tronquée à ses bords
+ * — c'est ce qui donne ses coins arrondis au visuel —, et un menu qui
+ * dépassait s'y trouvait coupé.
  *
  * Il appelle l'action directement, sans formulaire : la carte vit à
  * l'intérieur du formulaire de sélection, et un formulaire ne s'imbrique pas
@@ -41,126 +63,304 @@ export type MembreChoisissable = { id: string; nom: string; statut: string };
 export function MenuRessource({
   id,
   titre,
-  payant,
   dossierId,
 }: {
   id: string;
   titre: string;
-  payant: boolean;
   dossierId: string | null;
 }) {
-  const [ouvert, setOuvert] = useState(false);
   const [enCours, demarrer] = useTransition();
 
-  const agir = (mode: "copier" | "couper") => {
-    setOuvert(false);
-    demarrer(() => {
-      void mettreUneAuPressePapier(id, mode, dossierId);
-    });
-  };
-
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOuvert((v) => !v)}
-        disabled={enCours}
-        aria-label={`Actions sur « ${titre} »`}
-        aria-expanded={ouvert}
-        title="Autres actions"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink"
-      >
-        <MoreVertical size={15} />
-      </button>
-
-      {ouvert ? (
+    <Modal
+      title="Que faire de cette ressource ?"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          disabled={enCours}
+          aria-label={`Actions sur « ${titre} »`}
+          title="Autres actions"
+          className={BTN_CARTE}
+        >
+          <MoreVertical size={15} />
+        </button>
+      )}
+    >
+      {(fermer) => (
         <>
-          {/* Un clic n'importe où ailleurs referme le menu. */}
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            onClick={() => setOuvert(false)}
-            className="fixed inset-0 z-20 cursor-default border-0 bg-transparent p-0"
-          />
-          <div className="absolute right-0 z-30 mt-1 w-[210px] overflow-hidden rounded-[var(--radius-m)] border border-line bg-surface py-1 shadow-[var(--shadow)]">
-            <Entree onClick={() => agir("copier")} icone={<Copy size={14} />}>
-              Copier
-            </Entree>
-            <Entree
-              onClick={() => agir("couper")}
-              icone={<Scissors size={14} />}
-            >
-              Couper
-            </Entree>
-            {payant ? (
-              <Lien
-                href={`/admin/ressources/${id}/acces`}
-                icone={<Eye size={14} />}
+          <ModalBody>
+            <p className="m-0 text-[13.4px] text-muted">{titre}</p>
+            <div className="grid gap-2">
+              <Choix
+                icone={<Copy size={16} />}
+                titre="Copier"
+                detail="Ouvrez ensuite un dossier, puis « Coller ici ». La ressource et ses fichiers sont dupliqués."
+                onClick={() => {
+                  fermer();
+                  demarrer(() => {
+                    void mettreUneAuPressePapier(id, "copier", dossierId);
+                  });
+                }}
+              />
+              <Choix
+                icone={<Scissors size={16} />}
+                titre="Couper"
+                detail="Ouvrez ensuite un dossier, puis « Coller ici ». La ressource y est déplacée."
+                onClick={() => {
+                  fermer();
+                  demarrer(() => {
+                    void mettreUneAuPressePapier(id, "couper", dossierId);
+                  });
+                }}
+              />
+              <Link
+                href={`/admin/ressources/${id}/modifier`}
+                className="flex items-start gap-3 rounded-[var(--radius-m)] border border-line bg-surface px-4 py-3 text-left no-underline hover:border-faint hover:bg-surface-2"
               >
-                Qui y a accès
-              </Lien>
-            ) : null}
-            <Lien
-              href={`/admin/ressources/${id}/modifier`}
-              icone={<MoreVertical size={14} />}
-            >
-              Modifier
-            </Lien>
-          </div>
+                <span className="mt-px shrink-0 text-accent">
+                  <Pencil size={16} />
+                </span>
+                <span>
+                  <span className="block text-[14px] font-semibold text-ink">
+                    Modifier
+                  </span>
+                  <span className="block text-[12.4px] text-muted">
+                    Titre, catégorie, prix, dossier, fichier.
+                  </span>
+                </span>
+              </Link>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+          </ModalFooter>
         </>
-      ) : null}
-    </div>
+      )}
+    </Modal>
   );
 }
 
-const LIGNE_MENU =
-  "flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13.2px] text-ink no-underline hover:bg-surface-2";
-
-function Entree({
-  onClick,
+function Choix({
   icone,
-  children,
+  titre,
+  detail,
+  onClick,
 }: {
-  onClick: () => void;
   icone: React.ReactNode;
-  children: React.ReactNode;
+  titre: string;
+  detail: string;
+  onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`${LIGNE_MENU} cursor-pointer border-0 bg-transparent`}
+      className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-m)] border border-line bg-surface px-4 py-3 text-left hover:border-faint hover:bg-surface-2"
     >
-      <span className="text-faint">{icone}</span>
-      {children}
+      <span className="mt-px shrink-0 text-accent">{icone}</span>
+      <span>
+        <span className="block text-[14px] font-semibold text-ink">{titre}</span>
+        <span className="block text-[12.4px] text-muted">{detail}</span>
+      </span>
     </button>
   );
 }
 
-function Lien({
-  href,
-  icone,
-  children,
+/**
+ * Qui a accès à une ressource payante, et comment l'ouvrir.
+ *
+ * En fenêtre plutôt qu'en page : on vérifie un accès au milieu d'un
+ * rangement, sans vouloir quitter la bibliothèque et y revenir.
+ */
+export function BoutonAcces({
+  resourceId,
+  titre,
+  acces,
+  membres,
 }: {
-  href: string;
-  icone: React.ReactNode;
-  children: React.ReactNode;
+  resourceId: string;
+  titre: string;
+  acces: AccesOuvert[];
+  membres: MembreChoisissable[];
 }) {
   return (
-    <Link href={href} className={LIGNE_MENU}>
-      <span className="text-faint">{icone}</span>
-      {children}
-    </Link>
+    <Modal
+      title="Qui a accès à cette ressource"
+      largeur="max-w-[620px]"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Qui a accès à « ${titre} »`}
+          title="Qui y a accès"
+          className={BTN_CARTE}
+        >
+          <Eye size={15} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <ContenuAcces
+          resourceId={resourceId}
+          titre={titre}
+          acces={acces}
+          membres={membres}
+          fermer={fermer}
+        />
+      )}
+    </Modal>
+  );
+}
+
+function ContenuAcces({
+  resourceId,
+  titre,
+  acces,
+  membres,
+  fermer,
+}: {
+  resourceId: string;
+  titre: string;
+  acces: AccesOuvert[];
+  membres: MembreChoisissable[];
+  fermer: () => void;
+}) {
+  const [enCours, demarrer] = useTransition();
+  const [q, setQ] = useState("");
+  const [choisis, setChoisis] = useState<string[]>([]);
+
+  const ouverts = new Set(acces.map((a) => a.memberId));
+  const filtre = q.trim().toLowerCase();
+  const liste = membres
+    .filter((m) => !ouverts.has(m.id))
+    .filter((m) => !filtre || m.nom.toLowerCase().includes(filtre));
+
+  const basculer = (id: string) =>
+    setChoisis((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
+
+  return (
+    <>
+      <ModalBody>
+        <p className="m-0 text-[13.4px] text-muted">{titre}</p>
+
+        <div className="rounded-[var(--radius-m)] border border-line">
+          <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
+            <Users size={15} className="text-accent" />
+            <span className="text-[13.4px] font-semibold text-ink">
+              {acces.length} entreprise{acces.length > 1 ? "s" : ""} y{" "}
+              {acces.length > 1 ? "ont" : "a"} accès
+            </span>
+          </div>
+          {acces.length ? (
+            <ul className="m-0 max-h-[180px] list-none overflow-y-auto p-0">
+              {acces.map((a) => (
+                <li
+                  key={a.memberId}
+                  className="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.4px] font-semibold text-ink">
+                      {a.nom}
+                    </span>
+                    <span className="block text-[11.8px] text-faint">
+                      Ouvert par {a.ouvertPar} · {ilYa(a.date)}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    disabled={enCours}
+                    onClick={() =>
+                      demarrer(() => {
+                        void retirerAccesPour(resourceId, a.memberId);
+                      })
+                    }
+                    aria-label={`Retirer l’accès de ${a.nom}`}
+                    title="Retirer"
+                    className="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-faint hover:text-accent"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="m-0 px-4 py-5 text-center text-[13px] text-muted">
+              Personne n’y a encore accès.
+            </p>
+          )}
+        </div>
+
+        <label className="relative block">
+          <Search
+            size={14}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
+          />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Chercher une entreprise à ajouter…"
+            className={`${INPUT} pl-9`}
+          />
+        </label>
+
+        <div className="max-h-[220px] overflow-y-auto rounded-[var(--radius-m)] border border-line">
+          {liste.length ? (
+            liste.map((m) => (
+              <label
+                key={m.id}
+                className="flex cursor-pointer items-center gap-3 border-b border-line px-3.5 py-2.5 text-[13.4px] last:border-b-0 hover:bg-surface-2"
+              >
+                <input
+                  type="checkbox"
+                  checked={choisis.includes(m.id)}
+                  onChange={() => basculer(m.id)}
+                  className="h-4 w-4 shrink-0 accent-[var(--accent)]"
+                />
+                <span className="min-w-0 flex-1 truncate">{m.nom}</span>
+                {m.statut !== "a_jour" ? (
+                  <span className="shrink-0 text-[11.5px] text-faint">
+                    cotisation en retard
+                  </span>
+                ) : null}
+              </label>
+            ))
+          ) : (
+            <p className="m-0 px-4 py-5 text-center text-[13px] text-muted">
+              {filtre
+                ? "Aucune entreprise ne correspond."
+                : "Toutes les entreprises y ont déjà accès."}
+            </p>
+          )}
+        </div>
+      </ModalBody>
+      <ModalFooter>
+        <CancelButton onClick={fermer} />
+        <button
+          type="button"
+          disabled={enCours || !choisis.length}
+          onClick={() =>
+            demarrer(() => {
+              void ouvrirAccesPour(resourceId, choisis);
+              setChoisis([]);
+            })
+          }
+          className="btn-action btn-action-sm disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <UserPlus size={15} />
+          {choisis.length
+            ? `Ouvrir l’accès à ${choisis.length} entreprise${choisis.length > 1 ? "s" : ""}`
+            : "Ouvrir l’accès"}
+        </button>
+      </ModalFooter>
+    </>
   );
 }
 
 /**
  * La barre du presse-papier : elle n'apparaît que quand il porte quelque
  * chose, et colle dans le dossier ouvert.
- *
- * Les boutons vivent dans le formulaire de la liste — d'où `formAction`
- * plutôt qu'un formulaire à eux.
  */
 export function BarrePressePapier({
   nombre,
@@ -198,7 +398,8 @@ export function BarrePressePapier({
  * Ce qu'on fait des ressources cochées.
  *
  * Les boutons vivent dans le formulaire de la liste : chaque case cochée
- * part avec, sans qu'aucun état n'ait à être tenu côté navigateur.
+ * part avec, sans qu'aucun état n'ait à être tenu côté navigateur. Seul
+ * « tout sélectionner » a besoin du navigateur — cocher n'est pas envoyer.
  */
 export function BarreSelection({
   membres,
@@ -207,11 +408,27 @@ export function BarreSelection({
   membres: MembreChoisissable[];
   dossierId: string | null;
 }) {
+  const [tout, setTout] = useState(false);
+
+  const basculerTout = () => {
+    const valeur = !tout;
+    document
+      .querySelectorAll<HTMLInputElement>('input[name="ressource"]')
+      .forEach((c) => (c.checked = valeur));
+    setTout(valeur);
+  };
+
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[var(--radius-m)] border border-line bg-surface-2 px-4 py-2.5">
-      <span className="mr-1 text-[12.6px] text-muted">
-        Cochez des ressources, puis :
-      </span>
+      <button
+        type="button"
+        onClick={basculerTout}
+        className="inline-flex items-center gap-1.5 rounded-[var(--radius-s)] border border-line bg-surface px-3 py-1.5 text-[12.6px] font-semibold text-ink hover:border-faint"
+      >
+        <CheckSquare size={14} />
+        {tout ? "Tout décocher" : "Tout sélectionner"}
+      </button>
+      <span className="mx-1 text-[12.6px] text-muted">puis :</span>
       <SubmitButton sm variant="line" pendingLabel="…">
         <Copy size={14} /> Copier
       </SubmitButton>
@@ -228,21 +445,20 @@ export function BarreSelection({
   );
 }
 
-/**
- * Ouvrir un accès à plusieurs entreprises, pour toutes les ressources
- * cochées.
- *
- * L'équipe accorde rarement un seul accès : une formation s'ouvre à la
- * douzaine d'entreprises qui l'ont suivie, d'un coup. La recherche filtre la
- * liste sans recharger la page — on tape trois lettres, on coche.
- */
-export function BoutonOuvrirAcces({
+/** Ouvrir un accès à plusieurs entreprises, pour toutes les cartes cochées. */
+function BoutonOuvrirAcces({
   membres,
   dossierId,
 }: {
   membres: MembreChoisissable[];
   dossierId: string | null;
 }) {
+  const [q, setQ] = useState("");
+  const filtre = q.trim().toLowerCase();
+  const liste = filtre
+    ? membres.filter((m) => m.nom.toLowerCase().includes(filtre))
+    : membres;
+
   return (
     <Modal
       title="Ouvrir l’accès à des entreprises"
@@ -258,137 +474,67 @@ export function BoutonOuvrirAcces({
       )}
     >
       {(fermer) => (
-        <ChoixMembres membres={membres} dossierId={dossierId} fermer={fermer} />
-      )}
-    </Modal>
-  );
-}
-
-function ChoixMembres({
-  membres,
-  dossierId,
-  fermer,
-  resourceId,
-}: {
-  membres: MembreChoisissable[];
-  dossierId: string | null;
-  fermer: () => void;
-  /** Sur la page d'une ressource : c'est elle qu'on ouvre, sans cocher. */
-  resourceId?: string;
-}) {
-  const [q, setQ] = useState("");
-  const filtre = q.trim().toLowerCase();
-  const liste = filtre
-    ? membres.filter((m) => m.nom.toLowerCase().includes(filtre))
-    : membres;
-
-  return (
-    <>
-      <ModalBody>
-        {resourceId ? (
-          <>
-            <input type="hidden" name="ressource" value={resourceId} />
-            {/* Depuis la fiche d'une ressource, on revient à la fiche. */}
-            <input
-              type="hidden"
-              name="retour"
-              value={`/admin/ressources/${resourceId}/acces`}
-            />
-          </>
-        ) : null}
-        <input type="hidden" name="dossier" value={dossierId ?? ""} />
-
-        <p className="m-0 text-[13px] text-muted">
-          Seules les ressources payantes ont une liste d’accès : les ressources
-          incluses dans l’adhésion sont déjà ouvertes à tout membre à jour.
-        </p>
-
-        <label className="relative block">
-          <Search
-            size={14}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
-          />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Chercher une entreprise…"
-            className={`${INPUT} pl-9`}
-          />
-        </label>
-
-        <div className="max-h-[320px] overflow-y-auto rounded-[var(--radius-m)] border border-line">
-          {liste.length ? (
-            liste.map((m) => (
-              <label
-                key={m.id}
-                className="flex cursor-pointer items-center gap-3 border-b border-line px-3.5 py-2.5 text-[13.4px] last:border-b-0 hover:bg-surface-2"
-              >
-                <input
-                  type="checkbox"
-                  name="membre"
-                  value={m.id}
-                  className="h-4 w-4 shrink-0 accent-[var(--accent)]"
-                />
-                <span className="min-w-0 flex-1 truncate">{m.nom}</span>
-                {m.statut !== "a_jour" ? (
-                  <span className="shrink-0 text-[11.5px] text-faint">
-                    cotisation en retard
-                  </span>
-                ) : null}
-              </label>
-            ))
-          ) : (
-            <p className="m-0 px-4 py-6 text-center text-[13px] text-muted">
-              Aucune entreprise ne correspond.
+        <>
+          <ModalBody>
+            <input type="hidden" name="dossier" value={dossierId ?? ""} />
+            <p className="m-0 text-[13px] text-muted">
+              L’accès s’ouvre pour toutes les ressources cochées. Les ressources
+              incluses dans l’adhésion sont écartées : tout membre à jour les lit
+              déjà.
             </p>
-          )}
-        </div>
-      </ModalBody>
-      <ModalFooter>
-        <CancelButton onClick={fermer} />
-        <SubmitButton
-          formAction={resourceId ? undefined : ouvrirAccesRessources}
-          pendingLabel="Ouverture…"
-        >
-          <UserPlus size={15} /> Ouvrir l’accès
-        </SubmitButton>
-      </ModalFooter>
-    </>
-  );
-}
 
-/** La même liste, sur la page d'une ressource : un formulaire à elle. */
-export function BoutonAccesRessource({
-  membres,
-  resourceId,
-}: {
-  membres: MembreChoisissable[];
-  resourceId: string;
-}) {
-  return (
-    <Modal
-      title="Ouvrir l’accès à des entreprises"
-      largeur="max-w-[620px]"
-      trigger={(ouvrir) => (
-        <button
-          type="button"
-          onClick={ouvrir}
-          className="btn-action btn-action-sm"
-        >
-          <UserPlus size={15} /> Ouvrir un accès
-        </button>
-      )}
-    >
-      {(fermer) => (
-        <form action={ouvrirAccesRessources}>
-          <ChoixMembres
-            membres={membres}
-            dossierId={null}
-            fermer={fermer}
-            resourceId={resourceId}
-          />
-        </form>
+            <label className="relative block">
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
+              />
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Chercher une entreprise…"
+                className={`${INPUT} pl-9`}
+              />
+            </label>
+
+            <div className="max-h-[320px] overflow-y-auto rounded-[var(--radius-m)] border border-line">
+              {liste.length ? (
+                liste.map((m) => (
+                  <label
+                    key={m.id}
+                    className="flex cursor-pointer items-center gap-3 border-b border-line px-3.5 py-2.5 text-[13.4px] last:border-b-0 hover:bg-surface-2"
+                  >
+                    <input
+                      type="checkbox"
+                      name="membre"
+                      value={m.id}
+                      className="h-4 w-4 shrink-0 accent-[var(--accent)]"
+                    />
+                    <span className="min-w-0 flex-1 truncate">{m.nom}</span>
+                    {m.statut !== "a_jour" ? (
+                      <span className="shrink-0 text-[11.5px] text-faint">
+                        cotisation en retard
+                      </span>
+                    ) : null}
+                  </label>
+                ))
+              ) : (
+                <p className="m-0 px-4 py-6 text-center text-[13px] text-muted">
+                  Aucune entreprise ne correspond.
+                </p>
+              )}
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton
+              formAction={ouvrirAccesRessources}
+              pendingLabel="Ouverture…"
+            >
+              <UserPlus size={15} /> Ouvrir l’accès
+            </SubmitButton>
+          </ModalFooter>
+        </>
       )}
     </Modal>
   );
