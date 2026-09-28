@@ -78,7 +78,7 @@ export async function conclurePaiement(
         data: {
           action: "paiement_refuse",
           entite: "Invoice",
-          entiteId: p.invoice.numero,
+          entiteId: p.invoice?.numero ?? p.reference,
           acteur: "Vanilla Pay",
           detail: `Montant annoncé ${fmtMontant(etat.montant, p.devise)} au lieu de ${fmtMontant(p.montant, p.devise)} — règlement non enregistré.`,
         },
@@ -87,10 +87,15 @@ export async function conclurePaiement(
     return "montant_different";
   }
 
+  // Un règlement sans facture — une inscription, un achat de ressource — n'a
+  // rien à passer à « payée » : il se contente d'être encaissé.
   const f = p.invoice;
-  const membre = f.member;
+  const membre = f?.member ?? null;
   const cotisation =
-    membre !== null && estCotisation(f.objet) && membre.statut !== "a_jour";
+    membre !== null &&
+    f !== null &&
+    estCotisation(f.objet) &&
+    membre.statut !== "a_jour";
   const montant = fmtMontant(p.montant, p.devise);
   const moyen = MODES_PAIEMENT[p.mode as ModePaiement] ?? p.mode;
 
@@ -106,7 +111,7 @@ export async function conclurePaiement(
     }),
     // La facture peut avoir été réglée entre-temps au back-office : on ne la
     // repasse à « payée » que si elle ne l'est pas déjà.
-    ...(f.statut === "payee"
+    ...(!f || f.statut === "payee"
       ? []
       : [
           prisma.invoice.update({
@@ -130,8 +135,8 @@ export async function conclurePaiement(
       data: {
         action: "paiement_en_ligne",
         entite: "Invoice",
-        entiteId: f.numero,
-        acteur: membre?.nom ?? nomFacture(f),
+        entiteId: f?.numero ?? p.reference,
+        acteur: membre?.nom ?? (f ? nomFacture(f) : "Membre"),
         detail: `${montant} réglés en ligne (${moyen.toLowerCase()})${etat.transaction ? ` · transaction ${etat.transaction}` : ""}.`,
       },
     }),

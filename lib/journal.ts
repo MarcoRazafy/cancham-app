@@ -68,6 +68,16 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "ok",
   },
+  reglement_confirme: {
+    libelle: "Règlement confirmé",
+    famille: "finance",
+    ton: "ok",
+  },
+  reglement_refuse: {
+    libelle: "Règlement écarté",
+    famille: "finance",
+    ton: "bad",
+  },
   paiement_en_ligne: {
     libelle: "Paiement en ligne encaissé",
     famille: "finance",

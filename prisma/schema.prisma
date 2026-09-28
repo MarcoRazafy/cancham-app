@@ -125,16 +125,34 @@ enum Devise {
   CAD
 }
 
-/// Où en est une tentative de règlement en ligne.
+/// Où en est un règlement.
 enum PaiementStatut {
-  /// Ouverte : le membre est parti sur la page du prestataire.
+  /// Ouvert : le tunnel est commencé, rien n'est encore arrivé.
   en_cours
-  /// Encaissée, notification signée reçue et vérifiée.
+  /// Le membre annonce avoir payé hors ligne. L'équipe doit constater.
+  annonce
+  /// Encaissé : notification du prestataire, ou constat de l'équipe.
   reussie
-  /// Refusée par la banque ou le prestataire.
+  /// Refusé par la banque, le prestataire, ou l'équipe.
   echouee
-  /// Restée sans réponse : le membre a fermé la page.
+  /// Resté sans réponse : le membre a fermé la page.
   abandonnee
+}
+
+/// Par où l'argent arrive.
+///
+/// Les deux premiers s'encaissent tout seuls, par le prestataire : la
+/// plateforme apprend le paiement sans que personne n'ait rien à faire. Les
+/// cinq autres se passent hors ligne — la plateforme accompagne, donne une
+/// référence à recopier, et c'est l'équipe qui constate l'arrivée.
+enum ModeReglement {
+  carte
+  mobile_money
+  virement
+  depot
+  especes
+  international
+  plateforme
 }
 
 model Member {
@@ -197,6 +215,7 @@ model Member {
   rendezvous   Rendezvous[]
   notes        NoteMembre[]
   acces        AccesRessource[]
+  reglements   Paiement[]
 
   @@index([statut])
   @@map("members")
@@ -714,8 +733,7 @@ model Paiement {
   montant Int
   devise  Devise @default(MGA)
 
-  /// `international` (carte bancaire) ou `mobile_money`.
-  mode String
+  mode ModeReglement
 
   /// Identifiant de la transaction chez le prestataire, connu à la réponse.
   transaction  String?
@@ -725,14 +743,68 @@ model Paiement {
   /// Horodatage de l'encaissement confirmé.
   regleLe      DateTime?
 
-  invoiceId String
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  /// Ce que le membre a saisi après son virement : la référence que sa banque
+  /// lui a donnée. Facultative, mais elle accélère le rapprochement.
+  refBancaire String?
+  /// Précisions du tunnel : lieu et moment d'une remise en espèces, nom de la
+  /// plateforme tierce. Ce qui n'a de sens que pour un moyen donné.
+  detail      Json?
+  /// Quand le membre a annoncé avoir payé hors ligne.
+  annonceLe   DateTime?
+  /// Qui de l'équipe a constaté l'arrivée de l'argent.
+  confirmePar String?
+
+  /// La facture réglée. `null` pour ce qui n'en a pas encore — une
+  /// inscription à un événement, l'achat d'une ressource.
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  /// Qui paie. Recopié ici parce qu'un règlement d'événement ou de ressource
+  /// n'a pas de facture pour le porter.
+  memberId String?
+  member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([invoiceId])
+  @@index([memberId])
+  @@index([statut])
   @@map("paiements")
+}
+
+/// Les coordonnées où la chambre reçoit l'argent.
+///
+/// Une seule ligne, tenue depuis le back-office : un changement de banque ne
+/// doit pas demander un déploiement. Tout est facultatif — un moyen dont les
+/// coordonnées manquent n'est simplement pas proposé au membre, ce qui vaut
+/// mieux qu'un virement envoyé dans le vide.
+model CoordonneesPaiement {
+  id String @id @default("uniques")
+
+  /// Titulaire du compte, tel qu'il doit être écrit sur un virement.
+  titulaire String @default("")
+  banque    String @default("")
+  agence    String @default("")
+  /// RIB en clair, tel qu'on le recopie au guichet.
+  rib       String @default("")
+  iban      String @default("")
+  bic       String @default("")
+
+  mvola       String @default("")
+  orangeMoney String @default("")
+  airtelMoney String @default("")
+
+  /// Où et quand remettre des espèces.
+  adresseBureau String @default("")
+  horaires      String @default("")
+
+  /// Plateformes tierces acceptées, une par ligne : nom et adresse.
+  plateformes String @default("")
+
+  updatedAt DateTime @updatedAt
+
+  @@map("coordonnees_paiement")
 }
 
 // ============================ Messagerie ============================
