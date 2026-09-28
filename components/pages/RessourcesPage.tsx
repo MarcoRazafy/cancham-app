@@ -2,15 +2,25 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ChevronRight,
+  Eye,
   Library,
   Pencil,
   Plus,
+  Search,
 } from "lucide-react";
 import { SupprimerRessourceButton } from "@/components/forms/AdminContenuForms";
+import {
+  BarrePressePapier,
+  BarreSelection,
+  MenuRessource,
+} from "@/components/forms/BibliothequeOutils";
 import {
   BoutonNouveauDossier,
   CarteDossier,
 } from "@/components/forms/DossiersRessources";
+import { copierRessources } from "@/lib/actions/content";
+import { lirePressePapier } from "@/lib/presse-papier";
+import { getMembresPourAcces } from "@/lib/queries-admin";
 import { ResourceCard } from "@/components/domain";
 import { EmptyState, ViewHead } from "@/components/ui";
 import { DownloadResourceButton } from "@/components/forms/ContentForms";
@@ -45,26 +55,34 @@ export async function RessourcesPage({
   space,
   type = "tout",
   dossier,
+  q = "",
 }: {
   space: Space;
   type?: string;
   dossier?: string;
+  q?: string;
 }) {
   const admin = space === "admin";
   const actif: Filtre = type === "gratuit" || type === "payant" ? type : "tout";
+  const recherche = q.trim();
 
   const fil = dossier ? await getFilDossier(dossier) : null;
   const dossierId = fil?.length ? fil[fil.length - 1].id : null;
 
-  const [sousDossiers, list, counts, arborescence] = await Promise.all([
-    getSousDossiers(dossierId),
-    getResources(actif === "tout" ? undefined : actif, dossierId),
-    getResourceCounts(dossierId),
-    admin ? getArborescenceDossiers() : Promise.resolve([]),
-  ]);
+  const [sousDossiers, list, counts, arborescence, membres, presse] =
+    await Promise.all([
+      // Une recherche traverse la bibliothèque : les dossiers s'effacent le
+      // temps qu'elle dure.
+      recherche ? Promise.resolve([]) : getSousDossiers(dossierId),
+      getResources(actif === "tout" ? undefined : actif, dossierId, recherche),
+      getResourceCounts(dossierId, recherche),
+      admin ? getArborescenceDossiers() : Promise.resolve([]),
+      admin ? getMembresPourAcces() : Promise.resolve([]),
+      admin ? lirePressePapier() : Promise.resolve(null),
+    ]);
 
   const lien = (t: Filtre) =>
-    `/${space}/ressources?type=${t}${dossierId ? `&dossier=${dossierId}` : ""}`;
+    `/${space}/ressources?type=${t}${dossierId ? `&dossier=${dossierId}` : ""}${recherche ? `&q=${encodeURIComponent(recherche)}` : ""}`;
 
   return (
     <>
@@ -137,6 +155,50 @@ export async function RessourcesPage({
         ))}
       </div>
 
+      {/*
+        Un formulaire GET : la recherche vit dans l'adresse, donc elle se
+        partage, se met en favori et survit au rechargement.
+      */}
+      <form
+        method="get"
+        action={`/${space}/ressources`}
+        className="mb-4 flex flex-wrap items-center gap-2"
+      >
+        <input type="hidden" name="type" value={actif} />
+        {dossierId ? (
+          <input type="hidden" name="dossier" value={dossierId} />
+        ) : null}
+        <label className="relative min-w-[220px] flex-1">
+          <Search
+            size={14}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
+          />
+          <input
+            type="search"
+            name="q"
+            defaultValue={recherche}
+            placeholder="Chercher un document dans toute la bibliothèque…"
+            className="w-full rounded-[var(--radius-s)] border border-line bg-surface py-2 pl-9 pr-3 text-[13.4px] text-ink placeholder:text-faint"
+          />
+        </label>
+        {recherche ? (
+          <Link
+            href={`/${space}/ressources`}
+            className="text-[12.8px] font-semibold text-muted no-underline hover:text-accent"
+          >
+            Effacer
+          </Link>
+        ) : null}
+      </form>
+
+      {recherche ? (
+        <p className="mb-4 text-[13px] text-muted">
+          {list.length} résultat{list.length > 1 ? "s" : ""} pour «&nbsp;
+          {recherche}&nbsp;» — toute la bibliothèque est fouillée, dossiers
+          compris.
+        </p>
+      ) : null}
+
       {sousDossiers.length ? (
         <div className="mb-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {sousDossiers.map((d) => (
@@ -151,61 +213,139 @@ export async function RessourcesPage({
         </div>
       ) : null}
 
-      {list.length ? (
-        <div className="cascade grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {list.map((r) => (
-            <ResourceCard
-              key={r.id}
-              resource={r}
-              footer={
-                admin ? (
-                  <div className="flex w-full items-center gap-1.5">
-                    {r.pret ? (
+      {/*
+        Un seul formulaire pour toute la liste : chaque case cochée part avec
+        le bouton qu'on presse, et la sélection n'a besoin d'aucun état tenu
+        côté navigateur. Le presse-papier, lui, vit dans un cookie — entre
+        « couper » et « coller ici », on change de page.
+
+        Le formulaire enveloppe aussi le cas de la liste vide : c'est
+        précisément dans un dossier vide qu'on vient coller.
+      */}
+      <FormulaireListe admin={admin} dossierId={dossierId}>
+        {admin && presse ? (
+          <BarrePressePapier nombre={presse.ids.length} mode={presse.mode} />
+        ) : null}
+        {admin && list.length ? (
+          <BarreSelection membres={membres} dossierId={dossierId} />
+        ) : null}
+
+        {list.length ? (
+          <div className="cascade grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {list.map((r) => (
+              <ResourceCard
+                key={r.id}
+                resource={r}
+                coin={
+                  admin ? (
+                    <label
+                      title="Sélectionner"
+                      className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-[var(--radius-s)] bg-white/95 shadow-[var(--shadow)]"
+                    >
+                      <input
+                        type="checkbox"
+                        name="ressource"
+                        value={r.id}
+                        aria-label={`Sélectionner « ${r.titre} »`}
+                        className="h-4 w-4 accent-[var(--accent)]"
+                      />
+                    </label>
+                  ) : undefined
+                }
+                footer={
+                  admin ? (
+                    <div className="flex w-full items-center gap-1.5">
+                      {r.pret ? (
+                        <DownloadResourceButton
+                          resourceId={r.id}
+                          space={space}
+                          accessible={r.accessible ?? r.type === "gratuit"}
+                          video={r.fmt === "Vidéo"}
+                        />
+                      ) : (
+                        <span className="flex-1 inline-flex items-center gap-1 text-[12px] font-semibold text-accent">
+                          <AlertTriangle size={13} /> Fichier manquant
+                        </span>
+                      )}
+                      {/* L'œil ne vaut que pour une ressource facturée : une
+                          ressource incluse n'a pas de liste d'accès. */}
+                      {r.type === "payant" ? (
+                        <Link
+                          href={`/admin/ressources/${r.id}/acces`}
+                          aria-label={`Qui a accès à « ${r.titre} »`}
+                          title="Qui y a accès"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink"
+                        >
+                          <Eye size={15} />
+                        </Link>
+                      ) : null}
+                      <Link
+                        href={`/admin/ressources/${r.id}/modifier`}
+                        aria-label={`Modifier « ${r.titre} »`}
+                        title="Modifier"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink"
+                      >
+                        <Pencil size={15} />
+                      </Link>
+                      <MenuRessource
+                        id={r.id}
+                        titre={r.titre}
+                        payant={r.type === "payant"}
+                        dossierId={dossierId}
+                      />
+                      <SupprimerRessourceButton
+                        resourceId={r.id}
+                        titre={r.titre}
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex w-full flex-col gap-1.5">
                       <DownloadResourceButton
                         resourceId={r.id}
                         space={space}
-                        payant={r.type === "payant"}
+                        accessible={r.accessible ?? r.type === "gratuit"}
                         video={r.fmt === "Vidéo"}
                       />
-                    ) : (
-                      <span className="flex-1 inline-flex items-center gap-1 text-[12px] font-semibold text-accent">
-                        <AlertTriangle size={13} /> Fichier manquant
-                      </span>
-                    )}
-                    <Link
-                      href={`/admin/ressources/${r.id}/modifier`}
-                      aria-label={`Modifier « ${r.titre} »`}
-                      title="Modifier"
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink"
-                    >
-                      <Pencil size={15} />
-                    </Link>
-                    <SupprimerRessourceButton
-                      resourceId={r.id}
-                      titre={r.titre}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex w-full flex-col gap-1.5">
-                    <DownloadResourceButton
-                      resourceId={r.id}
-                      space={space}
-                      payant={r.type === "payant"}
-                      video={r.fmt === "Vidéo"}
-                    />
-                  </div>
-                )
-              }
-            />
-          ))}
-        </div>
-      ) : sousDossiers.length ? null : (
-        <EmptyState>
-          {dossierId
-            ? "Ce dossier est vide."
-            : "Aucune ressource dans cette catégorie."}
-        </EmptyState>
-      )}
+                    </div>
+                  )
+                }
+              />
+            ))}
+          </div>
+        ) : sousDossiers.length ? null : (
+          <EmptyState>
+            {recherche
+              ? "Aucun document ne porte ce titre."
+              : dossierId
+                ? "Ce dossier est vide."
+                : "Aucune ressource dans cette catégorie."}
+          </EmptyState>
+        )}
+      </FormulaireListe>
     </>
+  );
+}
+
+/**
+ * La liste, dans un formulaire côté équipe — et telle quelle côté membre.
+ *
+ * Un adhérent n'a rien à cocher : lui poser un formulaire autour de la
+ * bibliothèque n'ajouterait qu'un élément vide dans la page.
+ */
+function FormulaireListe({
+  admin,
+  dossierId,
+  children,
+}: {
+  admin: boolean;
+  dossierId: string | null;
+  children: React.ReactNode;
+}) {
+  if (!admin) return <>{children}</>;
+  return (
+    <form action={copierRessources}>
+      <input type="hidden" name="dossier" value={dossierId ?? ""} />
+      {children}
+    </form>
   );
 }

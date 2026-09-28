@@ -83,6 +83,16 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "info",
   },
+  acces_ouvert: {
+    libelle: "Accès à une ressource ouvert",
+    famille: "contenu",
+    ton: "ok",
+  },
+  acces_retire: {
+    libelle: "Accès à une ressource retiré",
+    famille: "contenu",
+    ton: "bad",
+  },
   ressource_achetee: {
     libelle: "Demande d’achat de ressource",
     famille: "finance",

@@ -11,10 +11,17 @@ import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import {
   FichierRefuse,
+  dupliquerRessource,
   effacerRessource,
   recevoirRessource,
 } from "@/lib/stockage-ressources";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
+import {
+  lirePressePapier,
+  poserPressePapier,
+  viderPressePapier,
+  type ModePressePapier,
+} from "@/lib/presse-papier";
 import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -891,4 +898,234 @@ export async function deplacerDossier(formData: FormData) {
   });
   revalideTout();
   redirectWithFlash(retourDossier(vers), `Dossier « ${d.nom} » déplacé`);
+}
+
+/* ==================== Presse-papier de la bibliothèque ==================== */
+
+/** Les identifiants cochés dans la liste. */
+const coches = (fd: FormData) =>
+  fd.getAll("ressource").map(String).filter(Boolean);
+
+/**
+ * Où l'on était quand on a cliqué.
+ *
+ * `retour` l'emporte quand il est donné — depuis la fiche d'accès d'une
+ * ressource, on veut revenir à la fiche, pas à la bibliothèque. Seul un
+ * chemin interne est accepté : une action serveur est une adresse publique,
+ * et un `retour` choisi par l'appelant ferait une redirection ouverte.
+ */
+const retourBibliotheque = (fd: FormData) => {
+  const r = texte(fd, "retour");
+  if (r.startsWith("/admin/") && !r.startsWith("//")) return r;
+  const d = texte(fd, "dossier");
+  return d ? `/admin/ressources?dossier=${d}` : "/admin/ressources";
+};
+
+async function mettreAuPressePapier(
+  formData: FormData,
+  mode: ModePressePapier,
+) {
+  await exigerEquipe();
+  const retour = retourBibliotheque(formData);
+  const ids = coches(formData);
+  if (!ids.length) {
+    redirectWithErreur(retour, "Cochez au moins une ressource.");
+  }
+
+  await poserPressePapier({ mode, ids });
+  redirectWithFlash(
+    retour,
+    `${ids.length} ressource${ids.length > 1 ? "s" : ""} ${mode === "couper" ? "à déplacer" : "à copier"} · ouvrez un dossier puis « Coller ici »`,
+  );
+}
+
+export async function couperRessources(formData: FormData) {
+  await mettreAuPressePapier(formData, "couper");
+}
+
+export async function copierRessources(formData: FormData) {
+  await mettreAuPressePapier(formData, "copier");
+}
+
+export async function annulerPressePapier(formData: FormData) {
+  await exigerEquipe();
+  await viderPressePapier();
+  redirectWithFlash(retourBibliotheque(formData), "Presse-papier vidé");
+}
+
+/**
+ * Colle le presse-papier dans le dossier ouvert.
+ *
+ * « Couper » range ailleurs — une ligne qui change de dossier. « Copier »
+ * duplique : une nouvelle ressource, et une vraie copie des fichiers, parce
+ * que deux lignes qui partageraient le même dossier de stockage se
+ * détruiraient l'une l'autre à la première suppression.
+ */
+export async function collerRessources(formData: FormData) {
+  await exigerEquipe();
+  const retour = retourBibliotheque(formData);
+  const presse = await lirePressePapier();
+  if (!presse) redirectWithErreur(retour, "Le presse-papier est vide.");
+
+  const dossierId = texte(formData, "dossier") || null;
+  if (dossierId) {
+    const existe = await prisma.dossierRessource.count({
+      where: { id: dossierId },
+    });
+    if (!existe)
+      redirectWithErreur("/admin/ressources", "Dossier introuvable.");
+  }
+
+  const sources = await prisma.resource.findMany({
+    where: { id: { in: presse.ids } },
+  });
+  if (!sources.length) {
+    await viderPressePapier();
+    redirectWithErreur(retour, "Ces ressources n’existent plus.");
+  }
+
+  if (presse.mode === "couper") {
+    await prisma.resource.updateMany({
+      where: { id: { in: sources.map((r) => r.id) } },
+      data: { dossierId },
+    });
+  } else {
+    for (const r of sources) {
+      const copie = await prisma.resource.create({
+        data: {
+          titre: `${r.titre} (copie)`,
+          cat: r.cat,
+          fmt: r.fmt,
+          taille: r.taille,
+          date: r.date,
+          fichier: r.fichier,
+          pages: r.pages,
+          cover: r.cover,
+          type: r.type,
+          prix: r.prix,
+          dossierId,
+        },
+      });
+      await dupliquerRessource(r.id, copie.id);
+    }
+  }
+
+  await viderPressePapier();
+  revalideTout();
+  const n = sources.length;
+  redirectWithFlash(
+    retour,
+    `${n} ressource${n > 1 ? "s" : ""} ${presse.mode === "couper" ? "déplacée" : "copiée"}${n > 1 ? "s" : ""} ici`,
+  );
+}
+
+/* ==================== Accès aux ressources payantes ==================== */
+
+/**
+ * Ouvre l'accès d'une ou plusieurs entreprises à une ou plusieurs ressources
+ * payantes.
+ *
+ * En lot, parce que l'équipe accorde rarement un seul accès : une formation
+ * s'ouvre à la douzaine d'entreprises qui l'ont suivie, d'un coup.
+ *
+ * Les ressources incluses dans l'adhésion sont écartées : elles n'ont pas de
+ * liste, tout membre à jour les lit.
+ */
+export async function ouvrirAccesRessources(formData: FormData) {
+  const user = await exigerEquipe();
+  const retour = retourBibliotheque(formData);
+
+  const ressources = coches(formData);
+  const membres = formData.getAll("membre").map(String).filter(Boolean);
+  if (!ressources.length)
+    redirectWithErreur(retour, "Aucune ressource choisie.");
+  if (!membres.length)
+    redirectWithErreur(retour, "Choisissez au moins une entreprise.");
+
+  const payantes = await prisma.resource.findMany({
+    where: { id: { in: ressources }, type: "payant" },
+    select: { id: true, titre: true },
+  });
+  if (!payantes.length) {
+    redirectWithErreur(
+      retour,
+      "Ces ressources sont incluses dans l’adhésion : tout membre à jour y accède déjà.",
+    );
+  }
+
+  const { count } = await prisma.accesRessource.createMany({
+    data: payantes.flatMap((r) =>
+      membres.map((memberId) => ({
+        resourceId: r.id,
+        memberId,
+        ouvertPar: user.nom,
+      })),
+    ),
+    // Un accès déjà ouvert n'est pas une erreur : on le laisse tel quel.
+    skipDuplicates: true,
+  });
+
+  for (const r of payantes) {
+    await journal(
+      "acces_ouvert",
+      "Resource",
+      r.id,
+      `${membres.length} entreprise${membres.length > 1 ? "s" : ""} · ${r.titre}`,
+    );
+  }
+
+  revalideTout();
+  redirectWithFlash(
+    retour,
+    count
+      ? `${count} accès ouvert${count > 1 ? "s" : ""}`
+      : "Ces accès étaient déjà ouverts",
+  );
+}
+
+/** Retire l'accès d'une entreprise à une ressource. */
+export async function retirerAccesRessource(formData: FormData) {
+  await exigerEquipe();
+  const resourceId = texte(formData, "resourceId");
+  const memberId = texte(formData, "membreId");
+  const retour = retourBibliotheque(formData);
+
+  const acces = await prisma.accesRessource.findUnique({
+    where: { resourceId_memberId: { resourceId, memberId } },
+    include: {
+      member: { select: { nom: true } },
+      resource: { select: { titre: true } },
+    },
+  });
+  if (!acces) redirectWithErreur(retour, "Cet accès n’existe plus.");
+
+  await prisma.accesRessource.delete({ where: { id: acces.id } });
+  await journal(
+    "acces_retire",
+    "Resource",
+    resourceId,
+    `${acces.member.nom} · ${acces.resource.titre}`,
+  );
+  revalideTout();
+  redirectWithFlash(retour, `Accès retiré à ${acces.member.nom}`);
+}
+
+/**
+ * Couper ou copier une seule ressource, depuis son menu.
+ *
+ * Appelée directement par le menu — sans formulaire : le menu vit à
+ * l'intérieur du formulaire de sélection, et un formulaire ne s'imbrique pas
+ * dans un autre.
+ */
+export async function mettreUneAuPressePapier(
+  id: string,
+  mode: ModePressePapier,
+  dossier: string | null,
+) {
+  await exigerEquipe();
+  await poserPressePapier({ mode, ids: [id] });
+  redirectWithFlash(
+    dossier ? `/admin/ressources?dossier=${dossier}` : "/admin/ressources",
+    `Ressource ${mode === "couper" ? "à déplacer" : "à copier"} · ouvrez un dossier puis « Coller ici »`,
+  );
 }

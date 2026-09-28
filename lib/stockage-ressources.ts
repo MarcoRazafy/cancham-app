@@ -1,5 +1,13 @@
 import { execFile } from "node:child_process";
-import { mkdir, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import {
+  cp,
+  mkdir,
+  readdir,
+  rename,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { PLAFOND_FICHIER } from "@/lib/plafonds";
@@ -202,4 +210,24 @@ export async function recevoirRessource(
 /** Efface les fichiers d'une ressource supprimée. */
 export async function effacerRessource(id: string): Promise<void> {
   await rm(dossierRessource(id), { recursive: true, force: true });
+}
+
+/**
+ * Recopie les fichiers d'une ressource vers une autre.
+ *
+ * Dupliquer une ressource dans un autre dossier ne peut pas se contenter de
+ * dupliquer sa ligne : le contenu est rangé sous l'identifiant, et deux
+ * lignes qui pointeraient sur le même dossier se détruiraient l'une l'autre
+ * à la première suppression.
+ *
+ * Sans dossier source — ressource sans fichier —, il n'y a rien à copier.
+ */
+export async function dupliquerRessource(
+  source: string,
+  cible: string,
+): Promise<void> {
+  const depuis = dossierRessource(source);
+  if (!(await existe(depuis))) return;
+  await mkdir(path.dirname(dossierRessource(cible)), { recursive: true });
+  await cp(depuis, dossierRessource(cible), { recursive: true });
 }

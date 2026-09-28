@@ -43,17 +43,19 @@ import type { CanchamService, Space } from "@/lib/types";
 export function DownloadResourceButton({
   resourceId,
   space,
-  payant,
+  accessible,
   video,
 }: {
   resourceId: string;
   space: Space;
-  payant: boolean;
+  /**
+   * Ouvrable par la personne connectée : gratuite, ou payante dont l'accès a
+   * été ouvert à son entreprise. L'équipe ouvre tout ce qu'elle publie.
+   */
+  accessible: boolean;
   video: boolean;
 }) {
-  // Dans le back-office, l'équipe ouvre aussi les ressources payantes : elle
-  // n'a rien à acheter de ce qu'elle publie.
-  if (!payant || space === "admin") {
+  if (accessible || space === "admin") {
     return (
       <Link
         href={`/${space}/ressources/${resourceId}`}
