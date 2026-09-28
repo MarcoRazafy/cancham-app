@@ -30,7 +30,8 @@ export default async function RetourPaiementPage({
       })
     : null;
   // Une référence qui n'est pas la sienne n'existe pas pour lui.
-  if (!p || !user.memberId || p.invoice.memberId !== user.memberId) notFound();
+  const proprietaire = p?.invoice?.memberId ?? p?.memberId ?? null;
+  if (!p || !user.memberId || proprietaire !== user.memberId) notFound();
 
   // La notification a pu se perdre : on demande l'état, et on conclut avec
   // la même porte que le webhook — donc sans double règlement possible.
@@ -65,7 +66,7 @@ export default async function RetourPaiementPage({
             icon={<CheckCircle2 size={18} />}
             title="Paiement reçu"
           >
-            La facture {p.invoice.numero} est réglée : {montant} encaissés.
+            La facture {p.invoice?.numero} est réglée : {montant} encaissés.
             Votre adhésion est à jour, et votre certificat le dit déjà.
           </Banner>
         ) : statut === "echouee" ? (

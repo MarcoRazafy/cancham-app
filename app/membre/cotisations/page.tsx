@@ -26,8 +26,6 @@ import {
 } from "@/lib/membership";
 import { getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
-import { vanillaPayActif } from "@/lib/vanillapay";
-import { PaiementEnLigne } from "@/components/forms/PaiementEnLigne";
 
 /**
  * Cotisations et factures.
@@ -43,10 +41,6 @@ export default async function CotisationsPage() {
   if (!m) notFound();
 
   const factures = await getInvoices(m.id);
-  // Le règlement en ligne ne s'affiche que s'il est configuré : sans clés,
-  // proposer un bouton qui mène à une erreur vaut moins que de ne rien
-  // proposer du tout.
-  const enLigne = vanillaPayActif();
   const enAttente = ADHESION_PENDING.includes(m.statut);
   // Un an après le dernier règlement — pas après l'inscription.
   const renouvellement = renouvellementCotisation({
@@ -183,16 +177,16 @@ export default async function CotisationsPage() {
                       <Download size={13} /> Voir · PDF
                     </Link>
                     {/*
-                      L'Ariary seulement : le prestataire n'encaisse pas le
-                      dollar canadien, et les formules du Canada se règlent
-                      par virement.
+                      Toutes les devises : les moyens hors ligne — virement,
+                      dépôt, espèces — ne dépendent d'aucun prestataire.
                     */}
-                    {enLigne && f.statut === "envoyee" && f.devise === "MGA" ? (
-                      <PaiementEnLigne
-                        factureId={f.id}
-                        numero={f.numero}
-                        montant={fmtMontant(f.montant, f.devise)}
-                      />
+                    {f.statut === "envoyee" ? (
+                      <Link
+                        href={`/membre/cotisations/payer?facture=${f.id}`}
+                        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent no-underline hover:underline"
+                      >
+                        <CreditCard size={13} /> Régler
+                      </Link>
                     ) : null}
                   </div>
                 </Td>

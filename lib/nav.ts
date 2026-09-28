@@ -102,6 +102,11 @@ export const NAV_ADMIN: NavGroup[] = [
     label: "Compta",
     items: [
       { href: "/admin/paiements", label: "Paiements & factures", icon: "card" },
+      {
+        href: "/admin/reglements",
+        label: "Règlements annoncés",
+        icon: "card",
+      },
     ],
   },
 ];
@@ -137,6 +142,9 @@ export const TITLES: Record<string, [string, string]> = {
   "/admin/agenda": ["Back-office", "Agenda"],
   "/admin/rendez-vous": ["Back-office", "Rendez-vous"],
   "/admin/paiements": ["Back-office", "Paiements & factures"],
+  "/admin/reglements": ["Back-office", "Règlements annoncés"],
+  "/admin/reglements/coordonnees": ["Back-office", "Coordonnées de paiement"],
+  "/membre/cotisations/payer": ["Espace membre", "Régler"],
   "/admin/offres-cancham": ["Back-office", "Services CanCham"],
   "/admin/messagerie": ["Back-office", "Messagerie"],
   "/admin/actualites": ["Back-office", "Actualités"],
