@@ -477,13 +477,43 @@ model Resource {
   /// En Ariary. 0 si gratuit.
   prix Int         @default(0)
 
+  /// Dossier qui la range. `null` = à la racine de la bibliothèque.
+  /// `SetNull` et non `Cascade` : supprimer un classeur ne doit jamais
+  /// emporter les documents qu'il contenait.
+  dossierId String?
+  dossier   DossierRessource? @relation(fields: [dossierId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   commentaires Comment[]
 
   @@index([type])
+  @@index([dossierId])
   @@map("resources")
+}
+
+/// Dossier de la bibliothèque : un classeur, et des classeurs dedans.
+///
+/// La bibliothèque était une liste à plat : passé une trentaine de documents,
+/// on ne retrouve plus rien. Les dossiers s'imbriquent, et une ressource se
+/// dépose dans celui qu'on veut — ou à la racine, comme avant.
+model DossierRessource {
+  id  String @id @default(cuid())
+  nom String
+
+  /// `null` = dossier de premier niveau.
+  parentId String?
+  parent   DossierRessource?  @relation("Arborescence", fields: [parentId], references: [id], onDelete: Cascade)
+  enfants  DossierRessource[] @relation("Arborescence")
+
+  ressources Resource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@map("dossiers_ressources")
 }
 
 /// Commentaire sur une actualité ou sur une ressource.

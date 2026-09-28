@@ -355,13 +355,20 @@ export interface RessourceEditee {
   pret: boolean;
   pages: number | null;
   cover: string | null;
+  dossierId: string | null;
 }
 
 /** Ajout ou modification d'une ressource, fichier compris. */
 export function FormulaireRessource({
   ressource,
+  dossiers,
+  dossierParDefaut,
 }: {
   ressource?: RessourceEditee;
+  /** Les dossiers de la bibliothèque, à plat, pour la liste déroulante. */
+  dossiers: { id: string; nom: string; profondeur: number }[];
+  /** Le dossier ouvert quand on a cliqué « Nouvelle ressource ». */
+  dossierParDefaut?: string;
 }) {
   const [payant, setPayant] = useState(ressource?.type === "payant");
   const [fichier, setFichier] = useState<File | null>(null);
@@ -417,6 +424,23 @@ export function FormulaireRessource({
             </select>
           </Field>
         </div>
+        <Field
+          label="Dossier"
+          hint="Où la ranger dans la bibliothèque. Vide, elle reste à la racine."
+        >
+          <select
+            name="dossier"
+            defaultValue={ressource?.dossierId ?? dossierParDefaut ?? ""}
+            className={INPUT}
+          >
+            <option value="">Racine de la bibliothèque</option>
+            {dossiers.map((d) => (
+              <option key={d.id} value={d.id}>
+                {`${"\u00a0\u00a0".repeat(d.profondeur)}${d.profondeur ? "└ " : ""}${d.nom}`}
+              </option>
+            ))}
+          </select>
+        </Field>
         {payant ? (
           <Field
             label="Prix (Ariary)"

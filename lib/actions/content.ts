@@ -375,6 +375,8 @@ export async function enregistrerRessource(formData: FormData) {
   const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
   const entree = formData.get("fichier");
   const fichier = entree instanceof File && entree.size > 0 ? entree : null;
+  // Le dossier où la ranger. Vide = à la racine de la bibliothèque.
+  const dossierId = texte(formData, "dossier") || null;
 
   if (!titre) redirectWithErreur(retour, "Le titre est obligatoire.");
   if (!cat) redirectWithErreur(retour, "Catégorie inconnue.");
@@ -383,6 +385,12 @@ export async function enregistrerRessource(formData: FormData) {
   }
   if (!id && !fichier) {
     redirectWithErreur(retour, "Joignez le fichier de la ressource.");
+  }
+  if (dossierId) {
+    const existe = await prisma.dossierRessource.count({
+      where: { id: dossierId },
+    });
+    if (!existe) redirectWithErreur(retour, "Ce dossier n’existe plus.");
   }
 
   let cover: string | null = null;
@@ -406,6 +414,7 @@ export async function enregistrerRessource(formData: FormData) {
           cat,
           type,
           prix,
+          dossierId,
           ...(cover ? { cover } : retirerCover ? { cover: null } : {}),
         },
       })
@@ -416,6 +425,7 @@ export async function enregistrerRessource(formData: FormData) {
           type,
           prix,
           cover,
+          dossierId,
           fmt: "pdf",
           taille: "—",
           date: jourBase(),
@@ -701,4 +711,184 @@ export async function deplacerService(formData: FormData) {
   );
   revalideTout();
   redirect(retour);
+}
+
+/* ==================== Dossiers de la bibliothèque ==================== */
+
+/** Un nom de dossier tient sur une carte. */
+const NOM_DOSSIER_MAX = 80;
+
+/**
+ * Profondeur maximale de l'arborescence.
+ *
+ * Cinq niveaux suffisent à classer une bibliothèque de chambre de commerce,
+ * et au-delà le fil d'Ariane ne tient plus sur un écran de téléphone.
+ */
+const PROFONDEUR_MAX = 5;
+
+/** Où revenir après une opération sur un dossier. */
+const retourDossier = (id: string | null) =>
+  id ? `/admin/ressources?dossier=${id}` : "/admin/ressources";
+
+/** La profondeur d'un dossier : 0 à la racine. */
+async function profondeurDossier(id: string | null): Promise<number> {
+  let n = 0;
+  let courant = id;
+  while (courant && n < 20) {
+    const d = await prisma.dossierRessource.findUnique({
+      where: { id: courant },
+      select: { parentId: true },
+    });
+    if (!d) break;
+    courant = d.parentId;
+    n++;
+  }
+  return n;
+}
+
+/** Vrai si `candidat` est `dossier` lui-même ou l'un de ses descendants. */
+async function estDansSaDescendance(
+  dossier: string,
+  candidat: string | null,
+): Promise<boolean> {
+  let courant = candidat;
+  for (let i = 0; courant && i < 20; i++) {
+    if (courant === dossier) return true;
+    const d = await prisma.dossierRessource.findUnique({
+      where: { id: courant },
+      select: { parentId: true },
+    });
+    if (!d) return false;
+    courant = d.parentId;
+  }
+  return false;
+}
+
+export async function creerDossier(formData: FormData) {
+  await exigerEquipe();
+  const parentId = texte(formData, "parent") || null;
+  const retour = retourDossier(parentId);
+
+  const nom = texte(formData, "nom");
+  if (!nom) redirectWithErreur(retour, "Donnez un nom au dossier.");
+  if (nom.length > NOM_DOSSIER_MAX) {
+    redirectWithErreur(retour, `Le nom dépasse ${NOM_DOSSIER_MAX} caractères.`);
+  }
+  if (parentId) {
+    const parent = await prisma.dossierRessource.count({
+      where: { id: parentId },
+    });
+    if (!parent)
+      redirectWithErreur("/admin/ressources", "Dossier introuvable.");
+    if ((await profondeurDossier(parentId)) >= PROFONDEUR_MAX) {
+      redirectWithErreur(
+        retour,
+        `On ne range pas plus loin que ${PROFONDEUR_MAX} niveaux.`,
+      );
+    }
+  }
+
+  await prisma.dossierRessource.create({ data: { nom, parentId } });
+  revalideTout();
+  redirectWithFlash(retour, `Dossier « ${nom} » créé`);
+}
+
+export async function renommerDossier(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "dossierId");
+  const nom = texte(formData, "nom");
+
+  const d = await prisma.dossierRessource.findUnique({
+    where: { id },
+    select: { parentId: true },
+  });
+  if (!d) redirectWithErreur("/admin/ressources", "Dossier introuvable.");
+  const retour = retourDossier(d.parentId);
+
+  if (!nom) redirectWithErreur(retour, "Donnez un nom au dossier.");
+  if (nom.length > NOM_DOSSIER_MAX) {
+    redirectWithErreur(retour, `Le nom dépasse ${NOM_DOSSIER_MAX} caractères.`);
+  }
+
+  await prisma.dossierRessource.update({ where: { id }, data: { nom } });
+  revalideTout();
+  redirectWithFlash(retour, `Dossier renommé « ${nom} »`);
+}
+
+/**
+ * Suppression d'un dossier : ce qu'il contenait remonte d'un cran.
+ *
+ * Rien n'est détruit. Un classeur se jette, pas les documents qu'il range —
+ * et une suppression en cascade effacerait des fichiers, des commentaires et
+ * des achats sur un simple clic de rangement.
+ */
+export async function supprimerDossier(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "dossierId");
+
+  const d = await prisma.dossierRessource.findUnique({
+    where: { id },
+    select: {
+      nom: true,
+      parentId: true,
+      _count: { select: { enfants: true, ressources: true } },
+    },
+  });
+  if (!d) redirectWithErreur("/admin/ressources", "Dossier introuvable.");
+  const retour = retourDossier(d.parentId);
+
+  await prisma.$transaction([
+    prisma.dossierRessource.updateMany({
+      where: { parentId: id },
+      data: { parentId: d.parentId },
+    }),
+    prisma.resource.updateMany({
+      where: { dossierId: id },
+      data: { dossierId: d.parentId },
+    }),
+    prisma.dossierRessource.delete({ where: { id } }),
+  ]);
+
+  const deplaces = d._count.enfants + d._count.ressources;
+  revalideTout();
+  redirectWithFlash(
+    retour,
+    `Dossier « ${d.nom} » supprimé${deplaces ? ` · ${deplaces} élément${deplaces > 1 ? "s remontés" : " remonté"} d’un niveau` : ""}`,
+  );
+}
+
+/** Déplacement d'un dossier sous un autre — ou à la racine. */
+export async function deplacerDossier(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "dossierId");
+  const vers = texte(formData, "parent") || null;
+
+  const d = await prisma.dossierRessource.findUnique({
+    where: { id },
+    select: { nom: true, parentId: true },
+  });
+  if (!d) redirectWithErreur("/admin/ressources", "Dossier introuvable.");
+  const retour = retourDossier(d.parentId);
+
+  // Un dossier ne se range pas dans lui-même ni dans l'un des siens : la
+  // branche déplacée se détacherait de l'arbre et deviendrait introuvable.
+  if (vers && (await estDansSaDescendance(id, vers))) {
+    redirectWithErreur(
+      retour,
+      "Un dossier ne peut pas être rangé dans lui-même.",
+    );
+  }
+  if (vers && (await profondeurDossier(vers)) >= PROFONDEUR_MAX) {
+    redirectWithErreur(
+      retour,
+      `On ne range pas plus loin que ${PROFONDEUR_MAX} niveaux.`,
+    );
+  }
+
+  await prisma.dossierRessource.update({
+    where: { id },
+    data: { parentId: vers },
+  });
+  revalideTout();
+  redirectWithFlash(retourDossier(vers), `Dossier « ${d.nom} » déplacé`);
 }

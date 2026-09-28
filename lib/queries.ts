@@ -45,6 +45,8 @@ import type {
   Personne,
   Offer,
   Registration,
+  DossierRessource,
+  MaillonDossier,
   Resource,
   Space,
 } from "@/lib/types";
@@ -477,9 +479,17 @@ export async function aDesActualitesPubliques(): Promise<boolean> {
 
 export async function getResources(
   type?: "gratuit" | "payant",
+  /**
+   * Le dossier où regarder. `undefined` = toute la bibliothèque, à plat ;
+   * `null` = la racine seulement ; une chaîne = ce dossier seulement.
+   */
+  dossierId?: string | null,
 ): Promise<Resource[]> {
   const rows = await prisma.resource.findMany({
-    where: type ? { type } : undefined,
+    where: {
+      ...(type ? { type } : {}),
+      ...(dossierId !== undefined ? { dossierId } : {}),
+    },
     include: { commentaires: commentairesInclude() },
     orderBy: { date: "desc" },
   });
@@ -494,18 +504,103 @@ export async function getResources(
     prix: r.prix,
     commentaires: versCommentaires(r.commentaires),
     cover: r.cover,
+    dossierId: r.dossierId,
     pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
   }));
 }
 
-/** Compte des ressources par tarif, pour les onglets. */
-export async function getResourceCounts() {
+/** Compte des ressources par tarif, dans le dossier ouvert. */
+export async function getResourceCounts(dossierId?: string | null) {
+  const ou = dossierId !== undefined ? { dossierId } : {};
   const [tout, gratuit, payant] = await Promise.all([
-    prisma.resource.count(),
-    prisma.resource.count({ where: { type: "gratuit" } }),
-    prisma.resource.count({ where: { type: "payant" } }),
+    prisma.resource.count({ where: ou }),
+    prisma.resource.count({ where: { ...ou, type: "gratuit" } }),
+    prisma.resource.count({ where: { ...ou, type: "payant" } }),
   ]);
   return { tout, gratuit, payant };
+}
+
+/* -------------------------- Dossiers -------------------------- */
+
+/**
+ * Les dossiers rangés directement dans `parentId` — la racine si `null`.
+ *
+ * Chacun dit ce qu'il contient : sans ce compte, un dossier vide et un
+ * dossier plein se ressemblent, et l'on clique pour rien.
+ */
+export async function getSousDossiers(
+  parentId: string | null,
+): Promise<DossierRessource[]> {
+  const rows = await prisma.dossierRessource.findMany({
+    where: { parentId },
+    orderBy: { nom: "asc" },
+    select: {
+      id: true,
+      nom: true,
+      parentId: true,
+      _count: { select: { enfants: true, ressources: true } },
+    },
+  });
+  return rows.map((d) => ({
+    id: d.id,
+    nom: d.nom,
+    parentId: d.parentId,
+    dossiers: d._count.enfants,
+    ressources: d._count.ressources,
+  }));
+}
+
+/**
+ * Le chemin d'un dossier, de la racine jusqu'à lui — le fil d'Ariane.
+ *
+ * `null` quand le dossier n'existe pas : la page ouvre alors la racine
+ * plutôt que d'afficher une erreur pour un lien devenu caduc.
+ */
+export async function getFilDossier(
+  id: string,
+): Promise<MaillonDossier[] | null> {
+  const fil: MaillonDossier[] = [];
+  let courant: string | null = id;
+
+  // Bornée : une arborescence ne dépasse pas quelques niveaux, et une boucle
+  // en base — impossible en principe — ne doit pas figer la page.
+  for (let i = 0; courant && i < 20; i++) {
+    const d: { id: string; nom: string; parentId: string | null } | null =
+      await prisma.dossierRessource.findUnique({
+        where: { id: courant },
+        select: { id: true, nom: true, parentId: true },
+      });
+    if (!d) return fil.length ? fil.reverse() : null;
+    fil.push({ id: d.id, nom: d.nom });
+    courant = d.parentId;
+  }
+  return fil.reverse();
+}
+
+/** Tous les dossiers à plat, avec leur profondeur : pour une liste déroulante. */
+export async function getArborescenceDossiers(): Promise<
+  { id: string; nom: string; profondeur: number }[]
+> {
+  const tous = await prisma.dossierRessource.findMany({
+    orderBy: { nom: "asc" },
+    select: { id: true, nom: true, parentId: true },
+  });
+
+  const enfantsDe = new Map<string | null, typeof tous>();
+  for (const d of tous) {
+    const cle = d.parentId;
+    enfantsDe.set(cle, [...(enfantsDe.get(cle) ?? []), d]);
+  }
+
+  const sortie: { id: string; nom: string; profondeur: number }[] = [];
+  const descendre = (parent: string | null, profondeur: number) => {
+    for (const d of enfantsDe.get(parent) ?? []) {
+      sortie.push({ id: d.id, nom: d.nom, profondeur });
+      descendre(d.id, profondeur + 1);
+    }
+  };
+  descendre(null, 0);
+  return sortie;
 }
 
 /* ============================ Offres & services ============================ */
