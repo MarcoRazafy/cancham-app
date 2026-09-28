@@ -19,8 +19,10 @@ import { TexteLie } from "@/components/TexteLie";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
+import { NotesMembre } from "@/components/forms/NotesMembre";
 import { BtnLink, Card, Pill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
+import { getNotesMembre } from "@/lib/queries-admin";
 import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
 
@@ -39,6 +41,10 @@ export async function FicheAnnuairePage({
   const m = await getMember(id);
   if (!m || m.statut === "candidature") notFound();
   const contacts = await getContacts(m.id);
+
+  // Les notes de l'équipe ne sont même pas lues dans l'espace membre : ce qui
+  // n'est pas chargé ne peut pas fuir dans la page, fût-ce en donnée cachée.
+  const notes = espace === "admin" ? await getNotesMembre(m.id) : [];
 
   return (
     <>
@@ -151,6 +157,10 @@ export async function FicheAnnuairePage({
           />
         </div>
       </Card>
+
+      {espace === "admin" ? (
+        <NotesMembre memberId={m.id} notes={notes} />
+      ) : null}
     </>
   );
 }

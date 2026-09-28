@@ -195,6 +195,22 @@ export type CommentaireFixture = Pick<
   "id" | "auteur" | "entreprise" | "texte" | "date"
 >;
 
+/**
+ * Note de l'équipe sur un membre : le carnet du back-office.
+ *
+ * Elle ne sort jamais vers l'espace membre — ni ce type, ni les données
+ * qu'il porte.
+ */
+export interface NoteMembre {
+  id: string;
+  texte: string;
+  auteur: string;
+  /** Date d'écriture, ISO complet. */
+  date: string;
+  /** Écrite par la personne connectée. */
+  moi: boolean;
+}
+
 export interface NewsItem {
   id: string;
   titre: string;
