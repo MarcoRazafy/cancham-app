@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { EnTeteAdmin } from "@/components/admin/ui";
 import { FormulaireRessource } from "@/components/forms/AdminContenuForms";
 import { Saillant } from "@/components/ui";
+import { getArborescenceDossiers } from "@/lib/queries";
 import { getRessourcesAdmin } from "@/lib/queries-admin";
 
 export default async function ModifierRessource({
@@ -12,7 +13,11 @@ export default async function ModifierRessource({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const r = (await getRessourcesAdmin()).find((x) => x.id === id);
+  const [ressources, dossiers] = await Promise.all([
+    getRessourcesAdmin(),
+    getArborescenceDossiers(),
+  ]);
+  const r = ressources.find((x) => x.id === id);
   if (!r) notFound();
 
   return (
@@ -33,7 +38,7 @@ export default async function ModifierRessource({
       >
         {r.titre}
       </EnTeteAdmin>
-      <FormulaireRessource ressource={r} />
+      <FormulaireRessource ressource={r} dossiers={dossiers} />
     </>
   );
 }

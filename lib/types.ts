@@ -285,8 +285,30 @@ export interface Resource {
   commentaires: Comment[];
   /** Visuel de la carte. `null` = motif décoratif. */
   cover?: string | null;
+  /** Dossier qui la range. `null` = à la racine de la bibliothèque. */
+  dossierId?: string | null;
   /** Fichier converti et lisible dans la plateforme. */
   pret?: boolean;
+}
+
+/**
+ * Dossier de la bibliothèque, tel qu'une carte l'affiche.
+ *
+ * Il dit ce qu'il contient : sans ce compte, un dossier vide et un dossier
+ * plein se ressemblent, et l'on clique pour rien.
+ */
+export interface DossierRessource {
+  id: string;
+  nom: string;
+  parentId: string | null;
+  dossiers: number;
+  ressources: number;
+}
+
+/** Un maillon du fil d'Ariane, de la racine au dossier ouvert. */
+export interface MaillonDossier {
+  id: string;
+  nom: string;
 }
 
 export type InvoiceStatus = "payee" | "envoyee";

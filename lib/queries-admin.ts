@@ -256,6 +256,7 @@ export interface RessourceAdmin {
   pret: boolean;
   pages: number | null;
   cover: string | null;
+  dossierId: string | null;
   commentaires: number;
   demandes: number;
 }
@@ -288,6 +289,7 @@ export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
     pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
     pages: r.pages,
     cover: r.cover,
+    dossierId: r.dossierId,
     commentaires: r._count.commentaires,
     demandes: parRessource.get(r.id) ?? 0,
   }));

@@ -3,8 +3,15 @@ import { ArrowLeft } from "lucide-react";
 import { EnTeteAdmin } from "@/components/admin/ui";
 import { FormulaireRessource } from "@/components/forms/AdminContenuForms";
 import { Saillant } from "@/components/ui";
+import { getArborescenceDossiers } from "@/lib/queries";
 
-export default function NouvelleRessource() {
+export default async function NouvelleRessource({
+  searchParams,
+}: {
+  searchParams: Promise<{ dossier?: string }>;
+}) {
+  const { dossier } = await searchParams;
+  const dossiers = await getArborescenceDossiers();
   return (
     <>
       <Link
@@ -24,7 +31,7 @@ export default function NouvelleRessource() {
         Elle apparaît dans la bibliothèque des membres dès que son fichier est
         prêt.
       </EnTeteAdmin>
-      <FormulaireRessource />
+      <FormulaireRessource dossiers={dossiers} dossierParDefaut={dossier} />
     </>
   );
 }
