@@ -718,7 +718,12 @@ export default async function PublicHome() {
           </div>
 
           {/* ---------- La présidente ---------- */}
-          <div className="mt-14 grid gap-9 lg:gap-14 lg:grid-cols-[minmax(0,330px)_minmax(0,1fr)] lg:items-center">
+          {/*
+            Trois colonnes et le même écart que le bureau plus bas : le
+            portrait de la présidente fait exactement la largeur d'une carte
+            d'élu, et la citation s'aligne sur la deuxième.
+          */}
+          <div className="mt-14 grid gap-9 lg:grid-cols-3 lg:items-center">
             <div
               style={cascade(1)}
               className={`apparition-defilement rounded-[22px] p-1.5 ${FILET}`}
@@ -728,14 +733,14 @@ export default async function PublicHome() {
                 alt={`Portrait d’${PRESIDENTE.nom}`}
                 width={880}
                 height={1100}
-                sizes="(max-width: 1024px) 80vw, 330px"
+                sizes="(max-width: 1024px) 80vw, 420px"
                 className="block w-full aspect-[4/5] object-cover rounded-[17px]"
               />
             </div>
 
             <figure
               style={cascade(2)}
-              className="apparition-defilement m-0 min-w-0"
+              className="apparition-defilement m-0 min-w-0 lg:col-span-2"
             >
               {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à cette taille. */}
               <svg
@@ -791,8 +796,8 @@ export default async function PublicHome() {
                   <Image
                     src={m.photo}
                     alt={`Portrait de ${m.nom}`}
-                    width={520}
-                    height={520}
+                    width={900}
+                    height={900}
                     sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 400px"
                     className="block w-full h-[clamp(240px,24vw,320px)] object-cover object-[center_20%] rounded-2xl"
                   />
@@ -877,8 +882,8 @@ export default async function PublicHome() {
                   <Image
                     src={m.photo}
                     alt={`Portrait de ${m.nom}`}
-                    width={520}
-                    height={520}
+                    width={900}
+                    height={900}
                     sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
                     className="block w-full h-[clamp(210px,20vw,260px)] object-cover object-[center_20%] rounded-2xl"
                   />
