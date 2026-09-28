@@ -704,7 +704,7 @@ export default async function PublicHome() {
         <div className={`${CONTENEUR} py-16 md:py-24`}>
           <div className="apparition-defilement max-w-[780px]">
             <h2 className={TITRE_SECTION}>
-              Celles et ceux qui portent la chambre.
+              Celles et ceux qui portent <Saillant>la chambre.</Saillant>
             </h2>
             <span
               aria-hidden
