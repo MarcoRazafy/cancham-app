@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
+import {
+  CONTENEUR,
+  TITRE_BLOC,
+  TITRE_GRAS,
+} from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -163,9 +167,7 @@ export default async function ActualitePubliquePage({
           {offres.length ? (
             <aside className="apparition-defilement w-full min-w-0 xl:flex-1 xl:sticky xl:top-[124px] xl:max-h-[calc(100dvh-140px)] xl:overflow-y-auto">
               <span className="surtitre text-marque-vert">Entre membres</span>
-              <h2 className={`${TITRE_GRAS} text-[20px] m-0 mt-2`}>
-                Offres &amp; promotions
-              </h2>
+              <h2 className={`${TITRE_BLOC} mt-2`}>Offres &amp; promotions</h2>
               <p className="m-0 mt-2 text-[14px] leading-relaxed text-muted">
                 Les avantages que les adhérents de la chambre se réservent entre
                 eux.
@@ -187,7 +189,7 @@ export default async function ActualitePubliquePage({
 
         {autres.length ? (
           <section className="apparition-defilement mt-14">
-            <h2 className={`${TITRE_GRAS} text-[24px] m-0`}>À lire aussi</h2>
+            <h2 className={TITRE_BLOC}>À lire aussi</h2>
             <div className="grid gap-5 mt-6 md:grid-cols-2 lg:grid-cols-3">
               {autres.map((r) => (
                 <CarteActualite key={r.id} actualite={r} />

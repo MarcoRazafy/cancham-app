@@ -41,6 +41,18 @@ export const CONTENEUR = "max-w-[1400px] mx-auto px-5 md:px-10";
 export const TITRE_GRAS =
   "font-[family-name:var(--font-texte)]! font-bold! tracking-[-0.015em]";
 
+/**
+ * Titre de section de la vitrine.
+ *
+ * Une seule échelle pour toute la page : les sections se suivaient en 58, 54,
+ * 52 et 40 pixels, et deux titres voisins ne pesaient pas le même poids. Le
+ * `clamp` garde la lecture confortable du téléphone au grand écran.
+ */
+export const TITRE_SECTION = `${TITRE_GRAS} text-[clamp(30px,4.4vw,56px)] leading-[1.08] m-0`;
+
+/** Titre d'un bloc à l'intérieur d'une section — une carte, un encadré. */
+export const TITRE_BLOC = `${TITRE_GRAS} text-[clamp(22px,2.4vw,28px)] leading-[1.25] m-0`;
+
 /** Les liens de la barre, dans l'ordre où on les lit. */
 const LIENS = [
   { href: "/", libelle: "Accueil" },

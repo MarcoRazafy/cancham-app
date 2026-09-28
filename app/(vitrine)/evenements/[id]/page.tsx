@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { CONTENEUR, TITRE_GRAS } from "@/components/public/CadreVitrine";
+import {
+  CONTENEUR,
+  TITRE_BLOC,
+  TITRE_GRAS,
+} from "@/components/public/CadreVitrine";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -221,9 +225,7 @@ export default async function EvenementPublic({
             {e.programme?.length ? (
               <div className="mt-10">
                 <span className="surtitre text-marque-rouge">Au programme</span>
-                <h2
-                  className={`${TITRE_GRAS} text-[clamp(22px,2.6vw,28px)] m-0 mt-2 mb-5`}
-                >
+                <h2 className={`${TITRE_BLOC} mt-2 mb-5`}>
                   Le déroulé de la séance
                 </h2>
                 <ol className="list-none m-0 p-0 flex flex-col">
@@ -275,9 +277,7 @@ export default async function EvenementPublic({
                   <span className="surtitre text-marque-rouge">
                     Ne manquez rien
                   </span>
-                  <h2
-                    className={`${TITRE_GRAS} text-[clamp(22px,3vw,30px)] m-0 mt-2`}
-                  >
+                  <h2 className={`${TITRE_BLOC} mt-2`}>
                     Les autres rendez-vous
                   </h2>
                 </div>
