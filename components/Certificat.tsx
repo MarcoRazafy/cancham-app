@@ -7,17 +7,17 @@ import { affichageSite } from "@/lib/liens";
 import type { Member } from "@/lib/types";
 
 /**
- * Hammersmith One, la fonte des titres de la charte.
+ * Les titres du certificat, dans la fonte des titres du site.
  *
- * Le certificat s'affiche dans l'espace membre, dont les règles font passer
- * tous les titres sur Inter 700 : écrites après celles de `.marque` et de même
- * poids, elles l'emportent. Les `!` les repassent devant — un document
- * officiel de la chambre suit la charte, pas l'outil de travail qui l'affiche.
- * Et Hammersmith One n'existe qu'en graisse 400 : la demander en gras ferait
- * fabriquer un faux gras au navigateur.
+ * Même traitement que `TITRE_GRAS` sur la vitrine : la fonte de texte en 700.
+ * Hammersmith One n'a qu'une graisse, et la charte interdit le faux gras ;
+ * c'est donc Inter qui porte les titres, ici comme sur le site. Les `!`
+ * passent devant les règles de l'espace membre, qui coiffent tous les titres
+ * de la plateforme — un document officiel de la chambre parle sa langue, pas
+ * celle de l'outil qui l'affiche.
  */
 const TITRE_CHARTE =
-  "font-[family-name:var(--font-titre)]! font-normal! tracking-[-0.005em]";
+  "font-[family-name:var(--font-texte)]! font-bold! tracking-[-0.015em]";
 
 /**
  * Certificat d'adhésion, tel qu'il s'imprime.
@@ -56,7 +56,12 @@ export function CertificatAdhesion({
           Le cadre en dégradé, du rouge au vert : les deux couleurs de la
           charte se rejoignent sur la tranche du document, comme les deux pays.
         */}
-        <div className="certificat flex h-full w-full bg-[linear-gradient(100deg,#ad0707_0%,#7a4a1f_52%,#007140_100%)] p-[1.1cqw]">
+        {/*
+          Le cadre en dégradé habille l'écran ; à l'impression il disparaît —
+          une bordure pleine page vide une cartouche d'encre et sort baveuse
+          sur une imprimante de bureau. Reste la feuille, avec son filet.
+        */}
+        <div className="certificat flex h-full w-full bg-[linear-gradient(100deg,#ad0707_0%,#7a4a1f_52%,#007140_100%)] p-[1.1cqw] print:bg-none print:p-0">
           {/*
             `marque` va sur la feuille et non sur le cadre : la charte pose un
             fond blanc, écrit hors des couches de Tailwind, qui l'emporte donc
@@ -180,7 +185,8 @@ export function CertificatAdhesion({
  *
  * En vectoriel, il reste net à l'impression quelle que soit la taille du
  * papier, et il n'y a pas d'image à aller chercher — ni à enregistrer d'un
- * clic droit. L'anneau porte la mention qui tourne, le disque vert la coche.
+ * clic droit. L'anneau prend le dégradé de la charte, le liseré pointillé
+ * rappelle le tampon, et le disque vert porte la coche.
  */
 function SceauMembre({ className }: { className?: string }) {
   const rayon = 39;
@@ -199,19 +205,24 @@ function SceauMembre({ className }: { className?: string }) {
           fill="none"
           d={`M 50 ${50 - rayon} A ${rayon} ${rayon} 0 1 1 49.99 ${50 - rayon}`}
         />
+        <linearGradient id="sceau-degrade" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ad0707" />
+          <stop offset="1" stopColor="#007140" />
+        </linearGradient>
       </defs>
 
-      <circle cx="50" cy="50" r="49" fill="#8b0a1f" />
+      <circle cx="50" cy="50" r="49" fill="url(#sceau-degrade)" />
       <circle
         cx="50"
         cy="50"
-        r="33.5"
+        r="33"
         fill="none"
         stroke="#ffffff"
-        strokeWidth="1"
-        opacity="0.45"
+        strokeWidth="1.2"
+        strokeDasharray="2 2.6"
+        opacity="0.85"
       />
-      <circle cx="50" cy="50" r="30" fill="#007140" />
+      <circle cx="50" cy="50" r="29.5" fill="#007140" />
 
       <text
         fill="#ffffff"
