@@ -195,6 +195,7 @@ model Member {
   factures     Invoice[]
   inscriptions Registration[]
   rendezvous   Rendezvous[]
+  notes        NoteMembre[]
 
   @@index([statut])
   @@map("members")
@@ -235,6 +236,7 @@ model User {
   jaimesCommentaires CommentLike[]
   rappels            Rappel[]
   jetons             JetonCompte[]
+  notesMembres       NoteMembre[]
 
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
@@ -528,6 +530,32 @@ model CommentLike {
   @@unique([commentId, userId])
   @@index([commentId])
   @@map("comment_likes")
+}
+
+/// Note de l'équipe sur un membre, dans sa fiche d'annuaire.
+///
+/// Interne, et strictement : jamais lue par l'espace membre, ni renvoyée à
+/// un adhérent sous quelque forme que ce soit. C'est le carnet de l'équipe —
+/// « rappeler en janvier », « a changé de gérant », « paie toujours en
+/// retard mais paie ». L'intéressé ne doit pas la voir, sans quoi elle
+/// cesserait d'être franche et ne servirait plus à rien.
+model NoteMembre {
+  id    String @id @default(cuid())
+  texte String
+
+  /// Nom de l'auteur, recopié : un compte supprimé ne doit pas rendre la
+  /// note anonyme, comme pour les commentaires.
+  auteur String
+
+  memberId String
+  member   Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  userId   String?
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([memberId])
+  @@map("notes_membres")
 }
 
 /// Promotion publiée PAR un membre, à destination des autres membres.

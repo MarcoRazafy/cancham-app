@@ -1134,3 +1134,69 @@ export async function updateContact(formData: FormData) {
   revalideTout();
   redirectWithFlash(retour, `${nom} a été mis à jour.`);
 }
+
+/* ======================== Notes de l'équipe ======================== */
+
+/** Une note tient en quelques lignes : au-delà, c'est un dossier, pas une note. */
+const NOTE_MAX = 2000;
+
+/**
+ * Note de l'équipe sur un membre, dans sa fiche d'annuaire.
+ *
+ * Réservée au back-office, écriture comme lecture. Rien n'en part vers
+ * l'adhérent : ni affichage, ni courriel, ni notification. C'est ce qui lui
+ * permet d'être franche.
+ *
+ * Pas d'entrée au journal : celui-ci retrace les opérations faites sur un
+ * membre — une adhésion approuvée, une facture réglée. Une note est une
+ * remarque de travail, et en consigner chacune noierait le reste.
+ */
+export async function ajouterNoteMembre(formData: FormData) {
+  const user = await exigerEquipe();
+  const memberId = texte(formData, "memberId");
+  const retour = `/admin/annuaire/${memberId}`;
+
+  const contenu = texte(formData, "texte");
+  if (!contenu) redirectWithErreur(retour, "La note est vide.");
+  if (contenu.length > NOTE_MAX) {
+    redirectWithErreur(
+      retour,
+      `La note dépasse ${NOTE_MAX} caractères : gardez l’essentiel.`,
+    );
+  }
+
+  const membre = await prisma.member.findUnique({
+    where: { id: memberId },
+    select: { id: true },
+  });
+  if (!membre) redirectWithErreur("/admin/annuaire", "Membre introuvable.");
+
+  await prisma.noteMembre.create({
+    data: { memberId, texte: contenu, auteur: user.nom, userId: user.id },
+  });
+  revalidatePath(retour);
+  redirectWithFlash(retour, "Note ajoutée");
+}
+
+/**
+ * Retrait d'une note.
+ *
+ * Toute l'équipe peut retirer celles des autres : c'est un carnet commun, et
+ * une note devenue fausse doit pouvoir disparaître même si celle ou celui
+ * qui l'a écrite est parti.
+ */
+export async function supprimerNoteMembre(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "noteId");
+
+  const note = await prisma.noteMembre.findUnique({
+    where: { id },
+    select: { memberId: true },
+  });
+  if (!note) redirectWithErreur("/admin/annuaire", "Note introuvable.");
+
+  const retour = `/admin/annuaire/${note.memberId}`;
+  await prisma.noteMembre.delete({ where: { id } });
+  revalidatePath(retour);
+  redirectWithFlash(retour, "Note retirée");
+}

@@ -5,7 +5,8 @@ import { RESOURCE_CAT_LABEL } from "@/lib/enums";
 import { jourBase } from "@/lib/format";
 import { codesDeFamille, type FamilleJournal } from "@/lib/journal";
 import type { Devise, FormuleId } from "@/lib/membership";
-import type { NiveauEquipe } from "@/lib/types";
+import type { NiveauEquipe, NoteMembre } from "@/lib/types";
+import { exigerEquipe } from "@/lib/autorisations";
 
 /**
  * Lectures propres au back-office : journal des opérations, tableaux de bord
@@ -89,6 +90,29 @@ export async function getJournal({
     total,
     entrees: rows.map(versEntree),
   };
+}
+
+/**
+ * Les notes de l'équipe sur un membre.
+ *
+ * Le garde-fou est ici, et pas seulement dans la page qui les affiche : ces
+ * notes ne doivent jamais sortir du back-office, et une fonction qui les
+ * rendrait sans rien vérifier finirait un jour appelée depuis l'espace
+ * membre. `exigerEquipe` renvoie un adhérent à la connexion.
+ */
+export async function getNotesMembre(memberId: string): Promise<NoteMembre[]> {
+  const user = await exigerEquipe();
+  const rows = await prisma.noteMembre.findMany({
+    where: { memberId },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((n) => ({
+    id: n.id,
+    texte: n.texte,
+    auteur: n.auteur,
+    date: n.createdAt.toISOString(),
+    moi: n.userId === user.id,
+  }));
 }
 
 /** Historique d'un membre : ses entrées, et celles de ses factures. */
