@@ -96,6 +96,7 @@ const STATUS_TONE: Record<
   en_attente: "warn",
   envoyee: "warn",
   candidature: "warn",
+  refusee: "bad",
   confirmé: "warn",
   en_retard: "bad",
   absent: "bad",

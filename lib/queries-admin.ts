@@ -5,7 +5,7 @@ import { RESOURCE_CAT_LABEL } from "@/lib/enums";
 import { jourBase } from "@/lib/format";
 import { codesDeFamille, type FamilleJournal } from "@/lib/journal";
 import type { Devise, FormuleId } from "@/lib/membership";
-import type { NiveauEquipe, NoteMembre } from "@/lib/types";
+import type { MemberStatus, NiveauEquipe, NoteMembre } from "@/lib/types";
 import { exigerEquipe } from "@/lib/autorisations";
 
 /**
@@ -347,7 +347,7 @@ export interface CompteMembre extends Omit<CompteEquipe, "niveau"> {
   membre: {
     id: string;
     nom: string;
-    statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+    statut: MemberStatus;
     motivation: string | null;
     /** Fiche encore vide de tout historique : sa suppression n'emporte rien. */
     sansHistorique: boolean;
@@ -388,7 +388,7 @@ type LigneCompte = {
   member: {
     id: string;
     nom: string;
-    statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+    statut: MemberStatus;
     motivation: string | null;
     _count: { factures: number; inscriptions: number; produits: number };
   } | null;

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import type { MemberStatus } from "@/lib/types";
 import { EVENT_FORMAT_DB, toISODate } from "@/lib/enums";
 import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -431,9 +432,7 @@ export async function inscriptionPublique(formData: FormData) {
   }
 
   revalideTout();
-  redirect(
-    `/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
-  );
+  redirect(`/evenements/${eventId}/billet?${new URLSearchParams({ code })}`);
 }
 
 export async function cancelRegistration(formData: FormData) {
@@ -792,7 +791,7 @@ export interface ArriveeAccueil {
     logo: string | null;
     photo: string | null;
     type: "morale" | "physique";
-    statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+    statut: MemberStatus;
     secteur: string;
     ville: string;
   } | null;
