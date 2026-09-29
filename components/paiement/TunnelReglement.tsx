@@ -6,7 +6,9 @@ import { annoncerReglement } from "@/lib/actions/reglements";
 import { fmtMontant, type Devise } from "@/lib/membership";
 import {
   enLettres,
+  estPortefeuille,
   MODES,
+  numeroPortefeuille,
   type Coordonnees,
   type ModeReglement,
 } from "@/lib/reglements";
@@ -122,14 +124,22 @@ export function TunnelReglement({
             </div>
           ) : null}
 
-          {mode === "mobile_money" ? (
+          {/*
+            Le numéro du portefeuille choisi, et lui seul : afficher les trois
+            opérateurs inviterait à envoyer l'argent sur le mauvais.
+          */}
+          {estPortefeuille(mode) ? (
             <>
-              {c.mvola ? <Copiable libelle="MVola" valeur={c.mvola} /> : null}
-              {c.orangeMoney ? (
-                <Copiable libelle="Orange Money" valeur={c.orangeMoney} />
-              ) : null}
-              {c.airtelMoney ? (
-                <Copiable libelle="Airtel Money" valeur={c.airtelMoney} />
+              <Copiable
+                libelle={`Numéro ${MODES[mode].titre}`}
+                valeur={numeroPortefeuille(mode, c)}
+              />
+              {c.titulaire ? (
+                <Copiable
+                  libelle="Au nom de"
+                  valeur={c.titulaire}
+                  mono={false}
+                />
               ) : null}
             </>
           ) : null}
@@ -145,7 +155,9 @@ export function TunnelReglement({
             libelle={
               mode === "especes"
                 ? "Référence à donner à l’équipe"
-                : "Motif du virement, à recopier tel quel"
+                : estPortefeuille(mode)
+                  ? "Référence à mettre en note du transfert"
+                  : "Motif du virement, à recopier tel quel"
             }
             valeur={reference}
             accent
@@ -197,7 +209,9 @@ export function AnnonceReglement({
       <h2 className="m-0 text-[15.5px] font-semibold">
         {mode === "especes"
           ? "Vous avez remis l’argent ?"
-          : "Vous avez fait le virement ?"}
+          : estPortefeuille(mode)
+            ? "Vous avez envoyé l’argent ?"
+            : "Vous avez fait le virement ?"}
       </h2>
       <p className="m-0 mt-1.5 text-[13.4px] text-muted">
         Prévenez l’équipe : elle confirmera dès réception. Si vous préférez le
@@ -221,7 +235,9 @@ export function AnnonceReglement({
             placeholder={
               mode === "especes"
                 ? "Nom de la personne qui remet"
-                : "Donnée par votre banque après le virement"
+                : estPortefeuille(mode)
+                  ? "Référence du SMS de confirmation"
+                  : "Donnée par votre banque après le virement"
             }
             className="w-full rounded-[var(--radius-s)] border border-line bg-surface px-3 py-2 text-[13.4px] text-ink placeholder:text-faint"
           />

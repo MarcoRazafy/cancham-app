@@ -38,6 +38,7 @@ import {
   getServices,
   getUnreadTotal,
 } from "@/lib/queries";
+import { modesProposes } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import { initialesDe, teinteDe } from "@/lib/avatars";
 
@@ -59,6 +60,7 @@ export default async function VueDEnsemble() {
     services,
     semaine,
     contacts,
+    modesPaiement,
   ] = await Promise.all([
     getEvents(),
     getMembresAnnuaire(),
@@ -73,6 +75,7 @@ export default async function VueDEnsemble() {
       ajouterJours(aujourdhui, 6),
     ),
     getContacts(me.id),
+    modesProposes(),
   ]);
 
   const aVenir = events.filter((e) => !isPast(e.date));
@@ -216,6 +219,7 @@ export default async function VueDEnsemble() {
                       contacts={contacts}
                       moi={user.id}
                       coordonnees={{ email: user.email, telephone: user.tel }}
+                      modesPaiement={modesPaiement}
                       libelle="M’inscrire"
                     />
                   )}

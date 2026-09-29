@@ -29,6 +29,7 @@ import {
   getRegistration,
 } from "@/lib/queries";
 import { matriceQr } from "@/lib/qr";
+import { modesProposes } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney, isPast } from "@/lib/format";
@@ -44,11 +45,13 @@ export default async function EvenementDetailPage({
   const horaire = plageHoraire(e.debut, e.fin);
 
   const user = await getCurrentUser("membre");
-  const [reg, tous, membre, contacts] = await Promise.all([
+  const [reg, tous, membre, contacts, modesPaiement] = await Promise.all([
     getRegistration(e.id, user.memberId),
     getEvents(),
     user.memberId ? getMember(user.memberId) : null,
     user.memberId ? getContacts(user.memberId) : [],
+    // Le choix du moyen n'a de sens que pour un événement payant.
+    e.payant ? modesProposes() : [],
   ]);
 
   // L'inscription et le billet portent le nom de l'entreprise.
@@ -290,6 +293,7 @@ export default async function EvenementDetailPage({
                       contacts={contacts}
                       moi={user.id}
                       coordonnees={{ email: user.email, telephone: user.tel }}
+                      modesPaiement={modesPaiement}
                     />
                   ) : (
                     <p className="text-[13px] text-muted m-0 text-center">

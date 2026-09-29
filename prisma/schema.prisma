@@ -147,11 +147,13 @@ enum PaiementStatut {
 /// cinq autres se passent hors ligne — la plateforme accompagne, donne une
 /// référence à recopier, et c'est l'équipe qui constate l'arrivée.
 enum ModeReglement {
-  carte
-  mobile_money
+  mvola
+  orange_money
+  airtel_money
   virement
   depot
   especes
+  carte
   international
   plateforme
 }

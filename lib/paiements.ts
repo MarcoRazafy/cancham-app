@@ -3,11 +3,8 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { nomFacture } from "@/lib/factures";
 import { fmtMontant } from "@/lib/membership";
-import {
-  MODES_PAIEMENT,
-  type EtatPaiement,
-  type ModePaiement,
-} from "@/lib/vanillapay";
+import { MODES } from "@/lib/modes-reglement";
+import type { EtatPaiement } from "@/lib/vanillapay";
 
 /**
  * Ce qu'on fait d'un paiement dont on apprend l'issue.
@@ -97,7 +94,7 @@ export async function conclurePaiement(
     estCotisation(f.objet) &&
     membre.statut !== "a_jour";
   const montant = fmtMontant(p.montant, p.devise);
-  const moyen = MODES_PAIEMENT[p.mode as ModePaiement] ?? p.mode;
+  const moyen = MODES[p.mode].titre;
 
   await prisma.$transaction([
     prisma.paiement.update({

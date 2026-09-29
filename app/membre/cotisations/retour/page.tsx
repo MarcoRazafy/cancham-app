@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { fmtMontant } from "@/lib/membership";
 import { conclurePaiement } from "@/lib/paiements";
 import { getCurrentUser } from "@/lib/session";
-import { interrogerStatut, type ModePaiement } from "@/lib/vanillapay";
+import { canalVanillaPay, interrogerStatut } from "@/lib/vanillapay";
 
 /**
  * Retour de la page de paiement.
@@ -37,10 +37,10 @@ export default async function RetourPaiementPage({
   // la même porte que le webhook — donc sans double règlement possible.
   let statut = p.statut;
   if (statut === "en_cours") {
-    const etat = await interrogerStatut(
-      p.transaction ?? p.reference,
-      p.mode as ModePaiement,
-    );
+    const canal = canalVanillaPay(p.mode);
+    const etat = canal
+      ? await interrogerStatut(p.transaction ?? p.reference, canal)
+      : null;
     if (etat) {
       await conclurePaiement(etat, etat);
       statut =

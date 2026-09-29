@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
+import { ChoixMoyen } from "@/components/paiement/ChoixMoyen";
 import {
   CancelButton,
   Field,
@@ -31,6 +32,7 @@ import {
   validerInscription,
 } from "@/lib/actions/events";
 import { fmtMoney } from "@/lib/format";
+import type { ModeReglement } from "@/lib/modes-reglement";
 import type { CanchamEvent } from "@/lib/types";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
@@ -50,6 +52,7 @@ export function RegisterButton({
   contacts,
   moi,
   coordonnees,
+  modesPaiement = [],
   libelle = "S’inscrire",
 }: {
   event: CanchamEvent;
@@ -61,6 +64,12 @@ export function RegisterButton({
   moi: string;
   /** Ses coordonnées, proposées d'office pour joindre les inscrits. */
   coordonnees: { email: string; telephone?: string | null };
+  /**
+   * Les moyens de règlement proposables, pour un événement payant. Vide —
+   * aucune coordonnée renseignée au back-office —, le choix disparaît et la
+   * facture se règle auprès de l'équipe comme avant.
+   */
+  modesPaiement?: ModeReglement[];
   /** Intitulé du bouton déclencheur — « M’inscrire » sur la vue d'ensemble. */
   libelle?: string;
 }) {
@@ -108,12 +117,21 @@ export function RegisterButton({
               telephone={coordonnees.telephone}
             />
             {event.payant ? (
-              <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
-                <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
-                <br />
-                Une facture sera générée à l’inscription, réglable auprès de
-                l’équipe.
-              </p>
+              <>
+                <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
+                  <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
+                  <br />
+                  {modesPaiement.length
+                    ? "Une facture est générée à l’inscription. L’écran suivant vous donnera les coordonnées et la référence à recopier."
+                    : "Une facture sera générée à l’inscription, réglable auprès de l’équipe."}
+                </p>
+                {/*
+                  Le moyen se choisit ici, avec le reste : un membre qui
+                  s'inscrit sait déjà comment il va payer, et lui faire
+                  rouvrir le choix depuis ses factures est un détour.
+                */}
+                <ChoixMoyen modes={modesPaiement} />
+              </>
             ) : null}
           </ModalBody>
           <ModalFooter>
