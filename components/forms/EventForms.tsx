@@ -3,6 +3,7 @@
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef, useState } from "react";
 import {
+  ArrowRight,
   Check,
   ChevronDown,
   LogIn,
@@ -13,7 +14,6 @@ import {
   X,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
-import { ChoixMoyen } from "@/components/paiement/ChoixMoyen";
 import {
   CancelButton,
   Field,
@@ -66,14 +66,16 @@ export function RegisterButton({
   coordonnees: { email: string; telephone?: string | null };
   /**
    * Les moyens de règlement proposables, pour un événement payant. Vide —
-   * aucune coordonnée renseignée au back-office —, le choix disparaît et la
-   * facture se règle auprès de l'équipe comme avant.
+   * aucune coordonnée renseignée au back-office —, l'écran du paiement n'a
+   * rien à offrir : la facture se règle auprès de l'équipe comme avant.
    */
   modesPaiement?: ModeReglement[];
   /** Intitulé du bouton déclencheur — « M’inscrire » sur la vue d'ensemble. */
   libelle?: string;
 }) {
   const restantes = event.cap - event.inscrits;
+  // Payant, et la chambre a de quoi encaisser : l'écran du moyen suivra.
+  const paiementEnLigne = event.payant && modesPaiement.length > 0;
   return (
     <Modal
       title="Inscription à l’événement"
@@ -117,27 +119,32 @@ export function RegisterButton({
               telephone={coordonnees.telephone}
             />
             {event.payant ? (
-              <>
-                <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
-                  <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
-                  <br />
-                  {modesPaiement.length
-                    ? "Une facture est générée à l’inscription. L’écran suivant vous donnera les coordonnées et la référence à recopier."
-                    : "Une facture sera générée à l’inscription, réglable auprès de l’équipe."}
-                </p>
-                {/*
-                  Le moyen se choisit ici, avec le reste : un membre qui
-                  s'inscrit sait déjà comment il va payer, et lui faire
-                  rouvrir le choix depuis ses factures est un détour.
-                */}
-                <ChoixMoyen modes={modesPaiement} />
-              </>
+              <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
+                <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
+                <br />
+                {paiementEnLigne
+                  ? "Une facture est générée à l’inscription. Vous choisirez votre moyen de paiement à l’écran suivant."
+                  : "Une facture sera générée à l’inscription, réglable auprès de l’équipe."}
+              </p>
             ) : null}
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
+            {/*
+              Le moyen ne se choisit pas ici : l'inscription d'abord, le
+              paiement ensuite, sur son écran à lui. Le bouton le dit, pour
+              qu'on ne croie pas régler en confirmant.
+            */}
             <SubmitButton pendingLabel="Inscription…">
-              <Check size={14} /> Confirmer l’inscription
+              {paiementEnLigne ? (
+                <>
+                  Mode de paiement <ArrowRight size={14} />
+                </>
+              ) : (
+                <>
+                  <Check size={14} /> Confirmer l’inscription
+                </>
+              )}
             </SubmitButton>
           </ModalFooter>
         </form>
