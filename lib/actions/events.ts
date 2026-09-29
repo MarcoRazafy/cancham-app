@@ -11,7 +11,6 @@ import { EVENT_FORMAT_DB, toISODate } from "@/lib/enums";
 import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtDate, fmtMoney, jourBase } from "@/lib/format";
-import type { Devise } from "@/lib/membership";
 import { envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import {
@@ -20,11 +19,7 @@ import {
 } from "@/lib/modeles-courriels";
 import { plageHoraire } from "@/lib/agenda";
 import { numeroFacture } from "@/lib/factures";
-import {
-  estModeReglement,
-  modesProposes,
-  referenceReglement,
-} from "@/lib/reglements";
+import { modesProposes } from "@/lib/reglements";
 import {
   codeInscription,
   codeRepresentant,
@@ -273,7 +268,7 @@ export async function registerForEvent(formData: FormData) {
           statut: "envoyee",
           memberId: user.memberId,
         },
-        select: { id: true, montant: true, devise: true },
+        select: { id: true },
       }),
     );
   }
@@ -282,11 +277,7 @@ export async function registerForEvent(formData: FormData) {
   // La facture est la dernière écriture de la transaction, quand il y en a
   // une : le tableau est typé `unknown` pour pouvoir les porter toutes.
   const facture = event.payant
-    ? (ecrit[ecrit.length - 1] as {
-        id: string;
-        montant: number;
-        devise: Devise;
-      })
+    ? (ecrit[ecrit.length - 1] as { id: string })
     : null;
 
   const participants = representants.map((r, i) => ({
@@ -303,31 +294,15 @@ export async function registerForEvent(formData: FormData) {
   revalideTout();
 
   /*
-    Le moyen de règlement choisi dans la fenêtre : on ouvre le règlement dans
-    la foulée et le membre atterrit sur les coordonnées et sa référence. Le
-    moyen est revérifié ici — une valeur glissée dans le formulaire ne doit
-    pas ouvrir un virement vers un compte que la chambre n'a pas renseigné.
+    Payant : l'inscription est prise, et le membre passe au paiement — le
+    choix du moyen se fait sur son écran, pas dans la fenêtre d'inscription.
+    Sans moyen configuré, rien à proposer : on revient sur l'événement et la
+    facture se règle auprès de l'équipe.
   */
-  const mode = texte(formData, "mode");
-  if (
-    facture &&
-    estModeReglement(mode) &&
-    (await modesProposes()).includes(mode)
-  ) {
-    const reglement = await prisma.paiement.create({
-      data: {
-        reference: referenceReglement(),
-        invoiceId: facture.id,
-        memberId: user.memberId,
-        montant: facture.montant,
-        devise: facture.devise,
-        mode,
-      },
-      select: { id: true },
-    });
+  if (facture && (await modesProposes()).length) {
     redirectWithFlash(
-      `/membre/cotisations/payer/${reglement.id}`,
-      `Inscription enregistrée · ${n} représentant${n > 1 ? "s" : ""} · voici comment régler`,
+      `/membre/cotisations/payer?facture=${facture.id}`,
+      `Inscription enregistrée · ${n} représentant${n > 1 ? "s" : ""} · choisissez votre moyen de paiement`,
     );
   }
 

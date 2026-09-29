@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { SubmitButton } from "@/components/form-bits";
-import { IconeMode } from "@/components/paiement/IconeMode";
+import { VisuelMode } from "@/components/paiement/IconeMode";
 import { Card, EmptyState, ViewHead } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { fmtMontant } from "@/lib/membership";
@@ -69,11 +69,11 @@ export default async function ChoisirMoyen({
                 name="mode"
                 value={m}
                 variant="line"
-                className="h-full flex-col items-start gap-1 px-4 py-4 text-left"
+                className="h-full flex-col items-center gap-2 px-4 py-4 text-center"
                 pendingLabel="…"
               >
-                <span className="flex items-center gap-2 text-[14.5px] font-semibold text-ink">
-                  <IconeMode mode={m} />
+                <VisuelMode mode={m} />
+                <span className="text-[14.5px] font-semibold text-ink">
                   {MODES[m].titre}
                 </span>
                 <span className="text-[12.4px] font-normal leading-snug text-muted">
