@@ -432,6 +432,24 @@ export function RejectButton({
               session. Vous pourrez revenir sur ce refus, ou supprimer la fiche
               pour de bon.
             </p>
+            {/*
+              Le pourquoi du refus, obligatoire : c'est ce que cherchera la
+              personne qui rouvrira le dossier, ou qui prendra l'appel du
+              demandeur. Il reste à l'équipe — rien n'en part vers lui.
+            */}
+            <Field
+              label="Commentaire"
+              hint="Visible de l’équipe seulement : le demandeur ne le reçoit pas."
+            >
+              <textarea
+                name="commentaire"
+                required
+                maxLength={2000}
+                rows={4}
+                placeholder="Pourquoi cette demande n’est pas validée…"
+                className={`${INPUT} resize-y`}
+              />
+            </Field>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />

@@ -63,7 +63,7 @@ import {
 } from "@/lib/agenda";
 import { getAccesMembre } from "@/lib/acces-membres";
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
-import { getHistoriqueMembre } from "@/lib/queries-admin";
+import { getHistoriqueMembre, getNotesMembre } from "@/lib/queries-admin";
 import { situation } from "@/lib/situation";
 
 export default async function AdminMembreDetail({
@@ -75,12 +75,15 @@ export default async function AdminMembreDetail({
   const m = await getMember(id);
   if (!m) notFound();
 
-  const [contacts, factures, historique, acces] = await Promise.all([
-    getContacts(m.id),
-    getInvoices(m.id),
-    getHistoriqueMembre(m.id),
-    getAccesMembre(m.id),
-  ]);
+  const [contacts, factures, historique, acces, commentaires] =
+    await Promise.all([
+      getContacts(m.id),
+      getInvoices(m.id),
+      getHistoriqueMembre(m.id),
+      getAccesMembre(m.id),
+      // Les commentaires de refus : lus seulement pour une demande refusée.
+      m.statut === "refusee" ? getNotesMembre(m.id) : [],
+    ]);
   const candidature = m.statut === "candidature";
   // La date qui ouvre l'année d'adhésion : celle du dernier règlement.
   const dernierReglement = dernierReglementCotisation(factures);
@@ -450,6 +453,23 @@ export default async function AdminMembreDetail({
                     <X size={16} className="shrink-0" />
                     Demande refusée : rien n’en paraît côté membre.
                   </p>
+                  {/*
+                    Le pourquoi, le plus récent en tête : une demande
+                    reconsidérée puis refusée à nouveau garde les deux.
+                  */}
+                  {commentaires.map((c) => (
+                    <figure
+                      key={c.id}
+                      className="m-0 rounded-[var(--radius-s)] border border-line bg-surface-2 px-3.5 py-3"
+                    >
+                      <blockquote className="m-0 whitespace-pre-line text-[13.4px] leading-relaxed text-ink [overflow-wrap:anywhere]">
+                        {c.texte}
+                      </blockquote>
+                      <figcaption className="mt-1.5 text-[12px] text-muted">
+                        {c.auteur} · {fmtJour(c.date.slice(0, 10))}
+                      </figcaption>
+                    </figure>
+                  ))}
                   <ReconsidererButton memberId={m.id} nom={m.nom} />
                 </>
               ) : m.statut === "a_jour" ? (
