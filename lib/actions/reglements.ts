@@ -84,7 +84,7 @@ export async function enregistrerCoordonneesPaiement(formData: FormData) {
 export async function ouvrirReglement(formData: FormData) {
   const user = await getCurrentUser("membre");
   const factureId = texte(formData, "factureId");
-  const retour = `/membre/cotisations/payer?facture=${factureId}`;
+  const retour = `/membre/cotisations?regler=${factureId}`;
 
   const mode = texte(formData, "mode");
   if (!estModeReglement(mode)) {

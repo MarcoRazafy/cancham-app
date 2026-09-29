@@ -24,7 +24,6 @@ export type ModeReglement =
   | "depot"
   | "especes"
   | "carte"
-  | "international"
   | "plateforme";
 
 export interface DescriptionMode {
@@ -74,11 +73,6 @@ export const MODES: Record<ModeReglement, DescriptionMode> = {
     titre: "Carte bancaire",
     detail: "Visa, Mastercard. Paiement immédiat, sur la page du prestataire.",
     enLigne: true,
-  },
-  international: {
-    titre: "Virement international",
-    detail: "Depuis l’étranger, par IBAN et BIC.",
-    enLigne: false,
   },
   plateforme: {
     titre: "Plateformes de paiement",
@@ -174,8 +168,6 @@ export function modeDisponible(
       return Boolean(c.rib && c.banque);
     case "especes":
       return Boolean(c.adresseBureau);
-    case "international":
-      return Boolean(c.iban && c.bic);
     case "plateforme":
       return Boolean(c.plateformes.trim());
   }

@@ -49,6 +49,10 @@ export default async function PageReglement({
   const objet = p.invoice
     ? `${p.invoice.objet} · facture ${p.invoice.numero}`
     : "Règlement";
+  // Revenir en arrière, c'est rouvrir le choix du moyen pour cette facture.
+  const retour = p.invoiceId
+    ? `/membre/cotisations?regler=${p.invoiceId}`
+    : "/membre/cotisations";
 
   if (estPortefeuilleConnu(p.mode)) {
     // Le numéro du membre, posé à l'étape 1 et gardé dans le détail du
@@ -70,6 +74,7 @@ export default async function PageReglement({
         telephone={telephone}
         statut={p.statut}
         modifier={numero === "modifier"}
+        retour={retour}
       />
     );
   }
@@ -78,7 +83,7 @@ export default async function PageReglement({
     <>
       <div className="mb-4">
         <Link
-          href={`/membre/cotisations/payer?facture=${p.invoiceId ?? ""}`}
+          href={retour}
           className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted no-underline hover:text-accent"
         >
           <ArrowLeft size={14} /> Changer de moyen

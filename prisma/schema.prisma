@@ -154,7 +154,6 @@ enum ModeReglement {
   depot
   especes
   carte
-  international
   plateforme
 }
 

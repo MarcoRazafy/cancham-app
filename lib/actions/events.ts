@@ -294,14 +294,15 @@ export async function registerForEvent(formData: FormData) {
   revalideTout();
 
   /*
-    Payant : l'inscription est prise, et le membre passe au paiement — le
-    choix du moyen se fait sur son écran, pas dans la fenêtre d'inscription.
+    Payant : l'inscription est prise, et le membre passe au paiement — on
+    revient sur la fiche de l'événement, où la fenêtre du choix du moyen
+    s'ouvre d'elle-même.
     Sans moyen configuré, rien à proposer : on revient sur l'événement et la
     facture se règle auprès de l'équipe.
   */
   if (facture && (await modesProposes()).length) {
     redirectWithFlash(
-      `/membre/cotisations/payer?facture=${facture.id}`,
+      `${fiche}?regler=${facture.id}`,
       `Inscription enregistrée · ${n} représentant${n > 1 ? "s" : ""} · choisissez votre moyen de paiement`,
     );
   }
