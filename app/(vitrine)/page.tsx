@@ -428,11 +428,7 @@ export default async function PublicHome() {
       {/* ==================== À qui nous parlons ==================== */}
       <section className={`${CONTENEUR} pt-10 pb-14`}>
         <div>
-          <span className="apparition-defilement surtitre text-marque-rouge inline-flex items-center gap-3">
-            <span aria-hidden="true" className="w-8 h-px bg-marque-rouge" />À
-            qui nous parlons
-          </span>
-          <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
+          <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end">
             <h2 className={TITRE_SECTION}>
               Vous avez votre place <Saillant>chez nous.</Saillant>
             </h2>
@@ -497,11 +493,7 @@ export default async function PublicHome() {
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             {/* ---------- L'invitation ---------- */}
             <div className="apparition-defilement">
-              <span className="surtitre text-[#ad0707] inline-flex items-center gap-3">
-                <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
-                Rejoindre la communauté
-              </span>
-              <h2 className={`${TITRE_SECTION} mt-3 mb-6`}>
+              <h2 className={`${TITRE_SECTION} mb-6`}>
                 Devenir <Saillant>membre,</Saillant> c’est entrer dans{" "}
                 <Saillant ton="vert">un cercle.</Saillant>
               </h2>
