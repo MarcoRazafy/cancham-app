@@ -6,8 +6,14 @@ import {
   AnnonceReglement,
   TunnelReglement,
 } from "@/components/paiement/TunnelReglement";
+import { TunnelPortefeuille } from "@/components/paiement/TunnelPortefeuille";
 import { prisma } from "@/lib/db";
-import { getCoordonneesPaiement, MODES } from "@/lib/reglements";
+import {
+  estPortefeuilleConnu,
+  getCoordonneesPaiement,
+  MODES,
+  numeroPortefeuille,
+} from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 
 /**
@@ -15,13 +21,19 @@ import { getCurrentUser } from "@/lib/session";
  *
  * On y revient autant qu'on veut — « je le ferai plus tard » ne perd rien,
  * la référence est celle du règlement ouvert.
+ *
+ * Les portefeuilles mobiles ont leur propre écran, aux couleurs de
+ * l'opérateur : on y paie depuis son téléphone, en trois gestes annoncés.
  */
 export default async function PageReglement({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ numero?: string }>;
 }) {
   const { id } = await params;
+  const { numero } = await searchParams;
   const user = await getCurrentUser("membre");
 
   const p = await prisma.paiement.findUnique({
@@ -34,6 +46,33 @@ export default async function PageReglement({
   if (!p || !user.memberId || p.memberId !== user.memberId) notFound();
 
   const c = await getCoordonneesPaiement();
+  const objet = p.invoice
+    ? `${p.invoice.objet} · facture ${p.invoice.numero}`
+    : "Règlement";
+
+  if (estPortefeuilleConnu(p.mode)) {
+    // Le numéro du membre, posé à l'étape 1 et gardé dans le détail du
+    // règlement : revenir sur la page ne le fait pas resaisir.
+    const detail = (p.detail ?? {}) as { telephone?: unknown };
+    const telephone =
+      typeof detail.telephone === "string" ? detail.telephone : null;
+
+    return (
+      <TunnelPortefeuille
+        mode={p.mode}
+        reglementId={p.id}
+        reference={p.reference}
+        montant={p.montant}
+        devise={p.devise}
+        objet={p.invoice?.objet ?? "Règlement"}
+        titulaire={c.titulaire}
+        numeroChambre={numeroPortefeuille(p.mode, c)}
+        telephone={telephone}
+        statut={p.statut}
+        modifier={numero === "modifier"}
+      />
+    );
+  }
 
   return (
     <>
@@ -79,11 +118,7 @@ export default async function PageReglement({
           montant={p.montant}
           devise={p.devise}
           coordonnees={c}
-          objet={
-            p.invoice
-              ? `${p.invoice.objet} · facture ${p.invoice.numero}`
-              : "Règlement"
-          }
+          objet={objet}
           payeur={p.member?.nom ?? ""}
         />
       </div>

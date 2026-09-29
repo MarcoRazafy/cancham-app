@@ -18,6 +18,7 @@ import { vanillaPayActif } from "@/lib/vanillapay";
  * qui touche à la base ou au hasard.
  */
 export * from "@/lib/modes-reglement";
+export { estPortefeuilleConnu } from "@/lib/portefeuilles";
 
 /**
  * Les coordonnées de la chambre.
