@@ -6,23 +6,41 @@ import { toISODate } from "@/lib/enums";
 import type { Invoice } from "@/lib/types";
 
 /**
- * Numéro de facture séquentiel par année, ex. CC-2026-0008.
+ * Le numéro qui suit, parmi ceux déjà attribués pour l'année.
  *
- * On part du plus grand numéro de l'année plutôt que du nombre de factures :
- * compter redonnerait un numéro déjà pris dès qu'une facture manque à la
- * suite — importée, ou émise ailleurs.
+ * On part du plus grand numéro plutôt que du nombre de factures : compter
+ * redonnerait un numéro déjà pris dès qu'une facture manque à la suite —
+ * importée, émise ailleurs, ou supprimée.
+ *
+ * Le plus grand *en nombre*, pas en ordre alphabétique : passé 9999,
+ * « CC-2026-10000 » se classe avant « CC-2026-9999 », et l'on redonnait
+ * sans fin un numéro déjà pris — l'inscription échouait sur le doublon. Un
+ * numéro dont la fin n'est pas un nombre est ignoré, plutôt que de faire
+ * repartir la suite de zéro.
  */
+export function numeroSuivant(numeros: string[], prefixe: string): string {
+  let plusGrand = 0;
+  for (const numero of numeros) {
+    const fin = numero.slice(prefixe.length);
+    if (numero.startsWith(prefixe) && /^\d+$/.test(fin)) {
+      plusGrand = Math.max(plusGrand, Number(fin));
+    }
+  }
+  return `${prefixe}${String(plusGrand + 1).padStart(4, "0")}`;
+}
+
+/** Numéro de facture séquentiel par année, ex. CC-2026-0008. */
 export async function numeroFacture(date: Date): Promise<string> {
   // Année UTC : une date de facture est un minuit UTC (voir `jourBase`).
-  const annee = date.getUTCFullYear();
-  const prefixe = `CC-${annee}-`;
-  const derniere = await prisma.invoice.findFirst({
+  const prefixe = `CC-${date.getUTCFullYear()}-`;
+  const deLAnnee = await prisma.invoice.findMany({
     where: { numero: { startsWith: prefixe } },
-    orderBy: { numero: "desc" },
     select: { numero: true },
   });
-  const n = derniere ? Number(derniere.numero.slice(prefixe.length)) || 0 : 0;
-  return `${prefixe}${String(n + 1).padStart(4, "0")}`;
+  return numeroSuivant(
+    deLAnnee.map((f) => f.numero),
+    prefixe,
+  );
 }
 
 /**
