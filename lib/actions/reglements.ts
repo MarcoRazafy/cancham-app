@@ -7,6 +7,7 @@ import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtMontant } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
+import { payerEnLigne } from "@/lib/actions/paiements";
 import {
   estModeReglement,
   MODES,
@@ -90,6 +91,10 @@ export async function ouvrirReglement(formData: FormData) {
   if (!estModeReglement(mode)) {
     redirectWithErreur(retour, "Choisissez un moyen de paiement.");
   }
+  // La carte ne se règle pas hors ligne : elle part chez le prestataire, qui
+  // vérifie lui-même que ses clés sont posées et que la facture est en
+  // Ariary.
+  if (mode === "carte") return payerEnLigne(formData);
 
   const f = await prisma.invoice.findUnique({
     where: { id: factureId },
