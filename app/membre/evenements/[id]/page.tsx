@@ -31,7 +31,7 @@ import {
 import { matriceQr } from "@/lib/qr";
 import { prisma } from "@/lib/db";
 import { fmtMontant } from "@/lib/membership";
-import { modesProposes } from "@/lib/reglements";
+import { modesBientot, modesProposes } from "@/lib/reglements";
 import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
 import { getCurrentUser } from "@/lib/session";
 import { plageHoraire } from "@/lib/agenda";
@@ -103,6 +103,7 @@ export default async function EvenementDetailPage({
             montant: fmtMontant(aRegler.montant, aRegler.devise),
           }}
           modes={modesPaiement}
+          bientot={modesBientot()}
           ouverteAuDepart
         />
       ) : null}

@@ -6,7 +6,7 @@ import { Modal } from "@/components/Modal";
 import { SubmitButton } from "@/components/form-bits";
 import { VisuelMode } from "@/components/paiement/IconeMode";
 import { ouvrirReglement } from "@/lib/actions/reglements";
-import { MODES, type ModeReglement } from "@/lib/modes-reglement";
+import { MODES, ORDRE_MODES, type ModeReglement } from "@/lib/modes-reglement";
 
 /**
  * « Comment payerez-vous ? », en fenêtre.
@@ -24,12 +24,20 @@ import { MODES, type ModeReglement } from "@/lib/modes-reglement";
 export function FenetreMoyens({
   facture,
   modes,
+  bientot = [],
   ouverteAuDepart = false,
   declencheur,
   classeDeclencheur = "",
 }: {
   facture: { id: string; numero: string; objet: string; montant: string };
   modes: ModeReglement[];
+  /**
+   * Les moyens que la chambre offre mais qui ne marchent pas encore — la
+   * carte, tant que Vanilla Pay n'est pas branché. Montrés grisés, avec leur
+   * raison, plutôt que cachés : une tuile absente, personne ne sait
+   * l'expliquer.
+   */
+  bientot?: ModeReglement[];
   ouverteAuDepart?: boolean;
   /**
    * Le contenu du bouton qui ouvre la fenêtre. Du contenu et non une
@@ -79,24 +87,44 @@ export function FenetreMoyens({
               <form action={ouvrirReglement} className="mt-4">
                 <input type="hidden" name="factureId" value={facture.id} />
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {modes.map((m) => (
-                    <SubmitButton
-                      key={m}
-                      name="mode"
-                      value={m}
-                      variant="line"
-                      pendingLabel="Ouverture…"
-                      className="h-full min-h-[128px] w-full flex-col items-center justify-center gap-2 whitespace-normal px-4 py-4 text-center"
-                    >
-                      <VisuelMode mode={m} />
-                      <span className="text-[15px] font-semibold text-ink">
-                        {MODES[m].titre}
-                      </span>
-                      <span className="text-[12.8px] font-normal leading-snug text-muted">
-                        {MODES[m].detail}
-                      </span>
-                    </SubmitButton>
-                  ))}
+                  {/*
+                    Le logo et le nom suffisent : une phrase de détail sous
+                    chaque tuile débordait dès que la fenêtre se resserrait,
+                    et n'apprenait rien que le logo ne dise déjà.
+                  */}
+                  {ORDRE_MODES.map((m) =>
+                    modes.includes(m) ? (
+                      <SubmitButton
+                        key={m}
+                        name="mode"
+                        value={m}
+                        variant="line"
+                        pendingLabel="Ouverture…"
+                        className="h-full min-h-[112px] w-full min-w-0 flex-col items-center justify-center gap-2.5 px-4 py-4 text-center whitespace-normal!"
+                      >
+                        <VisuelMode mode={m} />
+                        <span className="text-[15px] font-semibold text-ink">
+                          {MODES[m].titre}
+                        </span>
+                      </SubmitButton>
+                    ) : bientot.includes(m) ? (
+                      <div
+                        key={m}
+                        aria-disabled="true"
+                        className="flex h-full min-h-[112px] min-w-0 cursor-not-allowed flex-col items-center justify-center gap-2.5 rounded-[var(--radius-s)] border border-dashed border-line bg-surface-2 px-4 py-4 text-center"
+                      >
+                        <span className="opacity-50 grayscale">
+                          <VisuelMode mode={m} />
+                        </span>
+                        <span className="text-[15px] font-semibold text-muted">
+                          {MODES[m].titre}
+                        </span>
+                        <span className="rounded-full bg-surface-3 px-2.5 py-0.5 text-[12px] font-semibold text-muted">
+                          Bientôt disponible
+                        </span>
+                      </div>
+                    ) : null,
+                  )}
                 </div>
               </form>
             ) : (

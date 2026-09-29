@@ -59,6 +59,15 @@ export async function modesProposes(): Promise<ModeReglement[]> {
 }
 
 /**
+ * Les moyens offerts mais pas encore en service : la carte bancaire, tant
+ * que les clés Vanilla Pay ne sont pas posées. La fenêtre du choix les
+ * montre grisés au lieu de les taire.
+ */
+export function modesBientot(): ModeReglement[] {
+  return vanillaPayActif() ? [] : ["carte"];
+}
+
+/**
  * La référence d'un règlement : `CC-2026-K7Q2PX`.
  *
  * C'est elle que le membre recopie dans le motif de son virement, et elle
