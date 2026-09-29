@@ -90,6 +90,7 @@ enum ResourceFormat {
   pdf   @map("PDF")
   docx  @map("DOCX")
   video @map("Vidéo")
+  image @map("Photo")
 }
 
 /// Gratuit ou facturé. Partagé par les services de la chambre et les ressources.

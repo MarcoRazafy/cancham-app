@@ -3,6 +3,7 @@ import {
   cp,
   mkdir,
   readdir,
+  readFile,
   rename,
   rm,
   stat,
@@ -10,6 +11,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import sharp from "sharp";
 import { PLAFOND_FICHIER } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
 
@@ -128,7 +130,7 @@ export const PLAFOND_RESSOURCE = PLAFOND_FICHIER;
 export class FichierRefuse extends Error {}
 
 export interface FichierRecu {
-  fmt: "pdf" | "docx" | "video";
+  fmt: "pdf" | "docx" | "video" | "image";
   fichier: string;
   pages: number | null;
   taille: string;
@@ -141,11 +143,56 @@ function poidsLisible(octets: number): string {
   return `${(octets / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`;
 }
 
+/** La signature d'une image : JPEG, PNG ou WebP, l'extension qui va avec. */
+function imageDe(debut: Buffer): string | null {
+  if (debut[0] === 0xff && debut[1] === 0xd8 && debut[2] === 0xff) return "jpg";
+  if (debut.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47])))
+    return "png";
+  if (
+    debut.subarray(0, 4).toString("latin1") === "RIFF" &&
+    debut.subarray(8, 12).toString("latin1") === "WEBP"
+  )
+    return "webp";
+  return null;
+}
+
+/**
+ * Une photo se lit comme un document d'une seule page : on la rend en PNG
+ * au même emplacement que les pages, et le lecteur n'y voit pas de
+ * différence. L'orientation de l'appareil est appliquée, les métadonnées —
+ * coordonnées GPS comprises — ne passent pas.
+ */
+async function preparerPhoto(id: string, source: Buffer): Promise<number> {
+  const sortie = path.join(dossierRessource(id), "pages");
+  await mkdir(sortie, { recursive: true });
+  await sharp(source)
+    .rotate()
+    .resize(1800, 1800, { fit: "inside", withoutEnlargement: true })
+    .png({ compressionLevel: 8 })
+    .toFile(cheminPage(id, 1));
+  return 1;
+}
+
+/**
+ * La couverture d'un document ou d'une photo : sa première page, réduite.
+ *
+ * C'est le contenu lui-même qui illustre la carte, pas une image choisie à
+ * part. Assez petite pour rester une vignette — on ne lit pas le document
+ * dans sa couverture.
+ */
+export async function couvertureDepuisPage(id: string): Promise<Buffer> {
+  return sharp(await readFile(cheminPage(id, 1)))
+    .resize(800, null, { withoutEnlargement: true })
+    .jpeg({ quality: 78, mozjpeg: true })
+    .toBuffer();
+}
+
 /**
  * Reçoit le fichier d'une ressource et le prépare pour la lecture.
  *
  * Le type se juge au contenu, pas au nom : un PDF commence par `%PDF-`, un
- * DOCX est une archive ZIP, une vidéo MP4 porte `ftyp` au quatrième octet.
+ * DOCX est une archive ZIP, une vidéo MP4 porte `ftyp` au quatrième octet,
+ * une photo sa signature JPEG, PNG ou WebP.
  * Le fichier précédent de la ressource est effacé, pages rendues comprises.
  */
 export async function recevoirRessource(
@@ -158,7 +205,8 @@ export async function recevoirRessource(
     );
   }
   const octets = Buffer.from(await entree.arrayBuffer());
-  const debut = octets.subarray(0, 8);
+  const debut = octets.subarray(0, 12);
+  const photo = imageDe(debut);
   const nom = entree.name.toLowerCase();
 
   let fmt: FichierRecu["fmt"];
@@ -175,9 +223,12 @@ export async function recevoirRessource(
   } else if (debut.subarray(4, 8).toString("latin1") === "ftyp") {
     fmt = "video";
     fichier = "video.mp4";
+  } else if (photo) {
+    fmt = "image";
+    fichier = `image.${photo}`;
   } else {
     throw new FichierRefuse(
-      `« ${entree.name} » : seuls les PDF, les documents Word (DOCX) et les vidéos MP4 sont acceptés.`,
+      `« ${entree.name} » : seuls les PDF, les documents Word (DOCX), les vidéos MP4 et les photos (JPEG, PNG, WebP) sont acceptés.`,
     );
   }
 
@@ -189,7 +240,10 @@ export async function recevoirRessource(
   let pages: number | null = null;
   if (fmt !== "video") {
     try {
-      pages = await preparerDocument(id, fichier);
+      pages =
+        fmt === "image"
+          ? await preparerPhoto(id, octets)
+          : await preparerDocument(id, fichier);
     } catch {
       await rm(dossier, { recursive: true, force: true });
       throw new FichierRefuse(

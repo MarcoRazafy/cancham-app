@@ -247,7 +247,7 @@ export interface RessourceAdmin {
   id: string;
   titre: string;
   cat: string;
-  fmt: "pdf" | "docx" | "video";
+  fmt: "pdf" | "docx" | "video" | "image";
   taille: string;
   date: string;
   type: "gratuit" | "payant";

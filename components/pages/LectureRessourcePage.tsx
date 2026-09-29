@@ -43,7 +43,8 @@ export async function LectureRessourcePage({
 
       <div className="mb-5">
         <Kicker>
-          {video ? "Vidéo" : "Document"} · {r.taille}
+          {video ? "Vidéo" : r.fmt === "image" ? "Photo" : "Document"} ·{" "}
+          {r.taille}
         </Kicker>
         <h1 className="m-0 mt-1.5 text-[26px]">{r.titre}</h1>
       </div>

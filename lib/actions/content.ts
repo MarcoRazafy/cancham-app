@@ -11,9 +11,11 @@ import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import {
   FichierRefuse,
+  couvertureDepuisPage,
   dupliquerRessource,
   effacerRessource,
   recevoirRessource,
+  type FichierRecu,
 } from "@/lib/stockage-ressources";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 import {
@@ -400,30 +402,11 @@ export async function enregistrerRessource(formData: FormData) {
     if (!existe) redirectWithErreur(retour, "Ce dossier n’existe plus.");
   }
 
-  let cover: string | null = null;
-  try {
-    cover = await enregistrerImage(formData.get("cover"), {
-      prefixe: "ressource",
-      largeur: 1200,
-    });
-  } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
-    throw e;
-  }
-  const retirerCover = texte(formData, "retirerCover") === "1";
-
   // La ligne d'abord : son identifiant nomme le dossier du fichier.
   const r = id
     ? await prisma.resource.update({
         where: { id },
-        data: {
-          titre,
-          cat,
-          type,
-          prix,
-          dossierId,
-          ...(cover ? { cover } : retirerCover ? { cover: null } : {}),
-        },
+        data: { titre, cat, type, prix, dossierId },
       })
     : await prisma.resource.create({
         data: {
@@ -431,7 +414,6 @@ export async function enregistrerRessource(formData: FormData) {
           cat,
           type,
           prix,
-          cover,
           dossierId,
           fmt: "pdf",
           taille: "—",
@@ -449,6 +431,7 @@ export async function enregistrerRessource(formData: FormData) {
           fichier: recu.fichier,
           pages: recu.pages,
           taille: recu.taille,
+          cover: await couvertureDuContenu(r.id, recu.fmt, formData),
         },
       });
     } catch (e) {
@@ -481,6 +464,43 @@ export async function enregistrerRessource(formData: FormData) {
     "/admin/ressources",
     id ? `« ${titre} » mise à jour` : `« ${titre} » ajoutée à la bibliothèque`,
   );
+}
+
+/**
+ * La couverture d'une ressource, tirée de son contenu.
+ *
+ * Plus d'image choisie à part : la carte montre ce qu'on va lire. Pour un
+ * document ou une photo, la première page, rendue côté serveur. Pour une
+ * vidéo, une image prise dans le film par le navigateur de l'équipe au
+ * moment du choix du fichier — le serveur n'a pas de quoi décoder une
+ * vidéo. Si le navigateur n'a pas pu la prendre, la carte garde son motif.
+ */
+async function couvertureDuContenu(
+  id: string,
+  fmt: FichierRecu["fmt"],
+  formData: FormData,
+): Promise<string | null> {
+  try {
+    const source =
+      fmt === "video"
+        ? formData.get("couvertureVideo")
+        : new File(
+            [new Uint8Array(await couvertureDepuisPage(id))],
+            "couverture.jpg",
+            {
+              type: "image/jpeg",
+            },
+          );
+    return await enregistrerImage(source, {
+      prefixe: `ressource-${id}`,
+      largeur: 800,
+    });
+  } catch (e) {
+    // Une couverture ratée ne doit pas faire échouer le dépôt : le fichier,
+    // lui, est bien là.
+    if (e instanceof ImageRefusee) return null;
+    throw e;
+  }
 }
 
 export async function deleteResource(formData: FormData) {
