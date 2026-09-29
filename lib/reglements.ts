@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { vanillaPayActif } from "@/lib/vanillapay";
 import {
   COORDONNEES_VIDES,
   modeDisponible,
@@ -48,13 +49,24 @@ export async function getCoordonneesPaiement(): Promise<Coordonnees> {
 
 /**
  * Les moyens proposables en l'état : ceux dont la chambre a renseigné les
- * coordonnées, plus la carte et les portefeuilles, toujours offerts. Une
- * seule définition, pour que la fenêtre d'inscription et la page des
- * factures n'offrent jamais deux listes différentes.
+ * coordonnées, les portefeuilles, toujours offerts, et la carte une fois
+ * Vanilla Pay branché. Une seule définition, pour que la fenêtre
+ * d'inscription et la page des factures n'offrent jamais deux listes
+ * différentes.
  */
 export async function modesProposes(): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
-  return ORDRE_MODES.filter((m) => modeDisponible(m, c));
+  const enLigne = vanillaPayActif();
+  return ORDRE_MODES.filter((m) => modeDisponible(m, c, enLigne));
+}
+
+/**
+ * Les moyens offerts mais pas encore en service : la carte bancaire, tant
+ * que les clés Vanilla Pay ne sont pas posées. La fenêtre du choix les
+ * montre grisés, « Bientôt disponible », au lieu de les taire.
+ */
+export function modesBientot(): ModeReglement[] {
+  return vanillaPayActif() ? [] : ["carte"];
 }
 
 /**
