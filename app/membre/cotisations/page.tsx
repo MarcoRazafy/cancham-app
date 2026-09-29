@@ -25,7 +25,7 @@ import {
   type Devise,
 } from "@/lib/membership";
 import { getInvoices, getMember } from "@/lib/queries";
-import { modesBientot, modesProposes } from "@/lib/reglements";
+import { modesProposes } from "@/lib/reglements";
 import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
 import { getCurrentUser } from "@/lib/session";
 
@@ -199,7 +199,6 @@ export default async function CotisationsPage({
                           montant: fmtMontant(f.montant, f.devise),
                         }}
                         modes={modes}
-                        bientot={modesBientot()}
                         ouverteAuDepart={regler === f.id}
                         declencheur={
                           <>

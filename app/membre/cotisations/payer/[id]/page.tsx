@@ -6,6 +6,7 @@ import {
   AnnonceReglement,
   TunnelReglement,
 } from "@/components/paiement/TunnelReglement";
+import { TunnelCarte } from "@/components/paiement/TunnelCarte";
 import { TunnelPortefeuille } from "@/components/paiement/TunnelPortefeuille";
 import { prisma } from "@/lib/db";
 import {
@@ -15,6 +16,7 @@ import {
   numeroPortefeuille,
 } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
+import { vanillaPayActif } from "@/lib/vanillapay";
 
 /**
  * Le tunnel d'un règlement : où envoyer l'argent, et la référence à recopier.
@@ -40,7 +42,7 @@ export default async function PageReglement({
     where: { id },
     include: {
       invoice: { select: { numero: true, objet: true } },
-      member: { select: { nom: true } },
+      member: { select: { nom: true, ville: true, pays: true } },
     },
   });
   if (!p || !user.memberId || p.memberId !== user.memberId) notFound();
@@ -53,6 +55,35 @@ export default async function PageReglement({
   const retour = p.invoiceId
     ? `/membre/cotisations?regler=${p.invoiceId}`
     : "/membre/cotisations";
+
+  if (p.mode === "carte") {
+    // Ce que le membre a déjà saisi à une tentative précédente, sinon ce
+    // que la plateforme sait déjà de lui.
+    const detail = (p.detail ?? {}) as {
+      titulaire?: unknown;
+      adresse?: unknown;
+    };
+    const lieu = [p.member?.ville, p.member?.pays ?? "Madagascar"]
+      .filter(Boolean)
+      .join(", ");
+    return (
+      <TunnelCarte
+        reglementId={p.id}
+        montant={p.montant}
+        devise={p.devise}
+        objet={p.invoice?.objet ?? "Règlement"}
+        numeroFacture={p.invoice?.numero ?? null}
+        email={user.email}
+        titulaire={
+          typeof detail.titulaire === "string" ? detail.titulaire : user.nom
+        }
+        adresse={typeof detail.adresse === "string" ? detail.adresse : lieu}
+        statut={p.statut}
+        raccorde={vanillaPayActif()}
+        retour={retour}
+      />
+    );
+  }
 
   if (estPortefeuilleConnu(p.mode)) {
     // Le numéro du membre, posé à l'étape 1 et gardé dans le détail du

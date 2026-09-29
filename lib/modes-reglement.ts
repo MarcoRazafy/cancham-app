@@ -143,17 +143,14 @@ export function numeroPortefeuille(
 /**
  * Ce qu'il faut pour qu'un moyen soit proposable.
  *
- * La carte dépend du prestataire, pas de coordonnées saisies : c'est
- * `vanillaPayActif()` qui décide, ailleurs.
+ * La carte est toujours offerte : son écran se remplit sans le prestataire,
+ * et c'est au moment de payer que le raccordement à Vanilla Pay est
+ * vérifié — s'il manque, le membre l'apprend là, en clair.
  */
-export function modeDisponible(
-  mode: ModeReglement,
-  c: Coordonnees,
-  enLigneActif: boolean,
-): boolean {
+export function modeDisponible(mode: ModeReglement, c: Coordonnees): boolean {
   switch (mode) {
     case "carte":
-      return enLigneActif;
+      return true;
     // Les trois portefeuilles sont toujours offerts : la chambre les a tous,
     // et le membre choisit celui qu'il a en poche. Si le numéro de la
     // chambre n'est pas encore publié, l'écran du règlement le dit — ce qui

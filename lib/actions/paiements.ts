@@ -2,104 +2,96 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { redirectWithErreur } from "@/lib/flash";
+import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
+import { referenceReglement } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import { baseSite } from "@/lib/site";
-import {
-  canalVanillaPay,
-  ouvrirPaiement,
-  referencePaiement,
-  vanillaPayActif,
-} from "@/lib/vanillapay";
-import { estModeReglement } from "@/lib/modes-reglement";
+import { ouvrirPaiement, vanillaPayActif } from "@/lib/vanillapay";
 
-const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+const texte = (fd: FormData, k: string) =>
+  String(fd.get(k) ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 /**
- * Règlement en ligne d'une facture, par le membre lui-même.
+ * Le paiement par carte : le membre valide l'écran, et part chez le
+ * prestataire saisir sa carte.
  *
- * Une action serveur est une adresse publique : on vérifie donc que la
- * facture appartient bien à qui la règle, qu'elle n'est pas déjà payée, et
- * qu'elle est en Ariary — Vanilla Pay n'encaisse pas le dollar canadien.
+ * Une action serveur est une adresse publique : on vérifie donc que le
+ * règlement appartient bien à qui paie, qu'il est en carte, pas déjà
+ * encaissé, et en Ariary — Vanilla Pay n'encaisse pas le dollar canadien.
  *
- * La tentative est enregistrée **avant** l'appel au prestataire : c'est elle
- * qui portera sa notification, et une tentative sans trace serait un
- * paiement qu'on ne saurait pas rattacher.
+ * Le titulaire et l'adresse de facturation sont gardés avec le règlement :
+ * c'est ce que la banque du membre compare, et ce que l'équipe regarde le
+ * jour où un paiement est contesté.
+ *
+ * Chaque tentative prend une référence neuve. Un prestataire refuse souvent
+ * de rouvrir une référence déjà envoyée — et c'est elle, et elle seule, qui
+ * relie sa notification au bon règlement.
  */
-export async function payerEnLigne(formData: FormData) {
+export async function payerParCarte(formData: FormData) {
   const user = await getCurrentUser("membre");
-  const retour = "/membre/cotisations";
+  const id = texte(formData, "reglementId");
 
-  const mode = texte(formData, "mode");
-  if (!estModeReglement(mode)) {
-    redirectWithErreur(retour, "Choisissez un moyen de paiement.");
-  }
-  // Le canal chez eux ; le moyen exact reste le nôtre, dans la ligne.
-  const canal = canalVanillaPay(mode);
-  if (!canal) {
-    redirectWithErreur(retour, "Ce moyen ne se règle pas en ligne.");
-  }
-  if (!vanillaPayActif()) {
-    redirectWithErreur(retour, "Le paiement en ligne n’est pas disponible.");
-  }
-
-  const f = await prisma.invoice.findUnique({
-    where: { id: texte(formData, "factureId") },
-    select: {
-      id: true,
-      numero: true,
-      objet: true,
-      montant: true,
-      devise: true,
-      statut: true,
-      memberId: true,
+  const p = await prisma.paiement.findUnique({
+    where: { id },
+    include: {
+      invoice: { select: { numero: true, objet: true, statut: true } },
     },
   });
-
   // Même message pour « introuvable » et « pas à vous » : répondre
-  // différemment dirait à un curieux quelles factures existent.
-  if (!f || !user.memberId || f.memberId !== user.memberId) {
-    redirectWithErreur(retour, "Facture introuvable.");
+  // différemment dirait à un curieux quels règlements existent.
+  if (!p || !user.memberId || p.memberId !== user.memberId) {
+    redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
   }
-  if (f.statut === "payee") {
-    redirectWithErreur(retour, `La facture ${f.numero} est déjà réglée.`);
+  const page = `/membre/cotisations/payer/${p.id}`;
+  if (p.mode !== "carte") {
+    redirectWithErreur(page, "Ce règlement ne se fait pas par carte.");
   }
-  if (f.devise !== "MGA") {
+  if (p.statut === "reussie" || p.invoice?.statut === "payee") {
+    redirectWithFlash("/membre/cotisations", "Ce règlement est déjà encaissé.");
+  }
+
+  const titulaire = texte(formData, "titulaire").slice(0, 80);
+  const adresse = texte(formData, "adresse").slice(0, 200);
+  if (!titulaire) {
+    redirectWithErreur(page, "Indiquez le nom du titulaire de la carte.");
+  }
+  if (!adresse) {
+    redirectWithErreur(page, "Indiquez l’adresse de facturation.");
+  }
+
+  const reference = referenceReglement();
+  await prisma.paiement.update({
+    where: { id: p.id },
+    data: { reference, statut: "en_cours", detail: { titulaire, adresse } },
+  });
+
+  // Sans les clés du prestataire, la saisie est gardée — le membre n'aura
+  // pas à la refaire — mais rien ne part.
+  if (!vanillaPayActif()) {
     redirectWithErreur(
-      retour,
-      "Cette cotisation se règle par virement : le paiement en ligne n’accepte que l’Ariary.",
+      page,
+      "Le paiement par carte n’est pas encore raccordé : la chambre attend ses accès au prestataire. En attendant, choisissez un autre moyen.",
     );
   }
-
-  const reference = referencePaiement(f.numero);
-  const paiement = await prisma.paiement.create({
-    data: {
-      reference,
-      invoiceId: f.id,
-      montant: f.montant,
-      devise: f.devise,
-      mode,
-    },
-    select: { id: true },
-  });
+  if (p.devise !== "MGA") {
+    redirectWithErreur(page, "Le paiement par carte n’accepte que l’Ariary.");
+  }
 
   const base = baseSite();
   const ouverture = await ouvrirPaiement({
-    montant: f.montant,
+    montant: p.montant,
     reference,
-    libelle: `${f.objet} — facture ${f.numero}`,
-    mode: canal,
+    libelle: p.invoice
+      ? `${p.invoice.objet} — facture ${p.invoice.numero}`
+      : "Règlement CanCham",
+    mode: "international",
     notifUrl: `${base}/api/paiements/vanillapay`,
     redirectUrl: `${base}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
   });
-
-  if ("raison" in ouverture) {
-    await prisma.paiement.update({
-      where: { id: paiement.id },
-      data: { statut: "echouee" },
-    });
-    redirectWithErreur(retour, ouverture.raison);
-  }
+  // Le règlement reste ouvert : le membre peut réessayer sans tout ressaisir.
+  if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
 
   // Sortie du site : la carte se saisit chez eux, jamais chez nous.
   redirect(ouverture.url);
