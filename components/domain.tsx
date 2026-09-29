@@ -803,9 +803,9 @@ export function OfferCard({
 }: {
   offer: Offer;
   /**
-   * Carte carrée : la photo prend tout le haut, le texte se resserre dessous
-   * en deux lignes au plus. Pour un rail assez large, où le bandeau de 88 px
-   * laissait des cartes plates et étirées.
+   * Carte carrée : la photo prend tout le haut, le texte se resserre dessous.
+   * Pour un rail assez large, où le bandeau de 88 px laissait des cartes
+   * plates et étirées.
    */
   carre?: boolean;
   /**
@@ -836,14 +836,17 @@ export function OfferCard({
         </div>
         <div className={`p-4 flex flex-col ${carre ? "shrink-0" : "flex-1"}`}>
           <Pill className="self-start">{offer.membre}</Pill>
-          <div
-            className={`font-semibold text-[13.2px] mt-2 mb-1 ${carre ? "line-clamp-2" : ""}`}
-          >
+          {/*
+            Deux lignes au plus, quelle que soit la forme de la carte : une
+            offre longuement décrite étirait la sienne et désalignait toute la
+            rangée. C'est une accroche — la fenêtre donne le texte entier.
+            `anywhere` coupe au besoin un mot interminable, qui déborderait
+            sinon de la carte.
+          */}
+          <div className="font-semibold text-[13.2px] mt-2 mb-1 line-clamp-2 [overflow-wrap:anywhere]">
             {offer.titre}
           </div>
-          <div
-            className={`text-[12.4px] text-muted leading-relaxed ${carre ? "line-clamp-2" : ""}`}
-          >
+          <div className="text-[12.4px] text-muted leading-relaxed line-clamp-2 [overflow-wrap:anywhere]">
             <TexteLie texte={offer.desc} dansUnLien />
           </div>
         </div>

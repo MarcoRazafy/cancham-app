@@ -62,7 +62,7 @@ function Detail({ offre: o }: { offre: Offer }) {
         ) : null}
 
         <div>
-          <h3 className="m-0 text-[18px] font-semibold leading-snug text-ink">
+          <h3 className="m-0 text-[18px] font-semibold leading-snug text-ink [overflow-wrap:anywhere]">
             {o.titre}
           </h3>
           <p className="m-0 mt-1 text-[13px] text-muted">
@@ -70,7 +70,12 @@ function Detail({ offre: o }: { offre: Offer }) {
           </p>
         </div>
 
-        <p className="m-0 text-[14.2px] leading-relaxed text-muted whitespace-pre-line">
+        {/*
+          Le texte entier, sans rien couper — mais un mot sans espace,
+          collé d'ailleurs, poussait la fenêtre en largeur et la faisait
+          défiler de travers. `anywhere` le replie.
+        */}
+        <p className="m-0 text-[14.2px] leading-relaxed text-muted whitespace-pre-line [overflow-wrap:anywhere]">
           {o.desc}
         </p>
 
@@ -92,7 +97,7 @@ function Detail({ offre: o }: { offre: Offer }) {
               </span>
             )}
             <div className="min-w-0">
-              <div className="text-[14px] font-semibold text-ink leading-snug">
+              <div className="text-[14px] font-semibold text-ink leading-snug [overflow-wrap:anywhere]">
                 {o.membre}
               </div>
               <div className="text-[12.3px] text-muted mt-0.5 flex items-center gap-1.5 flex-wrap">

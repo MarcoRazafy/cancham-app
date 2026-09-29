@@ -38,12 +38,16 @@ export function CarteOffre({ offre }: { offre: Offer }) {
         </div>
 
         <div className="flex flex-col flex-1 p-5">
+          {/*
+            Bornés, comme dans l'espace membre : la carte n'est qu'une
+            accroche, et sans cela une offre bavarde étirait sa colonne.
+          */}
           <h3
-            className={`${TITRE_GRAS} text-[17px] leading-[1.35] text-[var(--marque-nuit)] m-0 mb-2`}
+            className={`${TITRE_GRAS} text-[17px] leading-[1.35] text-[var(--marque-nuit)] m-0 mb-2 line-clamp-2 [overflow-wrap:anywhere]`}
           >
             {offre.titre}
           </h3>
-          <p className="m-0 text-[13.5px] leading-[1.6] text-[#6b6b6b] line-clamp-3">
+          <p className="m-0 text-[13.5px] leading-[1.6] text-[#6b6b6b] line-clamp-3 [overflow-wrap:anywhere]">
             {offre.desc}
           </p>
         </div>
