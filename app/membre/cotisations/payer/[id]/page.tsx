@@ -8,6 +8,10 @@ import {
 } from "@/components/paiement/TunnelReglement";
 import { TunnelCarte } from "@/components/paiement/TunnelCarte";
 import { TunnelPortefeuille } from "@/components/paiement/TunnelPortefeuille";
+import type { PropsReglement } from "@/components/paiement/tunnels/commun";
+import { TunnelDepot } from "@/components/paiement/tunnels/Depot";
+import { TunnelEspeces } from "@/components/paiement/tunnels/Especes";
+import { TunnelVirement } from "@/components/paiement/tunnels/Virement";
 import { prisma } from "@/lib/db";
 import {
   estPortefeuilleConnu,
@@ -15,6 +19,7 @@ import {
   MODES,
   numeroPortefeuille,
 } from "@/lib/reglements";
+import { aujourdhuiISO } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 import { vanillaPayActif } from "@/lib/vanillapay";
 
@@ -24,25 +29,27 @@ import { vanillaPayActif } from "@/lib/vanillapay";
  * On y revient autant qu'on veut — « je le ferai plus tard » ne perd rien,
  * la référence est celle du règlement ouvert.
  *
- * Les portefeuilles mobiles ont leur propre écran, aux couleurs de
- * l'opérateur : on y paie depuis son téléphone, en trois gestes annoncés.
+ * Chaque moyen a son écran, repris de sa maquette : les portefeuilles aux
+ * couleurs de l'opérateur, la carte, le virement et son RIB, le dépôt et son
+ * bordereau, les espèces et leur bon de remise. Seules les plateformes
+ * tierces gardent l'écran commun.
  */
 export default async function PageReglement({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ numero?: string }>;
+  searchParams: Promise<{ numero?: string; etape?: string; modifier?: string }>;
 }) {
   const { id } = await params;
-  const { numero } = await searchParams;
+  const { numero, etape, modifier } = await searchParams;
   const user = await getCurrentUser("membre");
 
   const p = await prisma.paiement.findUnique({
     where: { id },
     include: {
       invoice: { select: { numero: true, objet: true } },
-      member: { select: { nom: true, ville: true, pays: true } },
+      member: { select: { nom: true } },
     },
   });
   if (!p || !user.memberId || p.memberId !== user.memberId) notFound();
@@ -56,28 +63,24 @@ export default async function PageReglement({
     ? `/membre/cotisations?regler=${p.invoiceId}`
     : "/membre/cotisations";
 
+  // Ce que le membre a déjà saisi pour ce règlement : un rendez-vous, un
+  // numéro, le nom du titulaire.
+  const detail = (
+    p.detail && typeof p.detail === "object" && !Array.isArray(p.detail)
+      ? p.detail
+      : {}
+  ) as Record<string, unknown>;
+
   if (p.mode === "carte") {
-    // Ce que le membre a déjà saisi à une tentative précédente, sinon ce
-    // que la plateforme sait déjà de lui.
-    const detail = (p.detail ?? {}) as {
-      titulaire?: unknown;
-      adresse?: unknown;
-    };
-    const lieu = [p.member?.ville, p.member?.pays ?? "Madagascar"]
-      .filter(Boolean)
-      .join(", ");
     return (
       <TunnelCarte
         reglementId={p.id}
         montant={p.montant}
         devise={p.devise}
         objet={p.invoice?.objet ?? "Règlement"}
-        numeroFacture={p.invoice?.numero ?? null}
-        email={user.email}
         titulaire={
           typeof detail.titulaire === "string" ? detail.titulaire : user.nom
         }
-        adresse={typeof detail.adresse === "string" ? detail.adresse : lieu}
         statut={p.statut}
         raccorde={vanillaPayActif()}
         retour={retour}
@@ -85,10 +88,31 @@ export default async function PageReglement({
     );
   }
 
+  if (p.mode === "virement" || p.mode === "depot" || p.mode === "especes") {
+    const commun: PropsReglement = {
+      reglementId: p.id,
+      reference: p.reference,
+      montant: p.montant,
+      devise: p.devise,
+      objet: p.invoice?.objet ?? "Règlement",
+      numeroFacture: p.invoice?.numero ?? null,
+      statut: p.statut,
+      retour,
+      etape,
+      coordonnees: c,
+      payeur: p.member?.nom ?? "",
+      personne: user.nom,
+      detail,
+      aujourdhui: aujourdhuiISO(),
+    };
+    if (p.mode === "virement") return <TunnelVirement {...commun} />;
+    if (p.mode === "depot") return <TunnelDepot {...commun} />;
+    return <TunnelEspeces {...commun} modifier={modifier === "1"} />;
+  }
+
   if (estPortefeuilleConnu(p.mode)) {
     // Le numéro du membre, posé à l'étape 1 et gardé dans le détail du
     // règlement : revenir sur la page ne le fait pas resaisir.
-    const detail = (p.detail ?? {}) as { telephone?: unknown };
     const telephone =
       typeof detail.telephone === "string" ? detail.telephone : null;
 

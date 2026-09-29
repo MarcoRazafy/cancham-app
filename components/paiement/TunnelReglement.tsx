@@ -14,6 +14,11 @@ import {
 } from "@/lib/reglements";
 
 /**
+ * L'écran commun d'un règlement, pour les moyens qui n'ont pas le leur —
+ * les plateformes tierces aujourd'hui. La carte, les portefeuilles, le
+ * virement, le dépôt et les espèces ont chacun leur écran, repris de leur
+ * maquette.
+ *
  * Ce qu'on montre au membre une fois son moyen choisi.
  *
  * Trois choses, toujours dans le même ordre : où envoyer l'argent, la

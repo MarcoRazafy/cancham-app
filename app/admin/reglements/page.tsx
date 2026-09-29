@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Check, Settings2, X } from "lucide-react";
+import { CalendarClock, Check, Settings2, X } from "lucide-react";
 import { ilYa } from "@/components/admin/LigneJournal";
 import { SubmitButton } from "@/components/form-bits";
 import { Card, EmptyState, Pill, ViewHead } from "@/components/ui";
 import { confirmerReglement, refuserReglement } from "@/lib/actions/reglements";
 import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
+import { fmtJour } from "@/lib/agenda";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/reglements";
 
@@ -92,6 +93,9 @@ export default async function Reglements() {
                       </span>
                     </div>
                   ) : null}
+                  {p.mode === "especes" ? (
+                    <RendezVous detail={p.detail} />
+                  ) : null}
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
@@ -151,5 +155,41 @@ export default async function Reglements() {
         </>
       ) : null}
     </>
+  );
+}
+
+/**
+ * Le rendez-vous d'une remise en espèces : où l'argent arrive, et quand.
+ * Quand l'équipe doit passer, l'adresse est là — c'est elle qu'on cherche.
+ */
+function RendezVous({ detail }: { detail: unknown }) {
+  const d = (detail ?? {}) as {
+    lieu?: string;
+    adresse?: string | null;
+    jour?: string;
+    moment?: string;
+  };
+  if (!d.jour) return null;
+  const quand = `${fmtJour(d.jour, { weekday: "long", day: "numeric", month: "long" })}, ${
+    d.moment === "apres-midi" ? "l’après-midi" : "le matin"
+  }`;
+  return (
+    <div className="mt-2 flex items-start gap-2 rounded-[var(--radius-s)] bg-surface-2 px-3 py-2 text-[12.8px] text-ink">
+      <CalendarClock
+        size={15}
+        aria-hidden
+        className="mt-px shrink-0 text-accent"
+      />
+      <span>
+        {d.lieu === "domicile" ? (
+          <>
+            <b>L’équipe passe</b> — {d.adresse ?? "adresse non précisée"}
+          </>
+        ) : (
+          <b>Au bureau de la chambre</b>
+        )}{" "}
+        · {quand}
+      </span>
+    </div>
   );
 }

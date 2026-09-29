@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
+import { ajouterJours, estJourISO } from "@/lib/agenda";
+import { aujourdhuiISO } from "@/lib/format";
 import { fmtMontant } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -186,6 +188,75 @@ export async function enregistrerNumeroPortefeuille(formData: FormData) {
   });
   revalidatePath(retour);
   redirect(retour);
+}
+
+/**
+ * La remise en espèces : où et quand le membre apporte l'argent.
+ *
+ * Le bon de remise qui en sort vaut annonce — l'équipe voit le rendez-vous
+ * dans ses règlements annoncés, et confirme le jour où l'argent change de
+ * main. Revenir sur le rendez-vous reste possible tant que rien n'est
+ * encaissé.
+ */
+export async function preparerRemiseEspeces(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const id = texte(formData, "reglementId");
+
+  const p = await prisma.paiement.findUnique({
+    where: { id },
+    select: { id: true, memberId: true, mode: true, statut: true },
+  });
+  if (!p || !user.memberId || p.memberId !== user.memberId) {
+    redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
+  }
+  const page = `/membre/cotisations/payer/${p.id}`;
+  const formulaire = `${page}?modifier=1`;
+  if (p.mode !== "especes") {
+    redirectWithErreur(page, "Ce règlement ne se fait pas en espèces.");
+  }
+  if (p.statut === "reussie") {
+    redirectWithFlash("/membre/cotisations", "Ce règlement est déjà encaissé.");
+  }
+
+  const lieu = texte(formData, "lieu") === "domicile" ? "domicile" : "bureau";
+  const adresse = texte(formData, "adresse").replace(/\s+/g, " ").slice(0, 200);
+  if (lieu === "domicile" && !adresse) {
+    redirectWithErreur(formulaire, "Indiquez où l’équipe doit passer.");
+  }
+
+  const jour = texte(formData, "jour");
+  const aujourdhui = aujourdhuiISO();
+  if (!estJourISO(jour)) {
+    redirectWithErreur(formulaire, "Choisissez le jour de la remise.");
+  }
+  if (jour < aujourdhui) {
+    redirectWithErreur(formulaire, "Ce jour est déjà passé.");
+  }
+  if (jour > ajouterJours(aujourdhui, 90)) {
+    redirectWithErreur(
+      formulaire,
+      "Choisissez un jour dans les trois prochains mois.",
+    );
+  }
+  const moment =
+    texte(formData, "moment") === "apres-midi" ? "apres-midi" : "matin";
+
+  await prisma.paiement.update({
+    where: { id: p.id },
+    data: {
+      statut: "annonce",
+      annonceLe: new Date(),
+      detail: {
+        lieu,
+        adresse: lieu === "domicile" ? adresse : null,
+        jour,
+        moment,
+        remisPar: user.nom,
+      },
+    },
+  });
+  revalidatePath("/", "layout");
+  redirect(page);
 }
 
 /**

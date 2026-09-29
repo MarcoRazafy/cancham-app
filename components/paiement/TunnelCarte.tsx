@@ -2,38 +2,35 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  ChevronLeft,
   CreditCard,
   Lock,
 } from "lucide-react";
-import { AdresseFacturation } from "@/components/paiement/AdresseFacturation";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import { payerParCarte } from "@/lib/actions/paiements";
 import { fmtMontant, type Devise } from "@/lib/membership";
 
 /**
- * Le paiement par carte, d'après la maquette : à gauche, en bleu nuit, ce
- * qui est réglé et combien ; à droite, sur blanc, ce qu'il faut remplir.
+ * Le paiement par carte, d'après la maquette : une carte centrée, un en-tête
+ * bleu nuit qui dit à qui l'on paie et combien, puis le formulaire.
  *
- * La carte elle-même ne se saisit jamais ici. Le membre donne le titulaire
- * et l'adresse de facturation, puis part sur la page sécurisée du
- * prestataire — la CanCham ne voit ni ne garde aucun numéro. L'écran le dit
- * avant qu'on ne clique, pas après.
- *
- * Les couleurs sont celles de la CanCham et non d'une marque tierce : la
- * carte n'a pas d'opérateur, c'est la chambre qui encaisse.
+ * Une différence avec la maquette, et elle est voulue : le numéro de carte,
+ * la date d'expiration et le code de sécurité ne se saisissent pas ici. Ils
+ * se tapent sur la page sécurisée de Vanilla Pay, à l'étape suivante — la
+ * CanCham ne doit jamais voir passer un numéro de carte, ni le stocker, ni
+ * risquer de le laisser traîner dans un journal. L'écran l'annonce à la
+ * place même où l'on attendrait ces champs.
  */
+const NUIT = "#1e2d6b";
+
 export function TunnelCarte({
   reglementId,
   montant,
   devise,
   objet,
-  numeroFacture,
-  email,
   titulaire,
-  adresse,
   statut,
   raccorde,
   retour,
@@ -42,244 +39,152 @@ export function TunnelCarte({
   montant: number;
   devise: Devise;
   objet: string;
-  numeroFacture: string | null;
-  email: string;
   /** Proposé d'office : le nom de qui règle, ou celui déjà saisi. */
   titulaire: string;
-  /** Proposée d'office : la ville et le pays de l'entreprise. */
-  adresse: string;
   statut: string;
   /** Vanilla Pay est-il branché ? Sans lui, rien ne part. */
   raccorde: boolean;
   retour: string;
 }) {
   const somme = fmtMontant(montant, devise);
-  const chiffre = montant.toLocaleString("fr-FR");
-  const code = devise === "CAD" ? "CAD" : "MGA";
   const encaisse = statut === "reussie";
 
   return (
     <div
       style={
         {
-          "--pf-bouton": "var(--accent)",
+          "--pf-bouton": NUIT,
           "--pf-sur-bouton": "#ffffff",
-          "--pf-bouton-survol": "var(--accent-strong)",
+          "--pf-bouton-survol": "#15204f",
         } as CSSProperties
       }
-      className="grid overflow-hidden rounded-[var(--radius-l)] border border-line bg-surface lg:grid-cols-2"
+      className="rounded-[var(--radius-l)] bg-[linear-gradient(180deg,#eef1f7,#e4e8f1)] px-4 py-8 sm:py-12"
     >
-      {/* ---------- Ce qui est réglé ---------- */}
-      <aside className="relative bg-[var(--marque-nuit)] px-6 py-9 text-white sm:px-10 lg:py-14">
-        {/* Un halo rouge, en haut à gauche : la couleur de la chambre. */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(200,16,46,0.30),transparent_55%)]"
-        />
-        <div className="relative mx-auto max-w-[340px]">
-          <div className="flex items-center gap-3">
+      <section className="mx-auto max-w-[560px] overflow-hidden rounded-[20px] bg-white shadow-[0_30px_60px_-32px_rgba(20,30,70,0.5)]">
+        <header className="bg-[#1e2d6b] px-6 pb-6 pt-4 text-white sm:px-8">
+          <Link
+            href={retour}
+            className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 text-[15px] font-semibold text-[#9cc3ff] no-underline transition-colors duration-200 hover:text-white"
+          >
+            <ArrowLeft size={17} aria-hidden /> Retour
+          </Link>
+          <p className="m-0 mt-2 text-[12.5px] font-semibold uppercase tracking-[0.1em] text-white/75">
+            Paiement pour
+          </p>
+          <p className="m-0 mt-0.5 text-[26px] font-bold leading-tight">
+            CanCham Madagascar
+          </p>
+          <p className="m-0 mt-1 text-[38px] font-extrabold leading-tight tracking-[-0.02em] tabular-nums">
+            {somme}
+          </p>
+          <p className="m-0 mt-1 text-[15px] text-white/85">{objet}</p>
+        </header>
+
+        {encaisse ? (
+          <div className="px-6 py-10 text-center sm:px-8">
+            <CheckCircle2
+              size={46}
+              aria-hidden
+              className="mx-auto text-success"
+            />
+            <h1 className="m-0 mt-4 text-[22px] font-bold text-ink">
+              Paiement accepté
+            </h1>
+            <p className="m-0 mt-2 text-[15px] leading-relaxed text-muted">
+              Le prestataire a confirmé votre paiement de {somme}. Il n’y a plus
+              rien à faire.
+            </p>
             <Link
-              href={retour}
-              aria-label="Choisir un autre moyen de paiement"
-              className="-ml-2.5 flex h-11 w-11 items-center justify-center rounded-full text-white/80 no-underline transition-colors hover:bg-white/10 hover:text-white"
+              href="/membre/cotisations"
+              className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-[10px] bg-[#1e2d6b] px-6 text-[15px] font-bold text-white no-underline hover:bg-[#15204f]"
             >
-              <ChevronLeft size={20} />
+              Revenir aux factures <ArrowRight size={17} />
             </Link>
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-white">
-              <Image
-                src="/marque/logo-vertical.png"
-                alt=""
-                width={760}
-                height={547}
-                className="h-7 w-auto object-contain"
-              />
-            </span>
-            <span className="text-[15px] font-bold">CanCham Madagascar</span>
           </div>
-
-          <p className="m-0 mt-10 text-[16px] text-white/75">
-            Régler votre facture
-          </p>
-          <p className="m-0 mt-1 flex items-end gap-2.5">
-            <span className="text-[40px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
-              {chiffre} {code}
-            </span>
-            <span className="pb-1 text-[12px] leading-tight text-white/70">
-              une
-              <br />
-              fois
-            </span>
-          </p>
-
-          {/*
-            Une seule devise : Vanilla Pay n'encaisse que l'Ariary. Une carte
-            étrangère passe quand même — c'est sa banque qui convertit.
-          */}
-          <span className="mt-7 inline-flex items-center gap-2.5 rounded-[var(--radius-m)] border border-white px-3.5 py-2 text-[14px] font-bold">
-            <span className="rounded-[4px] bg-[#f5d27a] px-1.5 text-[12px] font-extrabold text-[var(--marque-nuit)]">
-              Ar
-            </span>
-            {code}
-          </span>
-          <p className="m-0 mt-3 text-[13px] leading-snug text-white/70">
-            Le règlement est prélevé en Ariary. Une carte étrangère est acceptée
-            ; votre banque peut appliquer des frais de change.
-          </p>
-
-          <dl className="m-0 mt-9 text-[14px]">
-            <div className="flex items-start justify-between gap-4 border-b border-white/12 pb-3.5">
-              <dt className="min-w-0">
-                <span className="block font-bold">{objet}</span>
-                {numeroFacture ? (
-                  <span className="mt-0.5 block text-[12.5px] text-white/65">
-                    Facture {numeroFacture}
-                  </span>
-                ) : null}
-              </dt>
-              <dd className="m-0 shrink-0 font-bold tabular-nums">{somme}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-white/12 py-3.5">
-              <dt className="font-bold">Sous-total</dt>
-              <dd className="m-0 font-bold tabular-nums">{somme}</dd>
-            </div>
-            <div className="flex justify-between gap-4 border-b border-white/12 py-3.5 text-white/70">
-              <dt>Frais prélevés par la CanCham</dt>
-              <dd className="m-0 tabular-nums">0 Ar</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-4 pt-3.5">
-              <dt className="text-[16px] font-bold">Total à régler</dt>
-              <dd className="m-0 text-[18px] font-extrabold text-[#f5d27a] tabular-nums">
-                {somme}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </aside>
-
-      {/* ---------- Ce qu'il faut remplir ---------- */}
-      <section className="px-6 py-9 sm:px-10 lg:py-14">
-        <div className="mx-auto max-w-[380px]">
-          {encaisse ? (
-            <div className="text-center lg:pt-16">
-              <CheckCircle2
-                size={44}
-                aria-hidden
-                className="mx-auto text-success"
-              />
-              <h1 className="m-0 mt-4 text-[24px] font-bold">
-                Règlement encaissé
+        ) : (
+          <form action={payerParCarte} className="px-6 py-6 sm:px-8">
+            <input type="hidden" name="reglementId" value={reglementId} />
+            <div className="flex items-center justify-between gap-4">
+              <h1 className="m-0 text-[18px] font-bold leading-snug text-[#1e2d6b]">
+                Paiement sécurisé par carte
               </h1>
-              <p className="m-0 mt-2 text-[15px] leading-relaxed text-muted">
-                Le prestataire a confirmé votre paiement de {somme}. Il n’y a
-                plus rien à faire.
-              </p>
-              <Link
-                href="/membre/cotisations"
-                className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-[var(--radius-m)] bg-accent px-6 text-[15px] font-bold text-white no-underline hover:bg-accent-strong"
-              >
-                Revenir aux factures <ArrowRight size={17} />
-              </Link>
+              <Image
+                src="/paiement/carte.jpeg"
+                alt="CB, Mastercard et Visa"
+                width={738}
+                height={363}
+                className="h-8 w-auto shrink-0 object-contain"
+              />
             </div>
-          ) : (
-            <form action={payerParCarte}>
-              <input type="hidden" name="reglementId" value={reglementId} />
-              <h1 className="sr-only">Payer par carte bancaire</h1>
 
-              <p className="m-0 mb-2 text-[15px] font-bold text-ink">
-                Montant à régler
+            {/*
+              À la place des champs de la carte : ce qui se passera, et
+              pourquoi on ne les tape pas ici.
+            */}
+            <div className="mt-4 flex gap-3 rounded-[10px] border border-[#d8def0] bg-[#f3f5fb] px-4 py-3.5">
+              <CreditCard
+                size={20}
+                aria-hidden
+                className="mt-0.5 shrink-0 text-[#1e2d6b]"
+              />
+              <p className="m-0 text-[14px] leading-snug text-[#33415f]">
+                <b className="text-[#1e2d6b]">
+                  Numéro de carte, expiration et code de sécurité
+                </b>{" "}
+                se saisissent à l’étape suivante, sur la page sécurisée de
+                Vanilla Pay. La CanCham ne les voit jamais.
               </p>
-              {/* Le montant de la facture : lisible, pas modifiable. */}
-              <div className="flex min-h-14 items-center justify-between rounded-[var(--radius-m)] border border-line bg-surface px-4">
-                <output className="text-[22px] font-bold text-ink tabular-nums">
-                  {chiffre}
-                </output>
-                <span className="text-[15px] font-semibold text-muted">
-                  {code}
-                </span>
-              </div>
+            </div>
 
-              <p className="m-0 mb-2 mt-7 text-[15px] font-bold text-ink">
-                Coordonnées
-              </p>
-              <div className="flex min-h-12 items-center gap-4 rounded-[var(--radius-m)] border border-line bg-surface-2 px-4 text-[15px]">
-                <span className="text-muted">E-mail</span>
-                <span className="min-w-0 truncate text-ink">{email}</span>
-              </div>
-
-              <p className="m-0 mb-2 mt-7 text-[15px] font-bold text-ink">
-                Moyen de paiement
-              </p>
-              <div className="rounded-[var(--radius-m)] border border-line p-4">
-                <div className="flex items-center gap-2.5">
-                  <CreditCard size={19} aria-hidden className="text-ink" />
-                  <span className="flex-1 text-[16px] font-semibold text-ink">
-                    Carte
-                  </span>
-                  <Image
-                    src="/paiement/carte.jpeg"
-                    alt="CB, Mastercard et Visa"
-                    width={738}
-                    height={363}
-                    className="h-7 w-auto object-contain"
-                  />
-                </div>
-
-                <p className="m-0 mt-3.5 flex gap-2.5 rounded-[var(--radius-m)] bg-[#eef2f7] px-3.5 py-3 text-[13.5px] leading-snug text-[#33414f]">
-                  <Lock size={15} aria-hidden className="mt-0.5 shrink-0" />
-                  <span>
-                    Vous serez conduit vers la page sécurisée de notre
-                    prestataire : c’est là que vous saisissez votre carte. La
-                    CanCham ne voit ni ne conserve jamais son numéro.
-                  </span>
-                </p>
-
-                <div className="mt-4">
-                  <label
-                    htmlFor="titulaire-carte"
-                    className="mb-1.5 block text-[14px] font-semibold text-ink"
-                  >
-                    Nom du titulaire de la carte
-                  </label>
-                  <input
-                    id="titulaire-carte"
-                    name="titulaire"
-                    required
-                    maxLength={80}
-                    autoComplete="cc-name"
-                    defaultValue={titulaire}
-                    placeholder="Tel qu’il figure sur la carte"
-                    className="min-h-12 w-full rounded-[var(--radius-m)] border border-line bg-surface px-4 text-[16px] text-ink placeholder:text-faint focus:border-accent focus:outline-none"
-                  />
-                </div>
-
-                <div className="mt-4">
-                  <AdresseFacturation initiale={adresse} />
-                </div>
-              </div>
-
-              <BoutonMarque
-                enCours="Redirection…"
-                className="mt-6 min-h-[52px] w-full rounded-[var(--radius-m)] shadow-[0_10px_24px_-12px_rgba(200,16,46,0.6)]"
+            <div className="mt-5">
+              <label
+                htmlFor="titulaire-carte"
+                className="mb-1.5 block text-[15px] font-semibold text-ink"
               >
-                <Lock size={17} aria-hidden /> Payer {somme}
-              </BoutonMarque>
-              <div className="mt-4 text-center">
-                <Link
-                  href="/membre/cotisations"
-                  className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
-                >
-                  Payer plus tard
-                </Link>
-              </div>
-              {raccorde ? null : (
-                <p className="m-0 mt-5 text-center text-[12.5px] leading-snug text-muted">
-                  Le raccordement au prestataire est en cours de mise en place.
-                </p>
-              )}
-            </form>
-          )}
-        </div>
+                Nom du titulaire
+              </label>
+              <input
+                id="titulaire-carte"
+                name="titulaire"
+                required
+                maxLength={80}
+                autoComplete="cc-name"
+                defaultValue={titulaire}
+                placeholder="Nom figurant sur la carte"
+                className="min-h-12 w-full rounded-[10px] border border-[#cfd6e4] bg-surface px-4 text-[16px] text-ink placeholder:text-faint focus:border-[#1e2d6b] focus:outline-none"
+              />
+            </div>
+
+            <div className="mt-6 flex items-baseline justify-between gap-4 border-t border-line pt-5">
+              <span className="text-[17px] font-bold text-[#1e2d6b]">
+                Total à payer
+              </span>
+              <span className="text-[24px] font-extrabold text-ink tabular-nums">
+                {somme}
+              </span>
+            </div>
+
+            <BoutonMarque
+              enCours="Redirection…"
+              className="mt-5 min-h-[54px] w-full rounded-[10px] text-[17px]"
+            >
+              Payer {somme}
+            </BoutonMarque>
+            <p className="m-0 mt-4 flex items-center justify-center gap-2 text-[14px] text-muted">
+              <Lock size={15} aria-hidden className="text-[#b8860b]" />
+              Paiement sécurisé
+            </p>
+            {raccorde ? null : (
+              <p className="m-0 mt-2 text-center text-[12.5px] leading-snug text-muted">
+                Le raccordement au prestataire est en cours de mise en place.
+              </p>
+            )}
+          </form>
+        )}
       </section>
+      <p className="m-0 mt-4 text-center text-[12.5px] text-muted">
+        Paiement opéré par Vanilla Pay International
+      </p>
     </div>
   );
 }

@@ -21,9 +21,9 @@ const texte = (fd: FormData, k: string) =>
  * règlement appartient bien à qui paie, qu'il est en carte, pas déjà
  * encaissé, et en Ariary — Vanilla Pay n'encaisse pas le dollar canadien.
  *
- * Le titulaire et l'adresse de facturation sont gardés avec le règlement :
- * c'est ce que la banque du membre compare, et ce que l'équipe regarde le
- * jour où un paiement est contesté.
+ * Le nom du titulaire est gardé avec le règlement : c'est ce que l'équipe
+ * regarde le jour où un paiement est contesté. Le numéro de la carte, lui,
+ * ne passe jamais par ici — il se saisit chez le prestataire.
  *
  * Chaque tentative prend une référence neuve. Un prestataire refuse souvent
  * de rouvrir une référence déjà envoyée — et c'est elle, et elle seule, qui
@@ -53,18 +53,14 @@ export async function payerParCarte(formData: FormData) {
   }
 
   const titulaire = texte(formData, "titulaire").slice(0, 80);
-  const adresse = texte(formData, "adresse").slice(0, 200);
   if (!titulaire) {
     redirectWithErreur(page, "Indiquez le nom du titulaire de la carte.");
-  }
-  if (!adresse) {
-    redirectWithErreur(page, "Indiquez l’adresse de facturation.");
   }
 
   const reference = referenceReglement();
   await prisma.paiement.update({
     where: { id: p.id },
-    data: { reference, statut: "en_cours", detail: { titulaire, adresse } },
+    data: { reference, statut: "en_cours", detail: { titulaire } },
   });
 
   // Sans les clés du prestataire, la saisie est gardée — le membre n'aura
