@@ -67,7 +67,24 @@ const nextConfig: NextConfig = {
             },
           ]),
     ];
-    return [{ source: "/:chemin*", headers: entetes }];
+    return [
+      { source: "/:chemin*", headers: entetes },
+      {
+        // Le service worker de l'application : jamais mis en cache, pour
+        // qu'une nouvelle version remplace l'ancienne dès la visite suivante.
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
+    ];
   },
 
   /**

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { EnregistrementApplication } from "@/components/Application";
 import { RetoursFormulaire } from "@/components/Mouvement";
 import { Toast } from "@/components/Toast";
 import {
@@ -84,6 +85,19 @@ export const metadata: Metadata = {
   },
   description:
     "Le réseau des entreprises du Canada et de Madagascar : événements, mises en relation et accompagnement à l’export.",
+  // L'application installée : son nom sous l'icône, et l'écran d'accueil
+  // d'un iPhone qui l'ouvre sans barre d'adresse.
+  applicationName: "CanCham Connect",
+  appleWebApp: {
+    capable: true,
+    title: "CanCham",
+    statusBarStyle: "default",
+  },
+};
+
+/** Le bleu de la barre supérieure, prolongé par la barre d'état du téléphone. */
+export const viewport: Viewport = {
+  themeColor: "#0f1d2c",
 };
 
 export default function RootLayout({
@@ -111,6 +125,7 @@ export default function RootLayout({
           <Toast />
           <RetoursFormulaire />
         </Suspense>
+        <EnregistrementApplication />
       </body>
     </html>
   );

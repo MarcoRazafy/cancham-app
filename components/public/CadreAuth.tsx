@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { LienSite } from "@/components/Application";
 import { LogoOfficiel } from "@/components/public/Marque";
 
 /**
@@ -64,13 +64,9 @@ export function CadreAuth({
         <div className="absolute inset-x-0 top-0 h-[28%] bg-linear-to-b from-marque-nuit/45 to-transparent" />
 
         <div className="sur-sombre relative h-full flex flex-col justify-between p-10 xl:p-14">
-          <Link
-            href="/"
-            aria-label="CanCham Connect"
-            className="apparition inline-block"
-          >
+          <LienSite className="apparition inline-block">
             <LogoOfficiel version="blanc" className="w-[250px] h-auto" />
-          </Link>
+          </LienSite>
 
           <div>
             <span
@@ -139,13 +135,9 @@ export function CadreAuth({
                 back-office. Le logo n'apparaît que sous 1024 px : au-dessus,
                 il est déjà sur la photo, et le répéter ferait doublon. */}
             <div className="carte-filet filet-fixe filet-degrade rounded-[var(--radius-l)] border border-line bg-surface shadow-[0_18px_44px_-24px_rgb(15_29_44/0.35)] px-6 py-8 sm:px-10 sm:py-11">
-              <Link
-                href="/"
-                aria-label="CanCham Connect"
-                className="lg:hidden block mb-6"
-              >
+              <LienSite className="lg:hidden block mb-6">
                 <LogoOfficiel className="w-[178px] h-auto" priority />
-              </Link>
+              </LienSite>
               {children}
             </div>
           </main>

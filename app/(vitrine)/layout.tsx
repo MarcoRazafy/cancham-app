@@ -1,3 +1,4 @@
+import { RenvoiApplication } from "@/components/Application";
 import { BulleAssistance } from "@/components/public/BulleAssistance";
 import { EnTetePublique, PiedPublique } from "@/components/public/CadreVitrine";
 import "./vitrine.css";
@@ -20,7 +21,10 @@ export default function VitrineLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="marque min-h-screen flex flex-col">
+    // Dans l'application installée, la vitrine ne se montre pas : elle reste
+    // invisible le temps que `RenvoiApplication` mène vers l'espace membre.
+    <div className="marque min-h-screen flex flex-col [@media(display-mode:standalone)]:invisible">
+      <RenvoiApplication />
       <div className="vitrine-sombre flex flex-col min-h-screen">
         <EnTetePublique />
         {children}
