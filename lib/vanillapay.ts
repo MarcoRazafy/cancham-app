@@ -1,5 +1,6 @@
 import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { estPortefeuille, type ModeReglement } from "@/lib/modes-reglement";
 
 /**
  * Vanilla Pay International — l'encaissement en ligne des cotisations.
@@ -30,6 +31,19 @@ export const MODES_PAIEMENT: Record<ModePaiement, string> = {
 
 export function estModePaiement(v: string): v is ModePaiement {
   return v === "international" || v === "mobile_money";
+}
+
+/**
+ * Notre moyen de règlement, dit dans le vocabulaire du prestataire.
+ *
+ * Vanilla Pay ne connaît que deux canaux : la carte et le portefeuille
+ * mobile — l'opérateur se choisit sur leur page. Nous, nous gardons le
+ * moyen exact que le membre a coché, pour que l'équipe sache où chercher.
+ * `null` : ce moyen ne passe pas par eux.
+ */
+export function canalVanillaPay(mode: ModeReglement): ModePaiement | null {
+  if (mode === "carte") return "international";
+  return estPortefeuille(mode) ? "mobile_money" : null;
 }
 
 interface Config {

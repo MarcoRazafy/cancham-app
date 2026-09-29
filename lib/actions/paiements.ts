@@ -6,11 +6,12 @@ import { redirectWithErreur } from "@/lib/flash";
 import { getCurrentUser } from "@/lib/session";
 import { baseSite } from "@/lib/site";
 import {
-  estModePaiement,
+  canalVanillaPay,
   ouvrirPaiement,
   referencePaiement,
   vanillaPayActif,
 } from "@/lib/vanillapay";
+import { estModeReglement } from "@/lib/modes-reglement";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -30,8 +31,13 @@ export async function payerEnLigne(formData: FormData) {
   const retour = "/membre/cotisations";
 
   const mode = texte(formData, "mode");
-  if (!estModePaiement(mode)) {
+  if (!estModeReglement(mode)) {
     redirectWithErreur(retour, "Choisissez un moyen de paiement.");
+  }
+  // Le canal chez eux ; le moyen exact reste le nôtre, dans la ligne.
+  const canal = canalVanillaPay(mode);
+  if (!canal) {
+    redirectWithErreur(retour, "Ce moyen ne se règle pas en ligne.");
   }
   if (!vanillaPayActif()) {
     redirectWithErreur(retour, "Le paiement en ligne n’est pas disponible.");
@@ -82,7 +88,7 @@ export async function payerEnLigne(formData: FormData) {
     montant: f.montant,
     reference,
     libelle: `${f.objet} — facture ${f.numero}`,
-    mode,
+    mode: canal,
     notifUrl: `${base}/api/paiements/vanillapay`,
     redirectUrl: `${base}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
   });

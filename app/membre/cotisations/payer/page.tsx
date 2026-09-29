@@ -1,19 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CreditCard } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { SubmitButton } from "@/components/form-bits";
+import { IconeMode } from "@/components/paiement/IconeMode";
 import { Card, EmptyState, ViewHead } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { fmtMontant } from "@/lib/membership";
-import {
-  getCoordonneesPaiement,
-  modeDisponible,
-  MODES,
-  ORDRE_MODES,
-} from "@/lib/reglements";
+import { MODES, modesProposes } from "@/lib/reglements";
 import { ouvrirReglement } from "@/lib/actions/reglements";
 import { getCurrentUser } from "@/lib/session";
-import { vanillaPayActif } from "@/lib/vanillapay";
 
 /**
  * Le choix du moyen de paiement.
@@ -44,11 +39,7 @@ export default async function ChoisirMoyen({
   });
   if (!f || !user.memberId || f.memberId !== user.memberId) notFound();
 
-  const [c, enLigne] = await Promise.all([
-    getCoordonneesPaiement(),
-    Promise.resolve(vanillaPayActif()),
-  ]);
-  const proposes = ORDRE_MODES.filter((m) => modeDisponible(m, c, enLigne));
+  const proposes = await modesProposes();
 
   return (
     <>
@@ -82,7 +73,7 @@ export default async function ChoisirMoyen({
                 pendingLabel="…"
               >
                 <span className="flex items-center gap-2 text-[14.5px] font-semibold text-ink">
-                  <CreditCard size={16} className="text-accent" />
+                  <IconeMode mode={m} />
                   {MODES[m].titre}
                 </span>
                 <span className="text-[12.4px] font-normal leading-snug text-muted">
