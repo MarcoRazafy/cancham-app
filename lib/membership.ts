@@ -152,6 +152,16 @@ export const PAGES_TOUJOURS_OUVERTES = [
 /** Statuts pour lesquels l'adhésion n'est pas encore effective. */
 export const ADHESION_PENDING: MemberStatus[] = ["candidature", "en_attente"];
 
+/**
+ * Les statuts qui ne paraissent nulle part côté membre : ni dans l'annuaire,
+ * ni dans les chiffres publics, ni dans une liste de choix.
+ *
+ * Une demande à l'examen n'est pas encore une adhérente ; une demande
+ * refusée ne l'a jamais été. Les deux gardent leur dossier au back-office —
+ * et rien de plus.
+ */
+export const HORS_ANNUAIRE: MemberStatus[] = ["candidature", "refusee"];
+
 /** Nombre de jours écoulés depuis la bascule en retard. 0 si le membre est à jour. */
 export function joursDeRetard(m: Member | null | undefined): number {
   if (!m?.retardDepuis) return 0;

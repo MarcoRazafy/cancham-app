@@ -7,6 +7,7 @@ import {
   ImagePlus,
   Pencil,
   Plus,
+  RotateCcw,
   Send,
   Trash2,
   X,
@@ -38,6 +39,7 @@ import {
   modifierDateAdhesion,
   modifierFormule,
   registerPayment,
+  reconsidererCandidature,
   rejectCandidature,
   renvoyerInvitation,
   sendReminder,
@@ -424,15 +426,61 @@ export function RejectButton({
           <input type="hidden" name="memberId" value={memberId} />
           <ModalBody>
             <p className="text-[13.6px] text-muted m-0">
-              La candidature de <b className="text-ink">{nom}</b> sera
-              supprimée. Le refus est consigné dans le journal, mais la fiche ne
-              sera pas récupérable.
+              La demande de <b className="text-ink">{nom}</b> passe en « refusée
+              ». Le dossier reste au back-office, sous l’onglet du même nom :
+              rien n’en paraît côté membre, et son auteur ne peut pas ouvrir de
+              session. Vous pourrez revenir sur ce refus, ou supprimer la fiche
+              pour de bon.
             </p>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
             <SubmitButton variant="danger" pendingLabel="Refus…">
-              <X size={14} /> Refuser définitivement
+              <X size={14} /> Refuser la demande
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+/**
+ * Revenir sur un refus.
+ *
+ * Une décision prise trop vite, un dossier complété depuis : la demande
+ * repart à l'examen sans qu'on ait à la ressaisir.
+ */
+export function ReconsidererButton({
+  memberId,
+  nom,
+}: {
+  memberId: string;
+  nom: string;
+}) {
+  return (
+    <Modal
+      title="Reconsidérer la demande"
+      trigger={(ouvrir) => (
+        <button onClick={ouvrir} className="btn-contour btn-contour-sm">
+          <RotateCcw size={14} /> Reconsidérer
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={reconsidererCandidature}>
+          <input type="hidden" name="memberId" value={memberId} />
+          <ModalBody>
+            <p className="m-0 text-[13.6px] text-muted">
+              La demande de <b className="text-ink">{nom}</b> repasse à
+              l’examen, avec tout ce qu’elle contenait. Vous pourrez la valider
+              ou la refuser de nouveau.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="…">
+              <RotateCcw size={14} /> Remettre à l’examen
             </SubmitButton>
           </ModalFooter>
         </form>

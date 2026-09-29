@@ -87,6 +87,14 @@ export async function connexion(formData: FormData) {
   // Une candidature à l'examen n'ouvre pas encore de session. On ne le dit
   // qu'une fois le mot de passe vérifié : l'état d'une demande ne regarde
   // que son auteur.
+  if (u.role === "membre" && u.member?.statut === "refusee") {
+    oublier(`connexion:${origine}:${email}`);
+    echec(
+      "Votre demande d’adhésion n’a pas été retenue. Écrivez à la chambre si vous pensez qu’il s’agit d’une erreur.",
+      email,
+    );
+  }
+
   if (u.role === "membre" && u.member?.statut === "candidature") {
     oublier(`connexion:${origine}:${email}`);
     redirect(`/auth?${new URLSearchParams({ attente: "1", email })}`);

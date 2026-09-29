@@ -14,6 +14,7 @@ import type { Devise, FormuleId } from "@/lib/membership";
 /** Statut d'adhésion d'un membre. Pilote l'accès à toute l'application. */
 export type MemberStatus =
   | "candidature" // demande déposée, pas encore examinée
+  | "refusee" // demande écartée par l'équipe ; le dossier reste, l'accès non
   | "en_attente" // approuvée, en attente du paiement de la cotisation
   | "a_jour" // cotisation réglée
   | "en_retard"; // cotisation non renouvelée

@@ -86,6 +86,7 @@ const STATUS_LABELS: Record<
   en_attente: "En attente de paiement",
   en_retard: "En retard",
   candidature: "Nouvelle demande",
+  refusee: "Refusée",
   payee: "Payée",
   envoyee: "Envoyée",
   confirmé: "Confirmé",

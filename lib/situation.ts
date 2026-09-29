@@ -30,6 +30,12 @@ export function situation(m: Member): Situation {
         action: "Examiner",
         urgent: false,
       };
+    case "refusee":
+      return {
+        detail: `Demande refusée · déposée le ${fmtDate(m.adhesion, { day: "numeric", month: "long" })}`,
+        action: null,
+        urgent: false,
+      };
     case "en_attente":
       return {
         detail: m.formule

@@ -22,6 +22,7 @@ datasource db {
 /// Statut d'adhésion. Pilote l'accès à toute l'application.
 enum MemberStatus {
   candidature // demande déposée, pas encore examinée
+  refusee // demande écartée par l'équipe ; le dossier reste, l'accès non
   en_attente // approuvée, en attente du paiement
   a_jour // cotisation réglée
   en_retard // cotisation non renouvelée

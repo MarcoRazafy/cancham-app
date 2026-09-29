@@ -16,6 +16,7 @@ export const STATUTS_FILTRE: { cle: MemberStatus | "tous"; libelle: string }[] =
     { cle: "en_retard", libelle: "En retard" },
     { cle: "en_attente", libelle: "Paiement attendu" },
     { cle: "candidature", libelle: "Demandes" },
+    { cle: "refusee", libelle: "Refusées" },
   ];
 
 export interface FiltresMembres {

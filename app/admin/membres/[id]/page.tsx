@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Building2,
   CheckCircle2,
+  X,
   ExternalLink,
   Globe,
   User as UserIcon,
@@ -36,6 +37,7 @@ import {
   RemoveContactButton,
   SupprimerServiceButton,
   RegisterPaymentButton,
+  ReconsidererButton,
   RejectButton,
   ReminderButton,
   RenvoyerInvitationButton,
@@ -438,6 +440,17 @@ export default async function AdminMembreDetail({
                     large
                   />
                   <RejectButton memberId={m.id} nom={m.nom} />
+                </>
+              ) : m.statut === "refusee" ? (
+                // Demande écartée : le dossier reste, et la décision peut se
+                // revoir. La suppression définitive est plus bas, avec les
+                // autres opérations irréversibles.
+                <>
+                  <p className="m-0 flex items-center gap-2 rounded-[var(--radius-s)] bg-bad-soft px-3 py-2.5 text-[13px] text-bad">
+                    <X size={16} className="shrink-0" />
+                    Demande refusée : rien n’en paraît côté membre.
+                  </p>
+                  <ReconsidererButton memberId={m.id} nom={m.nom} />
                 </>
               ) : m.statut === "a_jour" ? (
                 // Cotisation réglée : rien à encaisser. Le bouton revient de

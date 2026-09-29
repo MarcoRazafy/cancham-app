@@ -262,6 +262,15 @@ export async function donnerAcces(formData: FormData) {
   redirectWithFlash(retour, message);
 }
 
+/**
+ * Demande écartée.
+ *
+ * Le dossier reste, avec le statut `refusee` : l'équipe doit pouvoir revoir
+ * ce qu'elle a écarté, et revenir sur sa décision. Il ne paraît nulle part
+ * côté membre — ni annuaire, ni chiffres publics — et son auteur ne peut pas
+ * ouvrir de session. Pour l'effacer vraiment, la suppression définitive
+ * reste disponible depuis sa fiche.
+ */
 export async function rejectCandidature(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -269,18 +278,59 @@ export async function rejectCandidature(formData: FormData) {
     where: { id },
     select: { nom: true },
   });
+  if (!m) redirectWithErreur("/admin/membres", "Demande introuvable.");
+
+  await prisma.member.update({ where: { id }, data: { statut: "refusee" } });
   await journal(
     "candidature_refusee",
     "Member",
     id,
     await acteurEquipe(),
-    `Demande de ${m?.nom ?? id} refusée.`,
+    `Demande de ${m.nom} refusée.`,
   );
-  await prisma.member.delete({ where: { id } });
   revalideTout();
   redirectWithFlash(
-    "/admin/membres",
-    `Demande de ${m?.nom ?? "ce candidat"} refusée`,
+    "/admin/membres?statut=refusee",
+    `Demande de ${m.nom} refusée`,
+  );
+}
+
+/**
+ * Revenir sur un refus : le dossier repart à l'examen.
+ *
+ * Une décision prise trop vite, un dossier complété depuis — il ne faut pas
+ * avoir à ressaisir la demande pour la reconsidérer.
+ */
+export async function reconsidererCandidature(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "memberId");
+  const m = await prisma.member.findUnique({
+    where: { id },
+    select: { nom: true, statut: true },
+  });
+  if (!m) redirectWithErreur("/admin/membres", "Demande introuvable.");
+  if (m.statut !== "refusee") {
+    redirectWithErreur(
+      `/admin/membres/${id}`,
+      "Cette demande n’est pas refusée.",
+    );
+  }
+
+  await prisma.member.update({
+    where: { id },
+    data: { statut: "candidature" },
+  });
+  await journal(
+    "candidature_deposee",
+    "Member",
+    id,
+    await acteurEquipe(),
+    `Demande de ${m.nom} remise à l’examen.`,
+  );
+  revalideTout();
+  redirectWithFlash(
+    `/admin/membres/${id}`,
+    `Demande de ${m.nom} remise à l’examen`,
   );
 }
 

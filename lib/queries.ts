@@ -6,6 +6,7 @@ import {
   fmtMontant,
   RETARD_BLOCAGE_JOURS,
   type FormuleId,
+  HORS_ANNUAIRE,
 } from "@/lib/membership";
 import {
   ajouterJours,
@@ -47,6 +48,7 @@ import type {
   Offer,
   Registration,
   DossierRessource,
+  MemberStatus,
   MaillonDossier,
   Resource,
   Space,
@@ -70,7 +72,7 @@ type MembreRow = {
   nom: string;
   secteur: string;
   ville: string;
-  statut: "candidature" | "en_attente" | "a_jour" | "en_retard";
+  statut: MemberStatus;
   formule: FormuleId | null;
   adhesion: Date;
   retardDepuis: Date | null;
@@ -144,7 +146,7 @@ export async function getMembers(): Promise<Member[]> {
 /** Les membres visibles dans l'annuaire : une candidature n'en est pas encore un. */
 export async function getMembresAnnuaire(): Promise<Member[]> {
   const rows = await prisma.member.findMany({
-    where: { statut: { not: "candidature" } },
+    where: { statut: { notIn: HORS_ANNUAIRE } },
     include: membreInclude,
     orderBy: { nom: "asc" },
   });
@@ -1358,9 +1360,7 @@ export async function rechercher(
     await Promise.all([
       prisma.member.findMany({
         where: {
-          ...(space === "admin"
-            ? {}
-            : { statut: { not: "candidature" as const } }),
+          ...(space === "admin" ? {} : { statut: { notIn: HORS_ANNUAIRE } }),
           OR: [
             { nom: like },
             { secteur: like },
@@ -1504,9 +1504,9 @@ export interface StatsPubliques {
  */
 export async function getStatsPubliques(): Promise<StatsPubliques> {
   const [membres, groupes, evenements] = await Promise.all([
-    prisma.member.count({ where: { statut: { not: "candidature" } } }),
+    prisma.member.count({ where: { statut: { notIn: HORS_ANNUAIRE } } }),
     prisma.member.findMany({
-      where: { statut: { not: "candidature" } },
+      where: { statut: { notIn: HORS_ANNUAIRE } },
       select: { secteur: true, ville: true },
     }),
     prisma.event.count({ where: { date: { gte: jourBase() }, public: true } }),
