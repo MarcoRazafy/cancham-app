@@ -55,7 +55,12 @@ const RES_CAT = {
   Rapport: "rapport",
 } as const;
 
-const RES_FMT = { PDF: "pdf", DOCX: "docx", Vidéo: "video" } as const;
+const RES_FMT = {
+  PDF: "pdf",
+  DOCX: "docx",
+  Vidéo: "video",
+  Photo: "image",
+} as const;
 
 /* ---- Participants aux événements ---- */
 

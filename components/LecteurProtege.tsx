@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
-import { FILIGRANE } from "@/lib/coordonnees";
 
 /**
  * Lecteur de ressource, dans la plateforme.
@@ -13,9 +12,8 @@ import { FILIGRANE } from "@/lib/coordonnees";
  * fuite traçable ; cela ne la rend pas impossible.
  *
  * Côté serveur, déjà : le fichier ne quitte jamais le stockage. Un document
- * arrive ici page par page, en images filigranées à la marque CanCham, sans
- * couche de texte à sélectionner. Une vidéo arrive par morceaux, sans lien de
- * téléchargement.
+ * arrive ici page par page, en images, sans couche de texte à sélectionner.
+ * Une vidéo arrive par morceaux, sans lien de téléchargement.
  *
  * Côté navigateur, ce composant ajoute :
  *  - pas de menu contextuel, pas de glisser-déposer, pas de sélection ;
@@ -23,8 +21,7 @@ import { FILIGRANE } from "@/lib/coordonnees";
  *  - rien à l'impression ;
  *  - le contenu se floute quand la fenêtre perd le focus — le geste qui
  *    précède la plupart des outils de capture ;
- *  - sur la vidéo, pas de bouton de téléchargement ni d'image dans l'image,
- *    et un filigrane qui se déplace pour ne pas pouvoir être masqué d'un bloc.
+ *  - sur la vidéo, pas de bouton de téléchargement ni d'image dans l'image.
  */
 export function LecteurProtege({ children }: { children: ReactNode }) {
   const [masque, setMasque] = useState(false);
@@ -63,8 +60,7 @@ export function LecteurProtege({ children }: { children: ReactNode }) {
     <div className="lecteur-protege">
       <div className="flex items-center gap-2 text-[12.4px] text-muted mb-3">
         <ShieldCheck size={15} className="text-success-strong shrink-0" />
-        Consultation réservée aux membres. Contenu protégé, filigrané{" "}
-        <b className="text-ink">CanCham</b>.
+        Consultation réservée aux membres. Contenu protégé.
       </div>
 
       <div
@@ -128,28 +124,11 @@ export function PagesDocument({
   );
 }
 
-/** Vidéo servie par morceaux, sans téléchargement, avec filigrane mobile. */
+/** Vidéo servie par morceaux, sans téléchargement. */
 export function VideoProtegee({ id, titre }: { id: string; titre: string }) {
-  const [position, setPosition] = useState(0);
-  const video = useRef<HTMLVideoElement>(null);
-
-  // Le filigrane change de coin régulièrement : masquer un coin fixe ne suffit pas.
-  useEffect(() => {
-    const t = setInterval(() => setPosition((p) => (p + 1) % 4), 7000);
-    return () => clearInterval(t);
-  }, []);
-
-  const coins = [
-    "top-3 left-3",
-    "top-3 right-3",
-    "bottom-14 right-3",
-    "bottom-14 left-3",
-  ];
-
   return (
     <div className="relative w-full max-w-[960px] mx-auto rounded-[var(--radius-m)] overflow-hidden bg-black">
       <video
-        ref={video}
         src={`/api/ressources/${id}/video`}
         controls
         controlsList="nodownload noremoteplayback noplaybackrate"
@@ -160,11 +139,6 @@ export function VideoProtegee({ id, titre }: { id: string; titre: string }) {
         aria-label={titre}
         className="block w-full h-auto"
       />
-      <span
-        className={`absolute ${coins[position]} pointer-events-none select-none text-[12px] font-semibold text-white/55 bg-black/25 rounded px-2 py-0.5 transition-all duration-700`}
-      >
-        {FILIGRANE}
-      </span>
     </div>
   );
 }

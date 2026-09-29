@@ -244,6 +244,7 @@ export function Visuel({
   icon,
   iconSize = 20,
   sizes = "400px",
+  cadrage = "object-center",
 }: {
   src?: string | null;
   alt: string;
@@ -252,6 +253,8 @@ export function Visuel({
   icon?: ReactNode;
   iconSize?: number;
   sizes?: string;
+  /** Quelle partie de l'image garder quand elle est rognée. */
+  cadrage?: "object-center" | "object-top";
 }) {
   if (!src) {
     return (
@@ -265,7 +268,13 @@ export function Visuel({
   }
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <Image src={src} alt={alt} fill sizes={sizes} className="object-cover" />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes={sizes}
+        className={`object-cover ${cadrage}`}
+      />
     </div>
   );
 }
@@ -963,12 +972,22 @@ export function ResourceCard({
       } h-full flex flex-col p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
     >
       <div className="relative">
+        {/*
+          La couverture est tirée du fichier : la première page d'un
+          document, calée en haut pour qu'on en lise le titre ; une image
+          de la vidéo ou la photo, centrée.
+        */}
         <Visuel
           src={resource.cover}
           alt=""
           seed={resource.id}
           className="h-[150px] w-full"
           sizes="(max-width: 768px) 100vw, 400px"
+          cadrage={
+            resource.fmt === "PDF" || resource.fmt === "DOCX"
+              ? "object-top"
+              : "object-center"
+          }
           icon={video ? <Play size={28} /> : <FileText size={28} />}
         />
         <div className="absolute top-2.5 left-2.5 bg-white rounded-[var(--radius-s)] px-2.5 py-[5px] text-center shadow-[var(--shadow)] min-w-[38px]">

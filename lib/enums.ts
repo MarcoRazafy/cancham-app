@@ -63,6 +63,7 @@ export const RESOURCE_FMT_LABEL: Record<DbResourceFormat, Resource["fmt"]> = {
   pdf: "PDF",
   docx: "DOCX",
   video: "Vidéo",
+  image: "Photo",
 };
 
 /** Les dates du modèle de vue sont des ISO courtes (YYYY-MM-DD). */

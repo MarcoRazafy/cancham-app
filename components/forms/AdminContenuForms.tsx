@@ -34,6 +34,7 @@ import {
   enregistrerRessource,
 } from "@/lib/actions/content";
 import { ChoixDiffusion } from "@/components/forms/ChoixDiffusion";
+import { CouvertureRessource } from "@/components/forms/CouvertureRessource";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
 
 const CATEGORIES: NewsCategory[] = [
@@ -350,7 +351,7 @@ export interface RessourceEditee {
   cat: string;
   type: "gratuit" | "payant";
   prix: number;
-  fmt: "pdf" | "docx" | "video";
+  fmt: "pdf" | "docx" | "video" | "image";
   taille: string;
   pret: boolean;
   pages: number | null;
@@ -384,13 +385,6 @@ export function FormulaireRessource({
       ) : null}
 
       <Card className="p-6 flex flex-col gap-4 min-w-0">
-        <ChampPhoto
-          name="cover"
-          retirer="retirerCover"
-          apercu={ressource?.cover}
-          libelle="Photo de la carte"
-          aide="Illustre la ressource dans la bibliothèque. Sans photo, un motif décoratif la remplace."
-        />
         <Field label="Titre">
           <input
             name="titre"
@@ -468,7 +462,7 @@ export function FormulaireRessource({
               className={`m-0 text-[13px] ${ressource.pret ? "text-success-strong" : "text-accent font-semibold"}`}
             >
               {ressource.pret
-                ? `Fichier actuel : ${ressource.fmt === "video" ? "vidéo" : `${ressource.fmt.toUpperCase()}, ${ressource.pages} page${(ressource.pages ?? 0) > 1 ? "s" : ""}`} · ${ressource.taille}`
+                ? `Fichier actuel : ${ressource.fmt === "video" ? "vidéo" : ressource.fmt === "image" ? "photo" : `${ressource.fmt.toUpperCase()}, ${ressource.pages} page${(ressource.pages ?? 0) > 1 ? "s" : ""}`} · ${ressource.taille}`
                 : "Aucun fichier lisible : les membres ne peuvent pas l’ouvrir."}
             </p>
           ) : null}
@@ -492,12 +486,12 @@ export function FormulaireRessource({
             >
               {trop
                 ? `Trop lourd : ${PLAFOND_MO} Mo au plus.`
-                : `PDF, DOCX ou vidéo MP4 · ${PLAFOND_MO} Mo au plus`}
+                : `PDF, DOCX, vidéo MP4 ou photo · ${PLAFOND_MO} Mo au plus`}
             </span>
             <input
               type="file"
               name="fichier"
-              accept="application/pdf,.docx,video/mp4"
+              accept="application/pdf,.docx,video/mp4,image/jpeg,image/png,image/webp"
               required={!ressource}
               className="sr-only"
               onChange={(e) => setFichier(e.target.files?.[0] ?? null)}
@@ -507,6 +501,7 @@ export function FormulaireRessource({
             Les documents sont convertis en pages images pour la lecture
             protégée : comptez quelques secondes, un peu plus pour un DOCX.
           </p>
+          <CouvertureRessource fichier={fichier} actuelle={ressource?.cover} />
         </Card>
 
         <SubmitButton

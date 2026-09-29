@@ -276,7 +276,7 @@ export interface Resource {
   id: string;
   titre: string;
   cat: ResourceCategory;
-  fmt: "PDF" | "DOCX" | "Vidéo";
+  fmt: "PDF" | "DOCX" | "Vidéo" | "Photo";
   taille: string;
   date: string;
   /** Accès inclus dans l'adhésion, ou facturé en supplément. */
