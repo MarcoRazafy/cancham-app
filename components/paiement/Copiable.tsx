@@ -37,9 +37,7 @@ export function Copiable({
   return (
     <div
       className={`flex items-center gap-3 rounded-[var(--radius-m)] border px-4 py-3 ${
-        accent
-          ? "border-accent/40 bg-accent-soft"
-          : "border-line bg-surface-2"
+        accent ? "border-accent/40 bg-accent-soft" : "border-line bg-surface-2"
       }`}
     >
       <div className="min-w-0 flex-1">
@@ -73,5 +71,48 @@ export function Copiable({
         )}
       </button>
     </div>
+  );
+}
+
+/**
+ * Le bouton « Copier » seul, pour les mises en page qui ne sont pas une
+ * ligne de coordonnées — le RIB dessiné comme une carte, le motif encadré.
+ */
+export function BoutonCopier({
+  valeur,
+  libelle,
+  texte = "Copier",
+  className = "",
+}: {
+  valeur: string;
+  /** Ce qu'on copie, pour les lecteurs d'écran : « le RIB », « le motif ». */
+  libelle: string;
+  texte?: string;
+  className?: string;
+}) {
+  const [copie, setCopie] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(valeur);
+          setCopie(true);
+          setTimeout(() => setCopie(false), 2000);
+        } catch {
+          // Presse-papier refusé : la valeur reste lisible et sélectionnable.
+        }
+      }}
+      aria-label={`Copier ${libelle}`}
+      className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border px-4 text-[14px] font-semibold transition-colors duration-200 ${className}`}
+    >
+      {copie ? (
+        <>
+          <Check size={15} aria-hidden /> Copié
+        </>
+      ) : (
+        texte
+      )}
+    </button>
   );
 }
