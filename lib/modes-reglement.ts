@@ -150,9 +150,7 @@ export function numeroPortefeuille(
  * Ce qu'il faut pour qu'un moyen soit proposable.
  *
  * La carte dépend du prestataire, pas de coordonnées saisies : c'est
- * `vanillaPayActif()` qui décide, ailleurs. Un portefeuille se contente d'un
- * numéro tant que l'encaissement automatique n'est pas branché — le membre
- * envoie, puis annonce son règlement.
+ * `vanillaPayActif()` qui décide, ailleurs.
  */
 export function modeDisponible(
   mode: ModeReglement,
@@ -162,10 +160,14 @@ export function modeDisponible(
   switch (mode) {
     case "carte":
       return enLigneActif;
+    // Les trois portefeuilles sont toujours offerts : la chambre les a tous,
+    // et le membre choisit celui qu'il a en poche. Si le numéro de la
+    // chambre n'est pas encore publié, l'écran du règlement le dit — ce qui
+    // vaut mieux qu'une tuile disparue, que personne ne sait expliquer.
     case "mvola":
     case "orange_money":
     case "airtel_money":
-      return enLigneActif || Boolean(numeroPortefeuille(mode, c));
+      return true;
     case "virement":
       return Boolean(c.rib || c.iban);
     case "depot":

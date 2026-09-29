@@ -13,6 +13,12 @@ import {
   referenceReglement,
   type ModeReglement,
 } from "@/lib/reglements";
+import {
+  estPortefeuilleConnu,
+  normaliserNumero,
+  numeroDeLOperateur,
+  PORTEFEUILLES,
+} from "@/lib/portefeuilles";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -130,6 +136,56 @@ export async function ouvrirReglement(formData: FormData) {
     }));
 
   redirect(`/membre/cotisations/payer/${p.id}`);
+}
+
+/**
+ * Le numéro depuis lequel le membre va payer, dans un portefeuille mobile.
+ *
+ * Il est vérifié contre les préfixes de l'opérateur : une ligne Orange ne
+ * peut pas envoyer de MVola, et découvrir l'erreur sur le téléphone, le
+ * montant déjà saisi, est une perte de temps pour tout le monde. Le numéro
+ * sert ensuite à l'équipe pour reconnaître l'envoi qui arrive.
+ */
+export async function enregistrerNumeroPortefeuille(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const id = texte(formData, "reglementId");
+
+  const p = await prisma.paiement.findUnique({
+    where: { id },
+    select: { id: true, memberId: true, mode: true, statut: true },
+  });
+  if (!p || !user.memberId || p.memberId !== user.memberId) {
+    redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
+  }
+  const retour = `/membre/cotisations/payer/${p.id}`;
+  if (!estPortefeuilleConnu(p.mode)) {
+    redirectWithErreur(
+      retour,
+      "Ce règlement n’est pas un portefeuille mobile.",
+    );
+  }
+
+  const numero = normaliserNumero(texte(formData, "telephone"));
+  if (!numero) {
+    redirectWithErreur(
+      `${retour}?numero=modifier`,
+      "Numéro incomplet : dix chiffres, comme 034 12 345 67.",
+    );
+  }
+  if (!numeroDeLOperateur(p.mode, numero)) {
+    const { prefixes } = PORTEFEUILLES[p.mode];
+    redirectWithErreur(
+      `${retour}?numero=modifier`,
+      `Un numéro ${MODES[p.mode].titre} commence par ${prefixes.join(" ou ")}.`,
+    );
+  }
+
+  await prisma.paiement.update({
+    where: { id: p.id },
+    data: { detail: { telephone: numero } },
+  });
+  revalidatePath(retour);
+  redirect(retour);
 }
 
 /**
