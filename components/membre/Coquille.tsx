@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { ChevronDown, Menu, Search } from "lucide-react";
 import { BoutonDeconnexion } from "@/components/BoutonDeconnexion";
+import { BoutonInstaller } from "@/components/Application";
 import { MenuNotifications } from "@/components/MenuNotifications";
 import { EnCoursLien, TirerPourRafraichir } from "@/components/Mouvement";
 import { NAV_ICONS } from "@/components/nav-icons";
@@ -205,6 +206,7 @@ export function Coquille({
           </Suspense>
 
           <div className="flex items-center gap-2 shrink-0">
+            <BoutonInstaller />
             <MenuNotifications notifications={notifications} />
 
             <Link
