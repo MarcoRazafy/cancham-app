@@ -8,7 +8,6 @@ import {
   type Coordonnees,
   type ModeReglement,
 } from "@/lib/modes-reglement";
-import { vanillaPayActif } from "@/lib/vanillapay";
 
 /**
  * Les moyens de règlement, côté serveur.
@@ -48,23 +47,14 @@ export async function getCoordonneesPaiement(): Promise<Coordonnees> {
 }
 
 /**
- * Les moyens proposables en l'état : coordonnées saisies et prestataire
- * branché. Une seule définition, pour que la fenêtre d'inscription et la
- * page des factures n'offrent jamais deux listes différentes.
+ * Les moyens proposables en l'état : ceux dont la chambre a renseigné les
+ * coordonnées, plus la carte et les portefeuilles, toujours offerts. Une
+ * seule définition, pour que la fenêtre d'inscription et la page des
+ * factures n'offrent jamais deux listes différentes.
  */
 export async function modesProposes(): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
-  const enLigne = vanillaPayActif();
-  return ORDRE_MODES.filter((m) => modeDisponible(m, c, enLigne));
-}
-
-/**
- * Les moyens offerts mais pas encore en service : la carte bancaire, tant
- * que les clés Vanilla Pay ne sont pas posées. La fenêtre du choix les
- * montre grisés au lieu de les taire.
- */
-export function modesBientot(): ModeReglement[] {
-  return vanillaPayActif() ? [] : ["carte"];
+  return ORDRE_MODES.filter((m) => modeDisponible(m, c));
 }
 
 /**
