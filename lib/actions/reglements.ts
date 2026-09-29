@@ -12,6 +12,7 @@ import { getCurrentUser } from "@/lib/session";
 import {
   estModeReglement,
   MODES,
+  modesProposes,
   referenceReglement,
   type ModeReglement,
 } from "@/lib/reglements";
@@ -91,6 +92,11 @@ export async function ouvrirReglement(formData: FormData) {
   const mode = texte(formData, "mode");
   if (!estModeReglement(mode)) {
     redirectWithErreur(retour, "Choisissez un moyen de paiement.");
+  }
+  // Une tuile grisée n'envoie rien, mais une action serveur est une adresse
+  // publique : un moyen qui n'est pas proposé ne s'ouvre pas non plus ici.
+  if (!(await modesProposes()).includes(mode)) {
+    redirectWithErreur(retour, `${MODES[mode].titre} : pas encore disponible.`);
   }
 
   const f = await prisma.invoice.findUnique({
