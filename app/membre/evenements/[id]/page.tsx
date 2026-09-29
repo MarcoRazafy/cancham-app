@@ -29,17 +29,23 @@ import {
   getRegistration,
 } from "@/lib/queries";
 import { matriceQr } from "@/lib/qr";
+import { prisma } from "@/lib/db";
+import { fmtMontant } from "@/lib/membership";
 import { modesProposes } from "@/lib/reglements";
+import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
 import { getCurrentUser } from "@/lib/session";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney, isPast } from "@/lib/format";
 
 export default async function EvenementDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ regler?: string }>;
 }) {
   const { id } = await params;
+  const { regler } = await searchParams;
   const e = await getEvent(id);
   if (!e) notFound();
   const horaire = plageHoraire(e.debut, e.fin);
@@ -57,6 +63,26 @@ export default async function EvenementDetailPage({
   // L'inscription et le billet portent le nom de l'entreprise.
   const entreprise = membre?.nom ?? null;
 
+  /*
+    Retour d'une inscription payante : la facture tout juste émise, pour
+    ouvrir d'office la fenêtre du choix du moyen. Seulement si elle est bien
+    à ce membre et encore due — un identifiant glissé dans l'adresse
+    n'ouvre rien.
+  */
+  const aRegler =
+    regler && user.memberId && e.payant
+      ? await prisma.invoice.findFirst({
+          where: { id: regler, memberId: user.memberId, statut: "envoyee" },
+          select: {
+            id: true,
+            numero: true,
+            objet: true,
+            montant: true,
+            devise: true,
+          },
+        })
+      : null;
+
   const past = isPast(e.date);
   const restantes = e.cap - e.inscrits;
   const remplissage = Math.min(100, Math.round((e.inscrits / e.cap) * 100));
@@ -68,6 +94,18 @@ export default async function EvenementDetailPage({
 
   return (
     <>
+      {aRegler ? (
+        <FenetreMoyens
+          facture={{
+            id: aRegler.id,
+            numero: aRegler.numero,
+            objet: aRegler.objet,
+            montant: fmtMontant(aRegler.montant, aRegler.devise),
+          }}
+          modes={modesPaiement}
+          ouverteAuDepart
+        />
+      ) : null}
       <div className="mb-4">
         <BtnLink href="/membre/evenements" variant="ghost" sm>
           <ArrowLeft size={14} /> Retour aux événements

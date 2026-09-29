@@ -25,6 +25,8 @@ import {
   type Devise,
 } from "@/lib/membership";
 import { getInvoices, getMember } from "@/lib/queries";
+import { modesProposes } from "@/lib/reglements";
+import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
 import { getCurrentUser } from "@/lib/session";
 
 /**
@@ -35,12 +37,20 @@ import { getCurrentUser } from "@/lib/session";
  * Elle reste accessible même quand l'accès est restreint — c'est ici que le
  * membre constate sa situation.
  */
-export default async function CotisationsPage() {
+export default async function CotisationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ regler?: string }>;
+}) {
+  const { regler } = await searchParams;
   const user = await getCurrentUser("membre");
   const m = await getMember(user.memberId!);
   if (!m) notFound();
 
-  const factures = await getInvoices(m.id);
+  const [factures, modes] = await Promise.all([
+    getInvoices(m.id),
+    modesProposes(),
+  ]);
   const enAttente = ADHESION_PENDING.includes(m.statut);
   // Un an après le dernier règlement — pas après l'inscription.
   const renouvellement = renouvellementCotisation({
@@ -181,12 +191,22 @@ export default async function CotisationsPage() {
                       dépôt, espèces — ne dépendent d'aucun prestataire.
                     */}
                     {f.statut === "envoyee" ? (
-                      <Link
-                        href={`/membre/cotisations/payer?facture=${f.id}`}
-                        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-accent no-underline hover:underline"
-                      >
-                        <CreditCard size={13} /> Régler
-                      </Link>
+                      <FenetreMoyens
+                        facture={{
+                          id: f.id,
+                          numero: f.numero,
+                          objet: f.objet,
+                          montant: fmtMontant(f.montant, f.devise),
+                        }}
+                        modes={modes}
+                        ouverteAuDepart={regler === f.id}
+                        declencheur={
+                          <>
+                            <CreditCard size={13} /> Régler
+                          </>
+                        }
+                        classeDeclencheur="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-[12.5px] font-semibold text-accent hover:underline"
+                      />
                     ) : null}
                   </div>
                 </Td>

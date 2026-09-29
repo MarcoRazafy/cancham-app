@@ -65,7 +65,7 @@ export default async function CoordonneesPaiement() {
             <input name="rib" defaultValue={c.rib} className={INPUT} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="IBAN" hint="Nécessaire au virement international.">
+            <Field label="IBAN" hint="Proposé au membre avec le RIB, pour un virement.">
               <input name="iban" defaultValue={c.iban} className={INPUT} />
             </Field>
             <Field label="BIC / SWIFT">

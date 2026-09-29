@@ -2,7 +2,6 @@ import Image from "next/image";
 import {
   ArrowRightLeft,
   CreditCard,
-  Globe,
   HandCoins,
   Landmark,
   Smartphone,
@@ -17,9 +16,8 @@ import type { ModeReglement } from "@/lib/modes-reglement";
  *
  * Les marques des opérateurs valent mieux qu'un pictogramme : un membre
  * reconnaît MVola ou Orange Money d'un coup d'œil, et se trompe moins de
- * tuile. Les fichiers sont ceux fournis par la chambre — remise en main
- * propre, virement international et plateformes n'en ont pas encore, et
- * gardent leur icône.
+ * tuile. Les fichiers sont ceux fournis par la chambre — seules les
+ * plateformes de paiement n'en ont pas encore, et gardent leur icône.
  */
 const LOGOS: Partial<
   Record<ModeReglement, { src: string; largeur: number; hauteur: number }>
@@ -37,6 +35,7 @@ const LOGOS: Partial<
   },
   virement: { src: "/paiement/virement.jpg", largeur: 246, hauteur: 209 },
   depot: { src: "/paiement/depot.png", largeur: 225, hauteur: 225 },
+  especes: { src: "/paiement/especes.jpeg", largeur: 424, hauteur: 391 },
   carte: { src: "/paiement/carte.jpeg", largeur: 738, hauteur: 363 },
 };
 
@@ -48,7 +47,6 @@ const ICONES: Record<ModeReglement, LucideIcon> = {
   depot: Landmark,
   especes: HandCoins,
   carte: CreditCard,
-  international: Globe,
   plateforme: Wallet,
 };
 

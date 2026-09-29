@@ -1,7 +1,7 @@
-import { AlertTriangle, Banknote, Clock, Info, MapPin } from "lucide-react";
+import { AlertTriangle, Banknote, Clock, MapPin } from "lucide-react";
 import { Copiable } from "@/components/paiement/Copiable";
 import { SubmitButton } from "@/components/form-bits";
-import { Banner, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { annoncerReglement } from "@/lib/actions/reglements";
 import { fmtMontant, type Devise } from "@/lib/membership";
 import {
@@ -68,21 +68,6 @@ export function TunnelReglement({
                   valeur={[c.banque, c.agence].filter(Boolean).join(" · ")}
                   mono={false}
                 />
-              ) : null}
-            </>
-          ) : null}
-
-          {mode === "international" ? (
-            <>
-              <Copiable
-                libelle="Bénéficiaire"
-                valeur={c.titulaire}
-                mono={false}
-              />
-              <Copiable libelle="IBAN" valeur={c.iban} />
-              <Copiable libelle="BIC / SWIFT" valeur={c.bic} />
-              {c.banque ? (
-                <Copiable libelle="Banque" valeur={c.banque} mono={false} />
               ) : null}
             </>
           ) : null}
@@ -167,15 +152,6 @@ export function TunnelReglement({
             {payeur ? ` Il sera rattaché à ${payeur}.` : ""}
           </p>
         </div>
-
-        {mode === "international" ? (
-          <Banner tone="warn" icon={<Info size={17} />}>
-            Si votre banque le propose, choisissez les frais «&nbsp;OUR&nbsp;» —
-            à votre charge : la chambre reçoit alors le montant entier. Avec
-            «&nbsp;SHA&nbsp;», des frais sont retenus en chemin et la somme
-            arrive amputée.
-          </Banner>
-        ) : null}
       </Card>
 
       <Card className="p-5">

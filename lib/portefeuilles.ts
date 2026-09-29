@@ -31,6 +31,15 @@ export interface DescriptionPortefeuille {
     douce: string;
     /** La couleur de la marque, pour les montants sur fond sombre. */
     valeur: string;
+    /**
+     * Le bouton principal, dans la couleur de la marque. Le texte y est
+     * choisi pour le contraste (4,5:1 au moins), pas pour l'habitude : noir
+     * sur l'orange, comme le fait Orange elle-même, et un rouge Airtel à
+     * peine plus profond sous le texte blanc.
+     */
+    bouton: string;
+    surBouton: string;
+    boutonSurvol: string;
   };
 }
 
@@ -44,6 +53,9 @@ export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
       encre: "#10241a",
       douce: "#3c4a3f",
       valeur: "#ffde00",
+      bouton: "#ffde00",
+      surBouton: "#10241a",
+      boutonSurvol: "#f2d000",
     },
   },
   orange_money: {
@@ -55,6 +67,9 @@ export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
       encre: "#1c1008",
       douce: "#4a2d15",
       valeur: "#fe9247",
+      bouton: "#fe6601",
+      surBouton: "#000000",
+      boutonSurvol: "#e85c00",
     },
   },
   airtel_money: {
@@ -66,6 +81,9 @@ export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
       encre: "#ffffff",
       douce: "#ffd8d9",
       valeur: "#ffd200",
+      bouton: "#e0141c",
+      surBouton: "#ffffff",
+      boutonSurvol: "#c50f17",
     },
   },
 };
