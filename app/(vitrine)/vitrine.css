@@ -96,48 +96,26 @@
 
 /*
  * Les visages du Conseil et de l'équipe glissent en boucle, une rangée vers
- * la gauche, la suivante vers la droite. Même mécanique que le bandeau : la
- * piste porte deux fois les cartes (`Defile`), et la même image-clé la
- * ramène sans à-coup. Quarante secondes par tour, soit une trentaine de
- * pixels par seconde : ça se remarque sans gêner la lecture.
- *
- * Passer la souris sur une rangée l'arrête — le temps de lire un nom.
- *
- * Sur écran tactile, personne ne survole, et rien n'arrêterait la rangée :
- * elle reste immobile et se fait glisser au doigt, sans sa copie. Idem pour
- * qui a demandé moins d'animations.
+ * la gauche, la suivante vers la droite, et se laissent tirer à la main —
+ * au doigt comme à la souris (`Defile`). C'est un défilement horizontal
+ * natif, sans barre : la poussée vient d'une boucle d'animation, qui se
+ * tait tant qu'on tient la rangée.
  */
-.defile-piste {
-  animation: vitrine-defilement var(--duree-defile, 40s) linear infinite;
-  will-change: transform;
+.defile {
+  overflow-x: auto;
+  /* Tirer au bout de la rangée ne fait pas reculer la page. */
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  cursor: grab;
 }
 
-.defile-droite .defile-piste {
-  animation-direction: reverse;
+.defile::-webkit-scrollbar {
+  display: none;
 }
 
-.defile:hover .defile-piste,
-.defile:focus-within .defile-piste {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce), (hover: none) {
-  .defile {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .defile::-webkit-scrollbar {
-    display: none;
-  }
-  .defile-piste {
-    animation: none;
-  }
-  .defile-piste > ul {
-    padding-right: 0;
-  }
-  .defile-copie {
-    display: none;
-  }
+.defile.defile-saisie {
+  cursor: grabbing;
+  user-select: none;
 }
 
 /* ============================================================
