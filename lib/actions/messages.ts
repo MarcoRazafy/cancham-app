@@ -26,6 +26,7 @@ import {
 import { fichiersRecus } from "@/lib/televersements";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 import type { Space } from "@/lib/types";
+import { apercu, notifier } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -35,6 +36,33 @@ const espace = (fd: FormData): "membre" | "admin" =>
 
 const lienFil = (space: Space, threadId: string) =>
   `/${space}/messagerie?t=${threadId}`;
+
+/**
+ * Prévient les autres participants d'un fil, sur leur appareil. Une
+ * notification par fil : la suivante remplace la précédente.
+ */
+async function prevenirParticipants(
+  threadId: string,
+  auteur: { id: string; nom: string },
+  contenu: string,
+  pieces: number,
+) {
+  const autres = await prisma.participantFil.findMany({
+    where: { threadId, userId: { not: auteur.id } },
+    select: { userId: true },
+  });
+  await notifier(
+    autres.map((p) => p.userId),
+    {
+      titre: `Message de ${auteur.nom}`,
+      corps: contenu
+        ? apercu(contenu)
+        : `${pieces} pièce${pieces > 1 ? "s" : ""} jointe${pieces > 1 ? "s" : ""}`,
+      url: { membre: lienFil("membre", threadId), admin: lienFil("admin", threadId) },
+      etiquette: `fil-${threadId}`,
+    },
+  );
+}
 
 /** Un fil n'est lisible, et on ne peut y écrire, qu'en y participant. */
 async function participe(threadId: string, userId: string) {
@@ -143,6 +171,8 @@ export async function sendMessage(formData: FormData) {
 
   // Un visiteur du site n'a pas de plateforme où lire la réponse.
   after(() => prevenirVisiteur(threadId, contenu));
+  // Les autres participants le reçoivent sur leur appareil.
+  after(() => prevenirParticipants(threadId, user, contenu, pieces.length));
 
   revalidatePath("/", "layout");
   redirect(retour);
@@ -732,6 +762,7 @@ export async function ecrireAuSupport(
   });
 
   after(() => prevenirVisiteur(fil.id, contenu));
+  after(() => prevenirParticipants(fil.id, user, contenu, 0));
 
   revalidatePath("/", "layout");
   return { ok: true, threadId: fil.id };

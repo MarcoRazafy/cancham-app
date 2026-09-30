@@ -26,6 +26,8 @@ import {
   type ModePressePapier,
 } from "@/lib/presse-papier";
 import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
+import { after } from "next/server";
+import { notifierTousLesMembres } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
@@ -174,6 +176,16 @@ export async function enregistrerActualite(formData: FormData) {
     n.id,
     `« ${n.titre} » · ${n.public ? "plateforme et page publique" : "plateforme uniquement"}`,
   );
+  // Une nouvelle publication : tous les membres l'apprennent sur leur appareil.
+  if (!id) {
+    after(() =>
+      notifierTousLesMembres({
+        titre: "Nouvelle actualité CanCham",
+        corps: n.titre,
+        url: `/membre/actualites/${n.id}`,
+      }),
+    );
+  }
   revalideTout();
   redirectWithFlash(
     `/admin/actualites/${n.id}`,

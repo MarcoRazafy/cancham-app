@@ -42,6 +42,8 @@ import {
 } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import type { MemberStatus, MemberType } from "@/lib/types";
+import { after } from "next/server";
+import { notifierMembre } from "@/lib/push";
 
 /**
  * Actions sur les membres et les cotisations.
@@ -582,6 +584,16 @@ export async function registerPayment(formData: FormData) {
       },
     }),
   ]);
+
+  after(() =>
+    notifierMembre(id, {
+      titre: premier
+        ? "Bienvenue : votre adhésion est active"
+        : "Cotisation enregistrée",
+      corps: `Facture ${numero} · ${fmtMontant(montant, devise)} · merci !`,
+      url: "/membre/cotisations",
+    }),
+  );
 
   revalideTout();
   redirectWithFlash(

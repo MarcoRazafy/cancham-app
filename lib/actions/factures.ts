@@ -9,6 +9,8 @@ import { fmtMontant, type Devise } from "@/lib/membership";
 import { ajouterAns } from "@/lib/agenda";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
+import { after } from "next/server";
+import { notifierMembre } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -93,6 +95,25 @@ export async function creerFacture(formData: FormData) {
     return f;
   });
 
+  // Le membre l'apprend sur son appareil : une facture à régler, ou un
+  // paiement enregistré.
+  after(() =>
+    notifierMembre(
+      memberId,
+      payee
+        ? {
+            titre: "Paiement enregistré",
+            corps: `Facture ${numero} · ${fmtMontant(montant, devise)} · merci !`,
+            url: `/membre/cotisations/${facture.id}`,
+          }
+        : {
+            titre: `Facture ${numero} à régler`,
+            corps: `${objet} · ${fmtMontant(montant, devise)}`,
+            url: `/membre/cotisations/${facture.id}`,
+          },
+    ),
+  );
+
   revalidatePath("/", "layout");
   redirectWithFlash(
     `/admin/paiements/${facture.id}`,
@@ -155,6 +176,17 @@ export async function marquerFacturePayee(formData: FormData) {
       },
     }),
   ]);
+
+  if (membre) {
+    const memberId = membre.id;
+    after(() =>
+      notifierMembre(memberId, {
+        titre: "Paiement enregistré",
+        corps: `Facture ${f.numero} · ${montant} · merci !${cotisation ? " Votre adhésion est à jour." : ""}`,
+        url: `/membre/cotisations/${id}`,
+      }),
+    );
+  }
 
   revalidatePath("/", "layout");
   redirectWithFlash(

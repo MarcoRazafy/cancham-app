@@ -26,6 +26,7 @@ import { creerProduit } from "@/lib/produits";
 import { FORMULES } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
+import { notifierEquipe } from "@/lib/push";
 
 /**
  * Adhésion en deux temps : la candidature d'abord, avec la fiche de la
@@ -166,6 +167,11 @@ export async function deposerCandidature(formData: FormData) {
   const fiche = await urlPublique(`/admin/membres/${membre.id}`);
   after(() =>
     Promise.all([
+      notifierEquipe({
+        titre: "Nouvelle demande d’adhésion",
+        corps: `${entreprise} · ${rep} · ${ville}, ${pays}`,
+        url: `/admin/membres/${membre.id}`,
+      }),
       envoyerCourriel(courrielDemandeRecue(email, rep)),
       envoyerCourriel(
         courrielNouvelleInscription(

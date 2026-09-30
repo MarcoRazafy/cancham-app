@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Notification } from "@/lib/notifications";
+import { NotificationsAppareil } from "@/components/NotificationsAppareil";
 
 const ICONES: Record<Notification["categorie"], LucideIcon> = {
   adhesion: UserPlus,
@@ -258,6 +259,9 @@ export function MenuNotifications({
               Tout est à jour.
             </div>
           )}
+
+          {/* Les notifications sur l'appareil lui-même, hors de la plateforme. */}
+          <NotificationsAppareil />
         </div>
       ) : null}
     </div>
