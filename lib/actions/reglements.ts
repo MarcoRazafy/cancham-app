@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { delivrerBillets } from "@/lib/billets";
 import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -400,6 +401,8 @@ export async function confirmerReglement(formData: FormData) {
     `${montant} par ${moyen.toLowerCase()} · ${p.member?.nom ?? "—"} · réf. ${p.reference}`,
     user.nom,
   );
+  // Une participation : l'inscription se confirme et les billets partent.
+  if (p.invoice) await delivrerBillets(p.invoice.id, user.nom);
   if (p.member) {
     const memberId = p.member.id;
     after(() =>

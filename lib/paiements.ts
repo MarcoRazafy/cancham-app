@@ -1,5 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { delivrerBillets } from "@/lib/billets";
 import { prisma } from "@/lib/db";
 import { nomFacture } from "@/lib/factures";
 import { fmtMontant } from "@/lib/membership";
@@ -138,6 +139,10 @@ export async function conclurePaiement(
       },
     }),
   ]);
+
+  // Une participation réglée : l'inscription se confirme et les billets
+  // partent, sans passer par l'équipe.
+  if (f) await delivrerBillets(f.id, "Vanilla Pay");
 
   return "reglee";
 }

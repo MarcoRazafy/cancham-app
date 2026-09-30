@@ -362,6 +362,7 @@ model Event {
   inscriptions Registration[]
   participants Attendee[]
   programme    EventAgenda[]
+  factures     Invoice[]
 
   @@index([date])
   @@map("events")
@@ -734,6 +735,12 @@ model Invoice {
   /// la facture à l'identique (voir `DestinataireFige` dans `lib/factures.ts`).
   destinataire    Json?
 
+  /// L'événement facturé, pour une participation : c'est lui qui permet, la
+  /// facture réglée, de confirmer l'inscription et d'envoyer les billets sans
+  /// que l'équipe n'ait rien à faire. `null` pour tout le reste.
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
   /// Tentatives de règlement en ligne de cette facture.
   paiements Paiement[]
 
@@ -741,6 +748,7 @@ model Invoice {
   updatedAt DateTime @updatedAt
 
   @@index([memberId])
+  @@index([eventId])
   @@map("invoices")
 }
 

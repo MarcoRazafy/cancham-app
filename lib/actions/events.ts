@@ -11,13 +11,9 @@ import { EVENT_FORMAT_DB, toISODate } from "@/lib/enums";
 import { estHeure, estJourISO } from "@/lib/agenda";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { fmtDate, fmtMoney, jourBase } from "@/lib/format";
-import { envoyerCourriel, urlPublique } from "@/lib/courriel";
+import { urlPublique } from "@/lib/courriel";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
-import {
-  courrielBilletsEvenement,
-  courrielInscriptionEnAttente,
-} from "@/lib/modeles-courriels";
-import { plageHoraire } from "@/lib/agenda";
+import { envoyerAttente, envoyerBillets, lignesDe } from "@/lib/billets";
 import { numeroFacture } from "@/lib/factures";
 import { modesProposes } from "@/lib/reglements";
 import {
@@ -67,11 +63,6 @@ async function codeAcces(eventId: string): Promise<string> {
   }
 }
 
-/** Les lignes d'accueil d'une inscription : son code, et ses déclinaisons. */
-const lignesDe = (code: string) => ({
-  OR: [{ code }, { code: { startsWith: `${code}-` } }],
-});
-
 /** Représentants inscrits par un membre, au plus. */
 const REPRESENTANTS_MAX = 10;
 
@@ -96,71 +87,6 @@ function coordonneesSaisies(
     );
   }
   return { email, telephone };
-}
-
-/** Ce qu'un e-mail doit savoir d'un événement pour y conduire quelqu'un. */
-type EvenementCourriel = {
-  id: string;
-  titre: string;
-  date: Date;
-  debut: string | null;
-  fin: string | null;
-  lieu: string;
-};
-
-/** Date et horaire d'un événement, tels que les e-mails les annoncent. */
-function quandEvenement(e: EvenementCourriel): string {
-  return [fmtDate(toISODate(e.date)), plageHoraire(e.debut, e.fin)]
-    .filter(Boolean)
-    .join(" · ");
-}
-
-/**
- * Les billets d'une inscription : un QR code par participant, envoyés à
- * l'adresse donnée au moment de s'inscrire.
- *
- * L'envoi a lieu après la réponse : une messagerie lente ne doit pas faire
- * attendre devant un formulaire, et l'inscription, elle, est déjà écrite.
- */
-function envoyerBillets(
-  e: EvenementCourriel,
-  participants: { nom: string; code: string }[],
-  email: string,
-  lien: string,
-): void {
-  after(async () =>
-    envoyerCourriel(
-      await courrielBilletsEvenement(email, {
-        evenement: e.titre,
-        quand: quandEvenement(e),
-        lieu: e.lieu,
-        participants,
-        lien,
-      }),
-    ),
-  );
-}
-
-/** Événement payant : l'inscription est prise, le billet attend le règlement. */
-function envoyerAttente(
-  e: EvenementCourriel,
-  participants: { nom: string }[],
-  email: string,
-  lien: string,
-  aRegler: string,
-): void {
-  after(() =>
-    envoyerCourriel(
-      courrielInscriptionEnAttente(email, {
-        evenement: e.titre,
-        quand: quandEvenement(e),
-        lieu: e.lieu,
-        participants,
-        lien,
-        aRegler,
-      }),
-    ),
-  );
 }
 
 /* ============================ Côté membre ============================ */
@@ -268,6 +194,9 @@ export async function registerForEvent(formData: FormData) {
           montant: event.prix * n,
           statut: "envoyee",
           memberId: user.memberId,
+          // La facture connaît l'événement : réglée, elle fera partir les
+          // billets d'elle-même.
+          eventId,
         },
         select: { id: true },
       }),

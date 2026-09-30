@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react";
-import { ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Smartphone } from "lucide-react";
+import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import { Copiable } from "@/components/paiement/Copiable";
-import type { Devise } from "@/lib/membership";
+import { payerParPortefeuille } from "@/lib/actions/paiements";
+import { fmtMontant, type Devise } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
 import {
   numeroLisible,
@@ -38,6 +40,68 @@ export interface PropsTunnel {
   modifier?: boolean;
   /** Où revenir pour choisir un autre moyen. */
   retour: string;
+  /**
+   * Le prestataire est raccordé : le membre peut payer depuis la
+   * plateforme, et son téléphone confirme. Sinon, il fait l'envoi lui-même.
+   */
+  raccorde: boolean;
+}
+
+/**
+ * « Payer maintenant » : le débit demandé depuis la plateforme.
+ *
+ * Le membre valide ici, et c'est son téléphone qui lui demande son code
+ * secret — jamais un écran de la chambre. Le reste suit tout seul : la
+ * facture se règle à la confirmation, et les billets partent s'il s'agit
+ * d'une participation. L'envoi à la main reste possible juste en dessous,
+ * pour qui préfère composer le menu de l'opérateur.
+ */
+export function PaiementDirect({
+  p,
+  className = "",
+}: {
+  p: PropsTunnel;
+  className?: string;
+}) {
+  if (!p.raccorde) return null;
+  const titre = MODES[p.mode].titre;
+  const somme = fmtMontant(p.montant, p.devise);
+  const billets = /^participation/i.test(p.objet);
+  return (
+    <div
+      className={`rounded-[var(--radius-m)] border-2 border-[var(--pf-fond)] p-5 ${className}`}
+    >
+      <div className="flex items-start gap-3.5">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--pf-fond)] text-[var(--pf-encre)]">
+          <Smartphone size={20} aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h2 className="m-0 text-[19px] font-bold leading-tight">
+            Payer maintenant, depuis {titre}
+          </h2>
+          <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed text-muted">
+            Votre téléphone
+            {p.telephone ? ` (${numeroLisible(p.telephone)})` : ""} reçoit une
+            demande de confirmation : validez-la avec votre code secret {titre},
+            et {somme} sont débités. Votre reçu
+            {billets ? " et vos billets arrivent" : " arrive"} aussitôt.
+          </p>
+        </div>
+      </div>
+      <form
+        action={payerParPortefeuille}
+        className="mt-4 flex flex-wrap items-center gap-4"
+      >
+        <input type="hidden" name="reglementId" value={p.reglementId} />
+        <BoutonMarque className="rounded-[var(--radius-m)]">
+          Payer {somme} par {titre} <ArrowRight size={17} />
+        </BoutonMarque>
+        <span className="text-[13px] text-muted">
+          ou faites l’envoi vous-même, ci-dessous.
+        </span>
+      </form>
+    </div>
+  );
 }
 
 export type Etape = 1 | 2 | 3;
