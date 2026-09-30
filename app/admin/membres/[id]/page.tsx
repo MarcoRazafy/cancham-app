@@ -43,6 +43,7 @@ import {
   RenvoyerInvitationButton,
 } from "@/components/forms/MemberForms";
 import { BoutonMessage } from "@/components/forms/MessageMembre";
+import { NotesMembre } from "@/components/forms/NotesMembre";
 import { TexteLie } from "@/components/TexteLie";
 import { Card, Pill, Saillant, StatusPill } from "@/components/ui";
 import { PROVISOIRE, saisi } from "@/lib/accueil";
@@ -81,8 +82,8 @@ export default async function AdminMembreDetail({
       getInvoices(m.id),
       getHistoriqueMembre(m.id),
       getAccesMembre(m.id),
-      // Les commentaires de refus : lus seulement pour une demande refusée.
-      m.statut === "refusee" ? getNotesMembre(m.id) : [],
+      // Les commentaires de l'équipe, motif d'un éventuel refus compris.
+      getNotesMembre(m.id),
     ]);
   const candidature = m.statut === "candidature";
   // La date qui ouvre l'année d'adhésion : celle du dernier règlement.
@@ -593,6 +594,8 @@ export default async function AdminMembreDetail({
               <Vide>Aucune opération enregistrée.</Vide>
             )}
           </Panneau>
+
+          <NotesMembre memberId={m.id} notes={commentaires} />
 
           <Card className="p-5 border-dashed">
             <div className="surtitre text-faint mb-2">Zone sensible</div>
