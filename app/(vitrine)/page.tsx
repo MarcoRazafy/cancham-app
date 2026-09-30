@@ -144,12 +144,12 @@ const EQUIPE = [
     photo: "/equipe/tahina-razafimamonjy.jpg",
   },
   {
-    nom: "Rindra RAZAFINDRAKOTO",
+    nom: "Narindrasoa RAVOAVINIRINA",
     role: "Adjointe de direction",
     photo: "/equipe/rindra-razafindrakoto.jpg",
   },
   {
-    nom: "Onja RANDRIANARISOA",
+    nom: "Onja ANDRIATSITOHAINA",
     role: "Chargée administrative",
     photo: "/equipe/onja-randrianarisoa.jpg",
   },
