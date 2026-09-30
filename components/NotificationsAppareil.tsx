@@ -13,16 +13,26 @@ import { lireConsigne, lireMode } from "@/components/Application";
  * son ordinateur, application fermée ou non. « Essayer » s'envoie une
  * notification pour vérifier ; « Désactiver » retire l'abonnement.
  *
- * Ce que le navigateur permet se lit une fois, à l'affichage : pas de
+ * Ce que le navigateur permet se lit une fois, à l'affichage : adresse
+ * sans https (un téléphone qui ouvre le serveur de développement), pas de
  * notifications possibles, iPhone sans l'application installée, ou
  * notifications bloquées. Le reste — abonné ou non — se vérifie auprès du
  * service worker.
  */
 
-type Support = "inconnu" | "absent" | "ios" | "refuse" | "possible";
+type Support =
+  | "inconnu"
+  | "non-securise"
+  | "absent"
+  | "ios"
+  | "refuse"
+  | "possible";
 type Etat = "inconnu" | "inactif" | "actif" | "refuse";
 
 function lireSupport(): Support {
+  // Les navigateurs n'accordent service worker et notifications qu'aux
+  // adresses sûres : https, ou localhost sur la machine même.
+  if (!window.isSecureContext) return "non-securise";
   if (
     !("serviceWorker" in navigator) ||
     !("PushManager" in window) ||
@@ -206,7 +216,12 @@ export function NotificationsAppareil() {
 
   return (
     <div className="border-t border-line px-4 py-3 text-[12.5px] leading-snug">
-      {support === "ios" ? (
+      {support === "non-securise" ? (
+        <p className="m-0 text-muted">
+          Les notifications demandent une adresse sécurisée (https) : elles
+          seront proposées ici sur la plateforme en ligne.
+        </p>
+      ) : support === "ios" ? (
         <p className="m-0 flex items-start gap-2 text-muted">
           <Smartphone size={15} className="mt-0.5 shrink-0" aria-hidden />
           Sur iPhone et iPad, installez d’abord l’application (bouton
