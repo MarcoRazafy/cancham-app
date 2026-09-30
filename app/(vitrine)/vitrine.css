@@ -141,3 +141,146 @@
 .vitrine-sombre .vitrine-claire .text-marque-vert {
   color: var(--marque-vert);
 }
+
+/* ============================================================
+   APPARITIONS AU DÉFILEMENT
+
+   Chaque section entre quand on y arrive : un fondu et un court
+   déplacement — 24 px, pas une traversée d'écran —, joués une seule fois.
+   `Scenes` (components/public/Scenes.tsx) pose `data-visible` sur une
+   « scène » (classe `scene`) dès qu'elle entre dans la fenêtre. Jusque-là,
+   ses éléments `reveler` attendent, animation en pause sur sa première image.
+
+   Quatre entrées, à choisir selon ce qui entre :
+   - `reveler`          monte de 24 px — le cas général ;
+   - `reveler-gauche`   vient de la gauche — une liste, ligne à ligne ;
+   - `reveler-droite`   vient de la droite — un encadré posé en regard ;
+   - `reveler-zoom`     grandit sur place — les cartes, et tout ce qui vit
+                        dans un carrousel, où un déplacement vertical
+                        ferait déborder la piste ;
+   - `reveler-trait`    se déroule de gauche à droite — les filets ;
+   - `reveler-pop`      surgit avec un léger rebond — une icône.
+
+   `--retard` décale une entrée dans une cascade (voir `retard()` dans
+   CadreVitrine.tsx). `backwards` ne garde rien une fois joué : l'élément
+   reprend ses styles, et ses transitions au survol restent les siennes.
+
+   Rien ici ne conditionne la lecture :
+   - sans JavaScript (`scripting`), personne ne poserait `data-visible` ;
+     la règle ne s'applique pas, et tout s'affiche d'emblée ;
+   - un `reveler` hors de toute `scene` n'est jamais retenu ;
+   - qui a demandé moins d'animations voit la page telle quelle.
+   ============================================================ */
+
+@keyframes vitrine-reveler {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vitrine-reveler-gauche {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vitrine-reveler-droite {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vitrine-reveler-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes vitrine-reveler-trait {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes vitrine-reveler-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (scripting: enabled) {
+  .vitrine-sombre .scene .reveler,
+  .vitrine-sombre .scene.reveler {
+    animation: vitrine-reveler var(--duree-reveler, 0.5s) var(--courbe-entree)
+      var(--retard, 0ms) backwards paused;
+  }
+
+  .vitrine-sombre .scene .reveler-gauche,
+  .vitrine-sombre .scene.reveler-gauche {
+    animation-name: vitrine-reveler-gauche;
+  }
+
+  .vitrine-sombre .scene .reveler-droite,
+  .vitrine-sombre .scene.reveler-droite {
+    animation-name: vitrine-reveler-droite;
+  }
+
+  .vitrine-sombre .scene .reveler-zoom,
+  .vitrine-sombre .scene.reveler-zoom {
+    animation-name: vitrine-reveler-zoom;
+  }
+
+  .vitrine-sombre .scene .reveler-trait,
+  .vitrine-sombre .scene.reveler-trait {
+    --duree-reveler: 0.6s;
+    animation-name: vitrine-reveler-trait;
+    transform-origin: left center;
+  }
+
+  /* Un dépassement d'un tiers, puis le retour : c'est lui qui fait le rebond. */
+  .vitrine-sombre .scene .reveler-pop {
+    --duree-reveler: 0.45s;
+    animation-name: vitrine-reveler-pop;
+    animation-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  .vitrine-sombre .scene[data-visible] .reveler,
+  .vitrine-sombre .scene[data-visible].reveler {
+    animation-play-state: running;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vitrine-sombre .scene .reveler,
+  .vitrine-sombre .scene.reveler {
+    animation: none !important;
+  }
+}

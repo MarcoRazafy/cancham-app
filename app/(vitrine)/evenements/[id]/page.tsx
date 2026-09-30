@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import {
   CONTENEUR,
+  retard,
   TITRE_BLOC,
   TITRE_GRAS,
 } from "@/components/public/CadreVitrine";
@@ -270,9 +271,9 @@ export default async function EvenementPublic({
         </div>
 
         {autres.length ? (
-          <section className="mt-14">
+          <section className="scene mt-14">
             <div>
-              <div className="flex items-end justify-between gap-6 flex-wrap mb-7">
+              <div className="reveler flex items-end justify-between gap-6 flex-wrap mb-7">
                 <div>
                   <span className="surtitre text-marque-rouge">
                     Ne manquez rien
@@ -287,11 +288,13 @@ export default async function EvenementPublic({
               </div>
 
               <CarrouselCartes debord="" libelle="Autres rendez-vous">
-                {autres.map(({ evenement, rang }) => (
+                {autres.map(({ evenement, rang }, i) => (
                   <CarteEvenement
                     key={evenement.id}
                     evenement={evenement}
                     index={rang}
+                    className="reveler reveler-zoom"
+                    style={retard(100 + i * 70)}
                   />
                 ))}
               </CarrouselCartes>

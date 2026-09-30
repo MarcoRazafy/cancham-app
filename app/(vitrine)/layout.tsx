@@ -1,6 +1,7 @@
 import { RenvoiApplication } from "@/components/Application";
 import { BulleAssistance } from "@/components/public/BulleAssistance";
 import { EnTetePublique, PiedPublique } from "@/components/public/CadreVitrine";
+import { Scenes } from "@/components/public/Scenes";
 import "./vitrine.css";
 
 /**
@@ -13,7 +14,8 @@ import "./vitrine.css";
  * les écrans de connexion, sous `/auth`, restent clairs.
  *
  * La bulle d'assistance accompagne toutes ces pages : une question se pose
- * d'où qu'on la lise, sans compte.
+ * d'où qu'on la lise, sans compte. `Scenes` fait entrer leurs sections au
+ * défilement.
  */
 export default function VitrineLayout({
   children,
@@ -30,6 +32,7 @@ export default function VitrineLayout({
         {children}
         <PiedPublique />
         <BulleAssistance />
+        <Scenes />
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Newspaper } from "lucide-react";
@@ -17,15 +18,21 @@ import type { ActualitePublique } from "@/lib/queries";
  */
 export function CarteActualite({
   actualite: a,
+  className = "",
+  style,
 }: {
   actualite: ActualitePublique;
+  /** Pour l'entrée au défilement : la classe `reveler` et son retard. */
+  className?: string;
+  style?: CSSProperties;
 }) {
   const couverture = a.images[0];
   const minutes = dureeLecture(a.corps || a.extrait);
   return (
     <Link
       href={`/actualites/${a.id}`}
-      className="group flex flex-col no-underline rounded-xl overflow-hidden bg-white transition-shadow duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:shadow-[0_20px_60px_rgba(15,29,44,0.12)]"
+      className={`group flex flex-col no-underline rounded-xl overflow-hidden bg-white transition-shadow duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:shadow-[0_20px_60px_rgba(15,29,44,0.12)] ${className}`}
+      style={style}
     >
       <div className="relative shrink-0 aspect-[16/9] overflow-hidden bg-[#e9edf2]">
         {couverture ? (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import {
   CONTENEUR,
+  retard,
   TITRE_BLOC,
   TITRE_GRAS,
 } from "@/components/public/CadreVitrine";
@@ -165,7 +166,7 @@ export default async function ActualitePubliquePage({
             que l'écran, un bloc collant garderait son bas hors d'atteinte.
           */}
           {offres.length ? (
-            <aside className="apparition-defilement w-full min-w-0 xl:flex-1 xl:sticky xl:top-[124px] xl:max-h-[calc(100dvh-140px)] xl:overflow-y-auto">
+            <aside className="scene reveler w-full min-w-0 xl:flex-1 xl:sticky xl:top-[124px] xl:max-h-[calc(100dvh-140px)] xl:overflow-y-auto">
               <span className="surtitre text-marque-vert">Entre membres</span>
               <h2 className={`${TITRE_BLOC} mt-2`}>Offres &amp; promotions</h2>
               <p className="m-0 mt-2 text-[14px] leading-relaxed text-muted">
@@ -188,11 +189,16 @@ export default async function ActualitePubliquePage({
         </div>
 
         {autres.length ? (
-          <section className="apparition-defilement mt-14">
-            <h2 className={TITRE_BLOC}>À lire aussi</h2>
+          <section className="scene mt-14">
+            <h2 className={`${TITRE_BLOC} reveler`}>À lire aussi</h2>
             <div className="grid gap-5 mt-6 md:grid-cols-2 lg:grid-cols-3">
-              {autres.map((r) => (
-                <CarteActualite key={r.id} actualite={r} />
+              {autres.map((r, i) => (
+                <CarteActualite
+                  key={r.id}
+                  actualite={r}
+                  className="reveler reveler-zoom"
+                  style={retard(100 + i * 70)}
+                />
               ))}
             </div>
           </section>

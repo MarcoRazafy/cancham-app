@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Mail, MapPin, Phone } from "lucide-react";
@@ -52,6 +53,16 @@ export const TITRE_SECTION = `${TITRE_GRAS} text-[clamp(30px,4.4vw,56px)] leadin
 
 /** Titre d'un bloc à l'intérieur d'une section — une carte, un encadré. */
 export const TITRE_BLOC = `${TITRE_GRAS} text-[clamp(22px,2.4vw,28px)] leading-[1.25] m-0`;
+
+/**
+ * Retard d'un élément dans une cascade d'apparitions (`vitrine.css`).
+ *
+ * Les cartes d'une rangée entrent l'une après l'autre, de gauche à droite :
+ * la suivante part soixante-dix millisecondes après la précédente. En deçà,
+ * la cascade ne se voit pas ; au-delà, la quatrième carte se fait attendre.
+ */
+export const retard = (ms: number): CSSProperties =>
+  ({ "--retard": `${ms}ms` }) as CSSProperties;
 
 /** Les liens de la barre, dans l'ordre où on les lit. */
 const LIENS = [
@@ -239,11 +250,12 @@ export function PiedPublique() {
 
   return (
     <footer className="border-t border-white/10 bg-[var(--marque-nuit)] mt-auto">
+      {/* Les quatre colonnes montent l'une après l'autre. */}
       <div
-        className={`${CONTENEUR} py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]`}
+        className={`scene ${CONTENEUR} py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]`}
       >
         {/* ---------- La marque ---------- */}
-        <div>
+        <div className="reveler">
           <Link
             href="/"
             aria-label="Accueil CanCham Connect"
@@ -280,8 +292,13 @@ export function PiedPublique() {
         </div>
 
         {/* ---------- Les colonnes de liens ---------- */}
-        {COLONNES.map((c) => (
-          <nav key={c.titre} aria-label={c.titre}>
+        {COLONNES.map((c, i) => (
+          <nav
+            key={c.titre}
+            aria-label={c.titre}
+            style={retard(80 + i * 70)}
+            className="reveler"
+          >
             <h2 className="surtitre m-0 mb-4 text-white/55">{c.titre}</h2>
             <ul className="list-none m-0 p-0 flex flex-col gap-3">
               {c.liens.map((l) => (
@@ -296,7 +313,7 @@ export function PiedPublique() {
         ))}
 
         {/* ---------- Joindre la chambre ---------- */}
-        <div>
+        <div style={retard(220)} className="reveler">
           <h2 className="surtitre m-0 mb-4 text-white/55">Contact</h2>
           <ul className="list-none m-0 p-0 flex flex-col gap-3 text-[13.5px] text-white/70">
             <li className="flex items-start gap-2.5">

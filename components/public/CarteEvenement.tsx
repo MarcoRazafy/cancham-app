@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import Link from "next/link";
@@ -20,9 +21,14 @@ function categorie(e: CanchamEvent): string {
 export function CarteEvenement({
   evenement,
   index,
+  className = "",
+  style,
 }: {
   evenement: CanchamEvent;
   index: number;
+  /** Pour l'entrée au défilement : la classe `reveler` et son retard. */
+  className?: string;
+  style?: CSSProperties;
 }) {
   const d = parseISO(evenement.date);
   const jour = d.getDate();
@@ -41,7 +47,8 @@ export function CarteEvenement({
       href={`/evenements/${evenement.id}`}
       // Trois cartes pleines sur ordinateur, deux sur tablette : aucune ne se
       // coupe au bord. Sur téléphone, la suivante dépasse, pour inviter à glisser.
-      className="group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-surface border border-line shadow-[var(--shadow)] transition-[border-color,box-shadow] hover:border-faint hover:shadow-[0_18px_40px_-22px_rgb(15_29_44/0.45)]"
+      className={`group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-surface border border-line shadow-[var(--shadow)] transition-[border-color,box-shadow] hover:border-faint hover:shadow-[0_18px_40px_-22px_rgb(15_29_44/0.45)] ${className}`}
+      style={style}
     >
       <div className="relative shrink-0 aspect-[16/10] overflow-hidden bg-surface-3">
         {visuel ? (
