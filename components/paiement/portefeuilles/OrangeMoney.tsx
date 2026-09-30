@@ -13,6 +13,7 @@ import {
   LOGOS,
   MentionSecret,
   type Etape,
+  PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
 import {
@@ -144,6 +145,7 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
             </form>
           ) : etape === 2 ? (
             <>
+              <PaiementDirect p={p} className="mb-6" />
               <h2 className="m-0 text-[22px] font-bold leading-snug">
                 Envoyez {somme} depuis votre téléphone
               </h2>

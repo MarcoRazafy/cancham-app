@@ -11,6 +11,7 @@ import {
   etapeDu,
   LOGOS,
   MentionSecret,
+  PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
 import {
@@ -34,7 +35,12 @@ export function TunnelMvola(p: PropsTunnel) {
   const ETAPES = [
     { titre: "Montant", detail: "Ce que vous réglez, et depuis quel numéro." },
     { titre: "Envoi", detail: `Depuis ${ussd}, vers le numéro de la chambre.` },
-    { titre: "Confirmation", detail: "L’équipe confirme dès réception." },
+    {
+      titre: "Confirmation",
+      detail: p.raccorde
+        ? "Le débit confirmé, votre reçu arrive aussitôt."
+        : "L’équipe confirme dès réception.",
+    },
   ];
 
   return (
@@ -199,6 +205,7 @@ export function TunnelMvola(p: PropsTunnel) {
           </>
         ) : etape === 2 ? (
           <>
+            <PaiementDirect p={p} className="mt-5" />
             <h1 className="m-0 mt-5 text-[27px] font-bold leading-[1.15] tracking-[-0.015em]">
               Envoyez {somme} depuis votre téléphone
             </h1>

@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
+import { MODES } from "@/lib/modes-reglement";
+import { estPortefeuilleConnu } from "@/lib/portefeuilles";
 import { referenceReglement } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import { baseSite } from "@/lib/site";
@@ -90,5 +92,70 @@ export async function payerParCarte(formData: FormData) {
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
 
   // Sortie du site : la carte se saisit chez eux, jamais chez nous.
+  redirect(ouverture.url);
+}
+
+/**
+ * Le paiement par portefeuille mobile depuis la plateforme : le membre
+ * valide, part chez le prestataire, et son téléphone reçoit la demande de
+ * confirmation de l'opérateur. Le code secret ne se saisit que là — jamais
+ * chez nous, ni chez le prestataire : sur le téléphone, auprès de
+ * l'opérateur. Le débit fait, la notification signée règle la facture, et
+ * les billets partent s'il s'agit d'une participation.
+ *
+ * Mêmes garde-fous que la carte : le règlement doit être à qui paie, en
+ * portefeuille, pas déjà encaissé, et en Ariary. Un règlement annoncé à la
+ * main peut aussi se payer ici : il repasse « en cours », avec une référence
+ * neuve.
+ */
+export async function payerParPortefeuille(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const id = texte(formData, "reglementId");
+
+  const p = await prisma.paiement.findUnique({
+    where: { id },
+    include: {
+      invoice: { select: { numero: true, objet: true, statut: true } },
+    },
+  });
+  if (!p || !user.memberId || p.memberId !== user.memberId) {
+    redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
+  }
+  const page = `/membre/cotisations/payer/${p.id}`;
+  if (!estPortefeuilleConnu(p.mode)) {
+    redirectWithErreur(page, "Ce règlement ne se fait pas par portefeuille mobile.");
+  }
+  if (p.statut === "reussie" || p.invoice?.statut === "payee") {
+    redirectWithFlash("/membre/cotisations", "Ce règlement est déjà encaissé.");
+  }
+  if (!vanillaPayActif()) {
+    redirectWithErreur(
+      page,
+      "Le paiement depuis la plateforme n’est pas encore raccordé : faites l’envoi depuis votre téléphone, comme indiqué.",
+    );
+  }
+  if (p.devise !== "MGA") {
+    redirectWithErreur(page, "Les portefeuilles mobiles n’acceptent que l’Ariary.");
+  }
+
+  const reference = referenceReglement();
+  await prisma.paiement.update({
+    where: { id: p.id },
+    data: { reference, statut: "en_cours" },
+  });
+
+  const base = baseSite();
+  const ouverture = await ouvrirPaiement({
+    montant: p.montant,
+    reference,
+    libelle: p.invoice
+      ? `${p.invoice.objet} — facture ${p.invoice.numero}`
+      : `Règlement CanCham (${MODES[p.mode].titre})`,
+    mode: "mobile_money",
+    notifUrl: `${base}/api/paiements/vanillapay`,
+    redirectUrl: `${base}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
+  });
+  if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
+
   redirect(ouverture.url);
 }

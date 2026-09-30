@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { delivrerBillets } from "@/lib/billets";
 import { prisma } from "@/lib/db";
 import { nomFacture, numeroFacture } from "@/lib/factures";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -177,6 +178,8 @@ export async function marquerFacturePayee(formData: FormData) {
     }),
   ]);
 
+  // Une participation : l'inscription se confirme et les billets partent.
+  await delivrerBillets(id, acteur);
   if (membre) {
     const memberId = membre.id;
     after(() =>

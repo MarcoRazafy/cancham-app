@@ -251,19 +251,57 @@ export function signatureValide(
   corps: string,
   signature: string | null,
 ): boolean {
-  const c = config();
-  if (!c || !signature) return false;
-
-  const attendue = createHmac("sha256", c.keySECRET)
-    .update(corps, "utf8")
-    .digest("hex")
-    .toUpperCase();
+  const attendue = signerCorps(corps);
+  if (!attendue || !signature) return false;
   const recue = signature.trim().toUpperCase();
   if (recue.length !== attendue.length) return false;
 
   return timingSafeEqual(
     Buffer.from(attendue, "utf8"),
     Buffer.from(recue, "utf8"),
+  );
+}
+
+/**
+ * La signature d'un corps de notification, telle que le prestataire la
+ * calcule. Sert à la vérifier — et au simulateur local à en fabriquer une.
+ * `null` sans clés.
+ */
+export function signerCorps(corps: string): string | null {
+  const c = config();
+  if (!c) return null;
+  return createHmac("sha256", c.keySECRET)
+    .update(corps, "utf8")
+    .digest("hex")
+    .toUpperCase();
+}
+
+/**
+ * Les identifiants qu'un appelant présente sont-ils les nôtres ? Pour le
+ * simulateur local, qui joue le prestataire et vérifie ce qu'on lui envoie.
+ */
+export function identifiantsValides(
+  keyID: string | null,
+  keySECRET: string | null,
+): boolean {
+  const c = config();
+  if (!c || !keyID || !keySECRET) return false;
+  const a = Buffer.from(`${keyID}\n${keySECRET}`, "utf8");
+  const b = Buffer.from(`${c.keyID}\n${c.keySECRET}`, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/**
+ * Le simulateur local tient lieu de prestataire : `VANILLAPAY_BASE` pointe
+ * alors vers nos propres routes `/api/bac-a-sable/vanillapay`. Jamais en
+ * production — aucun argent n'y change de main.
+ */
+export function simulateurActif(): boolean {
+  const base = process.env.VANILLAPAY_BASE?.trim().replace(/\/+$/, "") ?? "";
+  return (
+    process.env.NODE_ENV !== "production" &&
+    /\/api\/bac-a-sable\/vanillapay$/.test(base) &&
+    vanillaPayActif()
   );
 }
 

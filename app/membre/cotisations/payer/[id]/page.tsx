@@ -130,6 +130,7 @@ export default async function PageReglement({
         statut={p.statut}
         modifier={numero === "modifier"}
         retour={retour}
+        raccorde={vanillaPayActif()}
       />
     );
   }

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Ticket, XCircle } from "lucide-react";
 import { Banner, BtnLink, Card, ViewHead } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { fmtMontant } from "@/lib/membership";
@@ -26,7 +26,9 @@ export default async function RetourPaiementPage({
   const p = ref
     ? await prisma.paiement.findUnique({
         where: { reference: ref },
-        include: { invoice: { select: { numero: true, memberId: true } } },
+        include: {
+          invoice: { select: { numero: true, memberId: true, eventId: true } },
+        },
       })
     : null;
   // Une référence qui n'est pas la sienne n'existe pas pour lui.
@@ -54,10 +56,14 @@ export default async function RetourPaiementPage({
   }
 
   const montant = fmtMontant(p.montant, p.devise);
+  // Une participation réglée a ses billets ; une cotisation, son certificat.
+  const evenement = p.invoice?.eventId ?? null;
 
   return (
     <>
-      <ViewHead title="Paiement de la cotisation" />
+      <ViewHead
+        title={evenement ? "Paiement de la participation" : "Paiement de la cotisation"}
+      />
 
       <Card className="p-6 max-w-[620px]">
         {statut === "reussie" ? (
@@ -67,7 +73,9 @@ export default async function RetourPaiementPage({
             title="Paiement reçu"
           >
             La facture {p.invoice?.numero} est réglée : {montant} encaissés.
-            Votre adhésion est à jour, et votre certificat le dit déjà.
+            {evenement
+              ? " Votre inscription est confirmée : vos billets, avec leur QR code, partent à l’adresse donnée à l’inscription, et vous les retrouvez sur la fiche de l’événement."
+              : " Votre adhésion est à jour, et votre certificat le dit déjà."}
           </Banner>
         ) : statut === "echouee" ? (
           <Banner
@@ -84,9 +92,10 @@ export default async function RetourPaiementPage({
             icon={<Clock size={18} />}
             title="Paiement en cours"
           >
-            Votre banque n’a pas encore confirmé. Cela prend parfois quelques
-            minutes : revenez sur cette page ou rechargez-la. La facture sera
-            marquée réglée d’elle-même dès la confirmation.
+            Le prestataire n’a pas encore confirmé. Cela prend parfois
+            quelques minutes : revenez sur cette page ou rechargez-la. La
+            facture sera marquée réglée d’elle-même dès la confirmation
+            {evenement ? ", et vos billets partiront au même moment" : ""}.
           </Banner>
         )}
 
@@ -97,7 +106,12 @@ export default async function RetourPaiementPage({
           </span>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5 flex flex-wrap gap-3">
+          {evenement && statut === "reussie" ? (
+            <BtnLink href={`/membre/evenements/${evenement}`} sm>
+              <Ticket size={14} /> Voir mes billets
+            </BtnLink>
+          ) : null}
           <BtnLink href="/membre/cotisations" variant="ghost" sm>
             <ArrowLeft size={14} /> Retour aux cotisations
           </BtnLink>
