@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   Check,
   ChevronLeft,
   ChevronRight,
   FileUp,
   ImagePlus,
+  LoaderCircle,
   Pencil,
   Plus,
   Star,
@@ -524,6 +525,7 @@ export function SupprimerRessourceButton({
   resourceId: string;
   titre: string;
 }) {
+  const [enCours, demarrer] = useTransition();
   return (
     <Modal
       title="Retirer la ressource"
@@ -540,8 +542,13 @@ export function SupprimerRessourceButton({
       )}
     >
       {(fermer) => (
-        <form action={deleteResource}>
-          <input type="hidden" name="resourceId" value={resourceId} />
+        /*
+          Pas de <form> ici : ce bouton vit sur une carte de la bibliothèque,
+          à l'intérieur du formulaire du copier-coller, et un formulaire ne
+          peut pas en contenir un autre. Le navigateur ignorait celui-ci :
+          « Retirer » n'envoyait rien. L'action est donc appelée directement.
+        */
+        <>
           <ModalBody>
             <p className="m-0 text-[13.6px] text-muted">
               « <b className="text-ink">{titre}</b> » sera retirée de la
@@ -550,11 +557,35 @@ export function SupprimerRessourceButton({
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
-            <SubmitButton variant="danger" pendingLabel="Retrait…">
-              <Trash2 size={14} /> Retirer
-            </SubmitButton>
+            <button
+              type="button"
+              disabled={enCours}
+              onClick={() =>
+                demarrer(async () => {
+                  const donnees = new FormData();
+                  donnees.set("resourceId", resourceId);
+                  await deleteResource(donnees);
+                })
+              }
+              className="inline-flex cursor-pointer items-center gap-[7px] whitespace-nowrap rounded-[var(--radius-s)] border border-transparent bg-bad px-[15px] py-[9px] text-[13.4px] font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+            >
+              {enCours ? (
+                <>
+                  <LoaderCircle
+                    size={14}
+                    className="animate-spin"
+                    aria-hidden
+                  />{" "}
+                  Retrait…
+                </>
+              ) : (
+                <>
+                  <Trash2 size={14} /> Retirer
+                </>
+              )}
+            </button>
           </ModalFooter>
-        </form>
+        </>
       )}
     </Modal>
   );
