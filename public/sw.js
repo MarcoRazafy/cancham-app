@@ -41,3 +41,79 @@ self.addEventListener("fetch", (evenement) => {
     ),
   );
 });
+
+/* ---------- Notifications de l'appareil ---------- */
+
+/*
+ * Le serveur envoie un petit JSON : titre, corps, page à ouvrir, étiquette.
+ * L'étiquette regroupe : une nouvelle notification d'un même fil remplace la
+ * précédente au lieu de s'empiler.
+ */
+self.addEventListener("push", (evenement) => {
+  let n = {};
+  try {
+    n = evenement.data ? evenement.data.json() : {};
+  } catch {
+    n = { corps: evenement.data ? evenement.data.text() : "" };
+  }
+  evenement.waitUntil(
+    self.registration.showNotification(n.titre || "CanCham Connect", {
+      body: n.corps || "",
+      icon: "/icones/icone-192.png",
+      badge: "/icones/badge-96.png",
+      tag: n.etiquette || undefined,
+      renotify: Boolean(n.etiquette),
+      data: { url: n.url || "/" },
+    }),
+  );
+});
+
+/*
+ * Au clic, la page qui traite la notification : dans une fenêtre de la
+ * plateforme déjà ouverte s'il y en a une, sinon dans une nouvelle.
+ */
+self.addEventListener("notificationclick", (evenement) => {
+  evenement.notification.close();
+  const url = new URL(
+    (evenement.notification.data && evenement.notification.data.url) || "/",
+    self.location.origin,
+  ).href;
+  evenement.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then(async (fenetres) => {
+        const ouverte = fenetres.find(
+          (f) => new URL(f.url).origin === self.location.origin,
+        );
+        if (ouverte) {
+          await ouverte.focus();
+          return "navigate" in ouverte ? ouverte.navigate(url) : undefined;
+        }
+        return self.clients.openWindow(url);
+      }),
+  );
+});
+
+/*
+ * Le navigateur a changé l'adresse de l'abonnement : on se réinscrit avec la
+ * même clé et on prévient le serveur, sinon les envois partiraient dans le
+ * vide.
+ */
+self.addEventListener("pushsubscriptionchange", (evenement) => {
+  const ancien = evenement.oldSubscription;
+  const nouveau = evenement.newSubscription
+    ? Promise.resolve(evenement.newSubscription)
+    : self.registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: ancien && ancien.options.applicationServerKey,
+      });
+  evenement.waitUntil(
+    nouveau.then((abonnement) =>
+      fetch("/api/push/abonnement", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ abonnement: abonnement.toJSON() }),
+      }),
+    ),
+  );
+});

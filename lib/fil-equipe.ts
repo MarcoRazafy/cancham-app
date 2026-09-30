@@ -1,6 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/db";
+import { after } from "next/server";
+import { apercu, notifierEquipe } from "@/lib/push";
 
 /**
  * Fil d'assistance d'un membre avec l'équipe CanCham : celui qu'il a déjà, ou
@@ -96,5 +98,15 @@ export async function ecrireAEquipe(
     where: { threadId, userId: user.id },
     data: { luLe: maintenant },
   });
+
+  // L'équipe le sait sur son téléphone : une demande attend.
+  after(() =>
+    notifierEquipe({
+      titre: `Message de ${user.nom}`,
+      corps: apercu(texte),
+      url: `/admin/messagerie?t=${threadId}`,
+      etiquette: `fil-${threadId}`,
+    }),
+  );
   return threadId;
 }

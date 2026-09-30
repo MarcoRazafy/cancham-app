@@ -41,6 +41,8 @@ Sur le service de l'application, onglet **Variables** :
 | `RESEND_API_KEY` | La clé Resend (étape 3) |
 | `COURRIEL_EXPEDITEUR` | `CanCham Connect <connect@cancham.mg>` — sur le domaine vérifié |
 | `COURRIEL_EQUIPE` | L'adresse qui reçoit les alertes d'inscription et les réponses aux e-mails |
+| `WEB_PUSH_CLE_PUBLIQUE` | Clé VAPID publique des notifications sur l'appareil, générée avec `npx web-push generate-vapid-keys` |
+| `WEB_PUSH_CLE_PRIVEE` | Sa clé privée, générée en même temps. Sans les deux, la cloche ne propose pas d'activer les notifications. |
 
 Générer `AUTH_SECRET` :
 

@@ -23,6 +23,7 @@ import {
   type Plage,
 } from "@/lib/rendezvous";
 import { getCurrentUser } from "@/lib/session";
+import { notifier, notifierEquipe } from "@/lib/push";
 
 /**
  * Rendez-vous avec l'équipe : réservation par un membre, et réglages côté
@@ -179,6 +180,11 @@ export async function reserverRendezvous(formData: FormData) {
 
   const details = await annonce(rendezvous);
   after(async () => {
+    await notifierEquipe({
+      titre: "Rendez-vous pris",
+      corps: `${details.type} · ${details.jour}, ${details.horaire} · ${rendezvous.user.nom}${details.entreprise ? ` (${details.entreprise})` : ""}`,
+      url: EQUIPE,
+    });
     await envoyerCourriel(
       courrielRendezvousPris(rendezvous.user.email, details),
     );
@@ -252,6 +258,15 @@ export async function annulerRendezvous(formData: FormData) {
   const details = await annonce(rendezvous);
   // Celui qui annule le sait déjà : l'e-mail part à l'autre partie.
   const parLeMembre = rendezvous.userId === user.id;
+  const annulation = {
+    titre: "Rendez-vous annulé",
+    corps: `${details.type} · ${details.jour}, ${details.horaire} · annulé par ${user.nom}`,
+  };
+  after(() =>
+    parLeMembre
+      ? notifierEquipe({ ...annulation, url: EQUIPE })
+      : notifier([rendezvous.userId], { ...annulation, url: MEMBRE }),
+  );
   after(async () =>
     envoyerCourriel(
       courrielRendezvousAnnule(

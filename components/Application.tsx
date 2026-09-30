@@ -34,7 +34,8 @@ function suivreMode(rappel: () => void) {
   return () => requete.removeEventListener("change", rappel);
 }
 
-function lireMode(): boolean {
+/** Vrai dans l'application installée. Hors composant : voir `useDansApplication`. */
+export function lireMode(): boolean {
   return (
     window.matchMedia(EN_APPLICATION).matches ||
     // Safari sur iPhone signale l'écran d'accueil à sa façon.
@@ -95,7 +96,7 @@ function suivreInvitation(rappel: () => void) {
  */
 type Consigne = "ios" | "mac" | null;
 
-function lireConsigne(): Consigne {
+export function lireConsigne(): Consigne {
   const ua = navigator.userAgent;
   const ipad =
     navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;

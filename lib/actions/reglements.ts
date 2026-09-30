@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { ajouterJours, estJourISO } from "@/lib/agenda";
-import { aujourdhuiISO } from "@/lib/format";
+import { aujourdhuiISO, fmtDate } from "@/lib/format";
 import { fmtMontant } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -22,6 +22,8 @@ import {
   numeroDeLOperateur,
   PORTEFEUILLES,
 } from "@/lib/portefeuilles";
+import { after } from "next/server";
+import { notifierEquipe, notifierMembre } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -210,7 +212,16 @@ export async function preparerRemiseEspeces(formData: FormData) {
 
   const p = await prisma.paiement.findUnique({
     where: { id },
-    select: { id: true, memberId: true, mode: true, statut: true },
+    select: {
+      id: true,
+      memberId: true,
+      mode: true,
+      statut: true,
+      reference: true,
+      montant: true,
+      devise: true,
+      member: { select: { nom: true } },
+    },
   });
   if (!p || !user.memberId || p.memberId !== user.memberId) {
     redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
@@ -261,6 +272,14 @@ export async function preparerRemiseEspeces(formData: FormData) {
       },
     },
   });
+  after(() =>
+    notifierEquipe({
+      titre: "Remise en espèces annoncée",
+      corps: `${p.member?.nom ?? user.nom} · ${fmtMontant(p.montant, p.devise)} · ${lieu === "domicile" ? "à domicile" : "au bureau"} le ${fmtDate(jour, { day: "numeric", month: "long" })}, ${moment === "matin" ? "le matin" : "l’après-midi"}`,
+      url: "/admin/reglements",
+      etiquette: `reglement-${p.id}`,
+    }),
+  );
   revalidatePath("/", "layout");
   redirect(page);
 }
@@ -278,7 +297,16 @@ export async function annoncerReglement(formData: FormData) {
 
   const p = await prisma.paiement.findUnique({
     where: { id },
-    select: { id: true, memberId: true, statut: true, reference: true },
+    select: {
+      id: true,
+      memberId: true,
+      statut: true,
+      reference: true,
+      mode: true,
+      montant: true,
+      devise: true,
+      member: { select: { nom: true } },
+    },
   });
   if (!p || !user.memberId || p.memberId !== user.memberId) {
     redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
@@ -295,6 +323,15 @@ export async function annoncerReglement(formData: FormData) {
       refBancaire: texte(formData, "refBancaire") || null,
     },
   });
+  // L'équipe le sait sur son téléphone : un règlement attend sa confirmation.
+  after(() =>
+    notifierEquipe({
+      titre: "Règlement annoncé",
+      corps: `${p.member?.nom ?? user.nom} · ${fmtMontant(p.montant, p.devise)} par ${MODES[p.mode as ModeReglement].titre.toLowerCase()} · réf. ${p.reference}`,
+      url: "/admin/reglements",
+      etiquette: `reglement-${p.id}`,
+    }),
+  );
   revalidatePath("/", "layout");
   redirectWithFlash(
     "/membre/cotisations",
@@ -363,6 +400,16 @@ export async function confirmerReglement(formData: FormData) {
     `${montant} par ${moyen.toLowerCase()} · ${p.member?.nom ?? "—"} · réf. ${p.reference}`,
     user.nom,
   );
+  if (p.member) {
+    const memberId = p.member.id;
+    after(() =>
+      notifierMembre(memberId, {
+        titre: "Paiement confirmé",
+        corps: `${montant} · réf. ${p.reference} · merci !${cotisation ? " Votre adhésion est à jour." : ""}`,
+        url: p.invoice ? `/membre/cotisations/${p.invoice.id}` : "/membre/cotisations",
+      }),
+    );
+  }
   revalidatePath("/", "layout");
   redirectWithFlash(retour, `Règlement ${p.reference} confirmé`);
 }
@@ -375,7 +422,7 @@ export async function refuserReglement(formData: FormData) {
 
   const p = await prisma.paiement.findUnique({
     where: { id },
-    select: { id: true, reference: true, statut: true },
+    select: { id: true, reference: true, statut: true, memberId: true },
   });
   if (!p) redirectWithErreur(retour, "Règlement introuvable.");
   if (p.statut === "reussie") {
@@ -386,6 +433,16 @@ export async function refuserReglement(formData: FormData) {
     where: { id: p.id },
     data: { statut: "echouee" },
   });
+  if (p.memberId) {
+    const memberId = p.memberId;
+    after(() =>
+      notifierMembre(memberId, {
+        titre: "Règlement non constaté",
+        corps: `Réf. ${p.reference} · l’équipe n’a pas retrouvé votre paiement. Reprenez depuis vos cotisations.`,
+        url: "/membre/cotisations",
+      }),
+    );
+  }
   await journal(
     "reglement_refuse",
     p.reference,

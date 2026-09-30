@@ -260,6 +260,7 @@ model User {
   rappels            Rappel[]
   jetons             JetonCompte[]
   notesMembres       NoteMembre[]
+  abonnementsPush    AbonnementPush[]
 
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
@@ -267,6 +268,33 @@ model User {
 
   @@index([memberId])
   @@map("users")
+}
+
+/// Un navigateur abonné aux notifications de l'appareil (Web Push).
+///
+/// Une ligne par navigateur : qui active les notifications sur son
+/// téléphone et sur son ordinateur en a deux. L'adresse (`endpoint`) est
+/// propre au navigateur, qui la change parfois ; le service worker renvoie
+/// alors la nouvelle. Une adresse que le service de notifications déclare
+/// disparue s'efface au premier envoi qui échoue.
+model AbonnementPush {
+  id       String  @id @default(cuid())
+  endpoint String  @unique
+  /// Les deux clés du chiffrement, telles que le navigateur les donne.
+  p256dh   String
+  auth     String
+  /// Le navigateur et le système, en clair, pour reconnaître l'appareil.
+  appareil String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  /// Dernière inscription ou réinscription de ce navigateur.
+  vuLe      DateTime @default(now())
+
+  @@index([userId])
+  @@map("abonnements_push")
 }
 
 /// Nature d'une offre du catalogue d'un membre.

@@ -31,6 +31,7 @@ import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import type { EventFormat } from "@/lib/types";
+import { notifierEquipe, notifierMembre, notifierTousLesMembres } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
@@ -290,6 +291,13 @@ export async function registerForEvent(formData: FormData) {
   } else {
     envoyerBillets(event, participants, email, lien);
   }
+  after(() =>
+    notifierEquipe({
+      titre: `Inscription : ${event.titre}`,
+      corps: `${membre.nom} · ${n} représentant${n > 1 ? "s" : ""}${event.payant ? ` · ${fmtMoney(event.prix * n)} à régler` : ""}`,
+      url: `/admin/evenements/${eventId}`,
+    }),
+  );
 
   revalideTout();
 
@@ -452,6 +460,13 @@ export async function inscriptionPublique(formData: FormData) {
   } else {
     envoyerBillets(event, participants, email, lien);
   }
+  after(() =>
+    notifierEquipe({
+      titre: `Inscription publique : ${event.titre}`,
+      corps: `${entreprise} · ${n} personne${n > 1 ? "s" : ""}${aRegler ? ` · ${aRegler} à régler` : ""}`,
+      url: `/admin/evenements/${eventId}`,
+    }),
+  );
 
   revalideTout();
   redirect(`/evenements/${eventId}/billet?${new URLSearchParams({ code })}`);
@@ -641,6 +656,17 @@ export async function saveEvent(formData: FormData) {
     },
   });
 
+  // Un nouvel événement : tous les membres l'apprennent sur leur appareil.
+  if (!id) {
+    after(() =>
+      notifierTousLesMembres({
+        titre: "Nouvel événement CanCham",
+        corps: `${e.titre} · ${fmtDate(toISODate(e.date), { day: "numeric", month: "long" })} · ${e.lieu}`,
+        url: `/membre/evenements/${e.id}`,
+      }),
+    );
+  }
+
   revalideTout();
   redirectWithFlash(
     pageEvenement(e.id),
@@ -732,7 +758,7 @@ export async function validerInscription(formData: FormData) {
   const inscriptionMembre = racine
     ? await prisma.registration.findUnique({
         where: { code: racine },
-        select: { id: true },
+        select: { id: true, memberId: true },
       })
     : null;
   const lien = await urlPublique(
@@ -745,6 +771,16 @@ export async function validerInscription(formData: FormData) {
   );
   if (participants.length && ligne.email.includes("@")) {
     envoyerBillets(ligne.event, participants, ligne.email, lien);
+  }
+  if (inscriptionMembre) {
+    const memberId = inscriptionMembre.memberId;
+    after(() =>
+      notifierMembre(memberId, {
+        titre: `Billets prêts : ${ligne.event.titre}`,
+        corps: `Inscription validée · ${n} participant${n > 1 ? "s" : ""}`,
+        url: `/membre/evenements/${eventId}`,
+      }),
+    );
   }
 
   revalideTout();
