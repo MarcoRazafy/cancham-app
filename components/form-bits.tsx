@@ -8,7 +8,13 @@ import {
   type ComponentProps,
   type ReactNode,
 } from "react";
-import { ImagePlus, LoaderCircle } from "lucide-react";
+import { Check, ImagePlus, LoaderCircle } from "lucide-react";
+import {
+  JetonsEnvoyes,
+  pourcentage,
+  useEnvois,
+  type Envoi,
+} from "@/components/EnvoisSuivis";
 
 /** Champs de formulaire, accordés aux tokens de l'application. */
 export const INPUT =
@@ -114,6 +120,45 @@ export function ModalBody({ children }: { children: ReactNode }) {
   return <div className="px-5 py-5 flex flex-col gap-3.5">{children}</div>;
 }
 
+/**
+ * Posé sur l'aperçu d'une photo pendant son envoi : le pourcentage au
+ * centre, une barre en bas, puis une coche quand elle est arrivée.
+ */
+export function VoileEnvoi({ envoi }: { envoi: Envoi }) {
+  const pct = pourcentage(envoi);
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className={`absolute inset-0 flex flex-col items-center justify-center gap-1 text-white transition-colors duration-300 ${
+        envoi.termine && !envoi.erreur ? "bg-black/0" : "bg-[#0f1d2c]/55"
+      }`}
+    >
+      {envoi.erreur ? (
+        <span className="px-2 text-center text-[11.5px] font-semibold leading-tight">
+          Envoi interrompu — elle partira avec le formulaire
+        </span>
+      ) : envoi.termine ? (
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1f7a45] shadow">
+          <Check size={17} aria-label="Photo prête" />
+        </span>
+      ) : (
+        <span className="text-[20px] font-bold tabular-nums drop-shadow">
+          {pct} %
+        </span>
+      )}
+      {!envoi.termine ? (
+        <span className="absolute inset-x-0 bottom-0 h-1.5 bg-white/25">
+          <span
+            className="block h-full bg-[#7ee2a8] transition-[width] duration-200"
+            style={{ width: `${pct}%` }}
+          />
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 export function CancelButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -175,8 +220,13 @@ export function ChampPhoto({
   rond?: boolean;
 }) {
   const [choisie, setChoisie] = useState<string | null>(null);
+  const [fichiers, setFichiers] = useState<File[]>([]);
   const [retiree, setRetiree] = useState(false);
   const vue = choisie ?? (retiree ? null : (apercu ?? null));
+  // La photo part dès qu'on la choisit ; son pourcentage s'affiche sur
+  // l'aperçu, et le formulaire n'aura plus qu'à envoyer son jeton.
+  const { etats, jetons } = useEnvois(fichiers);
+  const envoi = etats[0];
 
   return (
     <div>
@@ -192,8 +242,11 @@ export function ChampPhoto({
           }`}
         >
           {vue ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={vue} alt="" className="w-full h-full object-cover" />
+            <span className="relative block h-full w-full">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={vue} alt="" className="w-full h-full object-cover" />
+              {envoi && !envoi.masque ? <VoileEnvoi envoi={envoi} /> : null}
+            </span>
           ) : (
             <span className="flex flex-col items-center gap-1.5 text-faint text-[12px]">
               <ImagePlus size={22} />
@@ -207,16 +260,18 @@ export function ChampPhoto({
             {vue ? "Remplacer la photo" : "Ajouter une photo"}
             <input
               type="file"
-              name={name}
+              name={jetons ? undefined : name}
               accept="image/*"
               className="sr-only"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 setChoisie(f ? URL.createObjectURL(f) : null);
+                setFichiers(f ? [f] : []);
                 if (f) setRetiree(false);
               }}
             />
           </label>
+          <JetonsEnvoyes name={name} jetons={jetons} />
           {retirer && apercu && !choisie ? (
             <label className="flex items-center gap-2 text-[12.8px] text-muted cursor-pointer">
               <input

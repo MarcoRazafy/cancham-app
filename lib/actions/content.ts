@@ -18,6 +18,7 @@ import {
   type FichierRecu,
 } from "@/lib/stockage-ressources";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
+import { fichierRecu, fichiersRecus } from "@/lib/televersements";
 import {
   lirePressePapier,
   poserPressePapier,
@@ -102,9 +103,9 @@ export async function enregistrerActualite(formData: FormData) {
         })
       )?.images ?? [])
     : [];
-  const fichiers = formData
-    .getAll("images")
-    .filter((f): f is File => f instanceof File && f.size > 0);
+  // Des fichiers, ou les jetons de leurs envois faits d'avance — dans
+  // l'ordre du champ, que `ordre` désigne par rang.
+  const fichiers = await fichiersRecus(formData.getAll("images"));
   let ordre: string[];
   try {
     ordre = JSON.parse(texte(formData, "ordre") || "null") ?? [
@@ -382,8 +383,7 @@ export async function enregistrerRessource(formData: FormData) {
   const cat = RESOURCE_CAT_DB[texte(formData, "cat") as ResourceCategory];
   const type = texte(formData, "type") === "payant" ? "payant" : "gratuit";
   const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
-  const entree = formData.get("fichier");
-  const fichier = entree instanceof File && entree.size > 0 ? entree : null;
+  const fichier = await fichierRecu(formData.get("fichier"));
   // Le dossier où la ranger. Vide = à la racine de la bibliothèque.
   const dossierId = texte(formData, "dossier") || null;
 

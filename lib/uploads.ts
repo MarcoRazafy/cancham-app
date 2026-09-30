@@ -4,6 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
+import { fichierRecu } from "@/lib/televersements";
 
 /**
  * Réception des images envoyées par les membres.
@@ -35,7 +36,7 @@ export class ImageRefusee extends Error {}
  * « ne change pas l'image existante », pas « efface-la ».
  */
 export async function enregistrerImage(
-  fichier: FormDataEntryValue | null,
+  entree: FormDataEntryValue | null,
   options: {
     /** Préfixe lisible du nom de fichier, par exemple `couverture-m1`. */
     prefixe: string;
@@ -48,7 +49,10 @@ export async function enregistrerImage(
     transparence?: boolean;
   },
 ): Promise<string | null> {
-  if (!(fichier instanceof File) || fichier.size === 0) return null;
+  // Le fichier lui-même, ou le jeton de l'envoi fait d'avance pour en
+  // suivre le pourcentage (lib/televersements.ts).
+  const fichier = await fichierRecu(entree);
+  if (!fichier) return null;
 
   if (!fichier.type.startsWith("image/")) {
     throw new ImageRefusee("Le fichier envoyé n’est pas une image.");

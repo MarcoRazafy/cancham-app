@@ -23,6 +23,7 @@ import {
   effacerPiece,
   recevoirPiece,
 } from "@/lib/stockage-messagerie";
+import { fichiersRecus } from "@/lib/televersements";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
 import type { Space } from "@/lib/types";
 
@@ -98,9 +99,8 @@ export async function sendMessage(formData: FormData) {
     );
   }
 
-  const fichiers = formData
-    .getAll("pieces")
-    .filter((f): f is File => f instanceof File && f.size > 0);
+  // Des fichiers, ou les jetons de leurs envois faits d'avance.
+  const fichiers = await fichiersRecus(formData.getAll("pieces"));
 
   if (!contenu && fichiers.length === 0) {
     redirectWithErreur(retour, "Le message est vide.");

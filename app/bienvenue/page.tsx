@@ -28,6 +28,7 @@ import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import { getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import type { Member, User as Utilisateur } from "@/lib/types";
+import { EntreeFichier } from "@/components/EnvoisSuivis";
 
 /**
  * Accueil d'un nouvel inscrit : la présentation, une étape à la fois, à la
@@ -446,12 +447,7 @@ function EtapeVisuels({ membre }: { membre: Member }) {
             : "PNG sur fond transparent de préférence."
         }
       >
-        <input
-          type="file"
-          name="logo"
-          accept="image/*"
-          className={CHAMP_FICHIER}
-        />
+        <EntreeFichier name="logo" accept="image/*" className={CHAMP_FICHIER} />
       </ChampAuth>
       <ChampAuth
         label="Photo de couverture (facultatif)"
@@ -461,8 +457,7 @@ function EtapeVisuels({ membre }: { membre: Member }) {
             : "Le bandeau en tête de votre fiche : une photo au format paysage."
         }
       >
-        <input
-          type="file"
+        <EntreeFichier
           name="cover"
           accept="image/*"
           className={CHAMP_FICHIER}
@@ -533,8 +528,7 @@ function EtapeProduits({ membre }: { membre: Member }) {
           label="Photos (facultatif)"
           hint={`${PHOTOS_PAR_PRODUIT} au plus.`}
         >
-          <input
-            type="file"
+          <EntreeFichier
             name="photos"
             accept="image/*"
             multiple
