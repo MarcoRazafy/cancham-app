@@ -337,6 +337,67 @@ export async function rejectCandidature(formData: FormData) {
 }
 
 /**
+ * Commentaire de l'équipe sur un membre, dans sa fiche du back-office.
+ *
+ * Réservé à l'équipe, écriture comme lecture. Rien n'en part vers
+ * l'adhérent : ni affichage, ni courriel, ni notification. C'est ce qui lui
+ * permet d'être franc. Le motif d'un refus d'adhésion s'y range aussi.
+ *
+ * Pas d'entrée au journal : celui-ci retrace les opérations faites sur un
+ * membre — une adhésion approuvée, une facture réglée. Un commentaire est
+ * une remarque de travail, et en consigner chacun noierait le reste.
+ */
+export async function ajouterNoteMembre(formData: FormData) {
+  const user = await exigerEquipe();
+  const memberId = texte(formData, "memberId");
+  const retour = `/admin/membres/${memberId}`;
+
+  const contenu = texte(formData, "texte");
+  if (!contenu) redirectWithErreur(retour, "Le commentaire est vide.");
+  if (contenu.length > COMMENTAIRE_MAX) {
+    redirectWithErreur(
+      retour,
+      `Le commentaire dépasse ${COMMENTAIRE_MAX} caractères : gardez l’essentiel.`,
+    );
+  }
+
+  const membre = await prisma.member.findUnique({
+    where: { id: memberId },
+    select: { id: true },
+  });
+  if (!membre) redirectWithErreur("/admin/membres", "Membre introuvable.");
+
+  await prisma.noteMembre.create({
+    data: { memberId, texte: contenu, auteur: user.nom, userId: user.id },
+  });
+  revalidatePath(retour);
+  redirectWithFlash(retour, "Commentaire ajouté");
+}
+
+/**
+ * Retrait d'un commentaire.
+ *
+ * Toute l'équipe peut retirer ceux des autres : c'est un carnet commun, et
+ * un commentaire devenu faux doit pouvoir disparaître même si celle ou
+ * celui qui l'a écrit est parti.
+ */
+export async function supprimerNoteMembre(formData: FormData) {
+  await exigerEquipe();
+  const id = texte(formData, "noteId");
+
+  const note = await prisma.noteMembre.findUnique({
+    where: { id },
+    select: { memberId: true },
+  });
+  if (!note) redirectWithErreur("/admin/membres", "Commentaire introuvable.");
+
+  const retour = `/admin/membres/${note.memberId}`;
+  await prisma.noteMembre.delete({ where: { id } });
+  revalidatePath(retour);
+  redirectWithFlash(retour, "Commentaire retiré");
+}
+
+/**
  * Revenir sur un refus : le dossier repart à l'examen.
  *
  * Une décision prise trop vite, un dossier complété depuis — il ne faut pas
