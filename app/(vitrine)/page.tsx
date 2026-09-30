@@ -12,6 +12,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselCartes } from "@/components/public/CarrouselCartes";
+import { Defile, SURVOL_CARTE } from "@/components/public/Defile";
 import { FormulaireInfolettre } from "@/components/public/FormulaireInfolettre";
 import { LienAncre } from "@/components/public/LienAncre";
 import { CarteActualite } from "@/components/public/CarteActualite";
@@ -799,12 +800,24 @@ export default async function PublicHome() {
               Le bureau du Conseil
             </div>
 
-            <div className="mt-6 grid gap-x-9 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
+            {/*
+              Les trois rangées glissent en boucle, en sens alternés : le
+              bureau vers la gauche, les conseillères vers la droite, l'équipe
+              vers la gauche. Trois cartes de front ici, quatre plus bas — sur
+              téléphone, une seule, la suivante dépassant pour inviter à
+              glisser.
+            */}
+            <Defile
+              sens="gauche"
+              ecart={36}
+              className="mt-6"
+              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-2*var(--ecart))/3)]"
+            >
               {BUREAU.map((m, i) => (
                 <article
                   key={m.nom}
                   style={retard(160 + i * 80)}
-                  className="reveler"
+                  className={`reveler reveler-zoom ${SURVOL_CARTE}`}
                 >
                   {/*
                     Cadrage haut : ces portraits sont des photos d'identité, et
@@ -830,7 +843,7 @@ export default async function PublicHome() {
                   </h3>
                 </article>
               ))}
-            </div>
+            </Defile>
           </div>
 
           {/* ---------- Les conseillères ---------- */}
@@ -844,12 +857,17 @@ export default async function PublicHome() {
               plus bas : une vignette ronde perdue dans un grand cadre laissait
               ces quatre-là plus effacées que le reste de la page.
             */}
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <Defile
+              sens="droite"
+              ecart={24}
+              className="mt-6"
+              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
+            >
               {CONSEILLERES.map((c, i) => (
                 <article
                   key={c.nom}
                   style={retard(100 + i * 70)}
-                  className="reveler reveler-zoom relative flex flex-col overflow-hidden rounded-2xl bg-surface"
+                  className={`reveler reveler-zoom relative flex flex-col overflow-hidden rounded-2xl bg-surface ${SURVOL_CARTE}`}
                 >
                   <span
                     aria-hidden
@@ -870,7 +888,7 @@ export default async function PublicHome() {
                   </h3>
                 </article>
               ))}
-            </div>
+            </Defile>
           </div>
 
           {/* ---------- L'équipe permanente ---------- */}
@@ -901,12 +919,17 @@ export default async function PublicHome() {
               </p>
             </div>
 
-            <div className="mt-8 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
+            <Defile
+              sens="gauche"
+              ecart={28}
+              className="mt-8"
+              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
+            >
               {EQUIPE.map((m, i) => (
                 <article
                   key={m.nom}
                   style={retard(200 + i * 70)}
-                  className="reveler"
+                  className={`reveler reveler-zoom ${SURVOL_CARTE}`}
                 >
                   <Image
                     src={m.photo}
@@ -928,7 +951,7 @@ export default async function PublicHome() {
                   </h3>
                 </article>
               ))}
-            </div>
+            </Defile>
           </div>
         </div>
       </section>
