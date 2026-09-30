@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import {
   CONTENEUR,
+  retard,
   TITRE_BLOC,
   TITRE_GRAS,
   TITRE_SECTION,
@@ -168,22 +169,6 @@ const FILET =
 /** Le même filet, tout en vert : il signale l'équipe salariée, pas les élus. */
 const FILET_VERT =
   "bg-[linear-gradient(90deg,var(--marque-vert-clair),#3fc98a)]";
-
-/**
- * Décalage de l'apparition d'un élément dans une rangée.
- *
- * Les apparitions au défilement suivent la position dans la page, pas une
- * horloge : un délai en secondes n'y ferait rien. C'est donc la plage de
- * déclenchement qu'on décale — chaque carte entre un peu après la
- * précédente, et la rangée se dévoile en cascade.
- *
- * La plage s'achève pendant l'entrée, jamais plus tard : un bloc situé tout
- * en bas de page ne peut pas toujours défiler jusqu'au bout, et resterait
- * alors à demi transparent.
- */
-const cascade = (i: number) => ({
-  animationRange: `entry ${10 + i * 9}% entry ${64 + i * 9}%`,
-});
 
 /** L'accueil porte le titre du site, sans suffixe : il l'est déjà. */
 export const metadata: Metadata = {
@@ -428,23 +413,28 @@ export default async function PublicHome() {
       {/* ==================== À qui nous parlons ==================== */}
       <section className={`${CONTENEUR} pt-10 pb-14`}>
         <div>
-          <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end">
-            <h2 className={TITRE_SECTION}>
+          <div className="scene grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end">
+            <h2 className={`${TITRE_SECTION} reveler`}>
               Vous avez votre place <Saillant>chez nous.</Saillant>
             </h2>
-            <p className="m-0 text-[15px] text-muted leading-relaxed">
+            <p
+              style={retard(90)}
+              className="reveler m-0 text-[15px] text-muted leading-relaxed"
+            >
               Que vous portiez une grande entreprise ou que vous lanciez votre
               premier projet, que vous soyez à Antananarivo, à Montréal ou
               ailleurs — il y a une porte qui s’ouvre pour vous.
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 mt-7">
+          {/* Les cartes grandissent l'une après l'autre ; sur chacune,
+              l'icône surgit une fois la carte posée. */}
+          <div className="scene grid gap-6 sm:grid-cols-2 mt-7">
             {PROFILS.map((p, i) => (
               <article
                 key={p.titre}
-                style={cascade(i)}
-                className={`apparition-defilement carte-filet ${p.filet} group rounded-xl bg-white p-10`}
+                style={retard(i * 70)}
+                className={`reveler reveler-zoom carte-filet ${p.filet} group rounded-xl bg-white p-10`}
               >
                 {/*
                   Quatre dixièmes de seconde et une détente douce, comme le
@@ -453,7 +443,8 @@ export default async function PublicHome() {
                   système demande moins d'animations (`motion-reduce`).
                 */}
                 <span
-                  className={`w-15 h-15 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform,rotate,scale] duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-hover:-rotate-6 group-hover:scale-[1.06] ${p.tuile}`}
+                  style={retard(220 + i * 70)}
+                  className={`reveler reveler-pop w-15 h-15 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform,rotate,scale] duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-hover:-rotate-6 group-hover:scale-[1.06] ${p.tuile}`}
                 >
                   <p.icone size={28} strokeWidth={1.5} />
                 </span>
@@ -470,7 +461,7 @@ export default async function PublicHome() {
           </div>
 
           {/* Le bouton du modèle, avec son halo rouge : il descend au formulaire. */}
-          <div className="apparition-defilement flex justify-center mt-9">
+          <div className="scene reveler flex justify-center mt-9">
             <LienAncre
               href="#newsletter"
               className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
@@ -488,16 +479,21 @@ export default async function PublicHome() {
         reste. Les couleurs y sont écrites en clair — les jetons de la vitrine
         sont taillés pour le bleu nuit.
       */}
-      <section className="vitrine-claire">
+      <section className="vitrine-claire overflow-x-clip">
         <div className={`${CONTENEUR} py-16`}>
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          {/* Le texte monte, les avantages arrivent ligne à ligne par la
+              gauche, et l'encadré des formules vient de la droite. */}
+          <div className="scene grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             {/* ---------- L'invitation ---------- */}
-            <div className="apparition-defilement">
-              <h2 className={`${TITRE_SECTION} mb-6`}>
+            <div>
+              <h2 className={`${TITRE_SECTION} reveler mb-6`}>
                 Devenir <Saillant>membre,</Saillant> c’est entrer dans{" "}
                 <Saillant ton="vert">un cercle.</Saillant>
               </h2>
-              <p className="m-0 text-[18px] leading-[1.6] text-[#6b6b6b] max-w-[48ch]">
+              <p
+                style={retard(90)}
+                className="reveler m-0 text-[18px] leading-[1.6] text-[#6b6b6b] max-w-[48ch]"
+              >
                 Un cercle de dirigeants, d’entrepreneurs et d’institutions qui
                 croient au pont entre le Canada et Madagascar. Et qui agissent.
               </p>
@@ -506,8 +502,8 @@ export default async function PublicHome() {
                 {AVANTAGES.map((a, i) => (
                   <li
                     key={a}
-                    style={cascade(i)}
-                    className="apparition-defilement flex items-start gap-3.5 py-3.5 border-b border-black/10 text-[15px] leading-relaxed"
+                    style={retard(200 + i * 60)}
+                    className="reveler reveler-gauche flex items-start gap-3.5 py-3.5 border-b border-black/10 text-[15px] leading-relaxed"
                   >
                     <ArrowRight
                       size={16}
@@ -521,7 +517,7 @@ export default async function PublicHome() {
                 ))}
               </ul>
 
-              <div className="mt-9">
+              <div style={retard(460)} className="reveler mt-9">
                 <Link
                   href="/auth/inscription"
                   className="btn-action shadow-[0_4px_24px_rgba(200,16,46,0.35)]"
@@ -533,8 +529,8 @@ export default async function PublicHome() {
 
             {/* ---------- Les formules ---------- */}
             <div
-              style={cascade(1)}
-              className="apparition-defilement carte-filet filet-fixe filet-degrade rounded-2xl bg-white p-8 md:p-12 shadow-[0_20px_60px_rgba(15,29,44,0.08)]"
+              style={retard(160)}
+              className="reveler reveler-droite carte-filet filet-fixe filet-degrade rounded-2xl bg-white p-8 md:p-12 shadow-[0_20px_60px_rgba(15,29,44,0.08)]"
             >
               <span className="surtitre text-[#ad0707]">
                 Choisissez votre formule
@@ -562,7 +558,8 @@ export default async function PublicHome() {
                   */
                   <li
                     key={f}
-                    className={`flex items-baseline justify-between gap-4 rounded-md bg-[#fafafa] border-l-[3px] border-transparent px-[18px] py-4 text-[14px] transition-[background-color,border-color] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none ${
+                    style={retard(360 + i * 45)}
+                    className={`reveler flex items-baseline justify-between gap-4 rounded-md bg-[#fafafa] border-l-[3px] border-transparent px-[18px] py-4 text-[14px] transition-[background-color,border-color] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none ${
                       i % 2 === 0
                         ? "hover:border-l-[#ad0707] hover:bg-[#ad0707]/[0.05]"
                         : "hover:border-l-[#007140] hover:bg-[#007140]/[0.05]"
@@ -589,7 +586,7 @@ export default async function PublicHome() {
       <section id="evenements" className="scroll-mt-[124px]">
         <div className={`${CONTENEUR} pt-10 pb-8`}>
           <div>
-            <div className="apparition-defilement flex items-end justify-between gap-6 flex-wrap">
+            <div className="scene reveler flex items-end justify-between gap-6 flex-wrap">
               <div>
                 <span className="surtitre text-marque-rouge">
                   Rencontrons-nous
@@ -610,14 +607,21 @@ export default async function PublicHome() {
 
             {evenements.length ? (
               /*
-                Le carrousel entre d'un bloc : ses cartes défilent à
-                l'horizontale, et une apparition posée sur chacune suivrait ce
-                défilement-là plutôt que celui de la page.
+                La scène est le carrousel entier, pas chaque carte : les cartes
+                entrent en cascade quand il arrive à l'écran, et le défilement
+                horizontal ne rejoue rien ensuite. Elles grandissent sur place
+                sans monter — un déplacement vertical ferait déborder la piste.
               */
-              <div style={cascade(1)} className="apparition-defilement mt-8">
+              <div className="scene mt-8">
                 <CarrouselCartes debord="" libelle="Prochains rendez-vous">
                   {evenements.map((e, i) => (
-                    <CarteEvenement key={e.id} evenement={e} index={i} />
+                    <CarteEvenement
+                      key={e.id}
+                      evenement={e}
+                      index={i}
+                      className="reveler reveler-zoom"
+                      style={retard(i * 70)}
+                    />
                   ))}
                 </CarrouselCartes>
               </div>
@@ -642,31 +646,41 @@ export default async function PublicHome() {
           className="vitrine-claire scroll-mt-[124px] bg-[#fafafa]!"
         >
           <div className={`${CONTENEUR} py-16`}>
-            <div>
-              <span className="apparition-defilement surtitre text-[#ad0707] inline-flex items-center gap-3">
-                <span aria-hidden="true" className="w-8 h-px bg-[#ad0707]" />
+            {/* Le trait du surtitre se déroule, le titre monte, puis les
+                cartes grandissent l'une après l'autre. */}
+            <div className="scene">
+              <span className="reveler surtitre text-[#ad0707] inline-flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  style={retard(150)}
+                  className="reveler reveler-trait w-8 h-px bg-[#ad0707]"
+                />
                 Actualités récentes
               </span>
-              <div className="apparition-defilement grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
-                <h2 className={TITRE_SECTION}>
+              <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
+                <h2 style={retard(80)} className={`${TITRE_SECTION} reveler`}>
                   Ce qui se passe <Saillant>chez nous.</Saillant>
                 </h2>
-                <p className="m-0 text-[17px] leading-[1.6] text-[#6b6b6b]">
+                <p
+                  style={retard(160)}
+                  className="reveler m-0 text-[17px] leading-[1.6] text-[#6b6b6b]"
+                >
                   Bilans, rencontres, prises de parole — la chambre en
                   mouvement.
                 </p>
               </div>
 
-              <div style={cascade(1)} className="apparition-defilement mt-10">
+              <div className="mt-10">
                 <CarrouselCartes
                   debord=""
                   libelle="Dernières actualités"
                   surFondClair
                 >
-                  {actualites.map((a) => (
+                  {actualites.map((a, i) => (
                     <div
                       key={a.id}
-                      className="snap-start shrink-0 flex w-[min(86vw,420px)]"
+                      style={retard(240 + i * 70)}
+                      className="reveler reveler-zoom snap-start shrink-0 flex w-[min(86vw,420px)]"
                     >
                       <CarteActualite actualite={a} />
                     </div>
@@ -688,21 +702,26 @@ export default async function PublicHome() {
         dégradés qui se touchent ne feraient que du bruit.
       */}
       <section id="conseil" className="relative scroll-mt-[124px]">
+        {/* Le filet se déroule de gauche à droite en arrivant sur la section. */}
         <span
           aria-hidden
-          className={`absolute inset-x-0 top-0 h-2.5 ${FILET}`}
+          className={`scene reveler reveler-trait absolute inset-x-0 top-0 h-2.5 ${FILET}`}
         />
 
         <div className={`${CONTENEUR} py-16 md:py-24`}>
-          <div className="apparition-defilement max-w-[780px]">
-            <h2 className={TITRE_SECTION}>
+          <div className="scene max-w-[780px]">
+            <h2 className={`${TITRE_SECTION} reveler`}>
               Celles et ceux qui portent <Saillant>la chambre.</Saillant>
             </h2>
             <span
               aria-hidden
-              className={`block w-[140px] h-1.5 rounded-full mt-6 ${FILET}`}
+              style={retard(200)}
+              className={`reveler reveler-trait block w-[140px] h-1.5 rounded-full mt-6 ${FILET}`}
             />
-            <p className="m-0 mt-6 text-[17px] leading-[1.6] text-white/72">
+            <p
+              style={retard(120)}
+              className="reveler m-0 mt-6 text-[17px] leading-[1.6] text-white/72"
+            >
               Notre Conseil d’Administration et notre direction exécutive,
               engagés entre le Canada et Madagascar, orientent notre action et
               veillent à ce que chaque membre y trouve sa place.
@@ -715,11 +734,10 @@ export default async function PublicHome() {
             portrait de la présidente fait exactement la largeur d'une carte
             d'élu, et la citation s'aligne sur la deuxième.
           */}
-          <div className="mt-14 grid gap-9 lg:grid-cols-3 lg:items-center">
-            <div
-              style={cascade(1)}
-              className={`apparition-defilement rounded-[22px] p-1.5 ${FILET}`}
-            >
+          {/* Le portrait grandit sur place, la citation vient de la droite et
+              son guillemet surgit en dernier. */}
+          <div className="scene mt-14 grid gap-9 lg:grid-cols-3 lg:items-center overflow-x-clip">
+            <div className={`reveler reveler-zoom rounded-[22px] p-1.5 ${FILET}`}>
               <Image
                 src={PRESIDENTE.photo}
                 alt={`Portrait d’${PRESIDENTE.nom}`}
@@ -731,8 +749,8 @@ export default async function PublicHome() {
             </div>
 
             <figure
-              style={cascade(2)}
-              className="apparition-defilement m-0 min-w-0 lg:col-span-2"
+              style={retard(150)}
+              className="reveler reveler-droite m-0 min-w-0 lg:col-span-2"
             >
               {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à cette taille. */}
               <svg
@@ -740,7 +758,8 @@ export default async function PublicHome() {
                 height="44"
                 viewBox="0 0 64 46"
                 aria-hidden="true"
-                className="block fill-white/90"
+                style={retard(380)}
+                className="reveler reveler-pop block fill-white/90"
               >
                 <path d="M0 31C0 15 9 4 24 0l2.5 5C18 8.5 13.5 14 12.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S21.9 45 15 45C6.2 45 0 39.5 0 31zM34 31c0-16 9-27 24-31l2.5 5C52 8.5 47.5 14 46.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S55.9 45 49 45c-8.8 0-15-5.5-15-14z" />
               </svg>
@@ -768,9 +787,15 @@ export default async function PublicHome() {
           </div>
 
           {/* ---------- Le bureau du Conseil ---------- */}
-          <div className="mt-16">
-            <span aria-hidden className={`block h-0.5 ${FILET}`} />
-            <div className="apparition-defilement surtitre text-white/72 mt-7">
+          <div className="scene mt-16">
+            <span
+              aria-hidden
+              className={`reveler reveler-trait block h-0.5 ${FILET}`}
+            />
+            <div
+              style={retard(100)}
+              className="reveler surtitre text-white/72 mt-7"
+            >
               Le bureau du Conseil
             </div>
 
@@ -778,8 +803,8 @@ export default async function PublicHome() {
               {BUREAU.map((m, i) => (
                 <article
                   key={m.nom}
-                  style={cascade(i + 1)}
-                  className="apparition-defilement"
+                  style={retard(160 + i * 80)}
+                  className="reveler"
                 >
                   {/*
                     Cadrage haut : ces portraits sont des photos d'identité, et
@@ -809,8 +834,8 @@ export default async function PublicHome() {
           </div>
 
           {/* ---------- Les conseillères ---------- */}
-          <div className="mt-14">
-            <div className="apparition-defilement surtitre text-white/72">
+          <div className="scene mt-14">
+            <div className="reveler surtitre text-white/72">
               Les conseillères
             </div>
 
@@ -823,8 +848,8 @@ export default async function PublicHome() {
               {CONSEILLERES.map((c, i) => (
                 <article
                   key={c.nom}
-                  style={cascade(i + 1)}
-                  className="apparition-defilement relative flex flex-col overflow-hidden rounded-2xl bg-surface"
+                  style={retard(100 + i * 70)}
+                  className="reveler reveler-zoom relative flex flex-col overflow-hidden rounded-2xl bg-surface"
                 >
                   <span
                     aria-hidden
@@ -854,10 +879,11 @@ export default async function PublicHome() {
             est salariée. Ce sont deux choses différentes, et ce sont ces
             personnes-là qu'un membre a au téléphone.
           */}
-          <div className="apparition-defilement relative mt-16 overflow-hidden rounded-3xl bg-[var(--marque-nuit-2)] p-7 md:p-12">
+          <div className="scene reveler relative mt-16 overflow-hidden rounded-3xl bg-[var(--marque-nuit-2)] p-7 md:p-12">
             <span
               aria-hidden
-              className={`absolute inset-x-0 top-0 h-1 ${FILET_VERT}`}
+              style={retard(250)}
+              className={`reveler reveler-trait absolute inset-x-0 top-0 h-1 ${FILET_VERT}`}
             />
 
             <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
@@ -877,7 +903,11 @@ export default async function PublicHome() {
 
             <div className="mt-8 grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-4">
               {EQUIPE.map((m, i) => (
-                <article key={m.nom} style={cascade(i + 1)}>
+                <article
+                  key={m.nom}
+                  style={retard(200 + i * 70)}
+                  className="reveler"
+                >
                   <Image
                     src={m.photo}
                     alt={`Portrait de ${m.nom}`}
@@ -930,26 +960,23 @@ export default async function PublicHome() {
             backgroundSize: "50px 50px",
           }}
         />
-        <div className={`${CONTENEUR} relative py-20 text-center`}>
-          <span className="apparition-defilement inline-flex items-center rounded-full border border-white/30 bg-white/15 px-[18px] py-2 text-[12px] font-bold uppercase tracking-[2px]">
+        <div className={`scene ${CONTENEUR} relative py-20 text-center`}>
+          <span className="reveler reveler-zoom inline-flex items-center rounded-full border border-white/30 bg-white/15 px-[18px] py-2 text-[12px] font-bold uppercase tracking-[2px]">
             Restons en contact
           </span>
-          <h2
-            style={cascade(1)}
-            className={`${TITRE_SECTION} apparition-defilement mt-7`}
-          >
+          <h2 style={retard(100)} className={`${TITRE_SECTION} reveler mt-7`}>
             S’inscrire à notre newsletter
           </h2>
           <p
-            style={cascade(2)}
-            className="apparition-defilement m-0 mt-5 mx-auto max-w-[62ch] text-[16px] leading-[1.6] text-white/85"
+            style={retard(180)}
+            className="reveler m-0 mt-5 mx-auto max-w-[62ch] text-[16px] leading-[1.6] text-white/85"
           >
             Nos actualités, nos invitations en avant-première et nos ressources
             exclusives, directement dans votre boîte mail. Désinscription à tout
             moment.
           </p>
 
-          <div style={cascade(3)} className="apparition-defilement">
+          <div style={retard(260)} className="reveler">
             <FormulaireInfolettre />
           </div>
         </div>

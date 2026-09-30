@@ -282,20 +282,6 @@ h3 {
 }
 
 /*
- * Apparition au défilement, via la timeline native du navigateur — aucun
- * observateur JavaScript, donc rien à charger ni à désynchroniser. Les
- * navigateurs qui ne la gèrent pas affichent simplement le contenu, visible
- * d'emblée : c'est une bonification, jamais une condition de lecture.
- */
-@supports (animation-timeline: view()) {
-  .marque .apparition-defilement {
-    animation: marque-apparition linear both;
-    animation-timeline: view();
-    animation-range: entry 8% cover 26%;
-  }
-}
-
-/*
  * Zoom très lent sur la photo des écrans d'identification : l'image respire
  * sans jamais attirer l'œil hors du formulaire.
  */
@@ -415,8 +401,7 @@ h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marque .apparition,
-  .marque .apparition-defilement {
+  .marque .apparition {
     animation: none !important;
     opacity: 1;
     transform: none;
