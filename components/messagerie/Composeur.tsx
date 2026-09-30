@@ -13,6 +13,11 @@ import {
 import { SubmitButton } from "@/components/form-bits";
 import { EMOJIS } from "@/components/SelecteurEmojis";
 import { sendMessage } from "@/lib/actions/messages";
+import {
+  JetonsEnvoyes,
+  pourcentage,
+  useEnvois,
+} from "@/components/EnvoisSuivis";
 import type { Space } from "@/lib/types";
 import { poids } from "./outils";
 import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
@@ -54,6 +59,9 @@ export function Composeur({
   const [erreur, setErreur] = useState<string | null>(null);
   const [emojis, setEmojis] = useState(false);
   const [vide, setVide] = useState(true);
+  // Chaque pièce jointe part dès qu'on la choisit : son pourcentage
+  // s'affiche sur son étiquette, et le message n'enverra que des jetons.
+  const { etats, jetons } = useEnvois(fichiers);
 
   // Le champ caché reflète toujours la liste affichée : c'est lui que le
   // formulaire envoie.
@@ -123,7 +131,7 @@ export function Composeur({
       <input
         ref={champFichiers}
         type="file"
-        name="pieces"
+        name={jetons ? undefined : "pieces"}
         multiple
         accept={ACCEPTE}
         className="sr-only"
@@ -133,6 +141,8 @@ export function Composeur({
           choisir(e.target.files);
         }}
       />
+
+      <JetonsEnvoyes name="pieces" jetons={jetons} />
 
       {fichiers.length ? (
         <ul className="list-none m-0 px-3.5 pt-2.5 flex gap-2 flex-wrap">
@@ -156,8 +166,15 @@ export function Composeur({
                   <span className="block text-[12px] font-semibold text-ink truncate">
                     {f.name}
                   </span>
-                  <span className="block text-[10.5px] text-faint">
+                  <span className="block text-[10.5px] text-faint tabular-nums">
                     {poids(f.size)}
+                    {etats[i] && !etats[i]!.termine
+                      ? ` · ${pourcentage(etats[i]!)} %`
+                      : etats[i]?.erreur
+                        ? " · partira avec le message"
+                        : etats[i]?.termine
+                          ? " · prête"
+                          : ""}
                   </span>
                 </span>
                 <button

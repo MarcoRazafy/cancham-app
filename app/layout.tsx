@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { EnregistrementApplication } from "@/components/Application";
+import { IndicateurEnvois } from "@/components/EnvoisSuivis";
 import { RetoursFormulaire } from "@/components/Mouvement";
 import { Toast } from "@/components/Toast";
 import {
@@ -126,6 +127,7 @@ export default function RootLayout({
           <RetoursFormulaire />
         </Suspense>
         <EnregistrementApplication />
+        <IndicateurEnvois />
       </body>
     </html>
   );

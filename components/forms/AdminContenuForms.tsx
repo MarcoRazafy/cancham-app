@@ -15,6 +15,12 @@ import {
   X,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
+import {
+  JetonsEnvoyes,
+  pourcentage,
+  useEnvois,
+  type Envoi,
+} from "@/components/EnvoisSuivis";
 import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 import {
   CancelButton,
@@ -24,6 +30,7 @@ import {
   ModalBody,
   ModalFooter,
   SubmitButton,
+  VoileEnvoi,
 } from "@/components/form-bits";
 import { Card } from "@/components/ui";
 import {
@@ -375,6 +382,15 @@ export function FormulaireRessource({
   const [payant, setPayant] = useState(ressource?.type === "payant");
   const [fichier, setFichier] = useState<File | null>(null);
   const trop = fichier ? fichier.size > PLAFOND_MO * 1024 * 1024 : false;
+  // Le fichier part dès qu'on le choisit — une vidéo de plusieurs centaines
+  // de Mo surtout : on suit son envoi au pourcentage, et l'enregistrement
+  // n'aura plus qu'à reprendre le jeton.
+  const aEnvoyer = useMemo(
+    () => (fichier && !trop ? [fichier] : []),
+    [fichier, trop],
+  );
+  const { etats, jetons } = useEnvois(aEnvoyer);
+  const envoi = etats[0];
 
   return (
     <form
@@ -491,13 +507,15 @@ export function FormulaireRessource({
             </span>
             <input
               type="file"
-              name="fichier"
+              name={jetons ? undefined : "fichier"}
               accept="application/pdf,.docx,video/mp4,image/jpeg,image/png,image/webp"
               required={!ressource}
               className="sr-only"
               onChange={(e) => setFichier(e.target.files?.[0] ?? null)}
             />
+            {envoi ? <BarreEnvoi envoi={envoi} /> : null}
           </label>
+          <JetonsEnvoyes name="fichier" jetons={jetons} />
           <p className="m-0 text-[11.8px] text-faint">
             Les documents sont convertis en pages images pour la lecture
             protégée : comptez quelques secondes, un peu plus pour un DOCX.
@@ -515,6 +533,45 @@ export function FormulaireRessource({
         </SubmitButton>
       </div>
     </form>
+  );
+}
+
+/** L'envoi d'un fichier, sous son nom : une barre, et le pourcentage. */
+function BarreEnvoi({ envoi }: { envoi: Envoi }) {
+  const pct = pourcentage(envoi);
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className="mt-1 block w-full max-w-[260px]"
+    >
+      <span className="flex items-center justify-between text-[12px] font-semibold">
+        <span
+          className={
+            envoi.erreur
+              ? "text-accent"
+              : envoi.termine
+                ? "text-success-strong"
+                : "text-muted"
+          }
+        >
+          {envoi.erreur
+            ? "Envoi interrompu — il repartira à l’enregistrement"
+            : envoi.termine
+              ? "Fichier prêt"
+              : "Envoi…"}
+        </span>
+        {envoi.erreur ? null : (
+          <span className="tabular-nums text-ink">{pct} %</span>
+        )}
+      </span>
+      <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-line">
+        <span
+          className={`block h-full rounded-full transition-[width] duration-200 ${envoi.termine ? "bg-success" : "bg-accent"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+    </span>
   );
 }
 
@@ -627,6 +684,14 @@ function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
     [photos],
   );
   const poids = nouvelles.reduce((n, p) => n + p.fichier.size, 0);
+  // Chaque nouvelle photo part dès qu'on l'ajoute ; son pourcentage
+  // s'affiche sur sa vignette. Les jetons suivent l'ordre des nouvelles,
+  // celui que `ordre` désigne par rang.
+  const fichiersNouveaux = useMemo(
+    () => nouvelles.map((p) => p.fichier),
+    [nouvelles],
+  );
+  const { etats, jetons } = useEnvois(fichiersNouveaux);
 
   useEffect(() => {
     if (!champ.current) return;
@@ -676,12 +741,13 @@ function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
       <input
         ref={champ}
         type="file"
-        name="images"
+        name={jetons ? undefined : "images"}
         multiple
         className="sr-only"
         tabIndex={-1}
         aria-hidden="true"
       />
+      <JetonsEnvoyes name="images" jetons={jetons} />
 
       <div className="flex items-baseline justify-between gap-3 mb-1.5">
         <span className="text-[12.3px] font-semibold text-muted">Photos</span>
@@ -702,6 +768,11 @@ function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
               alt=""
               className="w-full h-full object-cover"
             />
+            {p.type === "nouvelle" &&
+            etats[nouvelles.indexOf(p)] &&
+            !etats[nouvelles.indexOf(p)]!.masque ? (
+              <VoileEnvoi envoi={etats[nouvelles.indexOf(p)]!} />
+            ) : null}
             {i === 0 ? (
               <span className="absolute top-1.5 left-1.5 rounded-full bg-accent text-white text-[10.5px] font-bold px-2 py-0.5">
                 Couverture

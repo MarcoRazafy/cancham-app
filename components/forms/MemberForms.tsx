@@ -54,6 +54,7 @@ import {
   type FormuleId,
 } from "@/lib/membership";
 import type { Contact, Produit } from "@/lib/types";
+import { EntreeFichier } from "@/components/EnvoisSuivis";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
 const BTN_LINE =
@@ -966,8 +967,7 @@ function ChampImage({
         >
           <ImagePlus size={14} />
           {choisi ? "Changer" : apercu ? "Remplacer" : "Choisir une image"}
-          <input
-            type="file"
+          <EntreeFichier
             name={name}
             accept="image/*"
             className="sr-only"
@@ -1180,8 +1180,7 @@ function ChampGalerie({ actuelles }: { actuelles: string[] }) {
             {ajoutees
               ? `${ajoutees} photo${ajoutees > 1 ? "s" : ""} choisie${ajoutees > 1 ? "s" : ""}`
               : "Ajouter des photos"}
-            <input
-              type="file"
+            <EntreeFichier
               name="photos"
               accept="image/*"
               multiple

@@ -19,6 +19,7 @@ import {
 } from "@/lib/actions/messages";
 import { LONGUEUR_NOM_GROUPE, MAX_PARTICIPANTS_GROUPE } from "@/lib/messagerie";
 import type { Space } from "@/lib/types";
+import { EntreeFichier } from "@/components/EnvoisSuivis";
 import { ListeACocher, type ElementACocher } from "./ListeACocher";
 
 /** Création d'un groupe : un nom, une photo facultative, des participants. */
@@ -72,8 +73,7 @@ export function NouveauGroupe({
               label="Photo du groupe"
               hint="Facultative ; sans photo, le groupe prend ses initiales."
             >
-              <input
-                type="file"
+              <EntreeFichier
                 name="photo"
                 accept="image/*"
                 className="block w-full text-[13px] text-muted file:mr-3 file:rounded-[var(--radius-s)] file:border file:border-line file:bg-surface-2 file:px-3 file:py-1.5 file:text-[12.8px] file:font-semibold file:text-ink file:cursor-pointer"
