@@ -243,9 +243,12 @@ function CarteRib({ coordonnees: c }: PropsReglement) {
         </p>
       ) : null}
 
-      {c.iban ? (
+      {/* L'IBAN et le BIC : ce qu'une banque étrangère demande, un membre au
+          Canada compris. */}
+      {c.iban || c.bic ? (
         <p className="relative m-0 mt-2.5 font-[family-name:var(--font-mono)] text-[13px] tracking-[0.04em] text-muted [overflow-wrap:anywhere]">
-          IBAN {c.iban}
+          {c.iban ? <span className="block">IBAN {c.iban}</span> : null}
+          {c.bic ? <span className="block">BIC {c.bic}</span> : null}
         </p>
       ) : null}
 
