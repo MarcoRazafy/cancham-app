@@ -260,6 +260,16 @@ h3 {
   outline-color: #ffffff;
 }
 
+/*
+ * Un champ masqué (`sr-only`) est en position absolue. Sans ancêtre
+ * positionné dans la zone qui défile, il se place par rapport à un cadre
+ * plus lointain — une fenêtre, un panneau — et l'allonge d'un grand vide
+ * sous le contenu. Son étiquette l'ancre : il reste où on l'a écrit.
+ */
+label:has(.sr-only) {
+  position: relative;
+}
+
 /* ---------- Animations de l'espace public ---------- */
 
 @keyframes marque-apparition {

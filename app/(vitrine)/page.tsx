@@ -589,9 +589,6 @@ export default async function PublicHome() {
           <div>
             <div className="scene reveler flex items-end justify-between gap-6 flex-wrap">
               <div>
-                <span className="surtitre text-marque-rouge">
-                  Rencontrons-nous
-                </span>
                 <h2 className={`${TITRE_SECTION} mt-2.5`}>
                   Les prochains <Saillant>rendez-vous</Saillant>
                 </h2>
@@ -649,15 +646,7 @@ export default async function PublicHome() {
           <div className={`${CONTENEUR} py-16`}>
             {/* Le trait du surtitre se déroule, le titre monte, puis les
                 cartes grandissent l'une après l'autre. */}
-            <div className="scene">
-              <span className="reveler surtitre text-[#ad0707] inline-flex items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  style={retard(150)}
-                  className="reveler reveler-trait w-8 h-px bg-[#ad0707]"
-                />
-                Actualités récentes
-              </span>
+            <div className="scene">              
               <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
                 <h2 style={retard(80)} className={`${TITRE_SECTION} reveler`}>
                   Ce qui se passe <Saillant>chez nous.</Saillant>
