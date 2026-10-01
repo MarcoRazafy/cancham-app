@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { delivrerBillets } from "@/lib/billets";
+import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
+import { vanillaPayActif } from "@/lib/vanillapay";
 import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -130,7 +132,7 @@ export async function ouvrirReglement(formData: FormData) {
   // par deux lignes à rapprocher, dont une fantôme.
   const ouvert = await prisma.paiement.findFirst({
     where: { invoiceId: f.id, mode: mode as ModeReglement, statut: "en_cours" },
-    select: { id: true },
+    select: { id: true, montant: true },
   });
   const p =
     ouvert ??
@@ -143,10 +145,27 @@ export async function ouvrirReglement(formData: FormData) {
         devise: f.devise,
         mode: mode as ModeReglement,
       },
-      select: { id: true },
+      select: { id: true, montant: true },
     }));
+  const page = `/membre/cotisations/payer/${p.id}`;
 
-  redirect(`/membre/cotisations/payer/${p.id}`);
+  // La carte n'a rien à préparer chez nous : on ouvre le paiement chez le
+  // prestataire tout de suite, et le membre arrive sur sa page de saisie. Le
+  // titulaire noté est celui qui paie — c'est ce que l'équipe regarde si le
+  // paiement est contesté. Si l'ouverture est refusée — un montant sous leur
+  // plancher, une panne —, il arrive sur l'écran de la carte, qui lui dit
+  // pourquoi et le laisse réessayer ou changer de moyen.
+  if (mode === "carte" && vanillaPayActif() && f.devise === "MGA") {
+    const ouverture = await ouvrirChezLePrestataire(
+      { id: p.id, montant: p.montant, numeroFacture: f.numero },
+      "international",
+      { titulaire: user.nom },
+    );
+    if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
+    redirect(ouverture.url);
+  }
+
+  redirect(page);
 }
 
 /**

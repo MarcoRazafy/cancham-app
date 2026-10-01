@@ -132,13 +132,13 @@ export function RegisterButton({
             <CancelButton onClick={fermer} />
             {/*
               Le moyen ne se choisit pas ici : l'inscription d'abord, le
-              paiement ensuite, sur son écran à lui. Le bouton le dit, pour
-              qu'on ne croie pas régler en confirmant.
+              paiement ensuite, sur son écran à lui. « Suivant » dit qu'il
+              reste une étape, pour qu'on ne croie pas régler en confirmant.
             */}
             <SubmitButton pendingLabel="Inscription…">
               {paiementEnLigne ? (
                 <>
-                  Mode de paiement <ArrowRight size={14} />
+                  Suivant <ArrowRight size={14} />
                 </>
               ) : (
                 <>
