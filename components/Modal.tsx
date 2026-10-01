@@ -66,7 +66,7 @@ export function Modal({
         }}
         className={`m-auto w-[calc(100vw-32px)] ${
           largeur ?? (wide ? "max-w-[680px]" : "max-w-[560px]")
-        } rounded-[var(--radius-l)] border border-line bg-surface text-ink p-0 backdrop:bg-black/55 backdrop:backdrop-blur-[2px]`}
+        } overflow-hidden rounded-[var(--radius-l)] border border-line bg-surface text-ink p-0 backdrop:bg-black/55 backdrop:backdrop-blur-[2px]`}
       >
         {ouvert ? (
           <>
@@ -83,7 +83,14 @@ export function Modal({
                 <X size={15} />
               </button>
             </div>
-            <div className="max-h-[70vh] overflow-y-auto">
+            {/*
+              Seule cette zone défile, jamais la boîte elle-même. `relative`
+              ancre ici ce qui est en position absolue dans le formulaire —
+              un champ de fichier masqué, par exemple : sans cela il se plaçait
+              par rapport à la boîte, loin sous le dernier bouton, et la boîte
+              se laissait défiler dans un grand vide blanc.
+            */}
+            <div className="relative max-h-[70vh] overflow-y-auto">
               {children(() => setOuvert(false))}
             </div>
           </>
