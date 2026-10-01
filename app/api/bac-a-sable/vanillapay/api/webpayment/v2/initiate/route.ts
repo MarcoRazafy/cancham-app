@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { RELAIS_RETOUR } from "@/lib/retour-paiement";
 import { prisma } from "@/lib/db";
 import { simulateurActif } from "@/lib/vanillapay";
 
@@ -21,7 +22,9 @@ const refus = (statut: number, motif: string) =>
 
 export async function POST(requete: Request) {
   if (!simulateurActif()) return new Response(null, { status: 404 });
-  if (!/^Bearer bac-a-sable-/.test(requete.headers.get("authorization") ?? "")) {
+  if (
+    !/^Bearer bac-a-sable-/.test(requete.headers.get("authorization") ?? "")
+  ) {
     return refus(401, "Jeton refusé");
   }
 
@@ -54,7 +57,12 @@ export async function POST(requete: Request) {
   } catch {
     return refus(400, "redirect_url illisible");
   }
-  if (!/^\/(membre|evenements)\//.test(retourLocal.pathname)) {
+  // Le retour passe par le relais, qui ne mène qu'aux pages de retour de la
+  // plateforme ; les adresses directes d'avant restent acceptées.
+  if (
+    retourLocal.pathname !== RELAIS_RETOUR &&
+    !/^\/(membre|evenements)\//.test(retourLocal.pathname)
+  ) {
     return refus(400, "redirect_url refusée");
   }
 
