@@ -33,6 +33,7 @@ import { notifierEquipe, notifierTousLesMembres } from "@/lib/push";
 import { isAccessLocked } from "@/lib/membership";
 import {
   extraitDePublication,
+  LONGUEUR_PUBLICATION,
   PHOTOS_PAR_PUBLICATION,
   textePublication,
   titreDePublication,
@@ -398,7 +399,7 @@ async function maPublication(id: string) {
   if (!membre || isAccessLocked(membre)) return null;
   const n = await prisma.news.findFirst({
     where: { id, memberId: user.memberId },
-    select: { id: true, titre: true, images: true, libre: true },
+    select: { id: true, titre: true, corps: true, images: true, libre: true },
   });
   return n ? { user, membre, n } : null;
 }
@@ -420,7 +421,12 @@ export async function modifierPublication(
   if (!acces) return refus("Cette publication n’est pas la vôtre.");
   const { user, membre, n } = acces;
 
-  const corps = textePublication(formData.get("texte"));
+  // Un texte déjà plus long que la limite n'est pas raccourci parce qu'on
+  // en change la diffusion ou une photo.
+  const corps = textePublication(
+    formData.get("texte"),
+    Math.max(LONGUEUR_PUBLICATION, Array.from(n.corps).length),
+  );
   let images: string[];
   try {
     images = await lirePhotos(formData, n.images);

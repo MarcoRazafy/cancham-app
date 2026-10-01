@@ -892,6 +892,16 @@ export async function repositionnerCouverture(demande: {
     retour,
   );
 
+  // Une demande illisible n'est pas un cadrage au centre : on la refuse.
+  if (
+    demande == null ||
+    typeof demande !== "object" ||
+    !Number.isFinite(Number(demande.x)) ||
+    !Number.isFinite(Number(demande.y))
+  ) {
+    return { erreur: "Cadrage illisible." };
+  }
+
   const actuel = await prisma.member.findUnique({
     where: { id },
     select: { cover: true, coverX: true, coverY: true },

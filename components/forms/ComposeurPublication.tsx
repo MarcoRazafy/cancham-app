@@ -234,7 +234,12 @@ export function ComposeurPublication({
   const message = tropLourd
     ? `Les photos dépassent ${PLAFOND_FICHIER_MO} Mo à elles toutes : envoyez-en moins à la fois.`
     : (erreur ?? avis);
-  const reste = LONGUEUR_PUBLICATION - texte.length;
+  // Un texte déjà plus long que la limite garde sa longueur pour borne.
+  const longueurMax = Math.max(
+    LONGUEUR_PUBLICATION,
+    publication?.texte.length ?? 0,
+  );
+  const reste = longueurMax - texte.length;
 
   return (
     <>
@@ -346,7 +351,7 @@ export function ComposeurPublication({
                 setCaduque(etat);
                 ajuster(e.target);
               }}
-              maxLength={LONGUEUR_PUBLICATION}
+              maxLength={longueurMax}
               rows={3}
               placeholder={INVITE}
               aria-label="Votre publication"

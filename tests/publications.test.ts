@@ -28,6 +28,24 @@ describe("texte d'une publication", () => {
     expect(textePublication(long)).toHaveLength(LONGUEUR_PUBLICATION);
   });
 
+  it("reste rapide devant des dizaines de milliers d'espaces", () => {
+    const hostile = `${" ".repeat(200_000)}x`;
+    const debut = performance.now();
+    textePublication(hostile);
+    expect(performance.now() - debut).toBeLessThan(500);
+  });
+
+  it("retire les espaces de fin de ligne, pas ceux du milieu", () => {
+    expect(textePublication("Un  mot   \nDeux\t\t\nTrois")).toBe(
+      "Un  mot\nDeux\nTrois",
+    );
+  });
+
+  it("garde un texte déjà enregistré plus long que la limite", () => {
+    const ancien = "a".repeat(LONGUEUR_PUBLICATION + 4000);
+    expect(textePublication(ancien, ancien.length)).toHaveLength(ancien.length);
+  });
+
   it("rend une chaîne vide pour une saisie absente ou blanche", () => {
     expect(textePublication(null)).toBe("");
     expect(textePublication(undefined)).toBe("");
