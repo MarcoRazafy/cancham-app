@@ -1,3 +1,4 @@
+import { estCodeInscription } from "@/lib/codes-accueil";
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { delivrerBillets, delivrerBilletsPublics } from "@/lib/billets";
@@ -55,6 +56,9 @@ export async function conclurePaiement(
   if (p.statut === "reussie") return "deja_reglee";
 
   if (etat.echoue) {
+    // Un échec ne ferme qu'un paiement encore en cours chez le prestataire :
+    // pas un règlement que le payeur a annoncé hors ligne entre-temps.
+    if (p.statut !== "en_cours") return "echouee";
     await prisma.paiement.update({
       where: { id: p.id },
       data: { statut: "echouee", notification: trace },
@@ -176,12 +180,18 @@ export function inscriptionPublique(
  * visiteur a choisi, et la référence à rappeler. `null` tant qu'il n'a rien
  * choisi — ou quand l'équipe a écarté ce qu'il avait annoncé.
  */
-export async function reglementPublicOuvert(code: string) {
+export async function reglementPublicOuvert(eventId: string, code: string) {
+  if (!estCodeInscription(code)) return null;
   return prisma.paiement.findFirst({
     where: {
       invoiceId: null,
       statut: { in: ["en_cours", "annonce"] },
-      detail: { path: ["inscription"], equals: code },
+      // Le code et l'événement : le règlement d'une autre inscription ne se
+      // reprend jamais.
+      AND: [
+        { detail: { path: ["inscription"], equals: code } },
+        { detail: { path: ["eventId"], equals: eventId } },
+      ],
     },
     orderBy: { updatedAt: "desc" },
     select: {
@@ -192,6 +202,28 @@ export async function reglementPublicOuvert(code: string) {
       montant: true,
       devise: true,
     },
+  });
+}
+
+/**
+ * Le dernier règlement que l'équipe a écarté pour cette inscription, si le
+ * visiteur l'avait annoncé : la page le lui dit, plutôt que de repartir du
+ * choix comme si de rien n'était.
+ */
+export async function reglementPublicEcarte(eventId: string, code: string) {
+  if (!estCodeInscription(code)) return null;
+  return prisma.paiement.findFirst({
+    where: {
+      invoiceId: null,
+      statut: "echouee",
+      annonceLe: { not: null },
+      AND: [
+        { detail: { path: ["inscription"], equals: code } },
+        { detail: { path: ["eventId"], equals: eventId } },
+      ],
+    },
+    orderBy: { updatedAt: "desc" },
+    select: { reference: true, mode: true },
   });
 }
 
@@ -210,9 +242,22 @@ export async function suivrePaiementPublic(
 ): Promise<"reussie" | "echouee" | "en_cours" | null> {
   const p = await prisma.paiement.findUnique({
     where: { reference },
-    select: { statut: true, transaction: true, detail: true, invoiceId: true },
+    select: {
+      statut: true,
+      mode: true,
+      transaction: true,
+      detail: true,
+      invoiceId: true,
+    },
   });
-  if (!p || p.invoiceId || inscriptionPublique(p.detail)?.code !== code) {
+  // Seul un paiement par carte se suit chez le prestataire : un règlement
+  // hors ligne n'y a rien, et son état ne regarde que l'équipe.
+  if (
+    !p ||
+    p.invoiceId ||
+    p.mode !== "carte" ||
+    inscriptionPublique(p.detail)?.code !== code
+  ) {
     return null;
   }
   if (p.statut === "en_cours" && p.transaction) {

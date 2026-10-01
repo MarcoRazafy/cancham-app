@@ -36,6 +36,7 @@ export function PaiementPublic({
   montant,
   modes,
   reglement,
+  ecarte = null,
   coordonnees,
   marchand,
   page,
@@ -51,6 +52,11 @@ export function PaiementPublic({
     reference: string;
     statut: string;
   } | null;
+  /**
+   * La référence d'un paiement annoncé que l'équipe n'a pas retrouvé : le
+   * visiteur doit le savoir avant de choisir à nouveau.
+   */
+  ecarte?: string | null;
   coordonnees: Coordonnees;
   /** Le nom que la page du prestataire affiche, s'il n'est pas « CanCham ». */
   marchand: string | null;
@@ -74,6 +80,16 @@ export function PaiementPublic({
           <b className="text-ink">{fmtMoney(montant)}</b> à régler. Vos QR codes
           partent par e-mail dès le règlement confirmé.
         </p>
+        {ecarte ? (
+          <p
+            role="alert"
+            className="m-0 mt-3 rounded-[var(--radius-s)] bg-warn-soft px-3.5 py-3 text-[13.5px] text-warn"
+          >
+            <b>L’équipe n’a pas retrouvé votre paiement</b> (réf. {ecarte}).
+            Choisissez à nouveau un moyen, ou écrivez-lui si vous avez bien
+            payé.
+          </p>
+        ) : null}
         {modes.length ? (
           <form action={choisirPaiementPublic} className="mt-4">
             {cles}
@@ -122,19 +138,22 @@ export function PaiementPublic({
           <VisuelMode mode={mode} />
           <div className="min-w-0">
             <h2 className="m-0 text-[17px] font-semibold text-ink">
-              Régler par {MODES[mode].titre}
+              {MODES[mode].titre}
             </h2>
             <p className="m-0 text-[13.5px] text-muted">
               <b className="text-ink">{fmtMoney(montant)}</b> à régler
             </p>
           </div>
         </div>
-        <Link
-          href={`${page}&moyen=choix`}
-          className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted no-underline hover:text-accent"
-        >
-          <ArrowLeft size={14} /> Changer de moyen
-        </Link>
+        {/* Une fois annoncé, le paiement est entre les mains de l'équipe. */}
+        {annonce ? null : (
+          <Link
+            href={`${page}&moyen=choix`}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted no-underline hover:text-accent"
+          >
+            <ArrowLeft size={14} /> Changer de moyen
+          </Link>
+        )}
       </div>
 
       <div className="mt-4 flex flex-col gap-2.5">
@@ -213,9 +232,14 @@ export function PaiementPublic({
         <p className="m-0 mt-4 flex items-start gap-2 rounded-[var(--radius-s)] bg-surface-2 px-3.5 py-3 text-[13.5px] text-muted">
           <Clock size={16} className="mt-0.5 shrink-0 text-warn" />
           <span>
-            <b className="text-ink">Paiement annoncé.</b> L’équipe confirme dès
-            qu’elle a constaté l’arrivée de l’argent : vos QR codes partent
-            alors par e-mail, et s’affichent sur cette page.
+            <b className="text-ink">
+              {mode === "especes" ? "Venue annoncée." : "Paiement annoncé."}
+            </b>{" "}
+            {mode === "especes"
+              ? "L’équipe confirme à la remise des espèces"
+              : "L’équipe confirme dès qu’elle a constaté l’arrivée de l’argent"}{" "}
+            : vos QR codes partent alors par e-mail, et s’affichent sur cette
+            page.
           </span>
         </p>
       ) : (

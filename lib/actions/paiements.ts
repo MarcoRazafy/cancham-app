@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { lignesDe } from "@/lib/billets";
-import { codeInscription, extraireCode } from "@/lib/codes-accueil";
+import {
+  codeInscription,
+  estCodeInscription,
+  extraireCode,
+} from "@/lib/codes-accueil";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
@@ -180,6 +185,14 @@ const PAIEMENTS_PUBLICS_PAR_HEURE = 10;
 async function inscriptionAPayer(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const code = codeInscription(extraireCode(texte(formData, "code")));
+  // Un code tronqué désignerait toutes les inscriptions de l'événement : il
+  // doit avoir sa forme entière avant qu'on cherche quoi que ce soit.
+  if (!eventId || !estCodeInscription(code)) {
+    redirectWithErreur(
+      eventId ? `/evenements/${encodeURIComponent(eventId)}` : "/",
+      "Inscription introuvable.",
+    );
+  }
   const page = `/evenements/${eventId}/billet?${new URLSearchParams({ code })}`;
 
   const attente = tentative(
@@ -225,41 +238,55 @@ async function inscriptionAPayer(formData: FormData) {
 /**
  * Le règlement d'une inscription publique, dans le moyen choisi.
  *
- * Un seul par inscription : changer de moyen, ou revenir sans payer puis
- * recommencer, reprend le même, au montant du jour — on n'en empile pas dix.
+ * Revenir sans payer puis recommencer dans le même moyen reprend le même
+ * règlement, au montant du jour — on n'en empile pas dix. Changer de moyen
+ * en ouvre un autre, avec sa propre référence, et clôt l'ancien : une
+ * référence déjà donnée — recopiée sur un virement, ou envoyée au
+ * prestataire — ne change jamais de sens après coup.
+ *
+ * Un paiement déjà annoncé ne se défait pas d'ici : l'équipe le traite.
+ * `null` dans ce cas, à l'appelant de le dire.
+ *
  * Il n'a ni facture ni membre ; c'est le code de l'inscription, gardé dans
  * son détail, qui le relie aux billets.
  */
 async function reglementPublic(
+  eventId: string,
   code: string,
   mode: ModeReglement,
   montant: number,
+  detail: Prisma.InputJsonObject,
 ) {
-  const ouvert = await reglementPublicOuvert(code);
-  return ouvert
-    ? prisma.paiement.update({
-        where: { id: ouvert.id },
-        // Un moyen changé repart de zéro : l'annonce faite dans l'ancien ne
-        // vaut plus.
-        data: {
-          montant,
-          mode,
-          ...(ouvert.mode === mode
-            ? {}
-            : { statut: "en_cours", annonceLe: null, refBancaire: null }),
-        },
-        select: { id: true, reference: true, statut: true },
-      })
-    : prisma.paiement.create({
-        data: {
-          reference: referenceReglement(),
-          montant,
-          devise: "MGA",
-          mode,
-        },
-        select: { id: true, reference: true, statut: true },
-      });
+  const ouvert = await reglementPublicOuvert(eventId, code);
+  if (ouvert?.statut === "annonce") return null;
+
+  if (ouvert && ouvert.mode === mode) {
+    return prisma.paiement.update({
+      where: { id: ouvert.id },
+      data: { montant, detail },
+      select: { id: true, reference: true },
+    });
+  }
+  if (ouvert) {
+    await prisma.paiement.update({
+      where: { id: ouvert.id },
+      data: { statut: "echouee" },
+    });
+  }
+  return prisma.paiement.create({
+    data: {
+      reference: referenceReglement(),
+      montant,
+      devise: "MGA",
+      mode,
+      detail,
+    },
+    select: { id: true, reference: true },
+  });
 }
+
+const DEJA_ANNONCE =
+  "Votre paiement est déjà annoncé : l’équipe le traite. Écrivez-lui pour changer de moyen.";
 
 /**
  * Le visiteur choisit comment régler son inscription.
@@ -281,18 +308,13 @@ export async function choisirPaiementPublic(formData: FormData) {
     redirectWithErreur(page, "Ce moyen de paiement n’est pas proposé.");
   }
 
-  const p = await reglementPublic(code, mode, montant);
-  await prisma.paiement.update({
-    where: { id: p.id },
-    data: {
-      detail: {
-        inscription: code,
-        eventId,
-        titulaire: lignes[0].nom,
-        email: lignes[0].email,
-      },
-    },
+  const p = await reglementPublic(eventId, code, mode, montant, {
+    inscription: code,
+    eventId,
+    titulaire: lignes[0].nom,
+    email: lignes[0].email,
   });
+  if (!p) redirectWithFlash(page, DEJA_ANNONCE);
   revalidatePath(`/evenements/${eventId}/billet`);
   redirect(page);
 }
@@ -305,10 +327,10 @@ export async function choisirPaiementPublic(formData: FormData) {
  * « Règlements annoncés » — les billets partent alors par e-mail.
  */
 export async function annoncerPaiementPublic(formData: FormData) {
-  const { eventId, code, page, event, lignes } =
+  const { eventId, code, page, event, lignes, montant } =
     await inscriptionAPayer(formData);
 
-  const p = await reglementPublicOuvert(code);
+  const p = await reglementPublicOuvert(eventId, code);
   if (!p || p.mode === "carte") {
     redirectWithErreur(page, "Choisissez d’abord un moyen de paiement.");
   }
@@ -322,6 +344,10 @@ export async function annoncerPaiementPublic(formData: FormData) {
       statut: "annonce",
       annonceLe: new Date(),
       refBancaire: texte(formData, "refBancaire").slice(0, 80) || null,
+      // Le montant du jour, celui que la page vient d'afficher : un
+      // participant retiré depuis le choix du moyen ne doit pas laisser
+      // l'équipe comparer l'argent reçu à un chiffre périmé.
+      montant,
     },
   });
   await prisma.auditLog.create({
@@ -330,14 +356,14 @@ export async function annoncerPaiementPublic(formData: FormData) {
       entite: "Event",
       entiteId: eventId,
       acteur: "Inscription publique",
-      detail: `${lignes[0].nom} · ${fmtMontant(p.montant, p.devise)} par ${MODES[p.mode].titre.toLowerCase()} · réf. ${p.reference} · « ${event.titre} »`,
+      detail: `${lignes[0].nom} · ${fmtMontant(montant, p.devise)} par ${MODES[p.mode].titre.toLowerCase()} · réf. ${p.reference} · « ${event.titre} »`,
     },
   });
   // L'équipe le sait sur son téléphone : un règlement attend sa confirmation.
   after(() =>
     notifierEquipe({
       titre: "Règlement annoncé — inscription publique",
-      corps: `${lignes[0].nom} · ${fmtMontant(p.montant, p.devise)} par ${MODES[p.mode].titre.toLowerCase()} · réf. ${p.reference}`,
+      corps: `${lignes[0].nom} · ${fmtMontant(montant, p.devise)} par ${MODES[p.mode].titre.toLowerCase()} · réf. ${p.reference}`,
       url: "/admin/reglements",
       etiquette: `reglement-${p.id}`,
     }),
@@ -367,7 +393,13 @@ export async function payerInscriptionPublique(formData: FormData) {
     );
   }
 
-  const p = await reglementPublic(code, "carte", montant);
+  const p = await reglementPublic(eventId, code, "carte", montant, {
+    inscription: code,
+    eventId,
+    titulaire: lignes[0].nom,
+    email: lignes[0].email,
+  });
+  if (!p) redirectWithFlash(page, DEJA_ANNONCE);
 
   const ouverture = await ouvrirChezLePrestataire(
     { id: p.id, montant, numeroFacture: null },

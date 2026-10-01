@@ -56,9 +56,10 @@ export default async function Reglements() {
           </Link>
         }
       >
-        Ce que des membres disent avoir réglé hors ligne. Confirmez dès que
-        l’argent est constaté : la facture se solde et l’adhésion repasse à
-        jour.
+        Ce que des membres, ou des visiteurs inscrits à un événement, disent
+        avoir réglé hors ligne. Confirmez dès que l’argent est constaté : la
+        facture se solde et l’adhésion repasse à jour — ou, pour un visiteur,
+        ses billets partent.
       </ViewHead>
 
       {annonces.length ? (
@@ -91,7 +92,7 @@ export default async function Reglements() {
                   </div>
                   {p.refBancaire ? (
                     <div className="mt-1.5 text-[12.8px] text-muted">
-                      Référence donnée par le membre :{" "}
+                      Référence donnée par le payeur :{" "}
                       <span className="font-[family-name:var(--font-mono)] text-ink">
                         {p.refBancaire}
                       </span>
@@ -122,7 +123,7 @@ export default async function Reglements() {
         </div>
       ) : (
         <EmptyState>
-          Aucun règlement en attente. Les membres qui annoncent un virement
+          Aucun règlement en attente. Ceux qui annoncent un virement
           apparaîtront ici.
         </EmptyState>
       )}

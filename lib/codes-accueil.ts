@@ -17,6 +17,19 @@ export function codeInscription(code: string): string {
 }
 
 /**
+ * Vrai pour un code d'inscription bien formé : « CC-VOPA-K7Q2PX ».
+ *
+ * Ce code tient lieu de clé — il ouvre la page des billets et le règlement
+ * d'une inscription publique —, et les lignes d'une inscription se
+ * retrouvent par leur début (`CODE-2`, `CODE-3`…). Un code tronqué comme
+ * « CC » désignerait donc toutes les inscriptions d'un événement : on ne
+ * cherche jamais avec un code qui n'a pas cette forme.
+ */
+export function estCodeInscription(code: string): boolean {
+  return /^CC-[A-Z0-9]+-[A-Z0-9]{4,8}$/.test(code);
+}
+
+/**
  * Le code lu par le scanner ou saisi à la main, même au milieu d'un texte
  * plus long, en majuscules. À défaut de motif reconnu, la saisie telle quelle.
  */

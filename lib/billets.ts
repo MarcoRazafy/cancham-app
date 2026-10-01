@@ -1,5 +1,6 @@
 import "server-only";
 
+import { estCodeInscription } from "@/lib/codes-accueil";
 import { after } from "next/server";
 import { plageHoraire } from "@/lib/agenda";
 import { envoyerCourriel, urlPublique } from "@/lib/courriel";
@@ -171,13 +172,24 @@ export async function delivrerBilletsPublics(
   eventId: string,
   code: string,
   acteur: string,
+  /** Comment le règlement a été constaté : il s'écrit au journal. */
+  moyen = "en ligne",
 ): Promise<boolean> {
+  // Seconde barrière : un code mal formé désignerait toutes les inscriptions
+  // en attente de l'événement.
+  if (!estCodeInscription(code)) return false;
   const [event, lignes] = await Promise.all([
     prisma.event.findUnique({ where: { id: eventId } }),
     prisma.attendee.findMany({
       where: { eventId, statut: "a_valider", ...lignesDe(code) },
       orderBy: { createdAt: "asc" },
-      select: { id: true, nom: true, code: true, email: true, entreprise: true },
+      select: {
+        id: true,
+        nom: true,
+        code: true,
+        email: true,
+        entreprise: true,
+      },
     }),
   ]);
   if (!event || !lignes.length) return false;
@@ -194,7 +206,7 @@ export async function delivrerBilletsPublics(
         entite: "Event",
         entiteId: eventId,
         acteur,
-        detail: `« ${event.titre} » · ${lignes[0].entreprise} · ${n} personne${n > 1 ? "s" : ""} · inscription publique réglée en ligne · billets envoyés.`,
+        detail: `« ${event.titre} » · ${lignes[0].entreprise} · ${n} personne${n > 1 ? "s" : ""} · inscription publique réglée ${moyen} · billets envoyés.`,
       },
     }),
   ]);
@@ -217,7 +229,7 @@ export async function delivrerBilletsPublics(
   after(() =>
     notifierEquipe({
       titre: `Inscription publique réglée : ${event.titre}`,
-      corps: `${lignes[0].entreprise} · ${n} personne${n > 1 ? "s" : ""} · payé en ligne`,
+      corps: `${lignes[0].entreprise} · ${n} personne${n > 1 ? "s" : ""} · réglé ${moyen}`,
       url: `/admin/evenements/${eventId}`,
     }),
   );

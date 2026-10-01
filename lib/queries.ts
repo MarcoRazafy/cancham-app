@@ -20,7 +20,11 @@ import {
 
 import { PROVISOIRE } from "@/lib/accueil";
 import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
-import { codeInscription, extraireCode } from "@/lib/codes-accueil";
+import {
+  codeInscription,
+  estCodeInscription,
+  extraireCode,
+} from "@/lib/codes-accueil";
 import { visiteurDuFil } from "@/lib/support-visiteur";
 import { prisma } from "@/lib/db";
 import { utilisateurConnecte } from "@/lib/session";
@@ -202,7 +206,7 @@ export async function getEvents(): Promise<CanchamEvent[]> {
  */
 export async function getBilletsPublics(eventId: string, code: string) {
   const base = codeInscription(extraireCode(code));
-  if (!/^CC-[A-Z0-9]+-[A-Z0-9]{4,8}$/.test(base)) return [];
+  if (!estCodeInscription(base)) return [];
   const [membre, lignes] = await Promise.all([
     prisma.registration.findUnique({
       where: { code: base },
@@ -213,7 +217,9 @@ export async function getBilletsPublics(eventId: string, code: string) {
         eventId,
         OR: [{ code: base }, { code: { startsWith: `${base}-` } }],
       },
-      orderBy: { createdAt: "asc" },
+      // Les lignes d'une inscription naissent au même instant : le code
+      // départage, pour que le premier billet soit toujours le même.
+      orderBy: [{ createdAt: "asc" }, { code: "asc" }],
       select: {
         nom: true,
         entreprise: true,
