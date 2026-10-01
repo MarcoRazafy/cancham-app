@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Card, Pill } from "@/components/ui";
 import { Partage } from "@/components/Partage";
+import { PhotoNaturelle } from "@/components/PhotoNaturelle";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
 import { ModaleOffre } from "@/components/ModaleOffre";
@@ -677,10 +678,11 @@ export function MediaBanner({
 }
 
 /**
- * Photos d'une publication dans le fil : une seule en pleine largeur, deux
- * côte à côte, trois en une grande et deux petites, quatre et plus en
- * damier — la dernière case annonce combien il en reste. Chaque case mène à
- * l'article, où la galerie complète se parcourt.
+ * Photos d'une publication dans le fil, chacune dans ses propres
+ * proportions : rien n'est rogné. Une seule occupe la largeur ; plusieurs
+ * se rangent sur deux colonnes, comme elles viennent. Au-delà de quatre, la
+ * dernière case annonce combien il en reste. Chaque photo mène à l'article,
+ * où la galerie complète se parcourt.
  */
 export function MosaiquePhotos({
   images,
@@ -693,17 +695,12 @@ export function MosaiquePhotos({
 }) {
   const visibles = images.slice(0, 4);
   const reste = images.length - visibles.length;
-  const disposition =
-    visibles.length === 1
-      ? "grid-cols-1"
-      : visibles.length === 3
-        ? "grid-cols-2 grid-rows-2"
-        : "grid-cols-2";
+  const seule = visibles.length === 1;
 
   return (
     <div
-      className={`grid gap-1.5 mt-2.5 rounded-[var(--radius-m)] overflow-hidden ${disposition} ${
-        visibles.length === 1 ? "aspect-[16/8]" : "aspect-[16/10]"
+      className={`mt-2.5 overflow-hidden rounded-[var(--radius-m)] ${
+        seule ? "" : "columns-2 gap-1.5"
       }`}
     >
       {visibles.map((src, i) => (
@@ -713,16 +710,20 @@ export function MosaiquePhotos({
           aria-label={
             i === 0 ? `Lire : ${alt}` : `Photo ${i + 1} sur ${images.length}`
           }
-          className={`relative block overflow-hidden group bg-surface-2 ${
-            visibles.length === 3 && i === 0 ? "row-span-2" : ""
+          className={`group relative block overflow-hidden bg-surface-2 ${
+            seule ? "" : "mb-1.5 break-inside-avoid last:mb-0"
           }`}
         >
-          <Image
+          <PhotoNaturelle
             src={src}
             alt={i === 0 ? alt : ""}
-            fill
-            sizes="(max-width: 768px) 100vw, 640px"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            sizes={
+              seule
+                ? "(max-width: 768px) 100vw, 640px"
+                : "(max-width: 768px) 50vw, 320px"
+            }
+            plafond={seule ? "max-h-[620px]" : "max-h-[420px]"}
+            className="transition-transform duration-500 group-hover:scale-[1.03]"
           />
           {reste > 0 && i === visibles.length - 1 ? (
             <span className="absolute inset-0 bg-[#0f1d2c]/55 text-white flex items-center justify-center text-[22px] font-bold">
@@ -781,8 +782,8 @@ export function SignaturePublication({ news }: { news: NewsItem }) {
         <div className="text-[11.5px] text-faint">
           {fmtDate(news.date)}
           {news.auteur?.personne ? ` · ${news.auteur.personne}` : ""}
-          {/* Le membre choisit à qui sa publication se montre : on le dit. */}
-          {news.auteur ? (news.public ? " · Public" : " · Membres") : ""}
+          {/* Une publication de membre que l'équipe a diffusée au public. */}
+          {news.auteur && news.public ? " · Page publique" : ""}
         </div>
       </div>
     </div>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import {
   CONTENEUR,
   retard,
@@ -12,6 +11,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Agrandir } from "@/components/Agrandir";
 import { CarteActualite } from "@/components/public/CarteActualite";
 import { CarteOffre } from "@/components/public/CarteOffre";
+import { PhotoNaturelle } from "@/components/PhotoNaturelle";
 import { TexteLie } from "@/components/TexteLie";
 import { fmtDate } from "@/lib/format";
 import {
@@ -113,14 +113,14 @@ export default async function ActualitePubliquePage({
                 legende={a.titre}
                 className="mt-7"
               >
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden border border-line bg-surface-3">
-                  <Image
+                {/* Dans ses propres proportions : rien n'est rogné. */}
+                <div className="rounded-xl overflow-hidden border border-line bg-surface-3">
+                  <PhotoNaturelle
                     src={couverture}
                     alt=""
-                    fill
                     priority
                     sizes="(max-width: 800px) 100vw, 760px"
-                    className="object-cover"
+                    plafond="max-h-[680px]"
                   />
                 </div>
               </Agrandir>
@@ -141,16 +141,21 @@ export default async function ActualitePubliquePage({
             </div>
 
             {galerie.length ? (
-              <div className="grid gap-3 mt-8 grid-cols-2 sm:grid-cols-3">
+              <div className="mt-8 columns-2 gap-3 sm:columns-3">
                 {galerie.map((src) => (
-                  <Agrandir key={src} src={src} alt={a.titre} legende={a.titre}>
-                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-line bg-surface-3">
-                      <Image
+                  <Agrandir
+                    key={src}
+                    src={src}
+                    alt={a.titre}
+                    legende={a.titre}
+                    className="mb-3 break-inside-avoid"
+                  >
+                    <div className="rounded-lg overflow-hidden border border-line bg-surface-3">
+                      <PhotoNaturelle
                         src={src}
                         alt=""
-                        fill
                         sizes="(max-width: 640px) 50vw, 250px"
-                        className="object-cover"
+                        plafond="max-h-[420px]"
                       />
                     </div>
                   </Agrandir>

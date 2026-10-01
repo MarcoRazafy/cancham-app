@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { PhotoNaturelle } from "@/components/PhotoNaturelle";
 
 /**
- * Photos d'une publication : la première en grand, les suivantes en
- * vignettes, et une visionneuse plein écran qui passe de l'une à l'autre —
+ * Photos d'une publication, chacune dans ses propres proportions : la
+ * première en grand, les suivantes en vignettes, et une visionneuse plein écran qui passe de l'une à l'autre —
  * flèches à l'écran, flèches du clavier, vignettes en bas.
  */
 export function GaleriePhotos({
@@ -52,15 +53,16 @@ export function GaleriePhotos({
         type="button"
         onClick={() => setCourante(0)}
         aria-label={`Agrandir la photo 1 sur ${total}`}
-        className="group relative block w-full aspect-[16/8] rounded-[var(--radius-m)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
+        className="group relative block w-full rounded-[var(--radius-m)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
       >
-        <Image
+        {/* Dans ses propres proportions : rien n'est rogné. */}
+        <PhotoNaturelle
           src={premiere}
           alt={alt}
-          fill
           priority
           sizes="(max-width: 768px) 100vw, 760px"
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+          plafond="max-h-[680px]"
+          className="transition-transform duration-500 group-hover:scale-[1.02]"
         />
         {total > 1 ? (
           <span className="absolute bottom-3 right-3 rounded-full bg-[#0f1d2c]/75 text-white text-[12px] font-semibold px-3 py-1">
@@ -71,12 +73,8 @@ export function GaleriePhotos({
 
       {suivantes.length ? (
         <div
-          className={`grid gap-2 mt-2 ${
-            suivantes.length >= 4
-              ? "grid-cols-4"
-              : suivantes.length === 3
-                ? "grid-cols-3"
-                : "grid-cols-2"
+          className={`mt-2 gap-2 ${
+            suivantes.length >= 3 ? "columns-2 sm:columns-3" : "columns-2"
           }`}
         >
           {suivantes.map((src, i) => (
@@ -85,14 +83,14 @@ export function GaleriePhotos({
               type="button"
               onClick={() => setCourante(i + 1)}
               aria-label={`Agrandir la photo ${i + 2} sur ${total}`}
-              className="group relative aspect-[4/3] rounded-[var(--radius-s)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
+              className="group relative mb-2 block w-full break-inside-avoid rounded-[var(--radius-s)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
             >
-              <Image
+              <PhotoNaturelle
                 src={src}
                 alt=""
-                fill
-                sizes="200px"
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                sizes="(max-width: 640px) 50vw, 260px"
+                plafond="max-h-[360px]"
+                className="transition-transform duration-500 group-hover:scale-[1.05]"
               />
             </button>
           ))}
