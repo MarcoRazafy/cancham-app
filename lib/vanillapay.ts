@@ -103,6 +103,17 @@ export function vanillaPayActif(): boolean {
 }
 
 /**
+ * Le nom que le prestataire affiche au payeur, quand ce n'est pas celui de
+ * la chambre : le compte marchand peut être ouvert au nom de la société qui
+ * encaisse pour elle. On le dit au membre avant qu'il parte payer — un nom
+ * inconnu sur la page de paiement, puis sur son relevé, le ferait hésiter.
+ * `null` : rien à signaler.
+ */
+export function marchandAffiche(): string | null {
+  return process.env.VANILLAPAY_MARCHAND?.trim() || null;
+}
+
+/**
  * Le compte marchand encaisse-t-il le mobile money ?
  *
  * Les moyens proposés sur leur page dépendent du contrat : un compte peut

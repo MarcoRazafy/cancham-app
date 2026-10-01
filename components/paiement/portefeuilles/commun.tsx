@@ -45,6 +45,8 @@ export interface PropsTunnel {
    * plateforme, et son téléphone confirme. Sinon, il fait l'envoi lui-même.
    */
   raccorde: boolean;
+  /** Le nom que la page de paiement affichera, s'il n'est pas le nôtre. */
+  marchand?: string | null;
 }
 
 /**
@@ -100,6 +102,13 @@ export function PaiementDirect({
           ou faites l’envoi vous-même, ci-dessous.
         </span>
       </form>
+      {p.marchand ? (
+        <p className="m-0 mt-3 text-[12.5px] leading-snug text-muted">
+          Sur la page de paiement, le marchand affiché est{" "}
+          <b className="text-ink">{p.marchand}</b> : il encaisse pour le compte
+          de la CanCham.
+        </p>
+      ) : null}
     </div>
   );
 }
