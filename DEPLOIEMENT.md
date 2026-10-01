@@ -43,6 +43,11 @@ Sur le service de l'application, onglet **Variables** :
 | `COURRIEL_EQUIPE` | L'adresse qui reçoit les alertes d'inscription et les réponses aux e-mails |
 | `WEB_PUSH_CLE_PUBLIQUE` | Clé VAPID publique des notifications sur l'appareil, générée avec `npx web-push generate-vapid-keys` |
 | `WEB_PUSH_CLE_PRIVEE` | Sa clé privée, générée en même temps. Sans les deux, la cloche ne propose pas d'activer les notifications. |
+| `VANILLAPAY_BASE` | L'API de Vanilla Pay : `https://preprod.vanilla-pay.net` pour les essais, puis `https://api.vanilla-pay.net` à la mise en service |
+| `VANILLAPAY_CLIENT_ID` | « Client ID » de l'espace marchand Vanilla Pay |
+| `VANILLAPAY_CLIENT_SECRET` | « Client Secret » de l'espace marchand |
+| `VANILLAPAY_KEY_SECRET` | « Key Secret » de l'espace marchand : elle signe leurs confirmations de paiement. Sans ces quatre variables, le paiement en ligne n'est pas proposé. |
+| `VANILLAPAY_MOBILE_MONEY` | `1` une fois MVola, Orange Money et Airtel Money activés sur le compte marchand. Vide : seule la carte bancaire se paie en ligne. |
 
 Générer `AUTH_SECRET` :
 

@@ -1,19 +1,58 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
-import { MODES } from "@/lib/modes-reglement";
 import { estPortefeuilleConnu } from "@/lib/portefeuilles";
 import { referenceReglement } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import { baseSite } from "@/lib/site";
-import { ouvrirPaiement, vanillaPayActif } from "@/lib/vanillapay";
+import {
+  mobileMoneyEnLigne,
+  ouvrirPaiement,
+  vanillaPayActif,
+} from "@/lib/vanillapay";
 
 const texte = (fd: FormData, k: string) =>
   String(fd.get(k) ?? "")
     .replace(/\s+/g, " ")
     .trim();
+
+/**
+ * Où ramener le membre après le paiement.
+ *
+ * En production, l'adresse publique de la plateforme. En développement,
+ * celle d'où il vient : `APP_URL` peut y désigner la plateforme en ligne, et
+ * l'y ramener le sortirait de sa base locale. La notification, elle, vise
+ * toujours l'adresse publique — le prestataire ne peut joindre que
+ * celle-là ; sur un poste de développement, c'est donc la page de retour
+ * qui demande l'état du paiement.
+ */
+async function baseRetour(): Promise<string> {
+  if (process.env.NODE_ENV === "production") return baseSite();
+  const h = await headers();
+  const hote = h.get("x-forwarded-host") ?? h.get("host");
+  if (!hote) return baseSite();
+  const protocole =
+    h.get("x-forwarded-proto") ??
+    (/^(localhost|127\.0\.0\.1)(:|$)/.test(hote) ? "http" : "https");
+  return `${protocole}://${hote}`;
+}
+
+/**
+ * Garde l'identifiant du lien de paiement : c'est lui qu'on présente au
+ * prestataire pour demander où en est le paiement, si sa notification ne
+ * nous parvient pas. La notification, elle, le remplacera par leur
+ * référence de transaction.
+ */
+async function garderLien(reglementId: string, id: string | null) {
+  if (!id) return;
+  await prisma.paiement.update({
+    where: { id: reglementId },
+    data: { transaction: id },
+  });
+}
 
 /**
  * Le paiement par carte : le membre valide l'écran, et part chez le
@@ -81,15 +120,13 @@ export async function payerParCarte(formData: FormData) {
   const ouverture = await ouvrirPaiement({
     montant: p.montant,
     reference,
-    libelle: p.invoice
-      ? `${p.invoice.objet} — facture ${p.invoice.numero}`
-      : "Règlement CanCham",
-    mode: "international",
+    panier: p.invoice?.numero ?? reference,
     notifUrl: `${base}/api/paiements/vanillapay`,
-    redirectUrl: `${base}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
+    redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
   });
   // Le règlement reste ouvert : le membre peut réessayer sans tout ressaisir.
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
+  await garderLien(p.id, ouverture.id);
 
   // Sortie du site : la carte se saisit chez eux, jamais chez nous.
   redirect(ouverture.url);
@@ -128,10 +165,10 @@ export async function payerParPortefeuille(formData: FormData) {
   if (p.statut === "reussie" || p.invoice?.statut === "payee") {
     redirectWithFlash("/membre/cotisations", "Ce règlement est déjà encaissé.");
   }
-  if (!vanillaPayActif()) {
+  if (!mobileMoneyEnLigne()) {
     redirectWithErreur(
       page,
-      "Le paiement depuis la plateforme n’est pas encore raccordé : faites l’envoi depuis votre téléphone, comme indiqué.",
+      "Le paiement depuis la plateforme n’est pas encore raccordé pour ce moyen : faites l’envoi depuis votre téléphone, comme indiqué.",
     );
   }
   if (p.devise !== "MGA") {
@@ -148,14 +185,12 @@ export async function payerParPortefeuille(formData: FormData) {
   const ouverture = await ouvrirPaiement({
     montant: p.montant,
     reference,
-    libelle: p.invoice
-      ? `${p.invoice.objet} — facture ${p.invoice.numero}`
-      : `Règlement CanCham (${MODES[p.mode].titre})`,
-    mode: "mobile_money",
+    panier: p.invoice?.numero ?? reference,
     notifUrl: `${base}/api/paiements/vanillapay`,
-    redirectUrl: `${base}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
+    redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
   });
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
+  await garderLien(p.id, ouverture.id);
 
   redirect(ouverture.url);
 }

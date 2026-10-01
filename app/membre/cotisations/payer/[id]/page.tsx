@@ -21,7 +21,11 @@ import {
 } from "@/lib/reglements";
 import { aujourdhuiISO } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
-import { vanillaPayActif } from "@/lib/vanillapay";
+import {
+  mobileMoneyEnLigne,
+  MONTANT_MINIMUM_EN_LIGNE,
+  vanillaPayActif,
+} from "@/lib/vanillapay";
 
 /**
  * Le tunnel d'un règlement : où envoyer l'argent, et la référence à recopier.
@@ -130,7 +134,14 @@ export default async function PageReglement({
         statut={p.statut}
         modifier={numero === "modifier"}
         retour={retour}
-        raccorde={vanillaPayActif()}
+        // Le mobile money activé sur le compte marchand, en Ariary, et
+        // au-dessus du plancher du prestataire : sinon le membre fait
+        // l'envoi lui-même.
+        raccorde={
+          mobileMoneyEnLigne() &&
+          p.devise === "MGA" &&
+          p.montant >= MONTANT_MINIMUM_EN_LIGNE
+        }
       />
     );
   }

@@ -21,7 +21,8 @@ const signer = (corps: string, cle = CLE) =>
 
 beforeAll(() => {
   process.env.VANILLAPAY_BASE = "https://exemple.test";
-  process.env.VANILLAPAY_KEY_ID = "identifiant-de-test";
+  process.env.VANILLAPAY_CLIENT_ID = "identifiant-de-test";
+  process.env.VANILLAPAY_CLIENT_SECRET = "secret-de-test";
   process.env.VANILLAPAY_KEY_SECRET = CLE;
 });
 
@@ -66,6 +67,7 @@ describe("lecture de l’état d’un paiement", () => {
         reference: "CC-2026-0001-AB12CD",
         status: "success",
         montant: 500000,
+        devise: "MGA",
       }),
     ).toMatchObject({
       reference: "CC-2026-0001-AB12CD",
@@ -80,9 +82,68 @@ describe("lecture de l’état d’un paiement", () => {
           reference: "CC-2026-0001-AB12CD",
           statut: "PAID",
           amount: 250000,
+          currency: "mga",
         },
       }),
     ).toMatchObject({ reussi: true, montant: 250000 });
+  });
+
+  it("lit leur notification : etat, reference et reference_VPI", () => {
+    expect(
+      lireEtat({
+        reference_VPI: "VPI26100112345678",
+        panier: "CC-2026-0452",
+        reference: "CC-2026-AB12CD",
+        remarque: "",
+        etat: "SUCCESS",
+      }),
+    ).toEqual({
+      reference: "CC-2026-AB12CD",
+      reussi: true,
+      echoue: false,
+      montant: null,
+      transaction: "VPI26100112345678",
+    });
+  });
+
+  it("lit la réponse du statut, dans son enveloppe", () => {
+    expect(
+      lireEtat({
+        CodeRetour: 200,
+        DescRetour: "Statut de la transaction",
+        DetailRetour: "",
+        Data: { reference: "R1", etat: "FAILED", referenceVPI: "VPI-1" },
+      }),
+    ).toMatchObject({ reference: "R1", reussi: false, echoue: true });
+    expect(
+      lireEtat({ CodeRetour: 200, Data: { reference: "R1", etat: "PENDING" } }),
+    ).toMatchObject({ reussi: false, echoue: false });
+  });
+
+  it("lit leur statut réel : un paiement ouvert, montants en euros", () => {
+    // Relevé sur leur API de production, le 1er octobre 2026.
+    const etat = lireEtat({
+      CodeRetour: 200,
+      DescRetour: "Transaction status.",
+      DetailRetour: "",
+      Data: {
+        reference_VPI: "VPI26100109190423",
+        panier: "CC-2026-10007",
+        reference: "CC-2026-XZLM6L",
+        montant: "1.01",
+        montantRecu: "0.95",
+        etat: "INITIATED",
+        remarque: "",
+      },
+    });
+    expect(etat).toEqual({
+      reference: "CC-2026-XZLM6L",
+      reussi: false,
+      echoue: false,
+      // 1,01 € ne se compare pas à 5 000 Ar : le montant n'est pas retenu.
+      montant: null,
+      transaction: "VPI26100109190423",
+    });
   });
 
   it("lit un échec sans le prendre pour une réussite", () => {
