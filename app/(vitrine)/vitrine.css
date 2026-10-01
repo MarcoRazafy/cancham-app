@@ -92,30 +92,24 @@
   }
 }
 
-/* ---------- Rangées qui défilent ---------- */
+/* ---------- Rangées de cartes ---------- */
 
 /*
- * Les visages du Conseil et de l'équipe glissent en boucle, une rangée vers
- * la gauche, la suivante vers la droite, et se laissent tirer à la main —
- * au doigt comme à la souris (`Defile`). C'est un défilement horizontal
- * natif, sans barre : la poussée vient d'une boucle d'animation, qui se
- * tait tant qu'on tient la rangée.
+ * Les visages du Conseil et de l'équipe (`Rangee`) : immobiles. Sur
+ * ordinateur, toutes les cartes tiennent de front ; plus étroit, la rangée
+ * se fait glisser à la main, sans barre, et s'arrête au bord d'une carte.
  */
-.defile {
+.rangee {
   overflow-x: auto;
   /* Tirer au bout de la rangée ne fait pas reculer la page. */
   overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 8px;
   scrollbar-width: none;
-  cursor: grab;
 }
 
-.defile::-webkit-scrollbar {
+.rangee::-webkit-scrollbar {
   display: none;
-}
-
-.defile.defile-saisie {
-  cursor: grabbing;
-  user-select: none;
 }
 
 /* ============================================================
