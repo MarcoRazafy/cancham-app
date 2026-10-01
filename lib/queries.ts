@@ -1,3 +1,4 @@
+import type { EmplacementOffre } from "@/lib/offres";
 import "server-only";
 
 import {
@@ -658,19 +659,28 @@ const CHAMPS_MEMBRE_OFFRE = {
   },
 } as const;
 
+/** Toutes les offres, de la plus récente à la plus ancienne : pour l'équipe, qui les gère. */
 export async function getOffers(): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
     // La vignette de l'offre reprend la couverture de l'entreprise : c'est elle
     // qui donne le contexte, avant même d'avoir lu le nom.
     include: { member: { select: CHAMPS_MEMBRE_OFFRE } },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
   });
   return rows.map(versOffre);
 }
 
-/** Les offres les plus récentes, pour le tableau de bord. */
-export async function getDernieresOffres(n = 3): Promise<Offer[]> {
+/**
+ * Les offres les plus récentes d'un endroit — le tableau de bord des
+ * membres, ou le rail des Actualités : celles que l'équipe y a placées, et
+ * celles qui s'affichent partout.
+ */
+export async function getDernieresOffres(
+  n = 3,
+  lieu: Exclude<EmplacementOffre, "partout"> = "tableau_de_bord",
+): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
+    where: { emplacement: { in: [lieu, "partout"] } },
     include: { member: { select: CHAMPS_MEMBRE_OFFRE } },
     orderBy: { createdAt: "desc" },
     take: n,
@@ -685,6 +695,7 @@ function versOffre(o: {
   desc: string;
   image: string | null;
   lien: string | null;
+  emplacement: EmplacementOffre;
   member: {
     nom: string;
     cover: string | null;
@@ -709,6 +720,7 @@ function versOffre(o: {
     image: o.image,
     cover: o.image ?? o.member.cover,
     lien: o.lien,
+    emplacement: o.emplacement,
     membreSecteur: o.member.secteur,
     membreVille: o.member.ville,
     membreLogo: o.member.logo,

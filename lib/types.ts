@@ -244,6 +244,8 @@ export interface Offer {
   cover?: string | null;
   /** Où en profiter. `null` = on écrit au contact de l'entreprise. */
   lien?: string | null;
+  /** Où l'équipe a choisi de la montrer. */
+  emplacement?: import("@/lib/offres").EmplacementOffre;
   /** De quoi présenter l'entreprise et la joindre, sans ouvrir sa fiche. */
   membreSecteur?: string;
   membreVille?: string;

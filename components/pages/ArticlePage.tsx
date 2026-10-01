@@ -10,7 +10,8 @@ import {
 } from "@/components/forms/Commentaires";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
-import { getNewsItem, getOffers } from "@/lib/queries";
+import { OFFRES_DU_RAIL } from "@/lib/offres";
+import { getDernieresOffres, getNewsItem } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { fmtDate } from "@/lib/format";
 import type { Space } from "@/lib/types";
@@ -20,7 +21,8 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
   const user = await getCurrentUser(space);
   const [n, offres] = await Promise.all([
     getNewsItem(id, user.id),
-    getOffers(),
+    // Le même rail que la page des Actualités : quatre offres au plus.
+    getDernieresOffres(OFFRES_DU_RAIL, "actualites"),
   ]);
   if (!n) notFound();
 

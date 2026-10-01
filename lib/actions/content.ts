@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { EMPLACEMENTS_OFFRE, estEmplacementOffre } from "@/lib/offres";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase, jourSaisi } from "@/lib/format";
@@ -600,6 +601,13 @@ export async function enregistrerOffre(formData: FormData) {
   if (!membre)
     redirectWithErreur(retour, "Choisissez le membre qui propose l’offre.");
 
+  // Où l'offre s'affiche. Sans choix lisible, aux deux endroits : c'était
+  // la règle avant que cela se choisisse.
+  const saisieEmplacement = texte(formData, "emplacement");
+  const emplacement = estEmplacementOffre(saisieEmplacement)
+    ? saisieEmplacement
+    : "partout";
+
   let image: string | null = null;
   try {
     image = await enregistrerImage(formData.get("image"), {
@@ -620,16 +628,19 @@ export async function enregistrerOffre(formData: FormData) {
         desc,
         memberId,
         lien,
+        emplacement,
         ...(image ? { image } : retirerImage ? { image: null } : {}),
       },
     });
   } else {
-    await prisma.offer.create({ data: { titre, desc, memberId, lien, image } });
+    await prisma.offer.create({
+      data: { titre, desc, memberId, lien, image, emplacement },
+    });
   }
   revalideTout();
   redirectWithFlash(
     retour,
-    id ? "Offre mise à jour" : `Offre de ${membre.nom} publiée`,
+    `${id ? "Offre mise à jour" : `Offre de ${membre.nom} publiée`} · affichée : ${EMPLACEMENTS_OFFRE[emplacement].toLowerCase()}`,
   );
 }
 

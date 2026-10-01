@@ -43,6 +43,7 @@ import {
 } from "@/lib/actions/content";
 import { ChoixDiffusion } from "@/components/forms/ChoixDiffusion";
 import { CouvertureRessource } from "@/components/forms/CouvertureRessource";
+import { EMPLACEMENTS_OFFRE, type EmplacementOffre } from "@/lib/offres";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
 
 const CATEGORIES: NewsCategory[] = [
@@ -292,6 +293,40 @@ export function OffreButton({
                 className={INPUT}
               />
             </Field>
+            {/*
+              Un groupe de cases, et non un `Field` : celui-ci est déjà une
+              étiquette, et chaque case a la sienne.
+            */}
+            <fieldset className="m-0 min-w-0 border-0 p-0">
+              <legend className="mb-1.5 block p-0 text-[12.3px] font-semibold text-muted">
+                Où afficher l’offre
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {(Object.keys(EMPLACEMENTS_OFFRE) as EmplacementOffre[]).map(
+                  (e) => (
+                    <label
+                      key={e}
+                      className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[var(--radius-s)] border border-line bg-surface px-3 py-2 text-[13.4px] font-semibold text-ink transition-colors hover:border-faint has-[:checked]:border-accent has-[:checked]:bg-accent-soft"
+                    >
+                      <input
+                        type="radio"
+                        name="emplacement"
+                        value={e}
+                        required
+                        defaultChecked={(offre?.emplacement ?? "partout") === e}
+                        className="accent-[var(--accent)]"
+                      />
+                      {EMPLACEMENTS_OFFRE[e]}
+                    </label>
+                  ),
+                )}
+              </div>
+              <span className="mt-1 block text-[11.5px] text-faint">
+                Dans le rail des Actualités (quatre offres au plus, les plus
+                récentes), sur le tableau de bord des membres (trois), ou aux
+                deux endroits.
+              </span>
+            </fieldset>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
