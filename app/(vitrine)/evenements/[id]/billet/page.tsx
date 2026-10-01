@@ -7,12 +7,22 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  CreditCard,
   MapPin,
 } from "lucide-react";
 import { CodeAccueil } from "@/components/CodeAccueil";
+import { SubmitButton } from "@/components/form-bits";
+import { payerInscriptionPublique } from "@/lib/actions/paiements";
+import { suivrePaiementPublic } from "@/lib/paiements";
+import {
+  marchandAffiche,
+  MONTANT_MINIMUM_EN_LIGNE,
+  vanillaPayActif,
+} from "@/lib/vanillapay";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { matriceQr } from "@/lib/qr";
+import { codeInscription, extraireCode } from "@/lib/codes-accueil";
 import { getBilletsPublics, getEvent } from "@/lib/queries";
 
 // Des noms et une adresse derrière une clé : rien à indexer.
@@ -22,15 +32,31 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * Les billets d'une inscription faite depuis la vitrine : un QR code par
  * participant, à présenter à l'accueil ou à télécharger. On y arrive juste
  * après l'inscription, puis par le lien de l'e-mail de confirmation.
+ *
+ * Pour un événement payant, c'est aussi d'ici qu'on règle par carte : le
+ * bouton mène chez le prestataire, qui ramène sur cette page avec la
+ * référence du paiement (`ref`). La page demande alors où il en est — la
+ * notification a pu ne pas arriver encore —, et les QR codes s'affichent
+ * dès qu'il est confirmé.
  */
 export default async function BilletsPublics({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ code?: string }>;
+  searchParams: Promise<{ code?: string; ref?: string }>;
 }) {
-  const [{ id }, { code = "" }] = await Promise.all([params, searchParams]);
+  const [{ id }, { code = "", ref = "" }] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  // Avant de lire les billets : un paiement confirmé à l'instant les change.
+  const paiement = ref
+    ? await suivrePaiementPublic(
+        ref,
+        codeInscription(extraireCode(code)),
+      )
+    : null;
   const [e, billets] = await Promise.all([
     getEvent(id),
     getBilletsPublics(id, code),
@@ -44,6 +70,12 @@ export default async function BilletsPublics({
   // Événement payant : les billets n'existent qu'une fois le règlement
   // constaté par l'équipe. D'ici là, cette page dit où l'on en est.
   const enAttente = billets.some((b) => b.statut === "a_valider");
+  const aRegler = e.prixPublic * billets.filter((b) => b.statut === "a_valider").length;
+  // La carte, si le prestataire est branché et le montant au-dessus de son
+  // plancher ; sinon le règlement se fait auprès de l'équipe, comme avant.
+  const payableEnLigne =
+    enAttente && vanillaPayActif() && aRegler >= MONTANT_MINIMUM_EN_LIGNE;
+  const marchand = marchandAffiche();
 
   return (
     <main className="max-w-[760px] mx-auto px-5 py-10 w-full">
@@ -80,25 +112,54 @@ export default async function BilletsPublics({
 
         <p className="m-0 mt-5 text-[14.5px] text-muted leading-relaxed">
           {enAttente
-            ? `${billets.length} inscription${plusieurs ? "s" : ""} enregistrée${plusieurs ? "s" : ""} pour ${billets[0].entreprise}. L’équipe CanCham valide le règlement, puis vos QR codes partent par e-mail.`
+            ? `${billets.length} inscription${plusieurs ? "s" : ""} enregistrée${plusieurs ? "s" : ""} pour ${billets[0].entreprise}. Vos QR codes partent par e-mail dès le règlement confirmé.`
             : plusieurs
               ? `${billets.length} participants pour ${billets[0].entreprise}. Chacun présente son QR code à l’accueil.`
               : `Présentez ce QR code à l’accueil : il vous pointe présent.`}{" "}
           Un e-mail est parti à <b className="text-ink">{billets[0].email}</b>,
           avec le lien de cette page.
         </p>
-        {e.prixPublic > 0 ? (
-          <p className="m-0 mt-4 text-[13.5px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3">
-            <b>
-              Événement payant · {fmtMoney(e.prixPublic * billets.length)} à
-              régler
-            </b>
-            <br />
-            Le règlement se fait auprès de l’équipe CanCham, avant l’événement.
-            {enAttente
-              ? " Sans validation, l’entrée n’est pas assurée : le QR code n’existe pas encore."
-              : ""}
+        {paiement === "en_cours" && enAttente ? (
+          <p className="m-0 mt-4 rounded-[var(--radius-s)] bg-surface-2 px-3.5 py-3 text-[13.5px] text-muted">
+            <b className="text-ink">Paiement en cours de confirmation.</b>{" "}
+            Cela prend parfois quelques minutes : rechargez cette page. Si vous
+            n’êtes pas allé au bout, vous pouvez recommencer ci-dessous.
           </p>
+        ) : paiement === "echouee" && enAttente ? (
+          <p className="m-0 mt-4 rounded-[var(--radius-s)] bg-warn-soft px-3.5 py-3 text-[13.5px] text-warn">
+            <b>Paiement refusé.</b> Rien n’a été débité : vous pouvez
+            recommencer, ou régler auprès de l’équipe CanCham.
+          </p>
+        ) : null}
+        {e.prixPublic > 0 && enAttente ? (
+          <div className="mt-4 rounded-[var(--radius-s)] bg-warn-soft px-3.5 py-3 text-[13.5px] text-warn">
+            <b>Événement payant · {fmtMoney(aRegler)} à régler</b>
+            <br />
+            {payableEnLigne
+              ? "Réglez maintenant par carte bancaire : vos QR codes s’affichent ici dès le paiement confirmé. Vous pouvez aussi régler auprès de l’équipe CanCham, avant l’événement."
+              : "Le règlement se fait auprès de l’équipe CanCham, avant l’événement."}{" "}
+            Sans règlement, l’entrée n’est pas assurée : le QR code n’existe
+            pas encore.
+            {payableEnLigne ? (
+              <form action={payerInscriptionPublique} className="mt-3">
+                <input type="hidden" name="eventId" value={e.id} />
+                <input type="hidden" name="code" value={billets[0].code} />
+                <SubmitButton pendingLabel="Redirection…">
+                  <CreditCard size={15} /> Payer {fmtMoney(aRegler)} par carte
+                  bancaire
+                </SubmitButton>
+                {/* Dans la teinte de l'encadré : les gris de la vitrine
+                    sombre sont clairs, et s'effaçaient sur ce fond pâle. */}
+                {marchand ? (
+                  <span className="mt-2 block text-[12.5px]">
+                    Sur la page de paiement, le marchand affiché est{" "}
+                    <b>{marchand}</b> : il encaisse pour le compte de la
+                    CanCham.
+                  </span>
+                ) : null}
+              </form>
+            ) : null}
+          </div>
         ) : null}
 
         {enAttente ? (

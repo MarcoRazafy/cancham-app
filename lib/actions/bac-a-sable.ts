@@ -31,7 +31,12 @@ export async function simulerIssue(formData: FormData) {
   const reference = texte(formData, "reference");
   const reussi = texte(formData, "issue") === "reussi";
   const retour = texte(formData, "retour");
-  if (!retour.startsWith(`${origine}/membre/`)) notFound();
+  if (
+    !retour.startsWith(`${origine}/membre/`) &&
+    !retour.startsWith(`${origine}/evenements/`)
+  ) {
+    notFound();
+  }
 
   const p = await prisma.paiement.findUnique({
     where: { reference },
