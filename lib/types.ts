@@ -224,6 +224,16 @@ export interface NewsItem {
   images: string[];
   /** Diffusée aussi sur la page publique ; sinon, réservée aux membres. */
   public: boolean;
+  /**
+   * L'entreprise membre qui a publié, et la personne qui a écrit. `null` :
+   * une actualité de la chambre.
+   */
+  auteur?: {
+    membreId: string;
+    membre: string;
+    logo: string | null;
+    personne: string | null;
+  } | null;
   commentaires: Comment[];
   /** Nombre de « j'aime ». */
   jaimes: number;

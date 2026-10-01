@@ -743,21 +743,40 @@ export function NewsFeedItem({
           occupe toute la largeur du rond et reste lisible jusqu'au mot
           « CanCham ». Un `cover` lui couperait la feuille d'érable.
         */}
-        <div className="w-11 h-11 rounded-full bg-white border border-line flex items-center justify-center shrink-0 overflow-hidden">
-          <Image
-            src="/marque/sigle.png"
-            alt="CanCham Madagascar"
-            width={44}
-            height={44}
-            sizes="44px"
-            className="w-full h-full object-contain"
+        {news.auteur ? (
+          // Une publication de membre porte le logo et le nom de son
+          // entreprise : on sait d'un coup d'œil que ce n'est pas la chambre.
+          <AvatarRond
+            src={news.auteur.logo}
+            alt={news.auteur.membre}
+            initiales={news.auteur.membre.slice(0, 2).toUpperCase()}
+            taille={44}
+            ajuste="contenu"
+            className="shrink-0 border border-line bg-surface-2 text-[13px] font-bold text-muted"
           />
-        </div>
-        <div>
-          <div className="font-semibold text-[13.6px]">
-            CanCham Madagascar <Pill className="ml-1">{news.cat}</Pill>
+        ) : (
+          <div className="w-11 h-11 rounded-full bg-white border border-line flex items-center justify-center shrink-0 overflow-hidden">
+            <Image
+              src="/marque/sigle.png"
+              alt="CanCham Madagascar"
+              width={44}
+              height={44}
+              sizes="44px"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <div className="text-[11.5px] text-faint">{fmtDate(news.date)}</div>
+        )}
+        <div className="min-w-0">
+          <div className="font-semibold text-[13.6px]">
+            {news.auteur ? news.auteur.membre : "CanCham Madagascar"}{" "}
+            <Pill className="ml-1">
+              {news.auteur ? "Publication d’un membre" : news.cat}
+            </Pill>
+          </div>
+          <div className="text-[11.5px] text-faint">
+            {fmtDate(news.date)}
+            {news.auteur?.personne ? ` · ${news.auteur.personne}` : ""}
+          </div>
         </div>
       </div>
       <div className="text-[13.6px] leading-relaxed">
@@ -809,8 +828,14 @@ export function OfferCard({
   offer,
   carre = false,
   className = "",
+  etiquette,
 }: {
   offer: Offer;
+  /**
+   * Posée sur la photo, en haut à gauche : pour l'équipe, l'endroit où
+   * l'offre s'affiche.
+   */
+  etiquette?: ReactNode;
   /**
    * Carte carrée : la photo prend tout le haut, le texte se resserre dessous.
    * Pour un rail assez large, où le bandeau de 88 px laissait des cartes
@@ -829,7 +854,14 @@ export function OfferCard({
       <Card
         className={`group carte-filet filet-bas filet-degrade p-0 ${carre ? "w-full aspect-square" : "h-full"} flex flex-col overflow-hidden transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] ${className}`}
       >
-        <div className={`overflow-hidden ${carre ? "flex-1 min-h-0" : ""}`}>
+        <div
+          className={`relative overflow-hidden ${carre ? "flex-1 min-h-0" : ""}`}
+        >
+          {etiquette ? (
+            <span className="absolute left-2.5 top-2.5 z-[2] inline-flex max-w-[calc(100%-20px)] items-center gap-1.5 rounded-full bg-[#0f1d2c]/90 px-2.5 py-1 text-[11.5px] font-semibold leading-none text-white shadow-[0_2px_8px_rgba(0,0,0,0.25)]">
+              {etiquette}
+            </span>
+          ) : null}
           <Visuel
             src={offer.cover}
             alt={offer.titre}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Globe, Pencil, Plus } from "lucide-react";
+import { Globe, LayoutDashboard, Newspaper, Pencil, Plus } from "lucide-react";
 import { NewsFeedItem, OfferCard } from "@/components/domain";
 import {
   OffreButton,
@@ -7,7 +7,7 @@ import {
   SupprimerOffreButton,
 } from "@/components/forms/AdminContenuForms";
 import { EmptyState, ViewHead } from "@/components/ui";
-import { EMPLACEMENTS_OFFRE, OFFRES_DU_RAIL } from "@/lib/offres";
+import { OFFRES_DU_RAIL, type EmplacementOffre } from "@/lib/offres";
 import {
   getDernieresOffres,
   getMembers,
@@ -17,10 +17,18 @@ import {
 import { getCurrentUser } from "@/lib/session";
 import type { Space } from "@/lib/types";
 
+/** L'endroit où une offre s'affiche, tel que l'équipe le lit sur la carte. */
+const OU: Record<EmplacementOffre, string> = {
+  actualites: "Actualités",
+  tableau_de_bord: "Tableau de bord",
+  partout: "Actualités + tableau de bord",
+};
+
 /**
- * Fil d'actualité, identique pour le membre et pour l'équipe. L'équipe y
- * trouve en plus ses commandes : publier, modifier, supprimer une actualité,
- * gérer les offres du rail.
+ * Fil d'actualité, identique pour le membre et pour l'équipe. Le membre peut
+ * y publier une actualité au nom de son entreprise ; l'équipe y trouve ses
+ * commandes : publier, modifier, supprimer n'importe quelle actualité, gérer
+ * les offres.
  */
 export async function ActualitesPage({ space }: { space: Space }) {
   const admin = space === "admin";
@@ -34,13 +42,14 @@ export async function ActualitesPage({ space }: { space: Space }) {
     admin ? getOffers() : getDernieresOffres(OFFRES_DU_RAIL, "actualites"),
     admin ? getMembers() : Promise.resolve([]),
   ]);
-  // Le rail : les plus récentes parmi celles qui s'affichent ici, quatre au
-  // plus. Le reste — offres du tableau de bord, offres plus anciennes — ne
-  // se montre qu'à l'équipe, dessous.
-  const offers = toutes
+  // Ce que le rail des membres montre : les plus récentes parmi les offres
+  // qui ont leur place ici, quatre au plus — deux colonnes, deux lignes.
+  const duRail = toutes
     .filter((o) => o.emplacement !== "tableau_de_bord")
     .slice(0, OFFRES_DU_RAIL);
-  const autres = toutes.filter((o) => !offers.includes(o));
+  // L'équipe, elle, les voit toutes, quel que soit leur emplacement : c'est
+  // ici qu'elle les gère. Chaque carte dit où l'offre s'affiche.
+  const offers = admin ? toutes : duRail;
   const proposants = membres
     .filter((m) => m.statut !== "candidature")
     .map((m) => ({ id: m.id, nom: m.nom }));
@@ -49,25 +58,25 @@ export async function ActualitesPage({ space }: { space: Space }) {
     <>
       {/*
           Deux moitiés : le titre et le fil à gauche, les offres à droite, dès
-          le haut de la page. Le rail suit le défilement, et ses quatre offres
-          — deux colonnes, deux lignes, pas plus — tiennent toujours dans la
-          fenêtre : chaque carte est carrée tant que la hauteur de l'écran le
-          permet, et s'aplatit juste ce qu'il faut sinon, sous la barre du
-          haut et le titre du rail (160 px en tout).
+          le haut de la page. Pour le membre, le rail suit le défilement, et
+          ses quatre offres — deux colonnes, deux lignes, pas plus — tiennent
+          toujours dans la fenêtre : chaque carte est carrée tant que la
+          hauteur de l'écran le permet, et s'aplatit juste ce qu'il faut
+          sinon. L'équipe y voit toutes les offres : son rail défile avec la
+          page.
         */}
       <div className="grid gap-7 items-start xl:grid-cols-2">
         <div className="min-w-0">
           <ViewHead
             title="Actualités"
             action={
-              admin ? (
-                <Link
-                  href="/admin/actualites/nouvelle"
-                  className="btn-action btn-action-sm no-underline"
-                >
-                  <Plus size={15} /> Nouvelle actualité
-                </Link>
-              ) : null
+              <Link
+                href={`${base}/nouvelle`}
+                className="btn-action btn-action-sm no-underline"
+              >
+                <Plus size={15} />{" "}
+                {admin ? "Nouvelle actualité" : "Publier une actualité"}
+              </Link>
             }
           >
             Le fil d’actualité de la chambre : programmation, retours
@@ -111,7 +120,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
           ))}
         </div>
 
-        <aside className="min-w-0 xl:sticky xl:top-[84px]">
+        <aside className={`min-w-0 ${admin ? "" : "xl:sticky xl:top-[84px]"}`}>
           <div className="flex items-center justify-between gap-2 mb-2.5">
             <h2 className="text-sm m-0 font-semibold uppercase tracking-[0.04em] text-faint">
               Offres &amp; promotions membres
@@ -127,6 +136,18 @@ export async function ActualitesPage({ space }: { space: Space }) {
                     offer={o}
                     carre
                     className="xl:max-h-[max(220px,calc((100dvh-200px)/2))]"
+                    etiquette={
+                      admin ? (
+                        <>
+                          {o.emplacement === "tableau_de_bord" ? (
+                            <LayoutDashboard size={12} aria-hidden />
+                          ) : (
+                            <Newspaper size={12} aria-hidden />
+                          )}
+                          {OU[o.emplacement ?? "partout"]}
+                        </>
+                      ) : undefined
+                    }
                   />
                 );
                 // Les commandes sous la carte, et non dedans : la carte
@@ -136,9 +157,18 @@ export async function ActualitesPage({ space }: { space: Space }) {
                   <div key={o.id} className="flex flex-col gap-1.5">
                     {carte}
                     <div className="flex items-center justify-end gap-1.5">
-                      <span className="mr-auto text-[12px] text-faint">
-                        Affichée : {EMPLACEMENTS_OFFRE[o.emplacement ?? "partout"].toLowerCase()}
-                      </span>
+                      {/*
+                        Placée dans les Actualités, mais poussée hors des
+                        quatre que voient les membres : l'équipe doit le
+                        savoir, sinon elle la croit affichée.
+                      */}
+                      {o.emplacement !== "tableau_de_bord" &&
+                      !duRail.includes(o) ? (
+                        <span className="mr-auto text-[12px] leading-snug text-faint">
+                          Hors du rail des membres : quatre offres plus
+                          récentes passent devant.
+                        </span>
+                      ) : null}
                       <OffreButton offre={o} membres={proposants} />
                       <SupprimerOffreButton offerId={o.id} titre={o.titre} />
                     </div>
@@ -151,43 +181,6 @@ export async function ActualitesPage({ space }: { space: Space }) {
           ) : (
             <EmptyState>Aucune offre en vedette pour le moment.</EmptyState>
           )}
-
-          {/*
-            Ce que le rail ne montre pas, pour l'équipe seulement : les offres
-            placées sur le tableau de bord, et celles qu'une plus récente a
-            poussées hors des quatre. Repliées : elles ne doivent pas rallonger
-            la page de qui ne les cherche pas.
-          */}
-          {admin && autres.length ? (
-            <details className="mt-3 rounded-[var(--radius-m)] border border-line bg-surface">
-              <summary className="cursor-pointer px-4 py-3 text-[13.4px] font-semibold text-ink">
-                Les autres offres ({autres.length})
-                <span className="ml-2 font-normal text-muted">
-                  hors du rail des Actualités
-                </span>
-              </summary>
-              <ul className="m-0 list-none border-t border-line p-0">
-                {autres.map((o) => (
-                  <li
-                    key={o.id}
-                    className="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13.4px] font-semibold text-ink">
-                        {o.titre}
-                      </span>
-                      <span className="block truncate text-[12px] text-muted">
-                        {o.membre} · affichée :{" "}
-                        {EMPLACEMENTS_OFFRE[o.emplacement ?? "partout"].toLowerCase()}
-                      </span>
-                    </span>
-                    <OffreButton offre={o} membres={proposants} />
-                    <SupprimerOffreButton offerId={o.id} titre={o.titre} />
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
         </aside>
       </div>
     </>

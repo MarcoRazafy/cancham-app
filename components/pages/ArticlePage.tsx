@@ -67,9 +67,14 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
       */}
       <div className="flex gap-7 items-start flex-col xl:flex-row">
         <Card className="p-[22px] w-full min-w-0 xl:w-[680px] 2xl:w-[760px] xl:shrink-0">
-          <Kicker>{n.cat}</Kicker>
+          <Kicker>{n.auteur ? "Publication d’un membre" : n.cat}</Kicker>
           <h1 className="mt-2 mb-1.5 text-[24px]">{n.titre}</h1>
-          <div className="text-[12.5px] text-faint mb-4">{fmtDate(n.date)}</div>
+          <div className="text-[12.5px] text-faint mb-4">
+            {fmtDate(n.date)}
+            {n.auteur
+              ? ` · ${[n.auteur.personne, n.auteur.membre].filter(Boolean).join(", ")}`
+              : ""}
+          </div>
 
           {n.images.length ? (
             <GaleriePhotos images={n.images} alt={n.titre} />

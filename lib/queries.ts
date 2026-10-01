@@ -361,6 +361,8 @@ function newsInclude(userId?: string) {
     commentaires: commentairesInclude(userId),
     _count: { select: { jaimes: true } },
     jaimes: { where: { userId: userId ?? "" }, select: { id: true } },
+    // Pour une publication de membre : de quoi la signer.
+    member: { select: { id: true, nom: true, logo: true } },
   };
 }
 
@@ -385,6 +387,14 @@ function versNews(n: NewsRow, userId?: string): NewsItem {
     corps: n.corps,
     public: n.public,
     images: n.images,
+    auteur: n.member
+      ? {
+          membreId: n.member.id,
+          membre: n.member.nom,
+          logo: n.member.logo,
+          personne: n.auteurNom,
+        }
+      : null,
     commentaires: versCommentaires(n.commentaires, userId),
     jaimes: n._count.jaimes,
     jaimeParMoi: n.jaimes.length > 0,
