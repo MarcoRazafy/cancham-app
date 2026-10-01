@@ -1,57 +1,17 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
+import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
 import { estPortefeuilleConnu } from "@/lib/portefeuilles";
-import { referenceReglement } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
-import { baseSite } from "@/lib/site";
-import {
-  mobileMoneyEnLigne,
-  ouvrirPaiement,
-  vanillaPayActif,
-} from "@/lib/vanillapay";
+import { mobileMoneyEnLigne, vanillaPayActif } from "@/lib/vanillapay";
 
 const texte = (fd: FormData, k: string) =>
   String(fd.get(k) ?? "")
     .replace(/\s+/g, " ")
     .trim();
-
-/**
- * Où ramener le membre après le paiement.
- *
- * En production, l'adresse publique de la plateforme. En développement,
- * celle d'où il vient : `APP_URL` peut y désigner la plateforme en ligne, et
- * l'y ramener le sortirait de sa base locale. La notification, elle, vise
- * toujours l'adresse publique — le prestataire ne peut joindre que
- * celle-là ; sur un poste de développement, c'est donc la page de retour
- * qui demande l'état du paiement.
- */
-async function baseRetour(): Promise<string> {
-  if (process.env.NODE_ENV === "production") return baseSite();
-  const h = await headers();
-  const hote = h.get("x-forwarded-host") ?? h.get("host");
-  if (!hote) return baseSite();
-  const protocole =
-    h.get("x-forwarded-proto") ??
-    (/^(localhost|127\.0\.0\.1)(:|$)/.test(hote) ? "http" : "https");
-  return `${protocole}://${hote}`;
-}
-
-/**
- * Garde la référence de la transaction chez le prestataire, lue sur le lien
- * de paiement : c'est elle qu'on lui présente pour demander où en est le
- * paiement, si sa notification ne nous parvient pas.
- */
-async function garderLien(reglementId: string, id: string | null) {
-  if (!id) return;
-  await prisma.paiement.update({
-    where: { id: reglementId },
-    data: { transaction: id },
-  });
-}
 
 /**
  * Le paiement par carte : le membre valide l'écran, et part chez le
@@ -65,9 +25,10 @@ async function garderLien(reglementId: string, id: string | null) {
  * regarde le jour où un paiement est contesté. Le numéro de la carte, lui,
  * ne passe jamais par ici — il se saisit chez le prestataire.
  *
- * Chaque tentative prend une référence neuve. Un prestataire refuse souvent
- * de rouvrir une référence déjà envoyée — et c'est elle, et elle seule, qui
- * relie sa notification au bon règlement.
+ * D'ordinaire, le membre n'arrive pas ici : la tuile « Carte bancaire »
+ * l'envoie droit chez le prestataire. Cet écran sert quand l'ouverture a été
+ * refusée — un montant sous leur plancher, une panne —, ou quand il revient
+ * sur un règlement resté ouvert.
  */
 export async function payerParCarte(formData: FormData) {
   const user = await getCurrentUser("membre");
@@ -97,14 +58,14 @@ export async function payerParCarte(formData: FormData) {
     redirectWithErreur(page, "Indiquez le nom du titulaire de la carte.");
   }
 
-  const reference = referenceReglement();
+  // Le nom saisi est gardé même si rien ne part : le membre n'aura pas à le
+  // refaire.
   await prisma.paiement.update({
     where: { id: p.id },
-    data: { reference, statut: "en_cours", detail: { titulaire } },
+    data: { detail: { titulaire } },
   });
 
-  // Sans les clés du prestataire, la saisie est gardée — le membre n'aura
-  // pas à la refaire — mais rien ne part.
+  // Sans les clés du prestataire, rien ne part.
   if (!vanillaPayActif()) {
     redirectWithErreur(
       page,
@@ -115,18 +76,13 @@ export async function payerParCarte(formData: FormData) {
     redirectWithErreur(page, "Le paiement par carte n’accepte que l’Ariary.");
   }
 
-  const base = baseSite();
-  const ouverture = await ouvrirPaiement({
-    montant: p.montant,
-    reference,
-    panier: p.invoice?.numero ?? reference,
-    mode: "international",
-    notifUrl: `${base}/api/paiements/vanillapay`,
-    redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
-  });
+  const ouverture = await ouvrirChezLePrestataire(
+    { id: p.id, montant: p.montant, numeroFacture: p.invoice?.numero ?? null },
+    "international",
+    { titulaire },
+  );
   // Le règlement reste ouvert : le membre peut réessayer sans tout ressaisir.
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
-  await garderLien(p.id, ouverture.id);
 
   // Sortie du site : la carte se saisit chez eux, jamais chez nous.
   redirect(ouverture.url);
@@ -175,23 +131,11 @@ export async function payerParPortefeuille(formData: FormData) {
     redirectWithErreur(page, "Les portefeuilles mobiles n’acceptent que l’Ariary.");
   }
 
-  const reference = referenceReglement();
-  await prisma.paiement.update({
-    where: { id: p.id },
-    data: { reference, statut: "en_cours" },
-  });
-
-  const base = baseSite();
-  const ouverture = await ouvrirPaiement({
-    montant: p.montant,
-    reference,
-    panier: p.invoice?.numero ?? reference,
-    mode: "mobile_money",
-    notifUrl: `${base}/api/paiements/vanillapay`,
-    redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
-  });
+  const ouverture = await ouvrirChezLePrestataire(
+    { id: p.id, montant: p.montant, numeroFacture: p.invoice?.numero ?? null },
+    "mobile_money",
+  );
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
-  await garderLien(p.id, ouverture.id);
 
   redirect(ouverture.url);
 }
