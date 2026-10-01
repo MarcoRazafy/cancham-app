@@ -130,7 +130,12 @@ export default async function EvenementPublic({
           la question qu'on se pose, pas une note à trouver sous la
           description. Sur ordinateur, elle reste à droite et suit le défilement.
         */}
-        <div className="grid gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
+        {/*
+          Le détail se lit sur du papier : un bloc blanc, posé sur le bleu
+          nuit de la page — le bloc seul, pas la section (voir
+          `.vitrine-claire` dans vitrine.css).
+        */}
+        <div className="vitrine-claire rounded-2xl px-5 py-7 sm:px-8 sm:py-9 lg:px-10 grid gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
           <div className="lg:col-start-1 lg:row-start-1 min-w-0">
             <span className="surtitre text-marque-rouge">{e.format}</span>
             <h1
