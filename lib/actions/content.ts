@@ -400,7 +400,14 @@ async function maPublication(id: string) {
   if (!membre || isAccessLocked(membre)) return null;
   const n = await prisma.news.findFirst({
     where: { id, memberId: user.memberId },
-    select: { id: true, titre: true, corps: true, images: true, libre: true },
+    select: {
+      id: true,
+      titre: true,
+      corps: true,
+      images: true,
+      libre: true,
+      public: true,
+    },
   });
   return n ? { user, membre, n } : null;
 }
@@ -444,7 +451,10 @@ export async function modifierPublication(
     data: {
       corps,
       images,
-      // La diffusion ne se touche pas ici : elle appartient à l'équipe.
+      // Reprise par son auteur, elle revient aux membres seuls : si l'équipe
+      // l'avait diffusée sur la page publique, c'est le texte qu'elle avait
+      // lu — le nouveau n'y paraît pas sans qu'elle le rediffuse.
+      public: false,
       // Une publication libre garde un titre tiré de son texte ; devenue un
       // article entre les mains de l'équipe, elle garde le titre de l'équipe.
       ...(n.libre
@@ -461,9 +471,20 @@ export async function modifierPublication(
       entite: "News",
       entiteId: maj.id,
       acteur: user.nom,
-      detail: `« ${maj.titre} » · modifiée par ${membre.nom} · ${maj.public ? "plateforme et page publique" : "plateforme uniquement"}`,
+      detail: `« ${maj.titre} » · modifiée par ${membre.nom} · ${n.public ? "retirée de la page publique" : "plateforme uniquement"}`,
     },
   });
+  // L'équipe l'avait diffusée au public : elle doit savoir qu'elle n'y est
+  // plus, et pourquoi.
+  if (n.public) {
+    after(() =>
+      notifierEquipe({
+        titre: "Publication modifiée par son auteur",
+        corps: `${membre.nom} · ${maj.titre} — retirée de la page publique, à rediffuser après relecture.`,
+        url: `/admin/actualites/${maj.id}`,
+      }),
+    );
+  }
   revalideTout();
   return { etape: "publiee", id: maj.id };
 }
