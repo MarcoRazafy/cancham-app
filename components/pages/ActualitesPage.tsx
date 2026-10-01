@@ -195,14 +195,13 @@ export async function ActualitesPage({
                     <ComposeurPublication
                       // La fenêtre repart de la publication telle qu'elle
                       // vient d'être enregistrée.
-                      key={`${n.corps}|${n.images.join("|")}|${n.public}`}
+                      key={`${n.corps}|${n.images.join("|")}`}
                       entreprise={entreprise.nom}
                       avatar={avatar}
                       publication={{
                         id: n.id,
                         texte: n.corps,
                         images: n.images,
-                        publique: n.public,
                       }}
                     />
                     <SupprimerMaPublication

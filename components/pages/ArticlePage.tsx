@@ -73,7 +73,7 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
           // Sa propre publication : le membre la reprend ou la retire.
           <div className="flex items-center gap-1.5">
             <ComposeurPublication
-              key={`${n.corps}|${n.images.join("|")}|${n.public}`}
+              key={`${n.corps}|${n.images.join("|")}`}
               entreprise={entreprise.nom}
               avatar={
                 <AvatarRond
@@ -89,7 +89,6 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
                 id: n.id,
                 texte: n.corps,
                 images: n.images,
-                publique: n.public,
               }}
             />
             <SupprimerMaPublication

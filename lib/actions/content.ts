@@ -283,8 +283,9 @@ const PUBLICATIONS_PAR_HEURE = 5;
  * Elle paraît aussitôt dans le fil des membres, signée de l'entreprise.
  * L'équipe en est
  * prévenue : elle peut la modifier ou la supprimer, comme toute actualité.
- * Le membre choisit à qui elle se montre — les membres, ou aussi la page
- * publique — et peut ensuite la reprendre ou la retirer.
+ * Elle est réservée aux membres : la page publique reste à la chambre, et
+ * seule l'équipe peut l'y diffuser. Le membre peut ensuite la reprendre ou
+ * la retirer.
  *
  * Appelée depuis la fenêtre de publication, sans quitter le fil : elle rend
  * son résultat au lieu de rediriger, pour qu'une erreur n'efface pas ce que
@@ -314,7 +315,6 @@ export async function publierPublication(
   }
 
   const corps = textePublication(formData.get("texte"));
-  const estPublique = texte(formData, "diffusion") === "public";
   const avecPhotos = formData
     .getAll("images")
     .some((v) => (typeof v === "string" ? v.trim() !== "" : v.size > 0));
@@ -357,8 +357,9 @@ export async function publierPublication(
       cat: "vie_de_la_chambre",
       date: jourBase(),
       images,
-      // Le membre choisit : les membres seulement, ou aussi la page publique.
-      public: estPublique,
+      // Réservée aux membres : la page publique reste à la chambre. Seule
+      // l'équipe peut l'y diffuser, en la reprenant.
+      public: false,
       libre: true,
       mediaType: "image",
       mediaTheme: Math.random() > 0.5 ? "navy" : "green",
@@ -378,9 +379,7 @@ export async function publierPublication(
   });
   after(() =>
     notifierEquipe({
-      titre: n.public
-        ? "Publication d’un membre, sur la page publique"
-        : "Publication d’un membre",
+      titre: "Publication d’un membre",
       corps: `${membre.nom} · ${n.titre}`,
       url: `/admin/actualites/${n.id}`,
     }),
@@ -407,8 +406,8 @@ async function maPublication(id: string) {
 }
 
 /**
- * Le membre reprend sa publication : le texte, les photos, à qui elle se
- * montre. Comme à la publication, l'action rend son résultat à la fenêtre.
+ * Le membre reprend sa publication : le texte et les photos. Comme à la
+ * publication, l'action rend son résultat à la fenêtre.
  */
 export async function modifierPublication(
   _avant: EtatPublication,
@@ -445,7 +444,7 @@ export async function modifierPublication(
     data: {
       corps,
       images,
-      public: texte(formData, "diffusion") === "public",
+      // La diffusion ne se touche pas ici : elle appartient à l'équipe.
       // Une publication libre garde un titre tiré de son texte ; devenue un
       // article entre les mains de l'équipe, elle garde le titre de l'équipe.
       ...(n.libre
