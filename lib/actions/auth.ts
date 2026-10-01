@@ -26,19 +26,25 @@ const ACCUEIL: Record<string, string> = {
   visiteur: "/membre/profil",
 };
 
-/** Retour à la connexion, motif et adresse saisie conservés. */
-function echec(message: string, email: string): never {
+/**
+ * Retour à la connexion, motif et adresse saisie conservés — et la page
+ * demandée avant la connexion : une faute de frappe dans le mot de passe ne
+ * doit pas faire oublier où l'on allait.
+ */
+function echec(message: string, email: string, suite = ""): never {
   const q = new URLSearchParams({ erreur: message });
   if (email) q.set("email", email);
+  if (suite.startsWith("/") && !suite.startsWith("//")) q.set("suite", suite);
   redirect(`/auth?${q}`);
 }
 
 export async function connexion(formData: FormData) {
   const email = texte(formData, "email").toLowerCase();
   const motDePasse = String(formData.get("motDePasse") ?? "");
+  const suite = texte(formData, "suite");
 
   if (!email || !motDePasse) {
-    echec("Indiquez votre adresse et votre mot de passe.", email);
+    echec("Indiquez votre adresse et votre mot de passe.", email, suite);
   }
 
   // Essayer les mots de passe en série n'avance à rien : le compte visé se
@@ -54,6 +60,7 @@ export async function connexion(formData: FormData) {
         minutes(attente) > 1 ? "s" : ""
       }.`,
       email,
+      suite,
     );
   }
 
@@ -77,11 +84,12 @@ export async function connexion(formData: FormData) {
         ? "Votre demande d’adhésion est en cours d’examen. Dès qu’elle sera validée, vous recevrez un e-mail pour créer votre mot de passe."
         : "Votre accès n’est pas encore ouvert : l’équipe CanCham vous enverra un e-mail pour créer votre mot de passe.",
       email,
+      suite,
     );
   }
 
   if (!u || !verifier(motDePasse, u.motDePasse)) {
-    echec("Adresse ou mot de passe incorrect.", email);
+    echec("Adresse ou mot de passe incorrect.", email, suite);
   }
 
   // Une candidature à l'examen n'ouvre pas encore de session. On ne le dit
@@ -92,6 +100,7 @@ export async function connexion(formData: FormData) {
     echec(
       "Votre demande d’adhésion n’a pas été retenue. Écrivez à la chambre si vous pensez qu’il s’agit d’une erreur.",
       email,
+      suite,
     );
   }
 
@@ -111,7 +120,6 @@ export async function connexion(formData: FormData) {
   // Retour à la page demandée avant la connexion, si elle appartient bien à
   // l'espace de la personne : sinon, son accueil.
   const accueil = ACCUEIL[u.role] ?? "/membre";
-  const suite = texte(formData, "suite");
   const sienne = suite === `/${u.role}` || suite.startsWith(`/${u.role}/`);
   redirect(sienne ? suite : accueil);
 }

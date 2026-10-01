@@ -1,6 +1,10 @@
 import { AlertTriangle, CalendarClock, Clock } from "lucide-react";
 import { CarteRendezvous } from "@/components/rendezvous/CarteRendezvous";
-import { ModifierType, NouveauType } from "@/components/rendezvous/Reglages";
+import {
+  LienRendezvous,
+  ModifierType,
+  NouveauType,
+} from "@/components/rendezvous/Reglages";
 import {
   Banner,
   Card,
@@ -17,6 +21,8 @@ import {
   getTypesRendezvous,
 } from "@/lib/rendezvous-donnees";
 import { getCurrentUser } from "@/lib/session";
+import { urlPublique } from "@/lib/courriel";
+import { cheminRendezvous } from "@/lib/liens";
 
 /**
  * Rendez-vous, côté équipe : ce qui est pris, ce qu'on propose, et quand on
@@ -33,6 +39,16 @@ export default async function RendezvousEquipePage() {
     getRendezvousEquipe(),
     getTypesRendezvous(true),
   ]);
+
+  // Chaque type a son lien, qui mène droit à ses créneaux : l'équipe le copie
+  // pour l'envoyer, ou pour le coller dans un service.
+  const liens = new Map(
+    await Promise.all(
+      types.map(
+        async (t) => [t.id, await urlPublique(cheminRendezvous(t.id))] as const,
+      ),
+    ),
+  );
 
   // Un type ne donne des créneaux que s'il porte des heures d'accueil.
   const proposes = types.filter((t) => t.actif && t.plages.length);
@@ -133,6 +149,14 @@ export default async function RendezvousEquipePage() {
                         aux membres.
                       </p>
                     )}
+
+                    {/* Un type masqué ou sans créneau n'a rien à ouvrir. */}
+                    {t.actif && t.plages.length ? (
+                      <LienRendezvous
+                        lien={liens.get(t.id) ?? ""}
+                        titre={t.titre}
+                      />
+                    ) : null}
                   </div>
                   <ModifierType type={t} />
                 </div>

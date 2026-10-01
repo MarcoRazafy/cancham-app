@@ -1,7 +1,7 @@
 import { CalendarClock } from "lucide-react";
 import { CarteRendezvous } from "@/components/rendezvous/CarteRendezvous";
 import { Reservation } from "@/components/rendezvous/Reservation";
-import { EmptyState, SectionTitle, ViewHead } from "@/components/ui";
+import { Banner, EmptyState, SectionTitle, ViewHead } from "@/components/ui";
 import { estHeure, estJourISO } from "@/lib/agenda";
 import { aujourdhuiISO } from "@/lib/format";
 import { MENTION_FUSEAU } from "@/lib/rendezvous";
@@ -69,6 +69,16 @@ export default async function RendezvousPage({
       </div>
 
       <SectionTitle>Prendre un rendez-vous</SectionTitle>
+      {/* Venu par le lien d'un rendez-vous qui n'est plus proposé. */}
+      {p.type && !type ? (
+        <div className="mb-4">
+          <Banner tone="warn" title="Ce rendez-vous n’est plus proposé">
+            {types.length
+              ? "Choisissez-en un autre ci-dessous."
+              : "Aucun rendez-vous n’est ouvert pour le moment."}
+          </Banner>
+        </div>
+      ) : null}
       <Reservation
         types={types}
         type={type}

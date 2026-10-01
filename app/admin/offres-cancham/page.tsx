@@ -1,4 +1,4 @@
-import { Briefcase, CreditCard, Tag } from "lucide-react";
+import { Briefcase, CreditCard, Link2, Tag } from "lucide-react";
 import { Compteur, EnTeteAdmin, Vide } from "@/components/admin/ui";
 import { ServiceCard } from "@/components/domain";
 import {
@@ -8,10 +8,33 @@ import {
 } from "@/components/forms/ContentForms";
 import { Card, Saillant } from "@/components/ui";
 import { getServices } from "@/lib/queries";
+import { getTypesRendezvous } from "@/lib/rendezvous-donnees";
+import { urlPublique } from "@/lib/courriel";
+import { cheminRendezvous, typeDuLienRendezvous } from "@/lib/liens";
 import type { CanchamService } from "@/lib/types";
 
 export default async function AdminServices() {
-  const services = await getServices();
+  const [services, types] = await Promise.all([
+    getServices(),
+    getTypesRendezvous(),
+  ]);
+  const ouverts = new Set(
+    types.filter((t) => t.plages.length).map((t) => t.id),
+  );
+  // Le lien d'un service mène-t-il à un rendez-vous qui n'est plus ouvert ?
+  const rendezvousFerme = (lien: string) => {
+    const type = typeDuLienRendezvous(lien);
+    return type !== null && !ouverts.has(type);
+  };
+  // Les rendez-vous ouverts, proposés dans le champ « Lien » d'un service.
+  const rendezvous = await Promise.all(
+    types
+      .filter((t) => t.plages.length)
+      .map(async (t) => ({
+        titre: t.titre,
+        lien: await urlPublique(cheminRendezvous(t.id)),
+      })),
+  );
   const gratuits = services.filter((s) => s.type === "gratuit");
   const payants = services.filter((s) => s.type === "payant");
 
@@ -27,7 +50,25 @@ export default async function AdminServices() {
               service={s}
               action={
                 <div className="flex items-center gap-1.5 w-full flex-wrap">
-                  <ServiceFormButton service={s} />
+                  {s.lien ? (
+                    rendezvousFerme(s.lien) ? (
+                      // L'équipe doit le savoir : sinon elle croit le
+                      // service relié à un rendez-vous.
+                      <span className="mb-1 w-full text-[12px] leading-snug text-warn">
+                        Rendez-vous masqué ou supprimé : le bouton écrit de
+                        nouveau à l’équipe.
+                      </span>
+                    ) : (
+                      <span
+                        title={s.lien}
+                        className="mb-1 flex w-full min-w-0 items-center gap-1.5 text-[12px] text-faint"
+                      >
+                        <Link2 size={12} className="shrink-0" aria-hidden />
+                        <span className="truncate">{s.lien}</span>
+                      </span>
+                    )
+                  ) : null}
+                  <ServiceFormButton service={s} rendezvous={rendezvous} />
                   <span className="flex-1" />
                   <DeplacerServiceButton
                     serviceId={s.id}
@@ -62,7 +103,7 @@ export default async function AdminServices() {
             Services <Saillant ton="vert">CanCham</Saillant>
           </>
         }
-        actions={<ServiceFormButton />}
+        actions={<ServiceFormButton rendezvous={rendezvous} />}
       >
         Ce que la chambre propose à ses membres, inclus dans l’adhésion ou
         facturé. L’ordre choisi ici est celui que voient les membres.
