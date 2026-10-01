@@ -21,6 +21,7 @@ export async function GET(
       reference: true,
       statut: true,
       montant: true,
+      mode: true,
       transaction: true,
       invoice: { select: { numero: true } },
     },
@@ -46,8 +47,13 @@ export async function GET(
           : p.statut === "echouee"
             ? "FAILED"
             : "INITIATED",
-      montant: p.montant,
-      devise: "MGA",
+      // Une carte se dit en euros, avec son équivalent en Ariary.
+      ...(p.mode === "carte"
+        ? {
+            montant: Math.round((p.montant / 4950) * 100) / 100,
+            montant_mga: p.montant,
+          }
+        : { montant: p.montant }),
     },
   });
 }

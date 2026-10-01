@@ -1,6 +1,10 @@
 import { revalidatePath } from "next/cache";
 import { conclurePaiement } from "@/lib/paiements";
-import { lireEtat, signatureValide } from "@/lib/vanillapay";
+import {
+  chargeDepuisCorps,
+  lireEtat,
+  signatureValide,
+} from "@/lib/vanillapay";
 
 /**
  * Notification de Vanilla Pay : c'est elle, et elle seule, qui règle une
@@ -26,12 +30,10 @@ export async function POST(req: Request) {
     return new Response("signature invalide", { status: 401 });
   }
 
-  let charge: unknown;
-  try {
-    charge = JSON.parse(corps);
-  } catch {
-    return new Response("corps illisible", { status: 400 });
-  }
+  // En JSON d'après leur document, mais annoncé comme un formulaire : on lit
+  // l'un, à défaut l'autre.
+  const charge = chargeDepuisCorps(corps);
+  if (!charge) return new Response("corps illisible", { status: 400 });
 
   const etat = lireEtat(charge);
   if (!etat) {

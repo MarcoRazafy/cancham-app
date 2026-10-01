@@ -41,10 +41,9 @@ async function baseRetour(): Promise<string> {
 }
 
 /**
- * Garde l'identifiant du lien de paiement : c'est lui qu'on présente au
- * prestataire pour demander où en est le paiement, si sa notification ne
- * nous parvient pas. La notification, elle, le remplacera par leur
- * référence de transaction.
+ * Garde la référence de la transaction chez le prestataire, lue sur le lien
+ * de paiement : c'est elle qu'on lui présente pour demander où en est le
+ * paiement, si sa notification ne nous parvient pas.
  */
 async function garderLien(reglementId: string, id: string | null) {
   if (!id) return;
@@ -121,6 +120,7 @@ export async function payerParCarte(formData: FormData) {
     montant: p.montant,
     reference,
     panier: p.invoice?.numero ?? reference,
+    mode: "international",
     notifUrl: `${base}/api/paiements/vanillapay`,
     redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
   });
@@ -186,6 +186,7 @@ export async function payerParPortefeuille(formData: FormData) {
     montant: p.montant,
     reference,
     panier: p.invoice?.numero ?? reference,
+    mode: "mobile_money",
     notifUrl: `${base}/api/paiements/vanillapay`,
     redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
   });

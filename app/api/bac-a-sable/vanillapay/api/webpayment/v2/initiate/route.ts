@@ -32,7 +32,11 @@ export async function POST(requete: Request) {
     return refus(400, "Corps illisible");
   }
   const reference = String(corps.reference ?? "");
-  const retour = String(corps.redirect_url ?? corps.redirectUrl ?? "");
+  const retour = String(corps.redirect_url ?? "");
+  const mode = String(corps.mode_paiement ?? "");
+  if (mode !== "international" && mode !== "mobile_money") {
+    return refus(400, "mode_paiement attendu : international ou mobile_money");
+  }
   const p = await prisma.paiement.findUnique({
     where: { reference },
     select: { id: true },

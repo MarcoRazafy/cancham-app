@@ -10,12 +10,14 @@ import { estPortefeuille, type ModeReglement } from "@/lib/modes-reglement";
  * rappellent. C'est leur certification qui porte les données de paiement,
  * pas la nôtre.
  *
- * Trois appels, ceux de leur API « webpayment » :
- *  - `GET  /webpayment/token`        le jeton, avec `Client-Id` et
- *                                    `Client-Secret` ;
- *  - `POST /webpayment/initiate`     ouvre le paiement et rend son lien ;
- *  - `GET  /webpayment/status/{id}`  l'état d'un paiement, par l'identifiant
- *                                    que porte son lien.
+ * Trois appels, ceux de leur document d'intégration (version 2.3) :
+ *  - `GET  /webpayment/token`                le jeton, avec `Client-Id` et
+ *                                            `Client-Secret` ;
+ *  - `POST /api/webpayment/v2/initiate`      ouvre le paiement, dans un
+ *                                            mode — carte ou mobile money —,
+ *                                            et rend son lien ;
+ *  - `GET  /api/webpayment/v2/status/{id}`   l'état d'un paiement, par sa
+ *                                            référence chez eux.
  * Leurs réponses arrivent toutes dans la même enveloppe : `CodeRetour`,
  * `DescRetour`, `DetailRetour` et `Data`.
  *
@@ -80,7 +82,7 @@ export const MONTANT_MINIMUM_EN_LIGNE = 5000;
  * qui ouvrent l'API, et une clé secrète (« KeySecret »), qui signe leurs
  * notifications. L'adresse de l'API vient de l'environnement elle aussi :
  * la préproduction (`https://preprod.vanilla-pay.net`) et la production
- * (`https://api.vanilla-pay.net`) n'ont pas le même hôte, et rien ne doit
+ * (`https://bo.vanilla-pay.net`) n'ont pas le même hôte, et rien ne doit
  * obliger à redéployer pour passer de l'une à l'autre.
  */
 function config(): Config | null {
@@ -116,12 +118,13 @@ export function marchandAffiche(): string | null {
 /**
  * Le compte marchand encaisse-t-il le mobile money ?
  *
- * Les moyens proposés sur leur page dépendent du contrat : un compte peut
- * n'avoir que la carte bancaire. Promettre « votre téléphone va sonner » à
- * un membre que leur page n'enverra que vers une carte serait le tromper ;
- * « Payer maintenant » n'apparaît donc dans les tunnels MVola, Orange Money
- * et Airtel Money que si la chambre déclare ces moyens activés
- * (`VANILLAPAY_MOBILE_MONEY=1`). Le simulateur, lui, les joue toujours.
+ * Le mobile money est une offre à part chez eux : un compte qui ne l'a pas
+ * se voit répondre « Vous n'avez pas accès à l'offre mobile money » à
+ * l'ouverture du paiement. Promettre « votre téléphone va sonner » à un
+ * membre pour le lui refuser l'instant d'après serait le tromper ; « Payer
+ * maintenant » n'apparaît donc dans les tunnels MVola, Orange Money et
+ * Airtel Money que si la chambre déclare l'offre activée
+ * (`VANILLAPAY_MOBILE_MONEY=1`). Le simulateur, lui, la joue toujours.
  */
 export function mobileMoneyEnLigne(): boolean {
   return (
@@ -218,18 +221,45 @@ export interface OuvertureRefusee {
 }
 
 /**
+ * La référence de la transaction chez eux (« VPI… » pour une carte, « MM… »
+ * pour un portefeuille), telle que la porte le lien de paiement : son `id`
+ * est un jeton signé dont le contenu est cette référence. `null` si le lien
+ * ne se lit pas ainsi.
+ */
+export function referenceDuLien(url: string): string | null {
+  try {
+    const id = new URL(url).searchParams.get("id");
+    const contenu = id?.split(".")[1];
+    if (!contenu) return id ?? null;
+    const lu = Buffer.from(contenu, "base64url").toString("utf8").trim();
+    return /^[A-Za-z0-9_-]{6,40}$/.test(lu) ? lu : id;
+  } catch {
+    return null;
+  }
+}
+
+/** Au-delà, ils répondent « Panier trop long ». */
+const PANIER_MAX = 20;
+
+/**
  * Ouvre un paiement et rend l'adresse de la page où envoyer le membre, avec
- * l'identifiant que porte ce lien : c'est lui qu'on présentera pour demander
- * l'état du paiement si la notification ne nous parvient pas.
+ * la référence de la transaction chez eux : c'est elle qu'on présentera pour
+ * demander l'état du paiement si la notification ne nous parvient pas.
  *
  * Le montant part en unités entières d'Ariary, comme il est facturé. La
  * référence est la nôtre : c'est elle qui reviendra dans la notification.
- * Le « panier » est ce que le payeur règle — le numéro de la facture.
+ * Le « panier » est ce que le payeur règle — le numéro de la facture. Le
+ * mode décide de leur page : `international` propose la carte (et PayPal
+ * si le compte l'a), `mobile_money` les trois portefeuilles.
+ *
+ * Leurs adresses de notification et de retour doivent appartenir au site
+ * déclaré dans leur espace marchand, quand il y en a un.
  */
 export async function ouvrirPaiement(v: {
   montant: number;
   reference: string;
   panier: string;
+  mode: ModePaiement;
   notifUrl: string;
   redirectUrl: string;
 }): Promise<{ url: string; id: string | null } | OuvertureRefusee> {
@@ -240,7 +270,7 @@ export async function ouvrirPaiement(v: {
   if (!t) return { raison: "Le prestataire de paiement ne répond pas." };
 
   try {
-    const r = await fetch(`${c.base}/webpayment/initiate`, {
+    const r = await fetch(`${c.base}/api/webpayment/v2/initiate`, {
       method: "POST",
       headers: {
         Accept: "*/*",
@@ -250,16 +280,12 @@ export async function ouvrirPaiement(v: {
       },
       body: JSON.stringify({
         montant: v.montant,
-        devise: "MGA",
         reference: v.reference,
-        panier: v.panier,
+        panier: v.panier.slice(0, PANIER_MAX),
         notif_url: v.notifUrl,
         redirect_url: v.redirectUrl,
-        // Les deux écritures de ces adresses circulent chez leurs
-        // intégrateurs ; on envoie les deux tant que la préproduction n'a
-        // pas dit laquelle elle lit.
-        notifUrl: v.notifUrl,
-        redirectUrl: v.redirectUrl,
+        devise: "MGA",
+        mode_paiement: v.mode,
       }),
       cache: "no-store",
     });
@@ -267,8 +293,14 @@ export async function ouvrirPaiement(v: {
     const url = d?.Data?.url;
     if (!url) {
       if (d) console.error("[vanillapay] ouverture : réponse sans lien de paiement");
-      // Un refus sur le montant est une règle du prestataire, que le membre
-      // doit connaître ; le reste ne le regarde pas.
+      // Deux refus regardent le membre : un montant hors de leurs bornes, et
+      // un compte marchand sans l'offre mobile money. Le reste, non.
+      if (detail && /mobile money/i.test(detail)) {
+        return {
+          raison:
+            "Le paiement mobile money en ligne n’est pas encore ouvert sur le compte de la chambre : faites l’envoi depuis votre téléphone, comme indiqué.",
+        };
+      }
       return {
         raison:
           detail && /montant/i.test(detail)
@@ -276,13 +308,7 @@ export async function ouvrirPaiement(v: {
             : "Le paiement n’a pas pu être ouvert.",
       };
     }
-    let id: string | null = null;
-    try {
-      id = new URL(url).searchParams.get("id");
-    } catch {
-      /* Un lien qu'on ne sait pas lire se suit quand même. */
-    }
-    return { url, id };
+    return { url, id: referenceDuLien(url) };
   } catch (e) {
     console.error("[vanillapay] ouverture injoignable :", e);
     return { raison: "Le prestataire de paiement ne répond pas." };
@@ -297,9 +323,10 @@ export interface EtatPaiement {
   /** Échec constaté : la tentative est close, le membre peut recommencer. */
   echoue: boolean;
   /**
-   * Le montant annoncé, quand il l'est en Ariary. Le prestataire convertit
-   * en euros ce qu'il encaisse : un montant sans devise, ou dans une autre,
-   * ne se compare pas à ce que nous avons demandé — il vaut `null`.
+   * Le montant annoncé, quand il l'est en Ariary : leur champ `montant_mga`,
+   * présent pour un paiement ouvert en Ariary. Leur `montant`, lui, est en
+   * euros pour une carte et net de frais pour un portefeuille : il ne se
+   * compare pas à ce que nous avons demandé — sans Ariary, c'est `null`.
    */
   montant: number | null;
   transaction: string | null;
@@ -328,10 +355,11 @@ const ECHOUE = [
 /**
  * Lit l'état d'un paiement dans une charge utile du prestataire.
  *
- * La notification porte `reference`, `reference_VPI`, `panier`, `remarque`
- * et `etat` ; l'interrogation du statut rend les mêmes champs dans `Data`,
- * avec `montant` et `montantRecu` — en euros, après conversion. Un paiement
- * ouvert et pas encore payé est `INITIATED`.
+ * La notification porte `reference_VPI`, `reference`, `panier`, `montant`
+ * et `etat` — plus `montant_mga` pour une carte, `initiateur` et
+ * `referenceMM` pour un portefeuille. L'interrogation du statut rend les
+ * mêmes champs dans `Data`, avec `montantRecu`. Les états : `INITIATED`
+ * (ouvert, pas encore payé), `PENDING`, `SUCCESS`, `FAILED`.
  *
  * On accepte aussi les variantes connues, et on refuse de conclure sur ce
  * qu'on ne comprend pas — un paiement qu'on ne sait pas lire reste en
@@ -352,7 +380,12 @@ export function lireEtat(charge: unknown): EtatPaiement | null {
   const devise = String(d.devise ?? d.currency ?? "")
     .trim()
     .toUpperCase();
-  const montant = devise === "MGA" ? Number(d.montant ?? d.amount) : NaN;
+  const montant =
+    d.montant_mga !== undefined && d.montant_mga !== null
+      ? Number(d.montant_mga)
+      : devise === "MGA"
+        ? Number(d.montant ?? d.amount)
+        : NaN;
   const transaction =
     d.reference_VPI ?? d.referenceVPI ?? d.transaction_id ?? d.id ?? d.transaction;
 
@@ -363,6 +396,22 @@ export function lireEtat(charge: unknown): EtatPaiement | null {
     montant: Number.isFinite(montant) ? montant : null,
     transaction: transaction ? String(transaction) : null,
   };
+}
+
+/**
+ * Le corps d'une notification, devenu objet.
+ *
+ * Leur document le montre en JSON, mais l'annonce en
+ * `application/x-www-form-urlencoded` : on lit l'un, et à défaut l'autre.
+ * La signature, elle, se vérifie toujours sur le corps brut, avant.
+ */
+export function chargeDepuisCorps(corps: string): unknown {
+  try {
+    return JSON.parse(corps);
+  } catch {
+    const champs = Object.fromEntries(new URLSearchParams(corps));
+    return Object.keys(champs).length ? champs : null;
+  }
 }
 
 /**
@@ -437,10 +486,12 @@ export function simulateurActif(): boolean {
 
 /**
  * Interroge le prestataire quand sa notification ne nous est pas parvenue.
- * `id` est l'identifiant que portait le lien de paiement.
+ * `id` est la référence de la transaction chez eux (« VPI… » ou « MM… »),
+ * gardée à l'ouverture ; le mode est celui dans lequel elle a été ouverte.
  */
 export async function interrogerStatut(
   id: string,
+  mode: ModePaiement,
 ): Promise<EtatPaiement | null> {
   const c = config();
   if (!c) return null;
@@ -449,7 +500,7 @@ export async function interrogerStatut(
 
   try {
     const r = await fetch(
-      `${c.base}/webpayment/status/${encodeURIComponent(id)}`,
+      `${c.base}/api/webpayment/v2/status/${encodeURIComponent(id)}?mode_paiement=${mode}`,
       {
         headers: { Accept: "*/*", Authorization: t, "VPI-Version": c.version },
         cache: "no-store",

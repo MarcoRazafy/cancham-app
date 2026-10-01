@@ -1,6 +1,12 @@
 import { createHmac } from "node:crypto";
 import { beforeAll, describe, expect, it } from "vitest";
-import { lireEtat, referencePaiement, signatureValide } from "@/lib/vanillapay";
+import {
+  chargeDepuisCorps,
+  lireEtat,
+  referenceDuLien,
+  referencePaiement,
+  signatureValide,
+} from "@/lib/vanillapay";
 
 /**
  * La notification du prestataire est ce qui règle une facture : si sa
@@ -120,6 +126,58 @@ describe("lecture de l’état d’un paiement", () => {
     ).toMatchObject({ reussi: false, echoue: false });
   });
 
+  it("lit la notification d'une carte : l'Ariary est dans montant_mga", () => {
+    // Document d'intégration 2.3, § 6.1.1.
+    expect(
+      lireEtat({
+        reference_VPI: "VPI23120101010101",
+        reference: "ABC-1234",
+        panier: "panier123",
+        montant: 58.5,
+        montant_mga: 292500,
+        etat: "SUCCESS",
+      }),
+    ).toEqual({
+      reference: "ABC-1234",
+      reussi: true,
+      echoue: false,
+      montant: 292500,
+      transaction: "VPI23120101010101",
+    });
+  });
+
+  it("lit la notification d'un portefeuille, sans se fier à son montant", () => {
+    // § 6.1.2 : le montant d'un portefeuille peut être net de frais.
+    expect(
+      lireEtat({
+        reference_VPI: "MM23120101010101",
+        reference: "ABC-1234",
+        panier: "panier123",
+        montant: 58.5,
+        etat: "SUCCESS",
+        initiateur: "0345678909",
+        referenceMM: "9049234",
+      }),
+    ).toEqual({
+      reference: "ABC-1234",
+      reussi: true,
+      echoue: false,
+      montant: null,
+      transaction: "MM23120101010101",
+    });
+  });
+
+  it("lit un corps de notification en JSON comme en formulaire", () => {
+    expect(chargeDepuisCorps('{"reference":"R1","etat":"SUCCESS"}')).toEqual({
+      reference: "R1",
+      etat: "SUCCESS",
+    });
+    expect(
+      lireEtat(chargeDepuisCorps("reference=R1&etat=FAILED&reference_VPI=VPI9")),
+    ).toMatchObject({ reference: "R1", echoue: true, transaction: "VPI9" });
+    expect(chargeDepuisCorps("")).toBeNull();
+  });
+
   it("lit leur statut réel : un paiement ouvert, montants en euros", () => {
     // Relevé sur leur API de production, le 1er octobre 2026.
     const etat = lireEtat({
@@ -171,6 +229,27 @@ describe("lecture de l’état d’un paiement", () => {
     expect(
       lireEtat({ reference: "R1", status: "success", transaction_id: "VP-99" }),
     ).toMatchObject({ transaction: "VP-99" });
+  });
+});
+
+describe("référence de la transaction, lue sur le lien de paiement", () => {
+  it("décode la référence que porte l'identifiant du lien", () => {
+    // Les liens du document : une carte, puis un portefeuille.
+    expect(
+      referenceDuLien(
+        "https://bo.vanilla-pay.net/webpayment?id=eyJhbGciOiJIUzI1NiJ9.VlBJMjMxMjIxMTA1MjUzOTQ.signature",
+      ),
+    ).toBe("VPI23122110525394");
+    expect(
+      referenceDuLien(
+        "https://bo.vanilla-pay.net/api/mobileMoney/selectChoice?id=eyJhbGciOiJIUzI1NiJ9.TU0yNTExMDUxNzAyMjQ1Ng.signature",
+      ),
+    ).toBe("MM25110517022456");
+  });
+
+  it("garde l'identifiant tel quel quand il ne se décode pas", () => {
+    expect(referenceDuLien("http://localhost:3000/bac-a-sable/paiement?id=CC-2026-AB12CD")).toBe("CC-2026-AB12CD");
+    expect(referenceDuLien("pas une adresse")).toBeNull();
   });
 });
 
