@@ -19,6 +19,7 @@ import {
   PuceSecteur,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { CouvertureReglable } from "@/components/CouvertureReglable";
 import { TexteLie } from "@/components/TexteLie";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
@@ -51,6 +52,7 @@ import {
 import { getContacts, getInvoices, getMember } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { affichageSite } from "@/lib/liens";
+import { positionObjet } from "@/lib/cadrage";
 import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
 import { fmtDate, fmtDateShort } from "@/lib/format";
 import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
@@ -61,6 +63,9 @@ import {
   retardBloque,
   RETARD_BLOCAGE_JOURS,
 } from "@/lib/membership";
+
+/** Le cadre de la couverture — celui de la fiche de l'annuaire. */
+const CADRE_COUVERTURE = "h-[190px] w-full sm:h-[260px]";
 
 export default async function ProfilPage() {
   const user = await getCurrentUser("membre");
@@ -172,22 +177,39 @@ export default async function ProfilPage() {
       ) : null}
 
       <Card className="overflow-hidden mb-[22px] p-0">
-        <Agrandir src={m.cover} alt={`Couverture de ${m.nom}`} legende={m.nom}>
-          <Visuel
+        {/*
+          Le cadre de la fiche de l'annuaire, à l'identique : ce que le membre
+          règle ici est ce que les autres verront là-bas.
+        */}
+        <CouvertureReglable
+          memberId={m.id}
+          src={m.cover}
+          cadrage={m.cadrage}
+          retour="/membre/profil"
+          className={CADRE_COUVERTURE}
+        >
+          <Agrandir
             src={m.cover}
-            alt=""
-            seed={m.id}
-            className="h-[190px] w-full"
-            sizes="(max-width: 1024px) 100vw, 900px"
-            icon={
-              m.type === "physique" ? (
-                <UserIcon size={26} />
-              ) : (
-                <Building2 size={26} />
-              )
-            }
-          />
-        </Agrandir>
+            alt={`Couverture de ${m.nom}`}
+            legende={m.nom}
+          >
+            <Visuel
+              src={m.cover}
+              position={positionObjet(m.cadrage)}
+              alt=""
+              seed={m.id}
+              className={CADRE_COUVERTURE}
+              sizes="(max-width: 1024px) 100vw, 900px"
+              icon={
+                m.type === "physique" ? (
+                  <UserIcon size={26} />
+                ) : (
+                  <Building2 size={26} />
+                )
+              }
+            />
+          </Agrandir>
+        </CouvertureReglable>
         <div className="p-[22px]">
           <div className="flex gap-4">
             <LogoMark member={m} size={64} />

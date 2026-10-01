@@ -1,6 +1,15 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Globe, LockKeyhole, Pencil } from "lucide-react";
-import { MediaBanner, OfferCard } from "@/components/domain";
+import {
+  AvatarRond,
+  MediaBanner,
+  OfferCard,
+  SignaturePublication,
+} from "@/components/domain";
+import {
+  ComposeurPublication,
+  SupprimerMaPublication,
+} from "@/components/forms/ComposeurPublication";
 import { BtnLink, Card, EmptyState, Kicker } from "@/components/ui";
 import { GaleriePhotos } from "@/components/GaleriePhotos";
 import { SupprimerActualiteButton } from "@/components/forms/AdminContenuForms";
@@ -11,7 +20,7 @@ import {
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
 import { OFFRES_DU_RAIL } from "@/lib/offres";
-import { getDernieresOffres, getNewsItem } from "@/lib/queries";
+import { getDernieresOffres, getMember, getNewsItem } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { fmtDate } from "@/lib/format";
 import type { Space } from "@/lib/types";
@@ -25,6 +34,10 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
     getDernieresOffres(OFFRES_DU_RAIL, "actualites"),
   ]);
   if (!n) notFound();
+  // L'entreprise du membre qui regarde : c'est elle qui peut reprendre ses
+  // propres publications.
+  const entreprise =
+    !admin && user.memberId ? await getMember(user.memberId) : null;
 
   return (
     <>
@@ -56,6 +69,34 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
               commentaires={n.commentaires.length}
             />
           </div>
+        ) : entreprise && n.auteur?.membreId === entreprise.id ? (
+          // Sa propre publication : le membre la reprend ou la retire.
+          <div className="flex items-center gap-1.5">
+            <ComposeurPublication
+              key={`${n.corps}|${n.images.join("|")}|${n.public}`}
+              entreprise={entreprise.nom}
+              avatar={
+                <AvatarRond
+                  src={entreprise.logo}
+                  alt=""
+                  initiales={entreprise.nom.slice(0, 2).toUpperCase()}
+                  taille={44}
+                  ajuste="contenu"
+                  className="shrink-0 border border-line bg-surface-2 text-[13px] font-bold text-muted"
+                />
+              }
+              publication={{
+                id: n.id,
+                texte: n.corps,
+                images: n.images,
+                publique: n.public,
+              }}
+            />
+            <SupprimerMaPublication
+              newsId={n.id}
+              commentaires={n.commentaires.length}
+            />
+          </div>
         ) : null}
       </div>
 
@@ -67,24 +108,46 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
       */}
       <div className="flex gap-7 items-start flex-col xl:flex-row">
         <Card className="p-[22px] w-full min-w-0 xl:w-[680px] 2xl:w-[760px] xl:shrink-0">
-          <Kicker>{n.auteur ? "Publication d’un membre" : n.cat}</Kicker>
-          <h1 className="mt-2 mb-1.5 text-[24px]">{n.titre}</h1>
-          <div className="text-[12.5px] text-faint mb-4">
-            {fmtDate(n.date)}
-            {n.auteur
-              ? ` · ${[n.auteur.personne, n.auteur.membre].filter(Boolean).join(", ")}`
-              : ""}
-          </div>
-
-          {n.images.length ? (
-            <GaleriePhotos images={n.images} alt={n.titre} />
+          {n.libre ? (
+            // Une publication libre : qui parle, ce qu'il dit, ses photos —
+            // dans l'ordre du fil. Son titre n'est que le début du texte : il
+            // reste pour les lecteurs d'écran, pas à l'affichage.
+            <>
+              <h1 className="sr-only">{n.titre}</h1>
+              <SignaturePublication news={n} />
+              {n.corps ? (
+                <p className="text-[15px] leading-[1.7] mt-4 mb-0 whitespace-pre-line break-words">
+                  <TexteLie texte={n.corps} />
+                </p>
+              ) : null}
+              {n.images.length ? (
+                <div className="mt-4">
+                  <GaleriePhotos images={n.images} alt={n.titre} />
+                </div>
+              ) : null}
+            </>
           ) : (
-            <MediaBanner media={n.media} lg />
-          )}
+            <>
+              <Kicker>{n.auteur ? "Publication d’un membre" : n.cat}</Kicker>
+              <h1 className="mt-2 mb-1.5 text-[24px]">{n.titre}</h1>
+              <div className="text-[12.5px] text-faint mb-4">
+                {fmtDate(n.date)}
+                {n.auteur
+                  ? ` · ${[n.auteur.personne, n.auteur.membre].filter(Boolean).join(", ")}`
+                  : ""}
+              </div>
 
-          <p className="text-[14.6px] leading-[1.75] mt-[18px] whitespace-pre-line">
-            <TexteLie texte={n.corps} />
-          </p>
+              {n.images.length ? (
+                <GaleriePhotos images={n.images} alt={n.titre} />
+              ) : (
+                <MediaBanner media={n.media} lg />
+              )}
+
+              <p className="text-[14.6px] leading-[1.75] mt-[18px] whitespace-pre-line">
+                <TexteLie texte={n.corps} />
+              </p>
+            </>
+          )}
 
           <div className="mt-5 pt-4 border-t border-line">
             <Reactions

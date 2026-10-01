@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Tag } from "lucide-react";
 import { ModaleOffre } from "@/components/ModaleOffre";
 import { TITRE_GRAS } from "@/components/public/CadreVitrine";
+import { positionObjet } from "@/lib/cadrage";
 import type { Offer } from "@/lib/types";
 
 /**
@@ -23,6 +24,11 @@ export function CarteOffre({ offre }: { offre: Offer }) {
               fill
               sizes="(max-width: 768px) 100vw, 300px"
               className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              style={
+                offre.cadrage
+                  ? { objectPosition: positionObjet(offre.cadrage) }
+                  : undefined
+              }
             />
           ) : (
             <div

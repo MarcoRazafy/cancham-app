@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { Globe, LayoutDashboard, Newspaper, Pencil, Plus } from "lucide-react";
-import { NewsFeedItem, OfferCard } from "@/components/domain";
+import { AvatarRond, NewsFeedItem, OfferCard } from "@/components/domain";
+import {
+  ComposeurPublication,
+  SupprimerMaPublication,
+} from "@/components/forms/ComposeurPublication";
 import {
   OffreButton,
   SupprimerActualiteButton,
@@ -10,6 +14,7 @@ import { EmptyState, ViewHead } from "@/components/ui";
 import { OFFRES_DU_RAIL, type EmplacementOffre } from "@/lib/offres";
 import {
   getDernieresOffres,
+  getMember,
   getMembers,
   getNews,
   getOffers,
@@ -25,23 +30,46 @@ const OU: Record<EmplacementOffre, string> = {
 };
 
 /**
- * Fil d'actualité, identique pour le membre et pour l'équipe. Le membre peut
- * y publier une actualité au nom de son entreprise ; l'équipe y trouve ses
+ * Fil d'actualité, identique pour le membre et pour l'équipe. Le membre y
+ * publie au nom de son entreprise, depuis la barre en tête du fil ; l'équipe y trouve ses
  * commandes : publier, modifier, supprimer n'importe quelle actualité, gérer
  * les offres.
  */
-export async function ActualitesPage({ space }: { space: Space }) {
+export async function ActualitesPage({
+  space,
+  voir,
+}: {
+  space: Space;
+  /** Filtre du fil, côté membre : `miennes` ne garde que ses publications. */
+  voir?: string;
+}) {
   const admin = space === "admin";
   const base = `/${space}/actualites`;
   // La requête rend déjà le fil du plus récent au plus ancien.
   const user = await getCurrentUser(space);
   // Le membre ne reçoit que les offres du rail ; l'équipe les reçoit toutes,
   // pour gérer aussi celles qui n'y paraissent pas.
-  const [feed, toutes, membres] = await Promise.all([
+  const [fil, toutes, membres, entreprise] = await Promise.all([
     getNews(user.id),
     admin ? getOffers() : getDernieresOffres(OFFRES_DU_RAIL, "actualites"),
     admin ? getMembers() : Promise.resolve([]),
+    // Qui signe les publications du membre : son entreprise.
+    !admin && user.memberId ? getMember(user.memberId) : Promise.resolve(null),
   ]);
+  const miennes = !admin && voir === "miennes";
+  const feed = miennes
+    ? fil.filter((n) => n.auteur?.membreId === user.memberId)
+    : fil;
+  const avatar = entreprise ? (
+    <AvatarRond
+      src={entreprise.logo}
+      alt=""
+      initiales={entreprise.nom.slice(0, 2).toUpperCase()}
+      taille={44}
+      ajuste="contenu"
+      className="shrink-0 border border-line bg-surface-2 text-[13px] font-bold text-muted"
+    />
+  ) : null;
   // Ce que le rail des membres montre : les plus récentes parmi les offres
   // qui ont leur place ici, quatre au plus — deux colonnes, deux lignes.
   const duRail = toutes
@@ -70,18 +98,65 @@ export async function ActualitesPage({ space }: { space: Space }) {
           <ViewHead
             title="Actualités"
             action={
-              <Link
-                href={`${base}/nouvelle`}
-                className="btn-action btn-action-sm no-underline"
-              >
-                <Plus size={15} />{" "}
-                {admin ? "Nouvelle actualité" : "Publier une actualité"}
-              </Link>
+              admin ? (
+                <Link
+                  href={`${base}/nouvelle`}
+                  className="btn-action btn-action-sm no-underline"
+                >
+                  <Plus size={15} /> Nouvelle actualité
+                </Link>
+              ) : undefined
             }
           >
             Le fil d’actualité de la chambre : programmation, retours
             d’événements et vie institutionnelle, dans l’ordre chronologique.
           </ViewHead>
+
+          {/*
+            Le membre publie d'ici, en tête du fil : une barre, qui ouvre la
+            fenêtre de publication. L'équipe, elle, rédige un article sur sa
+            propre page.
+          */}
+          {entreprise ? (
+            <>
+              <ComposeurPublication
+                entreprise={entreprise.nom}
+                avatar={avatar}
+              />
+              {/* Tout le fil, ou seulement ce que son entreprise a publié. */}
+              <nav
+                aria-label="Filtrer le fil"
+                className="mb-3 inline-flex rounded-full border border-line bg-surface p-1"
+              >
+                {(
+                  [
+                    ["Toutes les publications", base, !miennes],
+                    ["Mes publications", `${base}?voir=miennes`, miennes],
+                  ] as const
+                ).map(([libelle, href, actif]) => (
+                  <Link
+                    key={libelle}
+                    href={href}
+                    aria-current={actif ? "page" : undefined}
+                    className={`rounded-full px-3.5 py-1.5 text-[13px] font-semibold no-underline transition-colors ${
+                      actif
+                        ? "bg-accent text-white"
+                        : "text-muted hover:text-ink"
+                    }`}
+                  >
+                    {libelle}
+                  </Link>
+                ))}
+              </nav>
+            </>
+          ) : null}
+
+          {miennes && !feed.length ? (
+            <EmptyState>
+              Vous n’avez encore rien publié. Écrivez quelques mots dans la
+              barre ci-dessus.
+            </EmptyState>
+          ) : null}
 
           {feed.map((n) => (
             <NewsFeedItem
@@ -111,6 +186,27 @@ export async function ActualitesPage({ space }: { space: Space }) {
                     <SupprimerActualiteButton
                       newsId={n.id}
                       titre={n.titre}
+                      commentaires={n.commentaires.length}
+                    />
+                  </>
+                ) : entreprise && n.auteur?.membreId === entreprise.id ? (
+                  // Sa propre publication : le membre la reprend ou la retire.
+                  <>
+                    <ComposeurPublication
+                      // La fenêtre repart de la publication telle qu'elle
+                      // vient d'être enregistrée.
+                      key={`${n.corps}|${n.images.join("|")}|${n.public}`}
+                      entreprise={entreprise.nom}
+                      avatar={avatar}
+                      publication={{
+                        id: n.id,
+                        texte: n.corps,
+                        images: n.images,
+                        publique: n.public,
+                      }}
+                    />
+                    <SupprimerMaPublication
+                      newsId={n.id}
                       commentaires={n.commentaires.length}
                     />
                   </>
@@ -165,8 +261,8 @@ export async function ActualitesPage({ space }: { space: Space }) {
                       {o.emplacement !== "tableau_de_bord" &&
                       !duRail.includes(o) ? (
                         <span className="mr-auto text-[12px] leading-snug text-faint">
-                          Hors du rail des membres : quatre offres plus
-                          récentes passent devant.
+                          Hors du rail des membres : quatre offres plus récentes
+                          passent devant.
                         </span>
                       ) : null}
                       <OffreButton offre={o} membres={proposants} />

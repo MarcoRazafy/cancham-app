@@ -207,13 +207,18 @@ model Member {
   accueilEnCours Boolean @default(false)
 
   /// Photo de couverture de la fiche, par URL. `null` = dégradé décoratif.
-  cover String?
+  cover  String?
+  /// Cadrage de la couverture : le point de la photo qui reste visible quand
+  /// le cadre la rogne, en pourcentages (0 = bord gauche ou haut, 100 = bord
+  /// droit ou bas). 50 / 50 : centrée. Remis au centre à chaque nouvelle photo.
+  coverX Int     @default(50)
+  coverY Int     @default(50)
   /// Vignette ronde du membre : portrait pour une personne physique, logo ou
   /// visuel d'activité pour une personne morale. `null` = monogramme.
-  photo String?
+  photo  String?
   /// Logo de l'organisation, par URL. Affiché en `contain` sur fond blanc : il
   /// a des marges propres et de la transparence, un cadrage le mutilerait.
-  logo  String?
+  logo   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -495,6 +500,11 @@ model News {
   member    Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
   /// La personne qui l'a écrite, telle qu'elle s'appelait ce jour-là.
   auteurNom String?
+  /// Publication libre : un membre a écrit un texte, sans titre ni résumé —
+  /// ceux de la ligne en sont tirés, pour les listes et les notifications.
+  /// Le fil et la page affichent alors le texte seul. Faux pour un article,
+  /// y compris quand l'équipe donne un vrai titre à une publication libre.
+  libre     Boolean @default(false)
 
   commentaires Comment[]
   jaimes       NewsLike[]

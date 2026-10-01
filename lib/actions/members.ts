@@ -26,6 +26,7 @@ import {
 } from "@/lib/modeles-courriels";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { normaliserSite } from "@/lib/liens";
+import { cadrageValide } from "@/lib/cadrage";
 import { PAYS, PROVISOIRE } from "@/lib/accueil";
 import { estSecteur, secteurOuProvisoire } from "@/lib/secteurs";
 import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
@@ -843,6 +844,9 @@ export async function updateMemberProfile(formData: FormData) {
       interets: null,
       siteweb,
       cover: couverture ?? actuel.cover,
+      // Une nouvelle photo repart du centre : le cadrage choisi valait pour
+      // l'ancienne.
+      ...(couverture ? { coverX: 50, coverY: 50 } : {}),
       logo: logo ?? actuel.logo,
     },
   });
@@ -862,6 +866,51 @@ export async function updateMemberProfile(formData: FormData) {
   await tracerEquipe(estEquipe, id, retour, "Présentation de la fiche.");
   revalideTout();
   redirectWithFlash(retour, "Fiche mise à jour");
+}
+
+/**
+ * Repositionne la couverture d'une fiche : le point de la photo qui reste
+ * visible une fois rognée.
+ *
+ * Appelée pendant qu'on règle la photo, sans quitter la page : elle rend son
+ * résultat au lieu de rediriger. Seul un refus d'accès redirige, comme
+ * partout. La photo n'est pas touchée — on n'enregistre que deux
+ * pourcentages, bornés ici : ce que le navigateur envoie ne fait pas foi.
+ */
+export async function repositionnerCouverture(demande: {
+  memberId: string;
+  x: number;
+  y: number;
+  retour: string;
+}): Promise<{ ok: true } | { erreur: string }> {
+  // Seul un chemin interne : il décide de l'espace où l'on vérifie l'accès.
+  const r = String(demande?.retour ?? "");
+  const retour =
+    r.startsWith("/") && !r.startsWith("//") ? r : "/membre/profil";
+  const { memberId: id, estEquipe } = await exigerFiche(
+    String(demande?.memberId ?? ""),
+    retour,
+  );
+
+  const actuel = await prisma.member.findUnique({
+    where: { id },
+    select: { cover: true, coverX: true, coverY: true },
+  });
+  if (!actuel) return { erreur: "Fiche introuvable." };
+  if (!actuel.cover) {
+    return { erreur: "Cette fiche n’a pas de photo de couverture." };
+  }
+
+  const { x, y } = cadrageValide(demande.x, demande.y);
+  if (x !== actuel.coverX || y !== actuel.coverY) {
+    await prisma.member.update({
+      where: { id },
+      data: { coverX: x, coverY: y },
+    });
+    await tracerEquipe(estEquipe, id, retour, "Cadrage de la couverture.");
+    revalideTout();
+  }
+  return { ok: true };
 }
 
 /** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */

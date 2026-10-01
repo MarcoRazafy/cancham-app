@@ -38,7 +38,6 @@ import {
   deleteOffer,
   deleteResource,
   enregistrerActualite,
-  publierActualiteMembre,
   enregistrerOffre,
   enregistrerRessource,
 } from "@/lib/actions/content";
@@ -85,7 +84,8 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
         >
           <textarea
             name="extrait"
-            required
+            // Une publication libre peut n'être faite que de photos.
+            required={!news?.libre}
             rows={3}
             defaultValue={news?.extrait}
             className={INPUT}
@@ -97,7 +97,7 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
         >
           <textarea
             name="corps"
-            required
+            required={!news?.libre}
             rows={14}
             defaultValue={news?.corps}
             className={INPUT}
@@ -141,63 +141,6 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
           {news ? "Enregistrer les modifications" : "Publier l’actualité"}
         </SubmitButton>
       </div>
-    </form>
-  );
-}
-
-/**
- * Le formulaire d'un membre : la photo, le titre, le résumé, le texte. Ni
- * catégorie, ni date, ni diffusion publique — c'est l'équipe qui en décide,
- * si elle reprend la publication.
- */
-export function FormulaireActualiteMembre() {
-  return (
-    <form action={publierActualiteMembre} className="max-w-[820px]">
-      <Card className="flex min-w-0 flex-col gap-4 p-6">
-        <ChampPhotosActualite actuelles={[]} />
-        <Field label="Titre">
-          <input
-            name="titre"
-            required
-            maxLength={160}
-            placeholder="Ex. Nous ouvrons un bureau à Toamasina"
-            className={INPUT}
-          />
-        </Field>
-        <Field
-          label="Résumé"
-          hint="Deux ou trois lignes : c’est ce qu’affiche le fil d’actualité."
-        >
-          <textarea
-            name="extrait"
-            required
-            rows={3}
-            maxLength={600}
-            className={INPUT}
-          />
-        </Field>
-        <Field
-          label="Texte de l’article"
-          hint="Les liens collés dans le texte deviennent cliquables."
-        >
-          <textarea
-            name="corps"
-            required
-            rows={12}
-            maxLength={12000}
-            className={INPUT}
-          />
-        </Field>
-        <p className="m-0 text-[12.5px] text-muted">
-          Publiée au nom de votre entreprise, dans le fil des membres. L’équipe
-          CanCham peut la modifier ou la retirer.
-        </p>
-        <div>
-          <SubmitButton pendingLabel="Publication…">
-            <Check size={15} /> Publier l’actualité
-          </SubmitButton>
-        </div>
-      </Card>
     </form>
   );
 }

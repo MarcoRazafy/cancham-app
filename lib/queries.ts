@@ -87,6 +87,8 @@ type MembreRow = {
   motivation: string | null;
   paiementNote: string | null;
   cover: string | null;
+  coverX: number;
+  coverY: number;
   photo: string | null;
   logo: string | null;
   accueilEnCours: boolean;
@@ -121,6 +123,7 @@ function versMembre(m: MembreRow): Member {
     motivation: m.motivation ?? undefined,
     paiementNote: m.paiementNote ?? undefined,
     cover: m.cover,
+    cadrage: { x: m.coverX, y: m.coverY },
     photo: m.photo,
     logo: m.logo,
     accueilEnCours: m.accueilEnCours,
@@ -395,6 +398,7 @@ function versNews(n: NewsRow, userId?: string): NewsItem {
           personne: n.auteurNom,
         }
       : null,
+    libre: n.libre,
     commentaires: versCommentaires(n.commentaires, userId),
     jaimes: n._count.jaimes,
     jaimeParMoi: n.jaimes.length > 0,
@@ -405,7 +409,10 @@ function versNews(n: NewsRow, userId?: string): NewsItem {
 export async function getNews(userId?: string): Promise<NewsItem[]> {
   const rows = await prisma.news.findMany({
     include: newsInclude(userId),
-    orderBy: { date: "desc" },
+    // La date n'a pas d'heure : entre deux publications du même jour, la
+    // dernière écrite passe devant — celle qu'on vient de publier arrive
+    // en tête du fil.
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
   });
   return rows.map((n) => versNews(n, userId));
 }
@@ -430,6 +437,10 @@ export interface ActualitePublique {
   extrait: string;
   corps: string;
   images: string[];
+  /** L'entreprise membre qui publie ; `null` pour une actualité de la chambre. */
+  auteur: string | null;
+  /** Publication libre : un texte seul, dont le titre n'est que le début. */
+  libre: boolean;
 }
 
 function versActualitePublique(n: {
@@ -440,6 +451,8 @@ function versActualitePublique(n: {
   extrait: string;
   corps: string;
   images: string[];
+  libre: boolean;
+  member: { nom: string } | null;
 }): ActualitePublique {
   return {
     id: n.id,
@@ -449,6 +462,8 @@ function versActualitePublique(n: {
     extrait: n.extrait,
     corps: n.corps,
     images: n.images,
+    auteur: n.member?.nom ?? null,
+    libre: n.libre,
   };
 }
 
@@ -460,6 +475,8 @@ const CHAMPS_ACTUALITE_PUBLIQUE = {
   extrait: true,
   corps: true,
   images: true,
+  libre: true,
+  member: { select: { nom: true } },
 } as const;
 
 /** Les dernières actualités diffusées sur la page publique. */
@@ -658,6 +675,8 @@ export async function getArborescenceDossiers(): Promise<
 const CHAMPS_MEMBRE_OFFRE = {
   nom: true,
   cover: true,
+  coverX: true,
+  coverY: true,
   secteur: true,
   ville: true,
   logo: true,
@@ -709,6 +728,8 @@ function versOffre(o: {
   member: {
     nom: string;
     cover: string | null;
+    coverX: number;
+    coverY: number;
     secteur: string;
     ville: string;
     logo: string | null;
@@ -729,6 +750,12 @@ function versOffre(o: {
     desc: o.desc,
     image: o.image,
     cover: o.image ?? o.member.cover,
+    // Le cadrage est celui de la couverture de l'entreprise : il ne vaut
+    // pas pour un visuel propre à l'offre.
+    cadrage:
+      !o.image && o.member.cover
+        ? { x: o.member.coverX, y: o.member.coverY }
+        : undefined,
     lien: o.lien,
     emplacement: o.emplacement,
     membreSecteur: o.member.secteur,

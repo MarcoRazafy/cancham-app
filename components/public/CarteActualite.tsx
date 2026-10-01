@@ -52,7 +52,8 @@ export function CarteActualite({
           </div>
         )}
         <span className="absolute left-4 bottom-4 rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--marque-nuit)] shadow-[0_2px_10px_rgba(15,29,44,0.18)]">
-          {a.cat}
+          {/* Une publication de membre porte le nom de son entreprise. */}
+          {a.auteur ?? a.cat}
         </span>
       </div>
 
@@ -65,9 +66,12 @@ export function CarteActualite({
         >
           {a.titre}
         </h3>
-        <p className="m-0 text-[14px] leading-[1.6] text-[#6b6b6b] line-clamp-3">
-          {a.extrait}
-        </p>
+        {/* Le titre d'une publication libre est déjà le début du texte. */}
+        {a.libre ? null : (
+          <p className="m-0 text-[14px] leading-[1.6] text-[#6b6b6b] line-clamp-3">
+            {a.extrait}
+          </p>
+        )}
       </div>
     </Link>
   );

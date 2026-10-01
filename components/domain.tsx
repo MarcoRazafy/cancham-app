@@ -21,6 +21,8 @@ import { Partage } from "@/components/Partage";
 import { Reactions } from "@/components/forms/Reactions";
 import { TexteLie } from "@/components/TexteLie";
 import { ModaleOffre } from "@/components/ModaleOffre";
+import { positionObjet } from "@/lib/cadrage";
+import { publicationLongue } from "@/lib/publications";
 import { filetDe } from "@/lib/filets";
 import { initialesDe } from "@/lib/avatars";
 import {
@@ -245,6 +247,7 @@ export function Visuel({
   iconSize = 20,
   sizes = "400px",
   cadrage = "object-center",
+  position,
 }: {
   src?: string | null;
   alt: string;
@@ -255,6 +258,11 @@ export function Visuel({
   sizes?: string;
   /** Quelle partie de l'image garder quand elle est rognée. */
   cadrage?: "object-center" | "object-top";
+  /**
+   * Cadrage sur mesure, en `object-position` — celui qu'un membre a choisi
+   * pour sa couverture. Il prime sur `cadrage`.
+   */
+  position?: string;
 }) {
   if (!src) {
     return (
@@ -274,6 +282,7 @@ export function Visuel({
         fill
         sizes={sizes}
         className={`object-cover ${cadrage}`}
+        style={position ? { objectPosition: position } : undefined}
       />
     </div>
   );
@@ -337,6 +346,7 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
       >
         <Visuel
           src={member.cover}
+          position={positionObjet(member.cadrage)}
           alt=""
           seed={member.id}
           // Assez haute pour qu'on reconnaisse la photo : à 104 px, une
@@ -725,6 +735,60 @@ export function MosaiquePhotos({
   );
 }
 
+/**
+ * Qui publie, et quand : la chambre avec son sigle, ou l'entreprise membre
+ * avec son logo. Le même en-tête dans le fil et sur la page d'une
+ * publication libre.
+ */
+export function SignaturePublication({ news }: { news: NewsItem }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {/*
+        Le sigle est large (1888 × 1159) : en `contain` et sans marge, il
+        occupe toute la largeur du rond et reste lisible jusqu'au mot
+        « CanCham ». Un `cover` lui couperait la feuille d'érable.
+      */}
+      {news.auteur ? (
+        // Une publication de membre porte le logo et le nom de son
+        // entreprise : on sait d'un coup d'œil que ce n'est pas la chambre.
+        <AvatarRond
+          src={news.auteur.logo}
+          alt={news.auteur.membre}
+          initiales={news.auteur.membre.slice(0, 2).toUpperCase()}
+          taille={44}
+          ajuste="contenu"
+          className="shrink-0 border border-line bg-surface-2 text-[13px] font-bold text-muted"
+        />
+      ) : (
+        <div className="w-11 h-11 rounded-full bg-white border border-line flex items-center justify-center shrink-0 overflow-hidden">
+          <Image
+            src="/marque/sigle.png"
+            alt="CanCham Madagascar"
+            width={44}
+            height={44}
+            sizes="44px"
+            className="w-full h-full object-contain"
+          />
+        </div>
+      )}
+      <div className="min-w-0">
+        <div className="font-semibold text-[13.6px]">
+          {news.auteur ? news.auteur.membre : "CanCham Madagascar"}{" "}
+          <Pill className="ml-1">
+            {news.auteur ? "Publication d’un membre" : news.cat}
+          </Pill>
+        </div>
+        <div className="text-[11.5px] text-faint">
+          {fmtDate(news.date)}
+          {news.auteur?.personne ? ` · ${news.auteur.personne}` : ""}
+          {/* Le membre choisit à qui sa publication se montre : on le dit. */}
+          {news.auteur ? (news.public ? " · Public" : " · Membres") : ""}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function NewsFeedItem({
   news,
   base,
@@ -737,61 +801,44 @@ export function NewsFeedItem({
   /** Commandes de l'équipe, posées à côté du lien vers l'article. */
   actions?: ReactNode;
 }) {
+  const href = `${base}/${news.id}`;
+  // Une publication libre s'affiche comme elle a été écrite : le texte, sans
+  // le titre qu'on en a tiré — il le répéterait. Un texte long se replie.
+  const replie = Boolean(news.libre) && publicationLongue(news.corps);
   return (
     <article className="border border-line rounded-[var(--radius-m)] bg-surface p-4 mb-3">
-      <div className="flex items-center gap-2.5 mb-2.5">
-        {/*
-          Le sigle est large (1888 × 1159) : en `contain` et sans marge, il
-          occupe toute la largeur du rond et reste lisible jusqu'au mot
-          « CanCham ». Un `cover` lui couperait la feuille d'érable.
-        */}
-        {news.auteur ? (
-          // Une publication de membre porte le logo et le nom de son
-          // entreprise : on sait d'un coup d'œil que ce n'est pas la chambre.
-          <AvatarRond
-            src={news.auteur.logo}
-            alt={news.auteur.membre}
-            initiales={news.auteur.membre.slice(0, 2).toUpperCase()}
-            taille={44}
-            ajuste="contenu"
-            className="shrink-0 border border-line bg-surface-2 text-[13px] font-bold text-muted"
-          />
-        ) : (
-          <div className="w-11 h-11 rounded-full bg-white border border-line flex items-center justify-center shrink-0 overflow-hidden">
-            <Image
-              src="/marque/sigle.png"
-              alt="CanCham Madagascar"
-              width={44}
-              height={44}
-              sizes="44px"
-              className="w-full h-full object-contain"
-            />
-          </div>
-        )}
-        <div className="min-w-0">
-          <div className="font-semibold text-[13.6px]">
-            {news.auteur ? news.auteur.membre : "CanCham Madagascar"}{" "}
-            <Pill className="ml-1">
-              {news.auteur ? "Publication d’un membre" : news.cat}
-            </Pill>
-          </div>
-          <div className="text-[11.5px] text-faint">
-            {fmtDate(news.date)}
-            {news.auteur?.personne ? ` · ${news.auteur.personne}` : ""}
-          </div>
-        </div>
+      <div className="mb-2.5">
+        <SignaturePublication news={news} />
       </div>
-      <div className="text-[13.6px] leading-relaxed">
-        <b className="block text-[14.6px] mb-1">{news.titre}</b>
-        <TexteLie texte={news.extrait} />
-      </div>
-      {news.images.length ? (
-        <MosaiquePhotos
-          images={news.images}
-          alt={news.titre}
-          href={`${base}/${news.id}`}
-        />
+      {news.libre ? (
+        news.corps ? (
+          <div className="text-[14.2px] leading-relaxed">
+            <p
+              className={`m-0 whitespace-pre-line break-words ${replie ? "line-clamp-6" : ""}`}
+            >
+              <TexteLie texte={news.corps} />
+            </p>
+            {replie ? (
+              <Link
+                href={href}
+                className="mt-1 inline-block text-[13px] font-semibold text-muted no-underline hover:text-accent hover:underline"
+              >
+                Voir plus
+              </Link>
+            ) : null}
+          </div>
+        ) : null
       ) : (
+        <div className="text-[13.6px] leading-relaxed">
+          <b className="block text-[14.6px] mb-1">{news.titre}</b>
+          <TexteLie texte={news.extrait} />
+        </div>
+      )}
+      {news.images.length ? (
+        <MosaiquePhotos images={news.images} alt={news.titre} href={href} />
+      ) : news.libre ? null : (
+        // Un texte seul reste un texte : pas de bandeau décoratif sous une
+        // publication libre.
         <MediaBanner media={news.media} />
       )}
       <div className="flex items-center justify-between gap-3 flex-wrap mt-3 pt-3 border-t border-line">
@@ -801,14 +848,14 @@ export function NewsFeedItem({
           jaimes={news.jaimes}
           jaimeParMoi={news.jaimeParMoi}
           commentaires={news.commentaires.length}
-          lienCommentaires={`${base}/${news.id}#commentaires`}
+          lienCommentaires={`${href}#commentaires`}
         />
         <div className="flex items-center gap-3">
           <Link
-            href={`${base}/${news.id}`}
+            href={href}
             className="text-[12.8px] font-semibold text-accent no-underline hover:underline"
           >
-            Lire l’article complet
+            {news.libre ? "Voir la publication" : "Lire l’article complet"}
           </Link>
           {actions ? <div className="flex gap-1.5">{actions}</div> : null}
         </div>
@@ -866,6 +913,7 @@ export function OfferCard({
           ) : null}
           <Visuel
             src={offer.cover}
+            position={offer.cadrage ? positionObjet(offer.cadrage) : undefined}
             alt={offer.titre}
             seed={offer.id}
             className={`${carre ? "h-full" : "h-[88px]"} w-full transition-transform duration-500 group-hover:scale-[1.04]`}

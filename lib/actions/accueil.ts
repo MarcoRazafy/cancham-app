@@ -321,7 +321,11 @@ export async function enregistrerEtape(formData: FormData) {
       if (logo || cover) {
         await prisma.member.update({
           where: { id: memberId },
-          data: { ...(logo ? { logo } : {}), ...(cover ? { cover } : {}) },
+          data: {
+            ...(logo ? { logo } : {}),
+            // Une nouvelle couverture repart du centre.
+            ...(cover ? { cover, coverX: 50, coverY: 50 } : {}),
+          },
         });
       }
       break;
