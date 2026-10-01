@@ -22,7 +22,7 @@ export const REPLI_RETOUR = "/membre/cotisations";
  */
 const PAGES_DE_RETOUR = [
   /^\/membre\/cotisations\/retour\?/,
-  /^\/evenements\/[^/?#]+\/billet\?/,
+  /^\/evenements\/[A-Za-z0-9_-]+\/billet\?/,
 ];
 
 /** L'adresse du relais qui mènera à `chemin`, une page de la plateforme. */
@@ -38,7 +38,11 @@ export function versRelais(chemin: string): string {
 export function destinationDuRetour(vers: string | null | undefined): string {
   const chemin = String(vers ?? "");
   if (!chemin.startsWith("/") || chemin.startsWith("//")) return REPLI_RETOUR;
-  if (/[\\\s]/.test(chemin)) return REPLI_RETOUR;
+  // Rien que de l'ASCII imprimable, sans barre inverse : un autre caractère
+  // ne tient pas dans un en-tête `Location`, et la réponse échouerait.
+  if (!/^[\x21-\x7e]+$/.test(chemin) || chemin.includes("\\")) {
+    return REPLI_RETOUR;
+  }
   return PAGES_DE_RETOUR.some((page) => page.test(chemin))
     ? chemin
     : REPLI_RETOUR;

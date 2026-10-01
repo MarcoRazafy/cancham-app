@@ -54,6 +54,10 @@ describe("destination du retour", () => {
       "/evenements/e1/billet",
       "/membre/cotisations/retour?ref=x\nLocation: https://evil.example",
       "javascript:alert(1)",
+      "/membre/cotisations/retour?ref=€",
+      "/membre/cotisations/retour?ref=\0",
+      "/evenements/../billet?x=1",
+      "/evenements/%2e%2e/billet?x=1",
     ]) {
       expect(destinationDuRetour(v)).toBe(REPLI_RETOUR);
     }
