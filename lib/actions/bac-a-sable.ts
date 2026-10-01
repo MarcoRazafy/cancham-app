@@ -35,22 +35,46 @@ export async function simulerIssue(formData: FormData) {
 
   const p = await prisma.paiement.findUnique({
     where: { reference },
-    select: { montant: true, invoice: { select: { numero: true } } },
+    select: {
+      montant: true,
+      mode: true,
+      detail: true,
+      invoice: { select: { numero: true } },
+    },
   });
   if (!p) notFound();
 
-  // Les champs de leur notification, tels qu'ils les envoient.
-  const corps = JSON.stringify({
-    reference_VPI: `SIM-${Date.now().toString(36).toUpperCase()}`,
-    panier: p.invoice?.numero ?? reference,
+  // Les champs de leur notification, tels que leur document les donne : une
+  // carte annonce des euros et le montant en Ariary ; un portefeuille, le
+  // numéro qui a payé et la référence de l'opérateur.
+  const horodatage = Date.now().toString().slice(-12);
+  const commun = {
     reference,
-    remarque: "Simulation",
+    panier: p.invoice?.numero ?? reference,
     etat: reussi ? "SUCCESS" : "FAILED",
-    // En Ariary, et dit comme tel : le montant se vérifie alors à
-    // l'arrivée. Le vrai prestataire, lui, annonce des euros.
-    montant: p.montant,
-    devise: "MGA",
-  });
+  };
+  const detail = (
+    p.detail && typeof p.detail === "object" && !Array.isArray(p.detail)
+      ? p.detail
+      : {}
+  ) as Record<string, unknown>;
+  const corps = JSON.stringify(
+    p.mode === "carte"
+      ? {
+          reference_VPI: `VPI${horodatage}`,
+          ...commun,
+          montant: Math.round((p.montant / 4950) * 100) / 100,
+          montant_mga: p.montant,
+        }
+      : {
+          reference_VPI: `MM${horodatage}`,
+          ...commun,
+          montant: p.montant,
+          initiateur:
+            typeof detail.telephone === "string" ? detail.telephone : "",
+          referenceMM: horodatage.slice(-7),
+        },
+  );
   const signature = signerCorps(corps);
   if (!signature) notFound();
 

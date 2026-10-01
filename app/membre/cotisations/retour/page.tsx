@@ -39,10 +39,11 @@ export default async function RetourPaiementPage({
   // la même porte que le webhook — donc sans double règlement possible.
   let statut = p.statut;
   if (statut === "en_cours") {
-    // L'identifiant du lien de paiement, gardé à l'ouverture.
+    // La référence de la transaction chez eux, gardée à l'ouverture.
+    const canal = canalVanillaPay(p.mode);
     const etat =
-      canalVanillaPay(p.mode) && p.transaction
-        ? await interrogerStatut(p.transaction)
+      canal && p.transaction
+        ? await interrogerStatut(p.transaction, canal)
         : null;
     if (etat) {
       await conclurePaiement(etat, etat);
