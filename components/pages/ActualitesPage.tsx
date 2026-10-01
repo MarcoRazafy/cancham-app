@@ -7,7 +7,13 @@ import {
   SupprimerOffreButton,
 } from "@/components/forms/AdminContenuForms";
 import { EmptyState, ViewHead } from "@/components/ui";
-import { getMembers, getNews, getOffers } from "@/lib/queries";
+import { EMPLACEMENTS_OFFRE, OFFRES_DU_RAIL } from "@/lib/offres";
+import {
+  getDernieresOffres,
+  getMembers,
+  getNews,
+  getOffers,
+} from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import type { Space } from "@/lib/types";
 
@@ -21,11 +27,20 @@ export async function ActualitesPage({ space }: { space: Space }) {
   const base = `/${space}/actualites`;
   // La requête rend déjà le fil du plus récent au plus ancien.
   const user = await getCurrentUser(space);
-  const [feed, offers, membres] = await Promise.all([
+  // Le membre ne reçoit que les offres du rail ; l'équipe les reçoit toutes,
+  // pour gérer aussi celles qui n'y paraissent pas.
+  const [feed, toutes, membres] = await Promise.all([
     getNews(user.id),
-    getOffers(),
+    admin ? getOffers() : getDernieresOffres(OFFRES_DU_RAIL, "actualites"),
     admin ? getMembers() : Promise.resolve([]),
   ]);
+  // Le rail : les plus récentes parmi celles qui s'affichent ici, quatre au
+  // plus. Le reste — offres du tableau de bord, offres plus anciennes — ne
+  // se montre qu'à l'équipe, dessous.
+  const offers = toutes
+    .filter((o) => o.emplacement !== "tableau_de_bord")
+    .slice(0, OFFRES_DU_RAIL);
+  const autres = toutes.filter((o) => !offers.includes(o));
   const proposants = membres
     .filter((m) => m.statut !== "candidature")
     .map((m) => ({ id: m.id, nom: m.nom }));
@@ -34,11 +49,11 @@ export async function ActualitesPage({ space }: { space: Space }) {
     <>
       {/*
           Deux moitiés : le titre et le fil à gauche, les offres à droite, dès
-          le haut de la page. Le rail suit le défilement, et ses six offres
-          tiennent toujours dans la fenêtre : chaque carte est carrée tant que
-          la hauteur de l'écran le permet, et s'aplatit juste ce qu'il faut
-          sinon — trois rangées dans la hauteur visible, sous la barre du haut
-          et le titre du rail (160 px en tout).
+          le haut de la page. Le rail suit le défilement, et ses quatre offres
+          — deux colonnes, deux lignes, pas plus — tiennent toujours dans la
+          fenêtre : chaque carte est carrée tant que la hauteur de l'écran le
+          permet, et s'aplatit juste ce qu'il faut sinon, sous la barre du
+          haut et le titre du rail (160 px en tout).
         */}
       <div className="grid gap-7 items-start xl:grid-cols-2">
         <div className="min-w-0">
@@ -111,7 +126,7 @@ export async function ActualitesPage({ space }: { space: Space }) {
                     key={o.id}
                     offer={o}
                     carre
-                    className="xl:max-h-[max(220px,calc((100dvh-160px)/3))]"
+                    className="xl:max-h-[max(220px,calc((100dvh-200px)/2))]"
                   />
                 );
                 // Les commandes sous la carte, et non dedans : la carte
@@ -120,7 +135,10 @@ export async function ActualitesPage({ space }: { space: Space }) {
                 return admin ? (
                   <div key={o.id} className="flex flex-col gap-1.5">
                     {carte}
-                    <div className="flex justify-end gap-1.5">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span className="mr-auto text-[12px] text-faint">
+                        Affichée : {EMPLACEMENTS_OFFRE[o.emplacement ?? "partout"].toLowerCase()}
+                      </span>
                       <OffreButton offre={o} membres={proposants} />
                       <SupprimerOffreButton offerId={o.id} titre={o.titre} />
                     </div>
@@ -133,6 +151,43 @@ export async function ActualitesPage({ space }: { space: Space }) {
           ) : (
             <EmptyState>Aucune offre en vedette pour le moment.</EmptyState>
           )}
+
+          {/*
+            Ce que le rail ne montre pas, pour l'équipe seulement : les offres
+            placées sur le tableau de bord, et celles qu'une plus récente a
+            poussées hors des quatre. Repliées : elles ne doivent pas rallonger
+            la page de qui ne les cherche pas.
+          */}
+          {admin && autres.length ? (
+            <details className="mt-3 rounded-[var(--radius-m)] border border-line bg-surface">
+              <summary className="cursor-pointer px-4 py-3 text-[13.4px] font-semibold text-ink">
+                Les autres offres ({autres.length})
+                <span className="ml-2 font-normal text-muted">
+                  hors du rail des Actualités
+                </span>
+              </summary>
+              <ul className="m-0 list-none border-t border-line p-0">
+                {autres.map((o) => (
+                  <li
+                    key={o.id}
+                    className="flex items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.4px] font-semibold text-ink">
+                        {o.titre}
+                      </span>
+                      <span className="block truncate text-[12px] text-muted">
+                        {o.membre} · affichée :{" "}
+                        {EMPLACEMENTS_OFFRE[o.emplacement ?? "partout"].toLowerCase()}
+                      </span>
+                    </span>
+                    <OffreButton offre={o} membres={proposants} />
+                    <SupprimerOffreButton offerId={o.id} titre={o.titre} />
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
         </aside>
       </div>
     </>

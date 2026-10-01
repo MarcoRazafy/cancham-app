@@ -59,7 +59,7 @@ export default async function ActualitePubliquePage({
     getActualitePublique(id),
     getActualitesPubliques(4),
     // Quatre suffisent : le rail accompagne l'article, il ne le concurrence pas.
-    getDernieresOffres(4),
+    getDernieresOffres(4, "actualites"),
   ]);
   if (!a) notFound();
   const autres = recentes.filter((r) => r.id !== a.id).slice(0, 3);
