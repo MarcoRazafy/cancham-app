@@ -97,219 +97,223 @@ export default async function EvenementPublic({
 
   return (
     <>
-      <main className={`${CONTENEUR} py-10 w-full`}>
-        <Link
-          href="/#evenements"
-          className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
-        >
-          <ArrowLeft size={15} /> Tous les rendez-vous
-        </Link>
-
-        {visuel ? (
-          <Agrandir
-            src={visuel.url}
-            alt={e.titre}
-            legende={e.titre}
-            className="mb-8"
+      {/*
+        Un événement se lit sur du papier : la page entière quitte le bleu
+        nuit de la vitrine, comme celle d'une actualité (voir
+        `.vitrine-claire` dans vitrine.css).
+      */}
+      <main className="vitrine-claire w-full flex-1">
+        <div className={`${CONTENEUR} py-10`}>
+          <Link
+            href="/#evenements"
+            className="inline-flex items-center gap-2 text-[13.5px] text-muted hover:text-ink no-underline mb-6"
           >
-            <div className="relative aspect-[16/9] md:aspect-[21/8] rounded-xl overflow-hidden border border-line bg-surface-3">
-              <Image
-                src={visuel.url}
-                alt={visuel.alt}
-                fill
-                priority
-                sizes="(max-width: 1120px) 100vw, 1080px"
-                className="object-cover"
-              />
-            </div>
-          </Agrandir>
-        ) : null}
+            <ArrowLeft size={15} /> Tous les rendez-vous
+          </Link>
 
-        {/*
+          {visuel ? (
+            <Agrandir
+              src={visuel.url}
+              alt={e.titre}
+              legende={e.titre}
+              className="mb-8"
+            >
+              <div className="relative aspect-[16/9] md:aspect-[21/8] rounded-xl overflow-hidden border border-line bg-surface-3">
+                <Image
+                  src={visuel.url}
+                  alt={visuel.alt}
+                  fill
+                  priority
+                  sizes="(max-width: 1120px) 100vw, 1080px"
+                  className="object-cover"
+                />
+              </div>
+            </Agrandir>
+          ) : null}
+
+          {/*
           Sur téléphone, la participation vient juste après le titre : c'est
           la question qu'on se pose, pas une note à trouver sous la
           description. Sur ordinateur, elle reste à droite et suit le défilement.
         */}
-        {/*
-          Le détail se lit sur du papier : un bloc blanc, posé sur le bleu
-          nuit de la page — le bloc seul, pas la section (voir
-          `.vitrine-claire` dans vitrine.css).
-        */}
-        <div className="vitrine-claire rounded-2xl px-5 py-7 sm:px-8 sm:py-9 lg:px-10 grid gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
-          <div className="lg:col-start-1 lg:row-start-1 min-w-0">
-            <span className="surtitre text-marque-rouge">{e.format}</span>
-            <h1
-              className={`${TITRE_GRAS} text-[clamp(28px,4vw,42px)] m-0 mt-2.5`}
-            >
-              {e.titre}
-            </h1>
-
-            <div className="flex gap-x-5 gap-y-2.5 flex-wrap text-[14px] text-muted mt-5">
-              <span className="inline-flex items-center gap-2">
-                <CalendarDays size={16} /> {fmtDate(e.date)}
-              </span>
-              {horaire ? (
-                <span className="inline-flex items-center gap-2">
-                  <Clock size={16} /> {horaire}
-                </span>
-              ) : null}
-              <span className="inline-flex items-center gap-2">
-                <MapPin size={16} /> {e.lieu}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Users size={16} /> {e.inscrits} inscrits sur {e.cap}
-              </span>
-            </div>
-          </div>
-
-          <aside className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 rounded-xl border border-line bg-surface shadow-[var(--shadow)] p-6">
-            <div className="surtitre text-faint">Participation</div>
-            <div className="titre text-[30px] mt-1.5">
-              {e.prixPublic > 0 ? fmtMoney(e.prixPublic) : "Gratuit"}
-            </div>
-            <p className="text-[13px] text-muted mt-1.5 mb-5">
-              {restantes > 0
-                ? `${restantes} place${restantes > 1 ? "s" : ""} restante${restantes > 1 ? "s" : ""}`
-                : "Événement complet"}
-            </p>
-
-            {termine ? (
-              <p className="text-[13.5px] text-muted m-0">
-                Cet événement est terminé.
-              </p>
-            ) : restantes > 0 ? (
-              <InscriptionPublique
-                event={{
-                  id: e.id,
-                  titre: e.titre,
-                  lieu: e.lieu,
-                  payant: e.prixPublic > 0,
-                  prix: e.prixPublic,
-                  restantes,
-                  enLigne:
-                    vanillaPayActif() &&
-                    e.prixPublic >= MONTANT_MINIMUM_EN_LIGNE,
-                }}
-              />
-            ) : (
-              <p className="text-[13.5px] text-muted m-0">
-                Plus de place disponible.
-              </p>
-            )}
-
-            <p className="text-[12.5px] text-muted mt-3.5 mb-0">
-              Membre de la chambre ?{" "}
-              <Link
-                href={`/membre/evenements/${e.id}`}
-                className="text-ink font-semibold underline underline-offset-2"
+          <div className="grid gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
+            <div className="lg:col-start-1 lg:row-start-1 min-w-0">
+              <span className="surtitre text-marque-rouge">{e.format}</span>
+              <h1
+                className={`${TITRE_GRAS} text-[clamp(28px,4vw,42px)] m-0 mt-2.5`}
               >
-                Inscrivez-vous depuis votre espace
-              </Link>
-              , où vos contacts sont déjà enregistrés.
-            </p>
+                {e.titre}
+              </h1>
 
-            <Link
-              href="/auth/inscription"
-              className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-line text-[13px] text-marque-vert font-semibold no-underline hover:underline"
-            >
-              Pas encore membre ? Rejoindre la chambre
-              <ArrowRight size={15} className="shrink-0" />
-            </Link>
-          </aside>
-
-          <div className="lg:col-start-1 lg:row-start-2 min-w-0">
-            <div className="max-w-[62ch] flex flex-col gap-4">
-              {e.desc.split("\n\n").map((para, i) => (
-                <p
-                  key={i}
-                  className="m-0 text-[16px] leading-[1.75] text-muted"
-                >
-                  <TexteLie
-                    texte={para}
-                    classeLien="text-marque-vert underline underline-offset-2 decoration-marque-vert/40 hover:decoration-marque-vert [overflow-wrap:anywhere]"
-                  />
-                </p>
-              ))}
-            </div>
-
-            {e.programme?.length ? (
-              <div className="mt-10">
-                <span className="surtitre text-marque-rouge">Au programme</span>
-                <h2 className={`${TITRE_BLOC} mt-2 mb-5`}>
-                  Le déroulé de la séance
-                </h2>
-                <ol className="list-none m-0 p-0 flex flex-col">
-                  {e.programme.map((etape, i) => {
-                    const derniere = i === e.programme!.length - 1;
-                    return (
-                      <li key={i} className="flex gap-4">
-                        <div className="flex flex-col items-center shrink-0 w-[72px]">
-                          <span className="text-[13px] font-bold text-marque-rouge whitespace-nowrap tabular-nums">
-                            {etape.heure}
-                          </span>
-                          {derniere ? null : (
-                            <span className="w-px flex-1 bg-line my-1.5" />
-                          )}
-                        </div>
-                        <div className={`min-w-0 ${derniere ? "" : "pb-5"}`}>
-                          <div className="text-[15px] font-semibold text-ink">
-                            {etape.titre}
-                          </div>
-                          {etape.detail ? (
-                            <p className="m-0 mt-1 text-[14px] text-muted leading-relaxed">
-                              <TexteLie texte={etape.detail} />
-                            </p>
-                          ) : null}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </div>
-            ) : null}
-
-            {e.pourQui ? (
-              <div className="mt-10 rounded-xl border border-line bg-surface-2 px-5 py-4">
-                <span className="surtitre text-marque-vert">Pour qui</span>
-                <p className="m-0 mt-2 text-[15px] text-ink leading-relaxed">
-                  <TexteLie texte={e.pourQui} />
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        {autres.length ? (
-          <section className="scene mt-14">
-            <div>
-              <div className="reveler flex items-end justify-between gap-6 flex-wrap mb-7">
-                <div>
-                  <span className="surtitre text-marque-rouge">
-                    Ne manquez rien
+              <div className="flex gap-x-5 gap-y-2.5 flex-wrap text-[14px] text-muted mt-5">
+                <span className="inline-flex items-center gap-2">
+                  <CalendarDays size={16} /> {fmtDate(e.date)}
+                </span>
+                {horaire ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Clock size={16} /> {horaire}
                   </span>
-                  <h2 className={`${TITRE_BLOC} mt-2`}>
-                    Les autres rendez-vous
-                  </h2>
-                </div>
-                <span className="text-[13px] text-faint">
-                  {autres.length} à venir
+                ) : null}
+                <span className="inline-flex items-center gap-2">
+                  <MapPin size={16} /> {e.lieu}
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <Users size={16} /> {e.inscrits} inscrits sur {e.cap}
                 </span>
               </div>
-
-              <CarrouselCartes debord="" libelle="Autres rendez-vous">
-                {autres.map(({ evenement, rang }, i) => (
-                  <CarteEvenement
-                    key={evenement.id}
-                    evenement={evenement}
-                    index={rang}
-                    className="reveler reveler-zoom"
-                    style={retard(100 + i * 70)}
-                  />
-                ))}
-              </CarrouselCartes>
             </div>
-          </section>
-        ) : null}
+
+            <aside className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24 rounded-xl border border-line bg-surface shadow-[var(--shadow)] p-6">
+              <div className="surtitre text-faint">Participation</div>
+              <div className="titre text-[30px] mt-1.5">
+                {e.prixPublic > 0 ? fmtMoney(e.prixPublic) : "Gratuit"}
+              </div>
+              <p className="text-[13px] text-muted mt-1.5 mb-5">
+                {restantes > 0
+                  ? `${restantes} place${restantes > 1 ? "s" : ""} restante${restantes > 1 ? "s" : ""}`
+                  : "Événement complet"}
+              </p>
+
+              {termine ? (
+                <p className="text-[13.5px] text-muted m-0">
+                  Cet événement est terminé.
+                </p>
+              ) : restantes > 0 ? (
+                <InscriptionPublique
+                  event={{
+                    id: e.id,
+                    titre: e.titre,
+                    lieu: e.lieu,
+                    payant: e.prixPublic > 0,
+                    prix: e.prixPublic,
+                    restantes,
+                    enLigne:
+                      vanillaPayActif() &&
+                      e.prixPublic >= MONTANT_MINIMUM_EN_LIGNE,
+                  }}
+                />
+              ) : (
+                <p className="text-[13.5px] text-muted m-0">
+                  Plus de place disponible.
+                </p>
+              )}
+
+              <p className="text-[12.5px] text-muted mt-3.5 mb-0">
+                Membre de la chambre ?{" "}
+                <Link
+                  href={`/membre/evenements/${e.id}`}
+                  className="text-ink font-semibold underline underline-offset-2"
+                >
+                  Inscrivez-vous depuis votre espace
+                </Link>
+                , où vos contacts sont déjà enregistrés.
+              </p>
+
+              <Link
+                href="/auth/inscription"
+                className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-line text-[13px] text-marque-vert font-semibold no-underline hover:underline"
+              >
+                Pas encore membre ? Rejoindre la chambre
+                <ArrowRight size={15} className="shrink-0" />
+              </Link>
+            </aside>
+
+            <div className="lg:col-start-1 lg:row-start-2 min-w-0">
+              <div className="max-w-[62ch] flex flex-col gap-4">
+                {e.desc.split("\n\n").map((para, i) => (
+                  <p
+                    key={i}
+                    className="m-0 text-[16px] leading-[1.75] text-muted"
+                  >
+                    <TexteLie
+                      texte={para}
+                      classeLien="text-marque-vert underline underline-offset-2 decoration-marque-vert/40 hover:decoration-marque-vert [overflow-wrap:anywhere]"
+                    />
+                  </p>
+                ))}
+              </div>
+
+              {e.programme?.length ? (
+                <div className="mt-10">
+                  <span className="surtitre text-marque-rouge">
+                    Au programme
+                  </span>
+                  <h2 className={`${TITRE_BLOC} mt-2 mb-5`}>
+                    Le déroulé de la séance
+                  </h2>
+                  <ol className="list-none m-0 p-0 flex flex-col">
+                    {e.programme.map((etape, i) => {
+                      const derniere = i === e.programme!.length - 1;
+                      return (
+                        <li key={i} className="flex gap-4">
+                          <div className="flex flex-col items-center shrink-0 w-[72px]">
+                            <span className="text-[13px] font-bold text-marque-rouge whitespace-nowrap tabular-nums">
+                              {etape.heure}
+                            </span>
+                            {derniere ? null : (
+                              <span className="w-px flex-1 bg-line my-1.5" />
+                            )}
+                          </div>
+                          <div className={`min-w-0 ${derniere ? "" : "pb-5"}`}>
+                            <div className="text-[15px] font-semibold text-ink">
+                              {etape.titre}
+                            </div>
+                            {etape.detail ? (
+                              <p className="m-0 mt-1 text-[14px] text-muted leading-relaxed">
+                                <TexteLie texte={etape.detail} />
+                              </p>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ) : null}
+
+              {e.pourQui ? (
+                <div className="mt-10 rounded-xl border border-line bg-surface-2 px-5 py-4">
+                  <span className="surtitre text-marque-vert">Pour qui</span>
+                  <p className="m-0 mt-2 text-[15px] text-ink leading-relaxed">
+                    <TexteLie texte={e.pourQui} />
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {autres.length ? (
+            <section className="scene mt-14">
+              <div>
+                <div className="reveler flex items-end justify-between gap-6 flex-wrap mb-7">
+                  <div>
+                    <span className="surtitre text-marque-rouge">
+                      Ne manquez rien
+                    </span>
+                    <h2 className={`${TITRE_BLOC} mt-2`}>
+                      Les autres rendez-vous
+                    </h2>
+                  </div>
+                  <span className="text-[13px] text-faint">
+                    {autres.length} à venir
+                  </span>
+                </div>
+
+                <CarrouselCartes debord="" libelle="Autres rendez-vous">
+                  {autres.map(({ evenement, rang }, i) => (
+                    <CarteEvenement
+                      key={evenement.id}
+                      evenement={evenement}
+                      index={rang}
+                      className="reveler reveler-zoom"
+                      style={retard(100 + i * 70)}
+                    />
+                  ))}
+                </CarrouselCartes>
+              </div>
+            </section>
+          ) : null}
+        </div>
       </main>
     </>
   );
