@@ -15,6 +15,13 @@ export const COORDONNEES = {
   site: "https://cancham.mg/",
 
   /**
+   * Identifiants fiscaux de la chambre, communiqués par elle le 1er octobre
+   * 2026. Ils figurent sur chaque facture, espacés comme elle les écrit.
+   */
+  nif: "500 292 559 8",
+  stat: "94951 11 2018 000293",
+
+  /**
    * À CONFIRMER. Le site ne publie aucun numéro WhatsApp : on reprend le
    * numéro mobile publié, sans avoir vérifié qu'il est joignable sur WhatsApp.
    * Passer à `null` masque l'entrée.
