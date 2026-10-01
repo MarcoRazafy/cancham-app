@@ -94,7 +94,11 @@ export default async function proxy(request: NextRequest) {
   };
 
   const session = lireSession(request.cookies.get(NOM_COOKIE)?.value);
-  if (!session) return vers(CONNEXION, { suite: pathname });
+  // L'adresse entière, paramètres compris : le lien d'un rendez-vous ouvert
+  // sans être connecté ramène à ce rendez-vous, pas à la liste.
+  if (!session) {
+    return vers(CONNEXION, { suite: `${pathname}${request.nextUrl.search}` });
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
@@ -103,6 +107,14 @@ export default async function proxy(request: NextRequest) {
   // Compte supprimé, ou mot de passe changé depuis l'ouverture de la session.
   if (!user || sessionPerimee(session, user.motDePasseModifieLe)) {
     return vers(CONNEXION);
+  }
+  // L'équipe qui essaie le lien d'un rendez-vous qu'elle vient de copier : on
+  // lui dit pourquoi elle n'y arrive pas, plutôt qu'un retour muet à l'accueil
+  // qui ferait croire le lien cassé.
+  if (user.role === "admin" && pathname === "/membre/rendez-vous") {
+    return vers("/admin/rendez-vous", {
+      msg: "Ce lien ouvre la prise de rendez-vous des membres : il fonctionne pour un membre connecté.",
+    });
   }
   // Chacun chez soi : un membre n'entre pas dans le back-office.
   if (user.role !== espace) return vers(ACCUEIL[user.role] ?? CONNEXION);

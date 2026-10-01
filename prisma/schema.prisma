@@ -734,6 +734,10 @@ model CanchamService {
   /// Photo de couverture de la carte, par URL. `null` = dégradé aux couleurs
   /// du type de service.
   image String?
+  /// Où mène le bouton du service : une page de la plateforme, rangée en
+  /// chemin (« /membre/rendez-vous?type=… »), ou une adresse web complète.
+  /// `null` : le bouton envoie la demande à l'équipe, par la messagerie.
+  lien  String?
   ordre Int         @default(0)
 
   createdAt DateTime @default(now())

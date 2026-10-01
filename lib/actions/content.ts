@@ -7,7 +7,9 @@ import { EMPLACEMENTS_OFFRE, estEmplacementOffre } from "@/lib/offres";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase, jourSaisi } from "@/lib/format";
-import { normaliserSite } from "@/lib/liens";
+import { estCheminFerme, normaliserLien, normaliserSite } from "@/lib/liens";
+import { ADRESSE_PLATEFORME, urlPublique } from "@/lib/courriel";
+import { headers } from "next/headers";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -944,6 +946,20 @@ export async function deleteOffer(formData: FormData) {
   redirectWithFlash("/admin/actualites", "Offre retirée");
 }
 
+/**
+ * Les adresses sous lesquelles la plateforme se présente : celle des liens
+ * qu'elle envoie, celle de la production, et l'hôte de la requête en cours.
+ * Un lien collé qui y mène est une page d'ici, pas un site tiers.
+ */
+async function originesPlateforme(): Promise<string[]> {
+  const hote = (await headers()).get("host");
+  return [
+    await urlPublique("/"),
+    ADRESSE_PLATEFORME,
+    ...(hote ? [`https://${hote}`] : []),
+  ];
+}
+
 export async function saveService(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "serviceId");
@@ -958,6 +974,25 @@ export async function saveService(formData: FormData) {
   }
   if (type === "payant" && (!Number.isFinite(prix) || prix <= 0)) {
     redirectWithErreur(retour, "Indiquez le tarif d’un service payant.");
+  }
+
+  // Le lien est facultatif. Celui d'une page de la plateforme — un
+  // rendez-vous, par exemple — est rangé en chemin : il s'ouvre sur place.
+  const lienSaisi = texte(formData, "lien");
+  const lien = lienSaisi
+    ? normaliserLien(lienSaisi, await originesPlateforme())
+    : null;
+  if (lienSaisi && !lien) {
+    redirectWithErreur(
+      retour,
+      `« ${lienSaisi.slice(0, 80)} » n’est pas un lien valide.`,
+    );
+  }
+  if (lien && estCheminFerme(lien)) {
+    redirectWithErreur(
+      retour,
+      "Ce lien mène à l’espace de l’équipe : les membres ne peuvent pas l’ouvrir. Copiez plutôt le lien du rendez-vous.",
+    );
   }
 
   // Un champ laissé vide garde la photo actuelle ; la case « retirer »
@@ -979,6 +1014,7 @@ export async function saveService(formData: FormData) {
     desc,
     type,
     prix,
+    lien,
     ...(image ? { image } : retirerImage ? { image: null } : {}),
   } as const;
   const service = id
@@ -998,7 +1034,7 @@ export async function saveService(formData: FormData) {
     id ? "service_modifie" : "service_ajoute",
     "CanchamService",
     service.id,
-    `« ${titre} » · ${type === "payant" ? `${prix.toLocaleString("fr-FR")} Ar` : "inclus"}.`,
+    `« ${titre} » · ${type === "payant" ? `${prix.toLocaleString("fr-FR")} Ar` : "inclus"}${lien ? ` · lien : ${lien}` : ""}.`,
   );
   revalideTout();
   redirectWithFlash(

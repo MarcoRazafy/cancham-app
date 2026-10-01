@@ -441,7 +441,11 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
   revalider();
   redirectWithFlash(
     EQUIPE,
-    id ? "Type mis à jour" : `Type « ${titre} » ajouté`,
+    id
+      ? "Type mis à jour"
+      : actif && plages.length
+        ? `Type « ${titre} » ajouté : son lien est prêt à copier`
+        : `Type « ${titre} » ajouté`,
   );
 }
 

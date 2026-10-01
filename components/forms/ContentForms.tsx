@@ -28,6 +28,7 @@ import {
   downloadResource,
   saveService,
 } from "@/lib/actions/content";
+import { estCheminFerme, normaliserLien } from "@/lib/liens";
 import type { CanchamService, Space } from "@/lib/types";
 
 /* ============================ Ressources ============================ */
@@ -85,8 +86,16 @@ export function DownloadResourceButton({
 
 /* ============================ Services CanCham ============================ */
 
-export function ServiceFormButton({ service }: { service?: CanchamService }) {
+export function ServiceFormButton({
+  service,
+  rendezvous = [],
+}: {
+  service?: CanchamService;
+  /** Les rendez-vous proposés, et leur lien : suggérés dans le champ « Lien ». */
+  rendezvous?: { titre: string; lien: string }[];
+}) {
   const edition = !!service;
+  const suggestions = `liens-rendezvous-${service?.id ?? "nouveau"}`;
   return (
     <Modal
       title={edition ? "Modifier le service" : "Ajouter un service"}
@@ -165,6 +174,51 @@ export function ServiceFormButton({ service }: { service?: CanchamService }) {
                 />
               </Field>
             </div>
+            <Field
+              label="Lien"
+              hint={
+                rendezvous.length
+                  ? "Facultatif : où mène le bouton du service. Collez le lien d’un rendez-vous, ou choisissez-en un dans la liste. Sans lien, le bouton envoie la demande à l’équipe."
+                  : "Facultatif : où mène le bouton du service — le lien d’un rendez-vous, une page, un site. Sans lien, le bouton envoie la demande à l’équipe."
+              }
+            >
+              <input
+                type="text"
+                name="lien"
+                inputMode="url"
+                maxLength={500}
+                defaultValue={service?.lien ?? ""}
+                placeholder="Ex. le lien d’un type de rendez-vous"
+                list={rendezvous.length ? suggestions : undefined}
+                // Contrôlé avant l'envoi : un refus du serveur refermerait la
+                // fenêtre et ferait perdre tout le formulaire.
+                onChange={(e) => {
+                  const v = e.currentTarget.value.trim();
+                  const lien = v
+                    ? normaliserLien(v, [window.location.origin])
+                    : null;
+                  e.currentTarget.setCustomValidity(
+                    !v
+                      ? ""
+                      : !lien
+                        ? "Collez une adresse complète (https://…) ou le lien d’un rendez-vous."
+                        : estCheminFerme(lien)
+                          ? "Ce lien mène à l’espace de l’équipe : les membres ne peuvent pas l’ouvrir."
+                          : "",
+                  );
+                }}
+                className={INPUT}
+              />
+              {rendezvous.length ? (
+                <datalist id={suggestions}>
+                  {rendezvous.map((r) => (
+                    <option key={r.lien} value={r.lien}>
+                      Rendez-vous : {r.titre}
+                    </option>
+                  ))}
+                </datalist>
+              ) : null}
+            </Field>
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Check, Copy, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -34,6 +34,72 @@ interface Ligne {
   jour: number;
   debut: string;
   fin: string;
+}
+
+/**
+ * Le lien d'un type de rendez-vous : il mène droit à ses créneaux. L'équipe
+ * le copie pour l'envoyer à un membre, ou le coller dans un service.
+ */
+export function LienRendezvous({
+  lien,
+  titre,
+}: {
+  lien: string;
+  titre: string;
+}) {
+  const [copie, setCopie] = useState(false);
+  const champ = useRef<HTMLInputElement>(null);
+
+  const copier = async () => {
+    let fait = false;
+    try {
+      await navigator.clipboard.writeText(lien);
+      fait = true;
+    } catch {
+      // Hors HTTPS, le presse-papier moderne n'existe pas : on passe par la
+      // sélection du champ, que tous les navigateurs savent copier.
+      champ.current?.select();
+      try {
+        fait = document.execCommand("copy");
+      } catch {
+        // Rien à faire : le lien reste sélectionné, prêt pour Ctrl+C.
+      }
+    }
+    if (!fait) return;
+    setCopie(true);
+    setTimeout(() => setCopie(false), 2000);
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-1.5 rounded-[var(--radius-s)] border border-line bg-surface-2 py-1 pl-2.5 pr-1">
+      <Link2 size={13} className="shrink-0 text-faint" aria-hidden />
+      {/* Sélectionnable d'un clic : si le presse-papier est refusé, on copie à la main. */}
+      <input
+        ref={champ}
+        readOnly
+        value={lien}
+        aria-label={`Lien du rendez-vous « ${titre} »`}
+        onFocus={(e) => e.target.select()}
+        className="min-w-0 flex-1 truncate border-0 bg-transparent p-0 font-[family-name:var(--font-mono)] text-[11.5px] text-muted outline-none"
+      />
+      <button
+        type="button"
+        onClick={copier}
+        aria-label={`Copier le lien du rendez-vous « ${titre} »`}
+        className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-[var(--radius-s)] border border-line bg-surface px-2 py-1 text-[11.8px] font-semibold text-ink hover:border-faint"
+      >
+        {copie ? (
+          <>
+            <Check size={12} className="text-success-strong" /> Copié
+          </>
+        ) : (
+          <>
+            <Copy size={12} /> Copier
+          </>
+        )}
+      </button>
+    </div>
+  );
 }
 
 export function NouveauType() {

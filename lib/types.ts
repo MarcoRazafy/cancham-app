@@ -290,6 +290,11 @@ export interface CanchamService {
   icon: string;
   /** Photo de couverture de la carte. `null` = dégradé aux couleurs du type. */
   image: string | null;
+  /**
+   * Où mène le bouton du service : un chemin de la plateforme ou une adresse
+   * web. Sans lien, le bouton écrit à l'équipe.
+   */
+  lien?: string | null;
 }
 
 export type ResourceCategory = "Guide" | "Modèle" | "Formation" | "Rapport";
