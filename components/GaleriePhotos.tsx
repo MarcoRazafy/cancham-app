@@ -7,8 +7,9 @@ import { PhotoNaturelle } from "@/components/PhotoNaturelle";
 
 /**
  * Photos d'une publication, chacune dans ses propres proportions : la
- * première en grand, les suivantes en vignettes, et une visionneuse plein écran qui passe de l'une à l'autre —
- * flèches à l'écran, flèches du clavier, vignettes en bas.
+ * première en grand, les suivantes en vignettes, et une visionneuse plein
+ * écran qui passe de l'une à l'autre — flèches à l'écran, flèches du
+ * clavier, vignettes en bas.
  */
 export function GaleriePhotos({
   images,
@@ -53,9 +54,9 @@ export function GaleriePhotos({
         type="button"
         onClick={() => setCourante(0)}
         aria-label={`Agrandir la photo 1 sur ${total}`}
-        className="group relative block w-full rounded-[var(--radius-m)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
+        className="group relative mx-auto block max-w-full rounded-[var(--radius-m)] overflow-hidden p-0 border-0 cursor-zoom-in bg-transparent"
       >
-        {/* Dans ses propres proportions : rien n'est rogné. */}
+        {/* Dans ses propres proportions : le cadre est la photo. */}
         <PhotoNaturelle
           src={premiere}
           alt={alt}
@@ -73,8 +74,12 @@ export function GaleriePhotos({
 
       {suivantes.length ? (
         <div
-          className={`mt-2 gap-2 ${
-            suivantes.length >= 3 ? "columns-2 sm:columns-3" : "columns-2"
+          className={`mt-2 grid items-start gap-2 ${
+            suivantes.length >= 4
+              ? "grid-cols-2 sm:grid-cols-4"
+              : suivantes.length === 3
+                ? "grid-cols-3"
+                : "grid-cols-2"
           }`}
         >
           {suivantes.map((src, i) => (
@@ -83,13 +88,12 @@ export function GaleriePhotos({
               type="button"
               onClick={() => setCourante(i + 1)}
               aria-label={`Agrandir la photo ${i + 2} sur ${total}`}
-              className="group relative mb-2 block w-full break-inside-avoid rounded-[var(--radius-s)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
+              className="group relative block w-full rounded-[var(--radius-s)] overflow-hidden p-0 border-0 cursor-zoom-in bg-surface-2"
             >
               <PhotoNaturelle
                 src={src}
                 alt=""
                 sizes="(max-width: 640px) 50vw, 260px"
-                plafond="max-h-[360px]"
                 className="transition-transform duration-500 group-hover:scale-[1.05]"
               />
             </button>

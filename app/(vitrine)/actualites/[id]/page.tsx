@@ -113,16 +113,15 @@ export default async function ActualitePubliquePage({
                 legende={a.titre}
                 className="mt-7"
               >
-                {/* Dans ses propres proportions : rien n'est rogné. */}
-                <div className="rounded-xl overflow-hidden border border-line bg-surface-3">
-                  <PhotoNaturelle
-                    src={couverture}
-                    alt=""
-                    priority
-                    sizes="(max-width: 800px) 100vw, 760px"
-                    plafond="max-h-[680px]"
-                  />
-                </div>
+                {/* Dans ses propres proportions : le cadre est la photo. */}
+                <PhotoNaturelle
+                  src={couverture}
+                  alt=""
+                  priority
+                  sizes="(max-width: 800px) 100vw, 760px"
+                  plafond="max-h-[680px]"
+                  className="rounded-xl border border-line"
+                />
               </Agrandir>
             ) : null}
 
@@ -141,21 +140,14 @@ export default async function ActualitePubliquePage({
             </div>
 
             {galerie.length ? (
-              <div className="mt-8 columns-2 gap-3 sm:columns-3">
+              <div className="mt-8 grid grid-cols-2 items-start gap-3 sm:grid-cols-3">
                 {galerie.map((src) => (
-                  <Agrandir
-                    key={src}
-                    src={src}
-                    alt={a.titre}
-                    legende={a.titre}
-                    className="mb-3 break-inside-avoid"
-                  >
+                  <Agrandir key={src} src={src} alt={a.titre} legende={a.titre}>
                     <div className="rounded-lg overflow-hidden border border-line bg-surface-3">
                       <PhotoNaturelle
                         src={src}
                         alt=""
                         sizes="(max-width: 640px) 50vw, 250px"
-                        plafond="max-h-[420px]"
                       />
                     </div>
                   </Agrandir>
