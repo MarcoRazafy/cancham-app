@@ -1,12 +1,20 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { lignesDe } from "@/lib/billets";
+import { codeInscription, extraireCode } from "@/lib/codes-accueil";
 import { prisma } from "@/lib/db";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
+import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
 import { estPortefeuilleConnu } from "@/lib/portefeuilles";
+import { referenceReglement } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
-import { mobileMoneyEnLigne, vanillaPayActif } from "@/lib/vanillapay";
+import {
+  mobileMoneyEnLigne,
+  MONTANT_MINIMUM_EN_LIGNE,
+  vanillaPayActif,
+} from "@/lib/vanillapay";
 
 const texte = (fd: FormData, k: string) =>
   String(fd.get(k) ?? "")
@@ -134,6 +142,110 @@ export async function payerParPortefeuille(formData: FormData) {
   const ouverture = await ouvrirChezLePrestataire(
     { id: p.id, montant: p.montant, numeroFacture: p.invoice?.numero ?? null },
     "mobile_money",
+  );
+  if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
+
+  redirect(ouverture.url);
+}
+
+/** Ouvertures de paiement depuis une même origine, en une heure. */
+const PAIEMENTS_PUBLICS_PAR_HEURE = 10;
+
+/**
+ * Le paiement par carte d'une inscription faite depuis le site public.
+ *
+ * Pas de compte, donc pas de session à vérifier : c'est le code de
+ * l'inscription — celui du lien reçu par e-mail — qui fait foi, comme pour
+ * la page des billets. On ne paie que des lignes encore en attente, au
+ * tarif public du jour, et jamais une inscription de membre : celle-là a sa
+ * facture, qui se règle dans l'espace membre.
+ *
+ * Le règlement n'a ni facture ni membre ; il garde le code de l'inscription
+ * et l'événement. C'est ce qui permet, le paiement confirmé, de valider
+ * l'inscription et d'envoyer les billets.
+ */
+export async function payerInscriptionPublique(formData: FormData) {
+  const eventId = texte(formData, "eventId");
+  const code = codeInscription(extraireCode(texte(formData, "code")));
+  const page = `/evenements/${eventId}/billet?${new URLSearchParams({ code })}`;
+
+  const attente = tentative(
+    `paiement-public:${await origineAppelante()}`,
+    PAIEMENTS_PUBLICS_PAR_HEURE,
+    60 * 60 * 1000,
+  );
+  if (attente) {
+    redirectWithErreur(
+      page,
+      `Trop de tentatives depuis cet appareil. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
+    );
+  }
+
+  const [event, lignes, inscriptionMembre] = await Promise.all([
+    prisma.event.findUnique({
+      where: { id: eventId },
+      select: { public: true, prixPublic: true },
+    }),
+    prisma.attendee.findMany({
+      where: { eventId, statut: "a_valider", ...lignesDe(code) },
+      orderBy: { createdAt: "asc" },
+      select: { nom: true, email: true },
+    }),
+    prisma.registration.findUnique({ where: { code }, select: { id: true } }),
+  ]);
+  if (!event?.public || inscriptionMembre) {
+    redirectWithErreur(`/evenements/${eventId}`, "Inscription introuvable.");
+  }
+  if (!lignes.length) {
+    redirectWithFlash(page, "Cette inscription est déjà réglée.");
+  }
+
+  const montant = event.prixPublic * lignes.length;
+  if (!vanillaPayActif() || montant < MONTANT_MINIMUM_EN_LIGNE) {
+    redirectWithErreur(
+      page,
+      "Le paiement en ligne n’est pas disponible pour cette inscription : réglez-la auprès de l’équipe CanCham.",
+    );
+  }
+
+  // Un règlement déjà ouvert pour cette inscription se reprend, au montant
+  // du jour : revenir sans payer puis recommencer n'en empile pas dix.
+  const ouvert = await prisma.paiement.findFirst({
+    where: {
+      invoiceId: null,
+      mode: "carte",
+      statut: "en_cours",
+      detail: { path: ["inscription"], equals: code },
+    },
+    select: { id: true },
+  });
+  const p = ouvert
+    ? await prisma.paiement.update({
+        where: { id: ouvert.id },
+        data: { montant },
+        select: { id: true },
+      })
+    : await prisma.paiement.create({
+        data: {
+          reference: referenceReglement(),
+          montant,
+          devise: "MGA",
+          mode: "carte",
+        },
+        select: { id: true },
+      });
+
+  const ouverture = await ouvrirChezLePrestataire(
+    { id: p.id, montant, numeroFacture: null },
+    "international",
+    {
+      inscription: code,
+      eventId,
+      titulaire: lignes[0].nom,
+      email: lignes[0].email,
+    },
+    (reference) =>
+      `/evenements/${eventId}/billet?${new URLSearchParams({ code, ref: reference })}`,
   );
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
 

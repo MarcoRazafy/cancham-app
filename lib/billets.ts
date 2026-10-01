@@ -10,7 +10,7 @@ import {
   courrielBilletsEvenement,
   courrielInscriptionEnAttente,
 } from "@/lib/modeles-courriels";
-import { notifierMembre } from "@/lib/push";
+import { notifierEquipe, notifierMembre } from "@/lib/push";
 
 /**
  * Les billets d'un événement : ce qu'on envoie, et quand.
@@ -154,6 +154,71 @@ export async function delivrerBillets(
       titre: `Vos billets : ${event.titre}`,
       corps: `Règlement reçu · ${n} participant${n > 1 ? "s" : ""} · billets envoyés à ${email}`,
       url: page,
+    }),
+  );
+  return true;
+}
+
+/**
+ * Une inscription publique réglée en ligne : elle se confirme et ses billets
+ * partent, comme pour un membre. Il n'y a ni facture ni compte : c'est le
+ * code de l'inscription qui relie le règlement à ses lignes d'accueil.
+ *
+ * Rejouable sans risque — des lignes déjà confirmées ne le sont pas deux
+ * fois. Vrai si des billets sont partis.
+ */
+export async function delivrerBilletsPublics(
+  eventId: string,
+  code: string,
+  acteur: string,
+): Promise<boolean> {
+  const [event, lignes] = await Promise.all([
+    prisma.event.findUnique({ where: { id: eventId } }),
+    prisma.attendee.findMany({
+      where: { eventId, statut: "a_valider", ...lignesDe(code) },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, nom: true, code: true, email: true, entreprise: true },
+    }),
+  ]);
+  if (!event || !lignes.length) return false;
+  const n = lignes.length;
+
+  await prisma.$transaction([
+    prisma.attendee.updateMany({
+      where: { id: { in: lignes.map((l) => l.id) } },
+      data: { statut: "confirme" },
+    }),
+    prisma.auditLog.create({
+      data: {
+        action: "inscription_validee",
+        entite: "Event",
+        entiteId: eventId,
+        acteur,
+        detail: `« ${event.titre} » · ${lignes[0].entreprise} · ${n} personne${n > 1 ? "s" : ""} · inscription publique réglée en ligne · billets envoyés.`,
+      },
+    }),
+  ]);
+
+  const email = lignes[0].email;
+  const participants = lignes.flatMap((l) =>
+    l.code ? [{ nom: l.nom, code: l.code }] : [],
+  );
+  if (participants.length && email.includes("@")) {
+    envoyerBillets(
+      event,
+      participants,
+      email,
+      await urlPublique(
+        `/evenements/${eventId}/billet?${new URLSearchParams({ code })}`,
+      ),
+    );
+  }
+  // L'équipe n'a rien à valider, mais elle doit le savoir.
+  after(() =>
+    notifierEquipe({
+      titre: `Inscription publique réglée : ${event.titre}`,
+      corps: `${lignes[0].entreprise} · ${n} personne${n > 1 ? "s" : ""} · payé en ligne`,
+      url: `/admin/evenements/${eventId}`,
     }),
   );
   return true;

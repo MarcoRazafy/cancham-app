@@ -1,11 +1,11 @@
 import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { delivrerBillets } from "@/lib/billets";
+import { delivrerBillets, delivrerBilletsPublics } from "@/lib/billets";
 import { prisma } from "@/lib/db";
 import { nomFacture } from "@/lib/factures";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
-import type { EtatPaiement } from "@/lib/vanillapay";
+import { interrogerStatut, type EtatPaiement } from "@/lib/vanillapay";
 
 /**
  * Ce qu'on fait d'un paiement dont on apprend l'issue.
@@ -134,15 +134,75 @@ export async function conclurePaiement(
         action: "paiement_en_ligne",
         entite: "Invoice",
         entiteId: f?.numero ?? p.reference,
-        acteur: membre?.nom ?? (f ? nomFacture(f) : "Membre"),
+        acteur: membre?.nom ?? (f ? nomFacture(f) : "Inscription publique"),
         detail: `${montant} réglés en ligne (${moyen.toLowerCase()})${etat.transaction ? ` · transaction ${etat.transaction}` : ""}.`,
       },
     }),
   ]);
 
   // Une participation réglée : l'inscription se confirme et les billets
-  // partent, sans passer par l'équipe.
-  if (f) await delivrerBillets(f.id, "Vanilla Pay");
+  // partent, sans passer par l'équipe. Un membre a sa facture ; une
+  // inscription publique n'a que son code, gardé avec le règlement.
+  if (f) {
+    await delivrerBillets(f.id, "Vanilla Pay");
+  } else {
+    const inscription = inscriptionPublique(p.detail);
+    if (inscription) {
+      await delivrerBilletsPublics(
+        inscription.eventId,
+        inscription.code,
+        "Vanilla Pay",
+      );
+    }
+  }
 
   return "reglee";
 }
+
+/** L'inscription publique qu'un règlement sans facture vient payer. */
+function inscriptionPublique(
+  detail: unknown,
+): { eventId: string; code: string } | null {
+  if (!detail || typeof detail !== "object" || Array.isArray(detail)) return null;
+  const d = detail as Record<string, unknown>;
+  return typeof d.inscription === "string" && typeof d.eventId === "string"
+    ? { eventId: d.eventId, code: d.inscription }
+    : null;
+}
+
+/**
+ * Au retour d'un paiement d'inscription publique : où en est-il ?
+ *
+ * La notification du prestataire a pu ne pas arriver encore — ou ne jamais
+ * arriver, sur un poste de développement. On lui demande l'état, et on
+ * conclut par la même porte que la notification. La référence ne suffit
+ * pas : elle doit être celle d'un règlement de cette inscription-là, sinon
+ * n'importe quelle référence devinée ferait interroger le prestataire.
+ */
+export async function suivrePaiementPublic(
+  reference: string,
+  code: string,
+): Promise<"reussie" | "echouee" | "en_cours" | null> {
+  const p = await prisma.paiement.findUnique({
+    where: { reference },
+    select: { statut: true, transaction: true, detail: true, invoiceId: true },
+  });
+  if (!p || p.invoiceId || inscriptionPublique(p.detail)?.code !== code) {
+    return null;
+  }
+  if (p.statut === "en_cours" && p.transaction) {
+    const etat = await interrogerStatut(p.transaction, "international");
+    if (etat) {
+      await conclurePaiement(etat, etat);
+      const apres = await prisma.paiement.findUnique({
+        where: { reference },
+        select: { statut: true },
+      });
+      if (apres) return etatSimple(apres.statut);
+    }
+  }
+  return etatSimple(p.statut);
+}
+
+const etatSimple = (statut: string): "reussie" | "echouee" | "en_cours" =>
+  statut === "reussie" ? "reussie" : statut === "echouee" ? "echouee" : "en_cours";

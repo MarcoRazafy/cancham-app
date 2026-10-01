@@ -43,8 +43,9 @@ export async function POST(requete: Request) {
   });
   if (!p) return refus(404, "Référence inconnue");
 
-  // La page de retour doit être une page de l'espace membre, ramenée sur
-  // l'adresse locale : on ne renvoie nulle part ailleurs.
+  // La page de retour doit être l'une des nôtres — l'espace membre, ou les
+  // billets d'une inscription publique —, ramenée sur l'adresse locale : on
+  // ne renvoie nulle part ailleurs.
   const origine = new URL(requete.url).origin;
   let retourLocal: URL;
   try {
@@ -53,7 +54,7 @@ export async function POST(requete: Request) {
   } catch {
     return refus(400, "redirect_url illisible");
   }
-  if (!retourLocal.pathname.startsWith("/membre/")) {
+  if (!/^\/(membre|evenements)\//.test(retourLocal.pathname)) {
     return refus(400, "redirect_url refusée");
   }
 

@@ -51,6 +51,12 @@ export async function ouvrirChezLePrestataire(
   p: { id: string; montant: number; numeroFacture: string | null },
   mode: ModePaiement,
   detail?: Prisma.InputJsonValue,
+  /**
+   * Où ramener le payeur, en chemin relatif, une fois la référence connue.
+   * À défaut, la page de retour de l'espace membre.
+   */
+  cheminRetour: (reference: string) => string = (reference) =>
+    `/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
 ): Promise<{ url: string } | { raison: string }> {
   const reference = referenceReglement();
   await prisma.paiement.update({
@@ -68,7 +74,7 @@ export async function ouvrirChezLePrestataire(
     panier: p.numeroFacture ?? reference,
     mode,
     notifUrl: `${baseSite()}/api/paiements/vanillapay`,
-    redirectUrl: `${await baseRetour()}/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
+    redirectUrl: `${await baseRetour()}${cheminRetour(reference)}`,
   });
   if ("raison" in ouverture) return ouverture;
 

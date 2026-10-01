@@ -26,6 +26,7 @@ import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { estTermine } from "@/lib/presences";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
+import { MONTANT_MINIMUM_EN_LIGNE, vanillaPayActif } from "@/lib/vanillapay";
 
 /**
  * Ce qu'un partage affiche : le titre de l'événement, sa date et son lieu,
@@ -180,6 +181,9 @@ export default async function EvenementPublic({
                   payant: e.prixPublic > 0,
                   prix: e.prixPublic,
                   restantes,
+                  enLigne:
+                    vanillaPayActif() &&
+                    e.prixPublic >= MONTANT_MINIMUM_EN_LIGNE,
                 }}
               />
             ) : (

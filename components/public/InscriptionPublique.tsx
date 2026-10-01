@@ -36,6 +36,8 @@ export function InscriptionPublique({
     payant: boolean;
     prix: number;
     restantes: number;
+    /** Le règlement par carte suit l'inscription, à l'écran d'après. */
+    enLigne: boolean;
   };
 }) {
   const max = Math.min(REPRESENTANTS_MAX, event.restantes);
@@ -138,14 +140,25 @@ export function InscriptionPublique({
             {event.payant ? (
               <p className="text-[13px] text-warn bg-warn-soft rounded-[var(--radius-s)] px-3.5 py-3 m-0">
                 <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
-                <br />À régler auprès de l’équipe CanCham avant l’événement.
+                <br />
+                {event.enLigne
+                  ? "À régler à l’étape suivante, par carte bancaire — ou auprès de l’équipe CanCham avant l’événement."
+                  : "À régler auprès de l’équipe CanCham avant l’événement."}
               </p>
             ) : null}
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
             <SubmitButton pendingLabel="Inscription…">
-              <Check size={14} /> Confirmer l’inscription
+              {event.payant && event.enLigne ? (
+                <>
+                  Suivant <ArrowRight size={14} />
+                </>
+              ) : (
+                <>
+                  <Check size={14} /> Confirmer l’inscription
+                </>
+              )}
             </SubmitButton>
           </ModalFooter>
         </form>
