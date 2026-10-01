@@ -36,7 +36,7 @@ export function InscriptionPublique({
     payant: boolean;
     prix: number;
     restantes: number;
-    /** Le règlement par carte suit l'inscription, à l'écran d'après. */
+    /** Le choix du moyen de paiement suit l'inscription, à l'écran d'après. */
     enLigne: boolean;
   };
 }) {
@@ -142,7 +142,7 @@ export function InscriptionPublique({
                 <b>Événement payant · {fmtMoney(event.prix)} par personne</b>
                 <br />
                 {event.enLigne
-                  ? "À régler à l’étape suivante, par carte bancaire — ou auprès de l’équipe CanCham avant l’événement."
+                  ? "À l’étape suivante, vous choisissez comment régler."
                   : "À régler auprès de l’équipe CanCham avant l’événement."}
               </p>
             ) : null}

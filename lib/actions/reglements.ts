@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { delivrerBillets } from "@/lib/billets";
+import { delivrerBillets, delivrerBilletsPublics } from "@/lib/billets";
+import { inscriptionPublique } from "@/lib/paiements";
 import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
 import { vanillaPayActif } from "@/lib/vanillapay";
 import { prisma } from "@/lib/db";
@@ -361,6 +362,12 @@ export async function annoncerReglement(formData: FormData) {
 
 /* ==================== Ce que l'équipe en fait ==================== */
 
+/** Le nom donné à l'inscription publique qu'un règlement vient payer. */
+function payeurPublic(detail: unknown): string | null {
+  const d = (detail ?? {}) as { titulaire?: unknown };
+  return typeof d.titulaire === "string" && d.titulaire ? d.titulaire : null;
+}
+
 /** L'équipe constate que l'argent est arrivé. */
 export async function confirmerReglement(formData: FormData) {
   const user = await exigerEquipe();
@@ -417,18 +424,26 @@ export async function confirmerReglement(formData: FormData) {
   await journal(
     "reglement_confirme",
     p.invoice?.numero ?? p.reference,
-    `${montant} par ${moyen.toLowerCase()} · ${p.member?.nom ?? "—"} · réf. ${p.reference}`,
+    `${montant} par ${moyen.toLowerCase()} · ${p.member?.nom ?? payeurPublic(p.detail) ?? "—"} · réf. ${p.reference}`,
     user.nom,
   );
   // Une participation : l'inscription se confirme et les billets partent.
   if (p.invoice) await delivrerBillets(p.invoice.id, user.nom);
+  // Celle d'un visiteur n'a pas de facture : c'est le code de son
+  // inscription, gardé avec le règlement, qui désigne ses billets.
+  const publique = p.invoice ? null : inscriptionPublique(p.detail);
+  if (publique) {
+    await delivrerBilletsPublics(publique.eventId, publique.code, user.nom);
+  }
   if (p.member) {
     const memberId = p.member.id;
     after(() =>
       notifierMembre(memberId, {
         titre: "Paiement confirmé",
         corps: `${montant} · réf. ${p.reference} · merci !${cotisation ? " Votre adhésion est à jour." : ""}`,
-        url: p.invoice ? `/membre/cotisations/${p.invoice.id}` : "/membre/cotisations",
+        url: p.invoice
+          ? `/membre/cotisations/${p.invoice.id}`
+          : "/membre/cotisations",
       }),
     );
   }

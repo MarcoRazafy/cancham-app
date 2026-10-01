@@ -74,13 +74,17 @@ export default async function Reglements() {
                     <Pill>{MODES[p.mode].titre}</Pill>
                   </div>
                   <div className="mt-1.5 text-[15px] font-semibold text-ink">
-                    {p.member?.nom ?? "Membre supprimé"} ·{" "}
-                    {fmtMontant(p.montant, p.devise)}
+                    {p.member?.nom ??
+                      payeurPublic(p.detail) ??
+                      "Membre supprimé"}{" "}
+                    · {fmtMontant(p.montant, p.devise)}
                   </div>
                   <div className="mt-0.5 text-[12.8px] text-muted">
                     {p.invoice
                       ? `${p.invoice.objet} · facture ${p.invoice.numero}`
-                      : "Sans facture"}
+                      : payeurPublic(p.detail)
+                        ? "Inscription publique à un événement · les billets partent à la confirmation"
+                        : "Sans facture"}
                     {p.annonceLe
                       ? ` · annoncé ${ilYa(p.annonceLe.toISOString())}`
                       : ""}
@@ -139,7 +143,7 @@ export default async function Reglements() {
                     {p.reference}
                   </span>
                   <span className="font-semibold text-ink">
-                    {p.member?.nom ?? "—"}
+                    {p.member?.nom ?? payeurPublic(p.detail) ?? "—"}
                   </span>
                   <span className="text-muted">
                     {fmtMontant(p.montant, p.devise)} · {MODES[p.mode].titre}
@@ -162,6 +166,14 @@ export default async function Reglements() {
  * Le rendez-vous d'une remise en espèces : où l'argent arrive, et quand.
  * Quand l'équipe doit passer, l'adresse est là — c'est elle qu'on cherche.
  */
+/** Le visiteur d'une inscription publique, nommé dans le détail du règlement. */
+function payeurPublic(detail: unknown): string | null {
+  const d = (detail ?? {}) as { titulaire?: unknown; inscription?: unknown };
+  return typeof d.inscription === "string" && typeof d.titulaire === "string"
+    ? d.titulaire
+    : null;
+}
+
 function RendezVous({ detail }: { detail: unknown }) {
   const d = (detail ?? {}) as {
     lieu?: string;
