@@ -679,10 +679,11 @@ export function MediaBanner({
 
 /**
  * Photos d'une publication dans le fil, chacune dans ses propres
- * proportions : rien n'est rogné. Une seule occupe la largeur ; plusieurs
- * se rangent sur deux colonnes, comme elles viennent. Au-delà de quatre, la
- * dernière case annonce combien il en reste. Chaque photo mène à l'article,
- * où la galerie complète se parcourt.
+ * proportions : rien n'est rogné. Une seule se centre, à sa forme ;
+ * plusieurs se rangent sur deux colonnes, de gauche à droite — la première
+ * de trois occupe la largeur. Au-delà de quatre, la dernière case annonce
+ * combien il en reste. Chaque photo mène à l'article, où la galerie
+ * complète se parcourt.
  */
 export function MosaiquePhotos({
   images,
@@ -699,8 +700,8 @@ export function MosaiquePhotos({
 
   return (
     <div
-      className={`mt-2.5 overflow-hidden rounded-[var(--radius-m)] ${
-        seule ? "" : "columns-2 gap-1.5"
+      className={`mt-2.5 ${
+        seule ? "flex justify-center" : "grid grid-cols-2 items-start gap-1.5"
       }`}
     >
       {visibles.map((src, i) => (
@@ -710,19 +711,19 @@ export function MosaiquePhotos({
           aria-label={
             i === 0 ? `Lire : ${alt}` : `Photo ${i + 1} sur ${images.length}`
           }
-          className={`group relative block overflow-hidden bg-surface-2 ${
-            seule ? "" : "mb-1.5 break-inside-avoid last:mb-0"
-          }`}
+          className={`group relative block overflow-hidden rounded-[var(--radius-m)] ${
+            seule ? "max-w-full" : "bg-surface-2"
+          } ${visibles.length === 3 && i === 0 ? "col-span-2" : ""}`}
         >
           <PhotoNaturelle
             src={src}
             alt={i === 0 ? alt : ""}
             sizes={
-              seule
+              seule || (visibles.length === 3 && i === 0)
                 ? "(max-width: 768px) 100vw, 640px"
                 : "(max-width: 768px) 50vw, 320px"
             }
-            plafond={seule ? "max-h-[620px]" : "max-h-[420px]"}
+            plafond={seule ? "max-h-[620px]" : undefined}
             className="transition-transform duration-500 group-hover:scale-[1.03]"
           />
           {reste > 0 && i === visibles.length - 1 ? (

@@ -4,9 +4,13 @@ import Image from "next/image";
  * Une photo dans ses propres proportions.
  *
  * Un cadre fixe rogne ce qui n'a pas sa forme : une capture d'écran, une
- * affiche, un portrait y perdaient leurs bords. Ici la photo prend toute la
- * largeur offerte et la hauteur qui va avec. Une photo très haute s'arrête
- * au plafond et s'y inscrit en entier, sur le fond de son cadre.
+ * affiche, un portrait y perdaient leurs bords. Ici le cadre est la photo
+ * elle-même.
+ *
+ * Deux façons de la poser. Sans plafond, elle prend toute la largeur
+ * offerte et la hauteur qui va avec — la case d'une grille. Avec un
+ * plafond, elle ne dépasse ni la largeur offerte ni cette hauteur, et se
+ * centre : une photo en hauteur reste étroite, sans bandes de chaque côté.
  *
  * La largeur et la hauteur données à `Image` ne sont qu'une réserve de
  * place avant le chargement : avec `h-auto`, ce sont les proportions réelles
@@ -17,7 +21,7 @@ export function PhotoNaturelle({
   alt,
   sizes,
   priority = false,
-  plafond = "max-h-[620px]",
+  plafond,
   className = "",
 }: {
   src: string;
@@ -36,7 +40,9 @@ export function PhotoNaturelle({
       height={1200}
       sizes={sizes}
       priority={priority}
-      className={`block h-auto w-full object-contain ${plafond} ${className}`}
+      className={`block h-auto ${
+        plafond ? `mx-auto w-auto max-w-full ${plafond}` : "w-full"
+      } ${className}`}
     />
   );
 }
