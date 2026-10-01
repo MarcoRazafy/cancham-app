@@ -17,12 +17,13 @@ import { simulateurActif } from "@/lib/vanillapay";
 export default async function PageSimulateur({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string; retour?: string }>;
+  searchParams: Promise<{ id?: string; retour?: string }>;
 }) {
   if (!simulateurActif()) notFound();
-  const { ref = "", retour = "" } = await searchParams;
+  // Comme chez le prestataire, le lien de paiement porte un `id`.
+  const { id = "", retour = "" } = await searchParams;
   const p = await prisma.paiement.findUnique({
-    where: { reference: ref },
+    where: { reference: id },
     select: {
       reference: true,
       montant: true,

@@ -35,15 +35,21 @@ export async function simulerIssue(formData: FormData) {
 
   const p = await prisma.paiement.findUnique({
     where: { reference },
-    select: { montant: true },
+    select: { montant: true, invoice: { select: { numero: true } } },
   });
   if (!p) notFound();
 
+  // Les champs de leur notification, tels qu'ils les envoient.
   const corps = JSON.stringify({
+    reference_VPI: `SIM-${Date.now().toString(36).toUpperCase()}`,
+    panier: p.invoice?.numero ?? reference,
     reference,
-    status: reussi ? "success" : "failed",
+    remarque: "Simulation",
+    etat: reussi ? "SUCCESS" : "FAILED",
+    // En Ariary, et dit comme tel : le montant se vérifie alors à
+    // l'arrivée. Le vrai prestataire, lui, annonce des euros.
     montant: p.montant,
-    transaction_id: `SIM-${Date.now().toString(36).toUpperCase()}`,
+    devise: "MGA",
   });
   const signature = signerCorps(corps);
   if (!signature) notFound();

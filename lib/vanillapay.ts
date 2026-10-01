@@ -3,22 +3,32 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { estPortefeuille, type ModeReglement } from "@/lib/modes-reglement";
 
 /**
- * Vanilla Pay International — l'encaissement en ligne des cotisations.
+ * Vanilla Pay International — l'encaissement en ligne.
  *
- * Le membre ne saisit jamais sa carte chez nous : on ouvre un paiement chez
- * eux, on l'envoie sur leur page, et ils nous rappellent. C'est leur
- * certification qui porte les données bancaires, pas la nôtre.
+ * Le membre ne saisit jamais sa carte ni son code secret chez nous : on
+ * ouvre un paiement chez eux, on l'envoie sur leur page, et ils nous
+ * rappellent. C'est leur certification qui porte les données de paiement,
+ * pas la nôtre.
+ *
+ * Trois appels, ceux de leur API « webpayment » :
+ *  - `GET  /webpayment/token`        le jeton, avec `Client-Id` et
+ *                                    `Client-Secret` ;
+ *  - `POST /webpayment/initiate`     ouvre le paiement et rend son lien ;
+ *  - `GET  /webpayment/status/{id}`  l'état d'un paiement, par l'identifiant
+ *                                    que porte son lien.
+ * Leurs réponses arrivent toutes dans la même enveloppe : `CodeRetour`,
+ * `DescRetour`, `DetailRetour` et `Data`.
  *
  * Deux choses seulement font foi :
  *  - la notification signée qu'ils envoient à `notif_url`. Le retour du
  *    navigateur ne prouve rien : un membre peut fabriquer cette adresse.
  *  - à défaut, l'interrogation du statut, qu'on fait depuis le serveur.
  *
- * Sans clés (`VANILLAPAY_*`), rien n'est proposé au membre : le bouton
- * disparaît et les règlements se saisissent au back-office comme avant.
+ * Sans les quatre variables `VANILLAPAY_*`, rien n'est proposé au membre :
+ * le bouton disparaît et les règlements se constatent au back-office.
  *
- * L'Ariary uniquement : Vanilla Pay n'encaisse pas le dollar canadien. Les
- * formules canadiennes se règlent par virement, et l'équipe les enregistre.
+ * L'Ariary uniquement : les formules canadiennes se règlent par virement,
+ * et l'équipe les enregistre.
  */
 
 /** Modes d'encaissement : carte bancaire, ou portefeuille mobile malgache. */
@@ -36,10 +46,9 @@ export function estModePaiement(v: string): v is ModePaiement {
 /**
  * Notre moyen de règlement, dit dans le vocabulaire du prestataire.
  *
- * Vanilla Pay ne connaît que deux canaux : la carte et le portefeuille
- * mobile — l'opérateur se choisit sur leur page. Nous, nous gardons le
- * moyen exact que le membre a coché, pour que l'équipe sache où chercher.
- * `null` : ce moyen ne passe pas par eux.
+ * Sur leur page, le payeur choisit lui-même la carte ou son opérateur.
+ * Nous, nous gardons le moyen exact que le membre a coché, pour que
+ * l'équipe sache où chercher. `null` : ce moyen ne passe pas par eux.
  */
 export function canalVanillaPay(mode: ModeReglement): ModePaiement | null {
   if (mode === "carte") return "international";
@@ -48,23 +57,45 @@ export function canalVanillaPay(mode: ModeReglement): ModePaiement | null {
 
 interface Config {
   base: string;
-  keyID: string;
-  keySECRET: string;
+  clientId: string;
+  clientSecret: string;
+  keySecret: string;
+  version: string;
 }
 
+/** La version de leur API que nous parlons, à défaut d'une autre. */
+const VERSION = "2023-01-12";
+
 /**
- * La configuration, ou `null` si la chambre n'a pas encore ses clés.
+ * En deçà, le prestataire refuse d'ouvrir un paiement : son plancher vaut
+ * un euro, soit un peu moins de 5 000 Ar. Sous ce montant, on ne propose
+ * pas le paiement en ligne — le membre règle par les autres moyens.
+ */
+export const MONTANT_MINIMUM_EN_LIGNE = 5000;
+
+/**
+ * La configuration, ou `null` si la chambre n'a pas encore ses accès.
  *
- * L'adresse de l'API vient de l'environnement elle aussi : le bac à sable et
- * la production n'ont pas le même hôte, et rien ne doit obliger à redéployer
- * pour passer de l'un à l'autre.
+ * Ce que leur espace marchand remet : un identifiant client et son secret,
+ * qui ouvrent l'API, et une clé secrète (« KeySecret »), qui signe leurs
+ * notifications. L'adresse de l'API vient de l'environnement elle aussi :
+ * la préproduction (`https://preprod.vanilla-pay.net`) et la production
+ * (`https://api.vanilla-pay.net`) n'ont pas le même hôte, et rien ne doit
+ * obliger à redéployer pour passer de l'une à l'autre.
  */
 function config(): Config | null {
   const base = process.env.VANILLAPAY_BASE?.trim().replace(/\/+$/, "");
-  const keyID = process.env.VANILLAPAY_KEY_ID?.trim();
-  const keySECRET = process.env.VANILLAPAY_KEY_SECRET?.trim();
-  if (!base || !keyID || !keySECRET) return null;
-  return { base, keyID, keySECRET };
+  const clientId = process.env.VANILLAPAY_CLIENT_ID?.trim();
+  const clientSecret = process.env.VANILLAPAY_CLIENT_SECRET?.trim();
+  const keySecret = process.env.VANILLAPAY_KEY_SECRET?.trim();
+  if (!base || !clientId || !clientSecret || !keySecret) return null;
+  return {
+    base,
+    clientId,
+    clientSecret,
+    keySecret,
+    version: process.env.VANILLAPAY_VERSION?.trim() || VERSION,
+  };
 }
 
 export function vanillaPayActif(): boolean {
@@ -72,27 +103,85 @@ export function vanillaPayActif(): boolean {
 }
 
 /**
+ * Le compte marchand encaisse-t-il le mobile money ?
+ *
+ * Les moyens proposés sur leur page dépendent du contrat : un compte peut
+ * n'avoir que la carte bancaire. Promettre « votre téléphone va sonner » à
+ * un membre que leur page n'enverra que vers une carte serait le tromper ;
+ * « Payer maintenant » n'apparaît donc dans les tunnels MVola, Orange Money
+ * et Airtel Money que si la chambre déclare ces moyens activés
+ * (`VANILLAPAY_MOBILE_MONEY=1`). Le simulateur, lui, les joue toujours.
+ */
+export function mobileMoneyEnLigne(): boolean {
+  return (
+    vanillaPayActif() &&
+    (simulateurActif() || process.env.VANILLAPAY_MOBILE_MONEY?.trim() === "1")
+  );
+}
+
+/** L'enveloppe de toutes leurs réponses. */
+interface Reponse<T> {
+  CodeRetour?: number;
+  DescRetour?: string;
+  DetailRetour?: string;
+  Data?: T | null;
+}
+
+/** Ce qu'ils disent d'un refus, pour les journaux du serveur. */
+const motif = (d: Reponse<unknown>) =>
+  [d.CodeRetour, d.DescRetour, d.DetailRetour].filter(Boolean).join(" · ");
+
+/**
+ * Lit une réponse : son enveloppe si elle est acceptée ; sinon `null`, une
+ * ligne aux journaux, et le détail qu'ils donnent du refus. Un `CodeRetour`
+ * autre que 200 est un refus, même quand la réponse HTTP dit 200.
+ */
+async function lire<T>(
+  r: Response,
+  quoi: string,
+): Promise<{ d: Reponse<T> | null; detail: string | null }> {
+  const brut = await r.text();
+  let d: Reponse<T>;
+  try {
+    d = JSON.parse(brut) as Reponse<T>;
+  } catch {
+    console.error(
+      `[vanillapay] ${quoi} : réponse illisible (${r.status}) : ${brut.slice(0, 300)}`,
+    );
+    return { d: null, detail: null };
+  }
+  if (!r.ok || (d.CodeRetour !== undefined && d.CodeRetour !== 200)) {
+    console.error(
+      `[vanillapay] ${quoi} refusé (${r.status}) : ${motif(d) || brut.slice(0, 300)}`,
+    );
+    return { d: null, detail: d.DetailRetour?.trim() || null };
+  }
+  return { d, detail: null };
+}
+
+/**
  * Le jeton d'appel, valable vingt minutes.
  *
  * On en redemande un à chaque paiement plutôt que d'en garder un au chaud :
- * un jeton périmé au mauvais moment coûte plus cher que cet appel-là.
+ * un jeton périmé au mauvais moment coûte plus cher que cet appel-là. Il
+ * part ensuite tel quel dans `Authorization` ; s'il arrive sans son
+ * « Bearer », on le lui met.
  */
 async function jeton(c: Config): Promise<string | null> {
   try {
     const r = await fetch(`${c.base}/webpayment/token`, {
-      // Noms repris de leur documentation. À confirmer au premier essai dans
-      // le bac à sable : c'est le seul endroit à corriger si elle diffère.
-      headers: { keyID: c.keyID, keySECRET: c.keySECRET },
+      headers: {
+        Accept: "*/*",
+        "Client-Id": c.clientId,
+        "Client-Secret": c.clientSecret,
+        "VPI-Version": c.version,
+      },
       cache: "no-store",
     });
-    if (!r.ok) {
-      console.error(
-        `[vanillapay] jeton refusé (${r.status}) : ${await r.text()}`,
-      );
-      return null;
-    }
-    const d = (await r.json()) as { token?: string; data?: { token?: string } };
-    return d.token ?? d.data?.token ?? null;
+    const { d } = await lire<{ Token?: string }>(r, "jeton");
+    const t = d?.Data?.Token?.trim();
+    if (!t) return null;
+    return /^bearer /i.test(t) ? t : `Bearer ${t}`;
   } catch (e) {
     console.error("[vanillapay] jeton injoignable :", e);
     return null;
@@ -118,19 +207,21 @@ export interface OuvertureRefusee {
 }
 
 /**
- * Ouvre un paiement et rend l'adresse de la page où envoyer le membre.
+ * Ouvre un paiement et rend l'adresse de la page où envoyer le membre, avec
+ * l'identifiant que porte ce lien : c'est lui qu'on présentera pour demander
+ * l'état du paiement si la notification ne nous parvient pas.
  *
  * Le montant part en unités entières d'Ariary, comme il est facturé. La
  * référence est la nôtre : c'est elle qui reviendra dans la notification.
+ * Le « panier » est ce que le payeur règle — le numéro de la facture.
  */
 export async function ouvrirPaiement(v: {
   montant: number;
   reference: string;
-  libelle: string;
-  mode: ModePaiement;
+  panier: string;
   notifUrl: string;
   redirectUrl: string;
-}): Promise<{ url: string } | OuvertureRefusee> {
+}): Promise<{ url: string; id: string | null } | OuvertureRefusee> {
   const c = config();
   if (!c) return { raison: "Le paiement en ligne n’est pas configuré." };
 
@@ -138,39 +229,49 @@ export async function ouvrirPaiement(v: {
   if (!t) return { raison: "Le prestataire de paiement ne répond pas." };
 
   try {
-    const r = await fetch(`${c.base}/api/webpayment/v2/initiate`, {
+    const r = await fetch(`${c.base}/webpayment/initiate`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${t}`,
+        Accept: "*/*",
+        Authorization: t,
+        "VPI-Version": c.version,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         montant: v.montant,
+        devise: "MGA",
         reference: v.reference,
-        panier: [{ nom: v.libelle, quantite: 1, prix: v.montant }],
+        panier: v.panier,
         notif_url: v.notifUrl,
         redirect_url: v.redirectUrl,
-        devise: "MGA",
-        mode_paiement: v.mode,
+        // Les deux écritures de ces adresses circulent chez leurs
+        // intégrateurs ; on envoie les deux tant que la préproduction n'a
+        // pas dit laquelle elle lit.
+        notifUrl: v.notifUrl,
+        redirectUrl: v.redirectUrl,
       }),
       cache: "no-store",
     });
-    const brut = await r.text();
-    if (!r.ok) {
-      console.error(`[vanillapay] ouverture refusée (${r.status}) : ${brut}`);
-      return { raison: "Le paiement n’a pas pu être ouvert." };
-    }
-    const d = JSON.parse(brut) as {
-      url?: string;
-      payment_url?: string;
-      data?: { url?: string; payment_url?: string };
-    };
-    const url = d.url ?? d.payment_url ?? d.data?.url ?? d.data?.payment_url;
+    const { d, detail } = await lire<{ url?: string }>(r, "ouverture");
+    const url = d?.Data?.url;
     if (!url) {
-      console.error(`[vanillapay] réponse sans adresse de paiement : ${brut}`);
-      return { raison: "Le paiement n’a pas pu être ouvert." };
+      if (d) console.error("[vanillapay] ouverture : réponse sans lien de paiement");
+      // Un refus sur le montant est une règle du prestataire, que le membre
+      // doit connaître ; le reste ne le regarde pas.
+      return {
+        raison:
+          detail && /montant/i.test(detail)
+            ? `Le prestataire refuse ce montant : ${detail.replace(/\.$/, "")}. Choisissez un autre moyen de paiement.`
+            : "Le paiement n’a pas pu être ouvert.",
+      };
     }
-    return { url };
+    let id: string | null = null;
+    try {
+      id = new URL(url).searchParams.get("id");
+    } catch {
+      /* Un lien qu'on ne sait pas lire se suit quand même. */
+    }
+    return { url, id };
   } catch (e) {
     console.error("[vanillapay] ouverture injoignable :", e);
     return { raison: "Le prestataire de paiement ne répond pas." };
@@ -184,64 +285,96 @@ export interface EtatPaiement {
   reussi: boolean;
   /** Échec constaté : la tentative est close, le membre peut recommencer. */
   echoue: boolean;
+  /**
+   * Le montant annoncé, quand il l'est en Ariary. Le prestataire convertit
+   * en euros ce qu'il encaisse : un montant sans devise, ou dans une autre,
+   * ne se compare pas à ce que nous avons demandé — il vaut `null`.
+   */
   montant: number | null;
   transaction: string | null;
 }
 
+const REUSSI = ["success", "successful", "succes", "succès", "paid", "payee", "payé", "completed", "reussi", "réussi"];
+const ECHOUE = [
+  "failed",
+  "fail",
+  "failure",
+  "echec",
+  "échec",
+  "error",
+  "refused",
+  "refuse",
+  "refusé",
+  "rejected",
+  "canceled",
+  "cancelled",
+  "annule",
+  "annulé",
+  "expired",
+  "timeout",
+];
+
 /**
  * Lit l'état d'un paiement dans une charge utile du prestataire.
  *
- * Leurs champs varient d'un point d'entrée à l'autre ; on accepte les formes
- * connues et on refuse de conclure sur ce qu'on ne comprend pas — un
- * paiement qu'on ne sait pas lire reste en cours, jamais réussi.
+ * La notification porte `reference`, `reference_VPI`, `panier`, `remarque`
+ * et `etat` ; l'interrogation du statut rend les mêmes champs dans `Data`,
+ * avec `montant` et `montantRecu` — en euros, après conversion. Un paiement
+ * ouvert et pas encore payé est `INITIATED`.
+ *
+ * On accepte aussi les variantes connues, et on refuse de conclure sur ce
+ * qu'on ne comprend pas — un paiement qu'on ne sait pas lire reste en
+ * cours, jamais réussi.
  */
 export function lireEtat(charge: unknown): EtatPaiement | null {
   if (!charge || typeof charge !== "object") return null;
   const o = charge as Record<string, unknown>;
-  const d = (o.data ?? o) as Record<string, unknown>;
+  const d = (o.Data ?? o.data ?? o) as Record<string, unknown>;
+  if (!d || typeof d !== "object") return null;
 
   const reference = String(d.reference ?? d.ref ?? o.reference ?? "").trim();
   if (!reference) return null;
 
-  const statut = String(d.status ?? d.statut ?? d.state ?? "").toLowerCase();
-  const montant = Number(d.montant ?? d.amount);
-  const transaction = d.transaction_id ?? d.id ?? d.transaction;
+  const statut = String(d.etat ?? d.status ?? d.statut ?? d.state ?? "")
+    .trim()
+    .toLowerCase();
+  const devise = String(d.devise ?? d.currency ?? "")
+    .trim()
+    .toUpperCase();
+  const montant = devise === "MGA" ? Number(d.montant ?? d.amount) : NaN;
+  const transaction =
+    d.reference_VPI ?? d.referenceVPI ?? d.transaction_id ?? d.id ?? d.transaction;
 
   return {
     reference,
-    reussi: [
-      "success",
-      "succes",
-      "succès",
-      "paid",
-      "payee",
-      "payé",
-      "completed",
-    ].includes(statut),
-    echoue: [
-      "failed",
-      "echec",
-      "échec",
-      "refused",
-      "refuse",
-      "refusé",
-      "canceled",
-      "cancelled",
-      "annule",
-      "annulé",
-    ].includes(statut),
+    reussi: REUSSI.includes(statut),
+    echoue: ECHOUE.includes(statut),
     montant: Number.isFinite(montant) ? montant : null,
     transaction: transaction ? String(transaction) : null,
   };
 }
 
 /**
- * Vérifie la signature d'une notification.
+ * La signature d'un corps de notification, telle que le prestataire la
+ * calcule : le HMAC-SHA256 du corps brut avec la clé secrète (« KeySecret »),
+ * en hexadécimal majuscule. Sert à la vérifier — et au simulateur local à
+ * en fabriquer une. `null` sans clés.
+ */
+export function signerCorps(corps: string): string | null {
+  const c = config();
+  if (!c) return null;
+  return createHmac("sha256", c.keySecret)
+    .update(corps, "utf8")
+    .digest("hex")
+    .toUpperCase();
+}
+
+/**
+ * Vérifie la signature d'une notification (`VPI-Signature`).
  *
- * `VPI-Signature` porte le HMAC-SHA256 du corps **brut** de la requête,
- * calculé avec la clé secrète, en hexadécimal majuscule. Le corps doit être
- * lu tel qu'il est arrivé : le relire après un `JSON.parse` changerait un
- * espace ou l'ordre des clés, et la signature ne tomberait plus juste.
+ * Le corps doit être lu tel qu'il est arrivé : le relire après un
+ * `JSON.parse` changerait un espace ou l'ordre des clés, et la signature ne
+ * tomberait plus juste.
  *
  * La comparaison est à temps constant. Une comparaison ordinaire s'arrête au
  * premier caractère différent, et ce temps-là se mesure : on peut deviner une
@@ -263,31 +396,17 @@ export function signatureValide(
 }
 
 /**
- * La signature d'un corps de notification, telle que le prestataire la
- * calcule. Sert à la vérifier — et au simulateur local à en fabriquer une.
- * `null` sans clés.
- */
-export function signerCorps(corps: string): string | null {
-  const c = config();
-  if (!c) return null;
-  return createHmac("sha256", c.keySECRET)
-    .update(corps, "utf8")
-    .digest("hex")
-    .toUpperCase();
-}
-
-/**
  * Les identifiants qu'un appelant présente sont-ils les nôtres ? Pour le
  * simulateur local, qui joue le prestataire et vérifie ce qu'on lui envoie.
  */
 export function identifiantsValides(
-  keyID: string | null,
-  keySECRET: string | null,
+  clientId: string | null,
+  clientSecret: string | null,
 ): boolean {
   const c = config();
-  if (!c || !keyID || !keySECRET) return false;
-  const a = Buffer.from(`${keyID}\n${keySECRET}`, "utf8");
-  const b = Buffer.from(`${c.keyID}\n${c.keySECRET}`, "utf8");
+  if (!c || !clientId || !clientSecret) return false;
+  const a = Buffer.from(`${clientId}\n${clientSecret}`, "utf8");
+  const b = Buffer.from(`${c.clientId}\n${c.clientSecret}`, "utf8");
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
@@ -305,10 +424,12 @@ export function simulateurActif(): boolean {
   );
 }
 
-/** Interroge le prestataire quand sa notification ne nous est pas parvenue. */
+/**
+ * Interroge le prestataire quand sa notification ne nous est pas parvenue.
+ * `id` est l'identifiant que portait le lien de paiement.
+ */
 export async function interrogerStatut(
-  transactionOuReference: string,
-  mode: ModePaiement,
+  id: string,
 ): Promise<EtatPaiement | null> {
   const c = config();
   if (!c) return null;
@@ -317,11 +438,14 @@ export async function interrogerStatut(
 
   try {
     const r = await fetch(
-      `${c.base}/api/webpayment/v2/status/${encodeURIComponent(transactionOuReference)}?mode_paiement=${mode}`,
-      { headers: { Authorization: `Bearer ${t}` }, cache: "no-store" },
+      `${c.base}/webpayment/status/${encodeURIComponent(id)}`,
+      {
+        headers: { Accept: "*/*", Authorization: t, "VPI-Version": c.version },
+        cache: "no-store",
+      },
     );
-    if (!r.ok) return null;
-    return lireEtat(await r.json());
+    const { d } = await lire<Record<string, unknown>>(r, "statut");
+    return d ? lireEtat(d) : null;
   } catch (e) {
     console.error("[vanillapay] statut injoignable :", e);
     return null;
