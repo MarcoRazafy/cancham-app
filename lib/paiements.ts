@@ -160,14 +160,39 @@ export async function conclurePaiement(
 }
 
 /** L'inscription publique qu'un règlement sans facture vient payer. */
-function inscriptionPublique(
+export function inscriptionPublique(
   detail: unknown,
 ): { eventId: string; code: string } | null {
-  if (!detail || typeof detail !== "object" || Array.isArray(detail)) return null;
+  if (!detail || typeof detail !== "object" || Array.isArray(detail))
+    return null;
   const d = detail as Record<string, unknown>;
   return typeof d.inscription === "string" && typeof d.eventId === "string"
     ? { eventId: d.eventId, code: d.inscription }
     : null;
+}
+
+/**
+ * Le règlement en cours d'une inscription publique : le moyen que le
+ * visiteur a choisi, et la référence à rappeler. `null` tant qu'il n'a rien
+ * choisi — ou quand l'équipe a écarté ce qu'il avait annoncé.
+ */
+export async function reglementPublicOuvert(code: string) {
+  return prisma.paiement.findFirst({
+    where: {
+      invoiceId: null,
+      statut: { in: ["en_cours", "annonce"] },
+      detail: { path: ["inscription"], equals: code },
+    },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      id: true,
+      mode: true,
+      reference: true,
+      statut: true,
+      montant: true,
+      devise: true,
+    },
+  });
 }
 
 /**
@@ -205,4 +230,8 @@ export async function suivrePaiementPublic(
 }
 
 const etatSimple = (statut: string): "reussie" | "echouee" | "en_cours" =>
-  statut === "reussie" ? "reussie" : statut === "echouee" ? "echouee" : "en_cours";
+  statut === "reussie"
+    ? "reussie"
+    : statut === "echouee"
+      ? "echouee"
+      : "en_cours";

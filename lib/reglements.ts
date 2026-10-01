@@ -1,10 +1,12 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
-import { vanillaPayActif } from "@/lib/vanillapay";
+import { MONTANT_MINIMUM_EN_LIGNE, vanillaPayActif } from "@/lib/vanillapay";
 import {
   COORDONNEES_VIDES,
+  estPortefeuille,
   modeDisponible,
+  numeroPortefeuille,
   ORDRE_MODES,
   type Coordonnees,
   type ModeReglement,
@@ -58,6 +60,25 @@ export async function modesProposes(): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
   const enLigne = vanillaPayActif();
   return ORDRE_MODES.filter((m) => modeDisponible(m, c, enLigne));
+}
+
+/**
+ * Les moyens offerts à un visiteur qui règle une inscription publique.
+ *
+ * La même liste que celle des membres, à deux nuances près. La carte ne
+ * s'offre qu'au-dessus du plancher du prestataire. Et un portefeuille mobile
+ * ne s'offre que si la chambre en a publié le numéro : le visiteur fait
+ * l'envoi lui-même, et n'a pas d'espace où revenir lire une explication.
+ */
+export async function modesPublics(montant: number): Promise<ModeReglement[]> {
+  const c = await getCoordonneesPaiement();
+  return ORDRE_MODES.filter((m) =>
+    m === "carte"
+      ? vanillaPayActif() && montant >= MONTANT_MINIMUM_EN_LIGNE
+      : estPortefeuille(m)
+        ? Boolean(numeroPortefeuille(m, c))
+        : modeDisponible(m, c, false),
+  );
 }
 
 /**

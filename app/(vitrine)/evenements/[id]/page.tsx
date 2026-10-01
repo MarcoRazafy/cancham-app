@@ -26,7 +26,7 @@ import { plageHoraire } from "@/lib/agenda";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { estTermine } from "@/lib/presences";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
-import { MONTANT_MINIMUM_EN_LIGNE, vanillaPayActif } from "@/lib/vanillapay";
+import { modesPublics } from "@/lib/reglements";
 
 /**
  * Ce qu'un partage affiche : le titre de l'événement, sa date et son lieu,
@@ -94,6 +94,11 @@ export default async function EvenementPublic({
   const restantes = Math.max(0, e.cap - e.inscrits);
   const termine = estTermine({ date: e.date, fin: e.fin ?? null });
   const horaire = plageHoraire(e.debut, e.fin);
+
+  // Payant, avec au moins un moyen de paiement à offrir : l'inscription mène
+  // au choix du moyen, sur la page des billets.
+  const choixDuMoyen =
+    e.prixPublic > 0 && (await modesPublics(e.prixPublic)).length > 0;
 
   return (
     <>
@@ -187,9 +192,7 @@ export default async function EvenementPublic({
                     payant: e.prixPublic > 0,
                     prix: e.prixPublic,
                     restantes,
-                    enLigne:
-                      vanillaPayActif() &&
-                      e.prixPublic >= MONTANT_MINIMUM_EN_LIGNE,
+                    enLigne: choixDuMoyen,
                   }}
                 />
               ) : (
