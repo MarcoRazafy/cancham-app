@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { referenceReglement } from "@/lib/reglements";
+import { versRelais } from "@/lib/retour-paiement";
 import { baseSite } from "@/lib/site";
 import { ouvrirPaiement, type ModePaiement } from "@/lib/vanillapay";
 
@@ -17,6 +18,21 @@ import { ouvrirPaiement, type ModePaiement } from "@/lib/vanillapay";
  */
 
 /**
+ * L'adresse de la plateforme telle que le prestataire la connaît.
+ *
+ * Il n'accepte de notifier et de ramener le payeur qu'à des adresses qui
+ * commencent par l'« URL de base » déclarée dans son espace marchand. C'est
+ * donc l'adresse unique du site qu'il faut lui donner : le domaine principal
+ * quand il est posé (`DOMAINE_PRINCIPAL`), sinon `APP_URL`. Lui donner
+ * `app.cancham.mg` quand le site vit sur `cancham.mg`, et le retour ne se
+ * fait pas.
+ */
+function basePrestataire(): string {
+  const domaine = process.env.DOMAINE_PRINCIPAL?.trim().toLowerCase();
+  return domaine ? `https://${domaine}` : baseSite();
+}
+
+/**
  * Où ramener le membre après le paiement.
  *
  * En production, l'adresse publique de la plateforme. En développement,
@@ -27,10 +43,10 @@ import { ouvrirPaiement, type ModePaiement } from "@/lib/vanillapay";
  * qui demande l'état du paiement.
  */
 async function baseRetour(): Promise<string> {
-  if (process.env.NODE_ENV === "production") return baseSite();
+  if (process.env.NODE_ENV === "production") return basePrestataire();
   const h = await headers();
   const hote = h.get("x-forwarded-host") ?? h.get("host");
-  if (!hote) return baseSite();
+  if (!hote) return basePrestataire();
   const protocole =
     h.get("x-forwarded-proto") ??
     (/^(localhost|127\.0\.0\.1)(:|$)/.test(hote) ? "http" : "https");
@@ -73,8 +89,10 @@ export async function ouvrirChezLePrestataire(
     reference,
     panier: p.numeroFacture ?? reference,
     mode,
-    notifUrl: `${baseSite()}/api/paiements/vanillapay`,
-    redirectUrl: `${await baseRetour()}${cheminRetour(reference)}`,
+    notifUrl: `${basePrestataire()}/api/paiements/vanillapay`,
+    // Par le relais : une seule adresse de retour, qui ramène toujours sur
+    // la plateforme, puis à la page voulue.
+    redirectUrl: `${await baseRetour()}${versRelais(cheminRetour(reference))}`,
   });
   if ("raison" in ouverture) return ouverture;
 

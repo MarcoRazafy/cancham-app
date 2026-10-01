@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { destinationDuRetour, RELAIS_RETOUR } from "@/lib/retour-paiement";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { signerCorps, simulateurActif } from "@/lib/vanillapay";
@@ -21,7 +22,9 @@ const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 async function origineLocale(): Promise<string> {
   const h = await headers();
   const hote = h.get("host") ?? "localhost:3000";
-  const protocole = /^(localhost|127\.0\.0\.1)(:|$)/.test(hote) ? "http" : "https";
+  const protocole = /^(localhost|127\.0\.0\.1)(:|$)/.test(hote)
+    ? "http"
+    : "https";
   return `${protocole}://${hote}`;
 }
 export async function simulerIssue(formData: FormData) {
@@ -32,6 +35,7 @@ export async function simulerIssue(formData: FormData) {
   const reussi = texte(formData, "issue") === "reussi";
   const retour = texte(formData, "retour");
   if (
+    !retour.startsWith(`${origine}${RELAIS_RETOUR}?`) &&
     !retour.startsWith(`${origine}/membre/`) &&
     !retour.startsWith(`${origine}/evenements/`)
   ) {
@@ -90,5 +94,13 @@ export async function simulerIssue(formData: FormData) {
     cache: "no-store",
   });
 
-  redirect(retour);
+  // Le vrai prestataire renvoie le navigateur au relais, qui redirige. Ici la
+  // redirection part d'une action : on fait le pas du relais nous-mêmes — une
+  // navigation interne de Next ne suit pas la réponse d'une route d'API.
+  const url = new URL(retour);
+  redirect(
+    url.pathname === RELAIS_RETOUR
+      ? destinationDuRetour(url.searchParams.get("vers"))
+      : retour,
+  );
 }

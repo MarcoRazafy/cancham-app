@@ -43,7 +43,7 @@ Sur le service de l'application, onglet **Variables** :
 | `COURRIEL_EQUIPE` | L'adresse qui reçoit les alertes d'inscription et les réponses aux e-mails |
 | `WEB_PUSH_CLE_PUBLIQUE` | Clé VAPID publique des notifications sur l'appareil, générée avec `npx web-push generate-vapid-keys` |
 | `WEB_PUSH_CLE_PRIVEE` | Sa clé privée, générée en même temps. Sans les deux, la cloche ne propose pas d'activer les notifications. |
-| `VANILLAPAY_BASE` | L'API de Vanilla Pay : `https://bo.vanilla-pay.net` en production (`https://preprod.vanilla-pay.net` pour un compte de préproduction). Dans leur espace marchand, page « Site web », déclarer l'adresse de la plateforme, celle des notifications (`…/api/paiements/vanillapay`) et celle du retour (`…/membre/cotisations/retour`). |
+| `VANILLAPAY_BASE` | L'API de Vanilla Pay : `https://bo.vanilla-pay.net` en production (`https://preprod.vanilla-pay.net` pour un compte de préproduction). Dans leur espace marchand, page « Site web », déclarer l'« URL de base » — l'adresse exacte du site, celle de `DOMAINE_PRINCIPAL` (`https://cancham.mg`) ou à défaut d'`APP_URL` —, celle des notifications (`…/api/paiements/vanillapay`) et celle de la redirection (`…/api/paiements/retour`). Vanilla Pay ne ramène le payeur qu'à une adresse qui commence par cette URL de base : si elle diffère, le paiement aboutit mais le payeur reste sur leur page. |
 | `VANILLAPAY_CLIENT_ID` | « Client ID » de l'espace marchand Vanilla Pay |
 | `VANILLAPAY_CLIENT_SECRET` | « Client Secret » de l'espace marchand |
 | `VANILLAPAY_KEY_SECRET` | « Key Secret » de l'espace marchand : elle signe leurs confirmations de paiement. Sans ces quatre variables, le paiement en ligne n'est pas proposé. |
