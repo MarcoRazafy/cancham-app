@@ -186,6 +186,9 @@ export const metadata: Metadata = {
  * Tous les chiffres et les événements viennent de la base : la vitrine dit ce
  * que l'annuaire contient réellement et se met à jour d'elle-même.
  */
+/** Une section à la hauteur de l'écran, son contenu centré. */
+const PLEIN_ECRAN = "min-h-screen flex flex-col justify-center";
+
 export default async function PublicHome() {
   // Lue à chaque visite : sans cela, Next la calculerait une fois pour
   // toutes à la compilation, et les chiffres comme les prochains événements
@@ -215,8 +218,16 @@ export default async function PublicHome() {
 
   return (
     <>
+      {/*
+        Chaque section occupe au moins la hauteur de l'écran, sur toute
+        machine, son contenu centré : on en lit une à la fois. Le conseil et
+        l'infolettre gardent leur hauteur propre. Un contenu plus haut que
+        l'écran — sur téléphone — pousse simplement la section.
+      */}
       {/* ==================== Bannière ==================== */}
-      <section className="sur-sombre relative overflow-hidden bg-[var(--marque-nuit)]">
+      <section
+        className={`sur-sombre relative overflow-hidden bg-[var(--marque-nuit)] ${PLEIN_ECRAN}`}
+      >
         {/* Toronto à gauche, les baobabs à droite : les deux pays encadrent la
             bannière. Entre eux, le dégradé linéaire 90° de la charte, posé
             franchement — le rouge et le vert doivent se lire, pas se deviner. */}
@@ -270,7 +281,7 @@ export default async function PublicHome() {
           <div className="absolute inset-0 bg-[var(--marque-nuit)]/22" />
         </div>
 
-        <div className={`relative ${CONTENEUR} pt-10 md:pt-14 pb-0`}>
+        <div className={`relative w-full ${CONTENEUR} pt-10 md:pt-14 pb-0`}>
           <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center">
             <div>
               <span
@@ -412,7 +423,7 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== À qui nous parlons ==================== */}
-      <section className={`${CONTENEUR} pt-10 pb-14`}>
+      <section className={`${CONTENEUR} w-full pt-10 pb-14 ${PLEIN_ECRAN}`}>
         <div>
           <div className="scene grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end">
             <h2 className={`${TITRE_SECTION} reveler`}>
@@ -480,8 +491,8 @@ export default async function PublicHome() {
         reste. Les couleurs y sont écrites en clair — les jetons de la vitrine
         sont taillés pour le bleu nuit.
       */}
-      <section className="vitrine-claire overflow-x-clip">
-        <div className={`${CONTENEUR} py-16`}>
+      <section className={`vitrine-claire overflow-x-clip ${PLEIN_ECRAN}`}>
+        <div className={`${CONTENEUR} w-full py-16`}>
           {/* Le texte monte, les avantages arrivent ligne à ligne par la
               gauche, et l'encadré des formules vient de la droite. */}
           <div className="scene grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
@@ -584,8 +595,8 @@ export default async function PublicHome() {
       </section>
 
       {/* ==================== Événements ==================== */}
-      <section id="evenements" className="scroll-mt-[124px]">
-        <div className={`${CONTENEUR} pt-10 pb-8`}>
+      <section id="evenements" className={`scroll-mt-[124px] ${PLEIN_ECRAN}`}>
+        <div className={`${CONTENEUR} w-full pt-10 pb-8`}>
           <div>
             <div className="scene reveler flex items-end justify-between gap-6 flex-wrap">
               <div>
@@ -641,12 +652,12 @@ export default async function PublicHome() {
         */
         <section
           id="actualites"
-          className="vitrine-claire scroll-mt-[124px] bg-[#fafafa]!"
+          className={`vitrine-claire scroll-mt-[124px] bg-[#fafafa]! ${PLEIN_ECRAN}`}
         >
-          <div className={`${CONTENEUR} py-16`}>
+          <div className={`${CONTENEUR} w-full py-16`}>
             {/* Le trait du surtitre se déroule, le titre monte, puis les
                 cartes grandissent l'une après l'autre. */}
-            <div className="scene">              
+            <div className="scene">
               <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
                 <h2 style={retard(80)} className={`${TITRE_SECTION} reveler`}>
                   Ce qui se passe <Saillant>chez nous.</Saillant>
@@ -727,7 +738,9 @@ export default async function PublicHome() {
           {/* Le portrait grandit sur place, la citation vient de la droite et
               son guillemet surgit en dernier. */}
           <div className="scene mt-14 grid gap-9 lg:grid-cols-3 lg:items-center overflow-x-clip">
-            <div className={`reveler reveler-zoom rounded-[22px] p-1.5 ${FILET}`}>
+            <div
+              className={`reveler reveler-zoom rounded-[22px] p-1.5 ${FILET}`}
+            >
               <Image
                 src={PRESIDENTE.photo}
                 alt={`Portrait d’${PRESIDENTE.nom}`}
