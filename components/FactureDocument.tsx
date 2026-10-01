@@ -58,6 +58,14 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
               {COORDONNEES.email} · {COORDONNEES.telephone}
               <br />
               {COORDONNEES.site}
+              <br />
+              <span className="whitespace-nowrap">
+                NIF : {COORDONNEES.nif}
+              </span>{" "}
+              ·{" "}
+              <span className="whitespace-nowrap">
+                STAT : {COORDONNEES.stat}
+              </span>
             </div>
           </div>
           <div>
@@ -137,6 +145,8 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
         <footer className="mt-12 print:mt-auto pt-5 border-t border-[#dfe5ec] text-[11px] text-[#8797a6] leading-relaxed flex justify-between items-end gap-4 flex-wrap">
           <span>
             CanCham Madagascar · {COORDONNEES.email} · {COORDONNEES.telephone}
+            <br />
+            NIF : {COORDONNEES.nif} · STAT : {COORDONNEES.stat}
             <br />
             Document émis par la plateforme CanCham Connect.
           </span>
