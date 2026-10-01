@@ -454,17 +454,21 @@ export default async function PublicHome() {
                   vingtième. Rien ne saute — et rien ne bouge non plus si le
                   système demande moins d'animations (`motion-reduce`).
                 */}
-                <span
-                  style={retard(220 + i * 70)}
-                  className={`reveler reveler-pop w-15 h-15 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform,rotate,scale] duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-hover:-rotate-6 group-hover:scale-[1.06] ${p.tuile}`}
-                >
-                  <p.icone size={28} strokeWidth={1.5} />
-                </span>
-                <h3
-                  className={`${TITRE_BLOC} text-[var(--marque-nuit)] mt-6 mb-3.5`}
-                >
-                  {p.titre}
-                </h3>
+                {/* L'icône et le titre sur une même ligne : on lit d'un coup
+                    d'œil à qui la carte s'adresse. */}
+                <div className="flex items-center gap-4 mb-3.5">
+                  <span
+                    style={retard(220 + i * 70)}
+                    className={`reveler reveler-pop w-15 h-15 shrink-0 rounded-[10px] bg-[var(--marque-nuit)] text-white flex items-center justify-center transition-[background,transform,rotate,scale] duration-400 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none group-hover:-rotate-6 group-hover:scale-[1.06] ${p.tuile}`}
+                  >
+                    <p.icone size={28} strokeWidth={1.5} />
+                  </span>
+                  <h3
+                    className={`${TITRE_BLOC} text-[var(--marque-nuit)] m-0 min-w-0`}
+                  >
+                    {p.titre}
+                  </h3>
+                </div>
                 <p className="m-0 text-[15px] leading-[1.6] text-[#6b6b6b]">
                   {p.texte}
                 </p>
