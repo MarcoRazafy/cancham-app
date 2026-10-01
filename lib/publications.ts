@@ -38,16 +38,29 @@ export const PUBLICATION_VIERGE: EtatPublication = { etape: "saisie" };
  * Le texte tel qu'on l'enregistre : fins de ligne unifiées, pas de lignes
  * vides en tête ni en queue, jamais plus de deux retours de suite, et la
  * longueur bornée.
+ *
+ * `max` ne sert qu'à la modification : un texte déjà enregistré plus long
+ * que la limite — écrit avant elle, ou allongé par l'équipe — n'est pas
+ * raccourci parce qu'on en change la diffusion.
  */
-export function textePublication(saisie: unknown): string {
+export function textePublication(
+  saisie: unknown,
+  max = LONGUEUR_PUBLICATION,
+): string {
   const propre = String(saisie ?? "")
+    // Bornée avant tout traitement : ce que le navigateur envoie n'a pas de
+    // limite, et un texte géant ne doit pas occuper le serveur.
+    .slice(0, 4 * max)
     .replace(/\r\n?/g, "\n")
-    .replace(/[ \t]+$/gm, "")
+    // Le regard en arrière ne laisse qu'une tentative par suite d'espaces :
+    // sans lui, la recherche repartait de chaque espace, et quelques
+    // dizaines de milliers d'espaces figeaient le serveur.
+    .replace(/(?<![ \t])[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  if (propre.length <= LONGUEUR_PUBLICATION) return propre;
+  if (propre.length <= max) return propre;
   // Par caractères : la borne ne tranche pas un émoji en deux.
-  return Array.from(propre).slice(0, LONGUEUR_PUBLICATION).join("").trim();
+  return Array.from(propre).slice(0, max).join("").trim();
 }
 
 /**
