@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useRef,
   useState,
   useTransition,
@@ -60,6 +61,22 @@ export function CouvertureReglable({
 
   const cadre = useRef<HTMLDivElement>(null);
   const photo = useRef<HTMLImageElement>(null);
+  const zone = useRef<HTMLDivElement>(null);
+  const bouton = useRef<HTMLButtonElement>(null);
+  /** Le réglage a déjà été ouvert : à sa fermeture, le focus revient au bouton. */
+  const aRegle = useRef(false);
+
+  // Ouvrir le réglage démonte le bouton qui portait le focus, et le refermer
+  // démonte la zone : sans cela, le clavier retombait sur la page, et les
+  // flèches la faisaient défiler au lieu de déplacer la photo.
+  useEffect(() => {
+    if (reglage) {
+      aRegle.current = true;
+      zone.current?.focus();
+    } else if (aRegle.current) {
+      bouton.current?.focus();
+    }
+  }, [reglage]);
   /** Le geste en cours : d'où il part, et quel doigt le mène. */
   const geste = useRef<{
     id: number;
@@ -176,6 +193,7 @@ export function CouvertureReglable({
       <div className="relative">
         {children}
         <button
+          ref={bouton}
           type="button"
           onClick={ouvrir}
           className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full border-0 bg-[#0f1d2c]/70 px-3 py-1.5 text-[12.5px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-[#0f1d2c]/90 print:hidden"
@@ -201,6 +219,7 @@ export function CouvertureReglable({
           style={{ objectPosition: positionObjet(c) }}
         />
         <div
+          ref={zone}
           role="group"
           tabIndex={0}
           aria-label="Photo de couverture : faites-la glisser, ou utilisez les flèches du clavier, pour choisir la partie visible"

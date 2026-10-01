@@ -575,9 +575,11 @@ export function SupprimerMaPublication({
           <ModalBody>
             <p className="m-0 text-[13.6px] text-muted">
               Votre publication disparaîtra du fil
-              {commentaires
-                ? `, avec ses ${commentaires} commentaire${commentaires > 1 ? "s" : ""}`
-                : ""}
+              {commentaires === 1
+                ? ", avec son commentaire"
+                : commentaires
+                  ? `, avec ses ${commentaires} commentaires`
+                  : ""}
               . Cette suppression est définitive.
             </p>
           </ModalBody>
@@ -596,8 +598,16 @@ export function SupprimerMaPublication({
 /** La zone de texte grandit avec ce qu'on y écrit. */
 function ajuster(el: HTMLTextAreaElement | null) {
   if (!el) return;
+  // Repasser par `auto` raccourcit un instant la zone : dans une fenêtre qui
+  // défile, la position sautait à chaque frappe sur un long texte. On la
+  // relève avant, on la remet après.
+  const defilements: [HTMLElement, number][] = [];
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    if (p.scrollTop) defilements.push([p, p.scrollTop]);
+  }
   el.style.height = "auto";
   el.style.height = `${el.scrollHeight}px`;
+  for (const [p, haut] of defilements) p.scrollTop = haut;
 }
 
 /**
