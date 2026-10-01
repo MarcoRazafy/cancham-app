@@ -11,7 +11,11 @@ import {
 } from "lucide-react";
 import { CodeAccueil } from "@/components/CodeAccueil";
 import { PaiementPublic } from "@/components/public/PaiementPublic";
-import { reglementPublicOuvert, suivrePaiementPublic } from "@/lib/paiements";
+import {
+  reglementPublicEcarte,
+  reglementPublicOuvert,
+  suivrePaiementPublic,
+} from "@/lib/paiements";
 import {
   COORDONNEES_VIDES,
   getCoordonneesPaiement,
@@ -51,9 +55,10 @@ export default async function BilletsPublics({
     searchParams,
   ]);
   // Avant de lire les billets : un paiement confirmé à l'instant les change.
-  const paiement = ref
-    ? await suivrePaiementPublic(ref, codeInscription(extraireCode(code)))
-    : null;
+  // Le code de l'inscription, et non celui d'un de ses billets : c'est lui
+  // que portent les règlements, quel que soit le premier billet affiché.
+  const base = codeInscription(extraireCode(code));
+  const paiement = ref ? await suivrePaiementPublic(ref, base) : null;
   const [e, billets] = await Promise.all([
     getEvent(id),
     getBilletsPublics(id, code),
@@ -71,14 +76,15 @@ export default async function BilletsPublics({
     e.prixPublic * billets.filter((b) => b.statut === "a_valider").length;
   // Les moyens offerts — les mêmes que dans l'espace membre —, le règlement
   // déjà ouvert pour cette inscription, et les coordonnées de la chambre.
-  const [modes, reglement, coordonnees] =
+  const [modes, reglement, ecarte, coordonnees] =
     enAttente && e.prixPublic > 0
       ? await Promise.all([
           modesPublics(aRegler),
-          reglementPublicOuvert(billets[0].code),
+          reglementPublicOuvert(e.id, base),
+          reglementPublicEcarte(e.id, base),
           getCoordonneesPaiement(),
         ])
-      : [[], null, COORDONNEES_VIDES];
+      : [[], null, null, COORDONNEES_VIDES];
 
   return (
     <main className="max-w-[760px] mx-auto px-5 py-10 w-full">
@@ -137,19 +143,23 @@ export default async function BilletsPublics({
         {e.prixPublic > 0 && enAttente ? (
           <PaiementPublic
             eventId={e.id}
-            code={billets[0].code}
+            code={base}
             montant={aRegler}
             modes={modes}
             // « Changer de moyen » rouvre le choix sans rien effacer : le
-            // règlement ne change que si une autre tuile est choisie.
+            // règlement ne change que si une autre tuile est choisie. Un
+            // paiement annoncé, lui, reste affiché : l'équipe le traite.
             reglement={
-              reglement && reglement.mode !== "carte" && moyen !== "choix"
+              reglement &&
+              reglement.mode !== "carte" &&
+              (moyen !== "choix" || reglement.statut === "annonce")
                 ? reglement
                 : null
             }
+            ecarte={reglement ? null : (ecarte?.reference ?? null)}
             coordonnees={coordonnees}
             marchand={marchandAffiche()}
-            page={`/evenements/${e.id}/billet?${new URLSearchParams({ code: billets[0].code })}`}
+            page={`/evenements/${e.id}/billet?${new URLSearchParams({ code: base })}`}
           />
         ) : null}
 

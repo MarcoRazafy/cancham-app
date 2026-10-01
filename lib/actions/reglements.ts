@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { delivrerBillets, delivrerBilletsPublics } from "@/lib/billets";
 import { inscriptionPublique } from "@/lib/paiements";
+import { envoyerCourriel, urlPublique } from "@/lib/courriel";
+import { courrielReglementEcarte } from "@/lib/modeles-courriels";
 import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
 import { vanillaPayActif } from "@/lib/vanillapay";
 import { prisma } from "@/lib/db";
@@ -433,7 +435,12 @@ export async function confirmerReglement(formData: FormData) {
   // inscription, gardé avec le règlement, qui désigne ses billets.
   const publique = p.invoice ? null : inscriptionPublique(p.detail);
   if (publique) {
-    await delivrerBilletsPublics(publique.eventId, publique.code, user.nom);
+    await delivrerBilletsPublics(
+      publique.eventId,
+      publique.code,
+      user.nom,
+      `par ${moyen.toLowerCase()}, constaté par l’équipe`,
+    );
   }
   if (p.member) {
     const memberId = p.member.id;
@@ -459,7 +466,14 @@ export async function refuserReglement(formData: FormData) {
 
   const p = await prisma.paiement.findUnique({
     where: { id },
-    select: { id: true, reference: true, statut: true, memberId: true },
+    select: {
+      id: true,
+      reference: true,
+      statut: true,
+      memberId: true,
+      invoiceId: true,
+      detail: true,
+    },
   });
   if (!p) redirectWithErreur(retour, "Règlement introuvable.");
   if (p.statut === "reussie") {
@@ -478,6 +492,31 @@ export async function refuserReglement(formData: FormData) {
         corps: `Réf. ${p.reference} · l’équipe n’a pas retrouvé votre paiement. Reprenez depuis vos cotisations.`,
         url: "/membre/cotisations",
       }),
+    );
+  }
+  // Un visiteur n'a ni compte ni cloche : c'est un e-mail qui le prévient,
+  // avec le lien de son inscription, où il peut choisir à nouveau.
+  const publique = p.invoiceId ? null : inscriptionPublique(p.detail);
+  const email = (p.detail as { email?: unknown } | null)?.email;
+  if (publique && typeof email === "string" && email.includes("@")) {
+    const [event, lien] = await Promise.all([
+      prisma.event.findUnique({
+        where: { id: publique.eventId },
+        select: { titre: true },
+      }),
+      urlPublique(
+        `/evenements/${publique.eventId}/billet?${new URLSearchParams({ code: publique.code })}`,
+      ),
+    ]);
+    const reference = p.reference;
+    after(() =>
+      envoyerCourriel(
+        courrielReglementEcarte(email, {
+          evenement: event?.titre ?? "votre événement",
+          reference,
+          lien,
+        }),
+      ),
     );
   }
   await journal(

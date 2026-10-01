@@ -292,12 +292,39 @@ export function courrielInscriptionEnAttente(
         plusieurs
           ? `Inscrits : ${d.participants.map((p) => p.nom).join(", ")}`
           : `Inscrit : ${d.participants[0]?.nom ?? ""}`,
-        `À régler : ${d.aRegler}, auprès de l’équipe CanCham — en espèces, par virement bancaire ou par chèque.`,
+        `À régler : ${d.aRegler}. Choisissez votre moyen de paiement depuis la page de votre inscription (bouton ci-dessous) — ou réglez auprès de l’équipe CanCham.`,
         `Dès que le règlement est constaté, vous recevez un second e-mail avec ${plusieurs ? "les QR codes d’entrée" : "votre QR code d’entrée"}. C’est lui qui vous ouvre l’accueil : sans lui, l’entrée n’est pas assurée.`,
       ],
       bouton: { libelle: "Voir mon inscription", url: d.lien },
       apres: [
         "Si vous avez déjà réglé, ne tenez pas compte de ce rappel : l’enregistrement peut prendre quelques heures. Pour toute question, répondez simplement à ce message.",
+      ],
+    }),
+  };
+}
+
+/**
+ * L'équipe n'a pas retrouvé le paiement qu'un visiteur avait annoncé pour
+ * son inscription. Il n'a pas de compte : c'est cet e-mail qui le lui dit,
+ * avec le lien où choisir à nouveau.
+ */
+export function courrielReglementEcarte(
+  a: string,
+  d: { evenement: string; reference: string; lien: string },
+): Courriel {
+  return {
+    a,
+    sujet: `Paiement non retrouvé — ${d.evenement}`,
+    ...gabarit({
+      titre: "Nous n’avons pas retrouvé votre paiement",
+      paragraphes: [
+        "Bonjour,",
+        `Vous avez annoncé un paiement pour votre inscription à « ${d.evenement} » (référence ${d.reference}). L’équipe CanCham ne l’a pas retrouvé : votre inscription attend toujours son règlement.`,
+        "Depuis la page de votre inscription, vous pouvez choisir à nouveau un moyen de paiement.",
+      ],
+      bouton: { libelle: "Voir mon inscription", url: d.lien },
+      apres: [
+        "Si vous avez bien payé, répondez simplement à ce message avec la preuve du paiement : l’équipe le vérifiera.",
       ],
     }),
   };
