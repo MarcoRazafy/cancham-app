@@ -334,7 +334,10 @@ async function notificationsMembre(
       },
     }),
     prisma.news.findFirst({
-      orderBy: { date: "desc" },
+      // La dernière publication des autres : on n'est pas prévenu de la
+      // sienne.
+      where: { OR: [{ memberId: null }, { memberId: { not: memberId } }] },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       select: { id: true, titre: true, date: true },
     }),
     rappelsProches(userId, "membre"),

@@ -74,9 +74,18 @@ export async function enregistrerImage(
     .rotate()
     .resize(options.largeur, null, { withoutEnlargement: true });
 
-  const sortie = options.transparence
-    ? await traitee.png({ compressionLevel: 9, palette: true }).toBuffer()
-    : await traitee.jpeg({ quality: 80, mozjpeg: true }).toBuffer();
+  // Un fichier abîmé, ou d'un format que l'on ne sait pas lire, se présente
+  // comme une image jusqu'ici : c'est un refus à dire, pas une panne.
+  let sortie: Buffer;
+  try {
+    sortie = options.transparence
+      ? await traitee.png({ compressionLevel: 9, palette: true }).toBuffer()
+      : await traitee.jpeg({ quality: 80, mozjpeg: true }).toBuffer();
+  } catch {
+    throw new ImageRefusee(
+      "Cette image est illisible, ou d’un format non pris en charge. Essayez en JPEG ou en PNG.",
+    );
+  }
 
   await mkdir(DOSSIER, { recursive: true });
   await writeFile(path.join(DOSSIER, nom), sortie);

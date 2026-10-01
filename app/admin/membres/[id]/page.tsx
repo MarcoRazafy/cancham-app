@@ -14,6 +14,7 @@ import { EtatAcces } from "@/components/admin/EtatAcces";
 import { Jauge, LienFleche, Panneau, Vide } from "@/components/admin/ui";
 import { LigneJournal } from "@/components/admin/LigneJournal";
 import { Agrandir } from "@/components/Agrandir";
+import { CouvertureReglable } from "@/components/CouvertureReglable";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import {
@@ -49,6 +50,7 @@ import { Card, Pill, Saillant, StatusPill } from "@/components/ui";
 import { PROVISOIRE, saisi } from "@/lib/accueil";
 import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
+import { positionObjet } from "@/lib/cadrage";
 import {
   RETARD_BLOCAGE_JOURS,
   cotisationAnnuelle,
@@ -114,22 +116,35 @@ export default async function AdminMembreDetail({
 
       {/* ==================== Identité ==================== */}
       <Card className="overflow-hidden p-0 mb-4">
-        <Agrandir src={m.cover} alt={`Couverture de ${m.nom}`} legende={m.nom}>
-          <Visuel
+        <CouvertureReglable
+          memberId={m.id}
+          src={m.cover}
+          cadrage={m.cadrage}
+          retour={`/admin/membres/${m.id}`}
+          className="h-[170px] w-full"
+        >
+          <Agrandir
             src={m.cover}
-            alt=""
-            seed={m.id}
-            className="h-[170px] w-full"
-            sizes="(max-width: 1240px) 100vw, 1200px"
-            icon={
-              m.type === "physique" ? (
-                <UserIcon size={26} />
-              ) : (
-                <Building2 size={26} />
-              )
-            }
-          />
-        </Agrandir>
+            alt={`Couverture de ${m.nom}`}
+            legende={m.nom}
+          >
+            <Visuel
+              src={m.cover}
+              position={positionObjet(m.cadrage)}
+              alt=""
+              seed={m.id}
+              className="h-[170px] w-full"
+              sizes="(max-width: 1240px) 100vw, 1200px"
+              icon={
+                m.type === "physique" ? (
+                  <UserIcon size={26} />
+                ) : (
+                  <Building2 size={26} />
+                )
+              }
+            />
+          </Agrandir>
+        </CouvertureReglable>
         <div className="px-6 py-5 flex gap-5 flex-wrap items-start justify-between">
           <div className="flex gap-4 min-w-0">
             <LogoMark member={m} size={64} />

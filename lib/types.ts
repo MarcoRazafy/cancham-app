@@ -1,3 +1,4 @@
+import type { Cadrage } from "@/lib/cadrage";
 import type { Devise, FormuleId } from "@/lib/membership";
 /**
  * Modèle de domaine CanCham Connect.
@@ -108,6 +109,8 @@ export interface Member {
   paiementNote?: string;
   /** Photo de couverture de la fiche, par URL. */
   cover?: string | null;
+  /** Point de la couverture qui reste visible une fois rognée. */
+  cadrage?: Cadrage;
   /** Vignette ronde : portrait si personne physique, visuel sinon. */
   photo?: string | null;
   /** Logo de l'organisation. Prime sur `photo` partout où l'on identifie le membre. */
@@ -234,6 +237,11 @@ export interface NewsItem {
     logo: string | null;
     personne: string | null;
   } | null;
+  /**
+   * Publication libre d'un membre : un texte sans titre ni résumé. Le fil et
+   * la page affichent le texte seul ; `titre` en est tiré, pour les listes.
+   */
+  libre?: boolean;
   commentaires: Comment[];
   /** Nombre de « j'aime ». */
   jaimes: number;
@@ -252,6 +260,8 @@ export interface Offer {
   image?: string | null;
   /** Ce que la carte affiche : le visuel de l'offre, sinon la couverture de l'entreprise. */
   cover?: string | null;
+  /** Cadrage de la couverture de l'entreprise, quand c'est elle qu'on affiche. */
+  cadrage?: Cadrage;
   /** Où en profiter. `null` = on écrit au contact de l'entreprise. */
   lien?: string | null;
   /** Où l'équipe a choisi de la montrer. */

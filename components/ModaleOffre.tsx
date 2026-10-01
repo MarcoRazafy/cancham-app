@@ -6,6 +6,7 @@ import { ArrowUpRight, Building2, Mail, MapPin, Phone } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { ModalBody } from "@/components/form-bits";
 import { affichageSite } from "@/lib/liens";
+import { positionObjet } from "@/lib/cadrage";
 import type { Offer } from "@/lib/types";
 
 /**
@@ -57,6 +58,11 @@ function Detail({ offre: o }: { offre: Offer }) {
               fill
               sizes="(max-width: 700px) 100vw, 640px"
               className="object-cover"
+              style={
+                o.cadrage
+                  ? { objectPosition: positionObjet(o.cadrage) }
+                  : undefined
+              }
             />
           </div>
         ) : null}

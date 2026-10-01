@@ -85,7 +85,9 @@ export default async function ActualitePubliquePage({
         <div className="flex gap-10 items-start flex-col xl:flex-row">
           <article className="w-full min-w-0 xl:w-[760px] xl:shrink-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="surtitre text-marque-vert">{a.cat}</span>
+              <span className="surtitre text-marque-vert">
+                {a.auteur ? "Publication d’un membre" : a.cat}
+              </span>
               <span className="text-[13px] text-faint">
                 · {fmtDate(a.date)}
               </span>
@@ -93,11 +95,16 @@ export default async function ActualitePubliquePage({
             <h1
               className={`${TITRE_GRAS} text-[clamp(28px,4vw,42px)] m-0 mt-2.5`}
             >
-              {a.titre}
+              {/* Une publication libre n'a pas de titre : elle porte le nom
+                  de qui la publie, et son texte suit en entier. */}
+              {a.libre ? (a.auteur ?? "Publication d’un membre") : a.titre}
             </h1>
-            <p className="m-0 mt-4 text-[17px] leading-relaxed text-ink">
-              {a.extrait}
-            </p>
+            {a.libre ? null : (
+              <p className="m-0 mt-4 text-[17px] leading-relaxed text-ink">
+                {a.auteur ? `${a.auteur} · ` : ""}
+                {a.extrait}
+              </p>
+            )}
 
             {couverture ? (
               <Agrandir

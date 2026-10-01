@@ -30,6 +30,15 @@ import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
 import { after } from "next/server";
 import { minutes, tentative } from "@/lib/limite";
 import { notifierEquipe, notifierTousLesMembres } from "@/lib/push";
+import { isAccessLocked } from "@/lib/membership";
+import {
+  extraitDePublication,
+  PHOTOS_PAR_PUBLICATION,
+  textePublication,
+  titreDePublication,
+  type EtatPublication,
+} from "@/lib/publications";
+import { getMember } from "@/lib/queries";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
@@ -68,35 +77,37 @@ async function journal(
   });
 }
 
-/** Photos d'une publication, au plus. */
-const PHOTOS_PAR_ACTUALITE = 10;
+/** Une photo refusée, ou un champ de photos illisible : le message se montre. */
+class PhotosRefusees extends Error {}
 
 /**
  * Les photos d'une publication, dans l'ordre choisi : celles qu'on garde et
  * celles qui arrivent. Partagé par l'équipe et par les membres — mêmes
- * limites, même champ de formulaire.
+ * limites, même champ de formulaire. Lève `PhotosRefusees` : à chaque
+ * formulaire de dire comment il montre l'erreur.
  */
-async function photosDeLActualite(
+async function lirePhotos(
   formData: FormData,
   actuelles: string[],
-  retour: string,
 ): Promise<string[]> {
   // Des fichiers, ou les jetons de leurs envois faits d'avance — dans
   // l'ordre du champ, que `ordre` désigne par rang.
   const fichiers = await fichiersRecus(formData.getAll("images"));
-  let ordre: string[];
+  let ordre: unknown;
   try {
     ordre = JSON.parse(texte(formData, "ordre") || "null") ?? [
       ...actuelles.map((u) => `e:${u}`),
       ...fichiers.map((_, i) => `n:${i}`),
     ];
   } catch {
-    redirectWithErreur(retour, "L’ordre des photos est illisible.");
+    throw new PhotosRefusees("L’ordre des photos est illisible.");
   }
-  if (ordre.length > PHOTOS_PAR_ACTUALITE) {
-    redirectWithErreur(
-      retour,
-      `${PHOTOS_PAR_ACTUALITE} photos au plus par publication.`,
+  if (!Array.isArray(ordre) || ordre.some((j) => typeof j !== "string")) {
+    throw new PhotosRefusees("L’ordre des photos est illisible.");
+  }
+  if (ordre.length > PHOTOS_PAR_PUBLICATION) {
+    throw new PhotosRefusees(
+      `${PHOTOS_PAR_PUBLICATION} photos au plus par publication.`,
     );
   }
 
@@ -108,11 +119,19 @@ async function photosDeLActualite(
       );
     }
   } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
+    if (e instanceof ImageRefusee) throw new PhotosRefusees(e.message);
     throw e;
   }
 
-  return ordre
+  // Le formulaire annonce des photos qui ne sont pas arrivées — envois
+  // d'avance déjà consommés par une tentative précédente, par exemple :
+  // publier sans elles passerait pour un succès.
+  const annoncees = (ordre as string[]).filter((j) => j.startsWith("n:"));
+  if (annoncees.length > fichiers.length) {
+    throw new PhotosRefusees("Vos photos ne sont plus disponibles.");
+  }
+
+  return (ordre as string[])
     .map((jeton) =>
       jeton.startsWith("e:")
         ? actuelles.includes(jeton.slice(2))
@@ -123,6 +142,20 @@ async function photosDeLActualite(
           : null,
     )
     .filter((u): u is string => Boolean(u));
+}
+
+/** Les photos d'un formulaire en pleine page : une erreur y ramène. */
+async function photosDeLActualite(
+  formData: FormData,
+  actuelles: string[],
+  retour: string,
+): Promise<string[]> {
+  try {
+    return await lirePhotos(formData, actuelles);
+  } catch (e) {
+    if (e instanceof PhotosRefusees) redirectWithErreur(retour, e.message);
+    throw e;
+  }
 }
 
 /**
@@ -141,7 +174,21 @@ export async function enregistrerActualite(formData: FormData) {
   const titre = texte(formData, "titre");
   const extrait = texte(formData, "extrait");
   const corps = texte(formData, "corps");
-  if (!titre || !extrait || !corps) {
+  const avant = id
+    ? await prisma.news.findUnique({
+        where: { id },
+        select: {
+          images: true,
+          libre: true,
+          titre: true,
+          extrait: true,
+          member: { select: { nom: true } },
+        },
+      })
+    : null;
+  // Une publication libre peut n'être faite que de photos : l'équipe doit
+  // pouvoir la reprendre sans lui inventer un résumé et un texte.
+  if (!titre || (!avant?.libre && (!extrait || !corps))) {
     redirectWithErreur(retour, "Titre, résumé et texte sont obligatoires.");
   }
 
@@ -153,27 +200,38 @@ export async function enregistrerActualite(formData: FormData) {
 
   // Les photos, dans l'ordre choisi : `ordre` liste les photos gardées
   // (`e:<url>`) et les nouvelles (`n:<rang dans le champ fichier>`).
-  const actuelles = id
-    ? ((
-        await prisma.news.findUnique({
-          where: { id },
-          select: { images: true },
-        })
-      )?.images ?? [])
-    : [];
-  const images = await photosDeLActualite(formData, actuelles, retour);
+  const images = await photosDeLActualite(
+    formData,
+    avant?.images ?? [],
+    retour,
+  );
+  if (!corps && !images.length) {
+    redirectWithErreur(retour, "Il faut un texte, ou au moins une photo.");
+  }
+
+  // Une publication libre n'a pas de vrai titre : le sien est tiré du
+  // texte. Tant que l'équipe ne touche ni au titre ni au résumé, elle le
+  // reste, et tous deux suivent le texte corrigé. Dès qu'elle lui en écrit
+  // un, c'est un article : le fil affichera ce titre.
+  const resteLibre =
+    Boolean(avant?.libre) &&
+    titre === avant?.titre &&
+    extrait === avant?.extrait;
 
   // Sans choix explicite, réservée aux membres, comme avant que la
   // diffusion se choisisse.
   const estPublique = texte(formData, "diffusion") === "public";
   const data = {
-    titre,
-    extrait,
+    titre: resteLibre
+      ? titreDePublication(corps, avant?.member?.nom ?? "un membre")
+      : titre,
+    extrait: resteLibre ? extraitDePublication(corps) : extrait,
     corps,
     cat,
     date,
     images,
     public: estPublique,
+    libre: resteLibre,
   };
   const n = id
     ? await prisma.news.update({ where: { id }, data })
@@ -213,67 +271,92 @@ export async function enregistrerActualite(formData: FormData) {
 }
 
 /** Publications d'une même entreprise, en une heure. */
-const ACTUALITES_MEMBRE_PAR_HEURE = 5;
+const PUBLICATIONS_PAR_HEURE = 5;
 
 /**
- * Un membre publie une actualité au nom de son entreprise.
+ * Un membre publie dans le fil, au nom de son entreprise : un texte, des
+ * photos, ou les deux.
  *
- * Elle paraît aussitôt dans le fil des membres, signée de l'entreprise —
- * jamais sur la page publique, qui reste à la chambre. L'équipe en est
+ * Elle paraît aussitôt dans le fil des membres, signée de l'entreprise.
+ * L'équipe en est
  * prévenue : elle peut la modifier ou la supprimer, comme toute actualité.
- * Le membre, lui, ne peut ni la reprendre ni la retirer : ce qui est publié
- * au nom du réseau passe par l'équipe.
+ * Le membre choisit à qui elle se montre — les membres, ou aussi la page
+ * publique — et peut ensuite la reprendre ou la retirer.
+ *
+ * Appelée depuis la fenêtre de publication, sans quitter le fil : elle rend
+ * son résultat au lieu de rediriger, pour qu'une erreur n'efface pas ce que
+ * le membre vient d'écrire.
  */
-export async function publierActualiteMembre(formData: FormData) {
+export async function publierPublication(
+  _avant: EtatPublication,
+  formData: FormData,
+): Promise<EtatPublication> {
+  const refus = (erreur: string, photosPerdues = false): EtatPublication => ({
+    etape: "erreur",
+    erreur,
+    photosPerdues,
+  });
+
   const user = await getCurrentUser("membre");
-  const retour = "/membre/actualites/nouvelle";
   if (!user.memberId) {
-    redirectWithErreur(
-      "/membre/actualites",
-      "Aucune entreprise n’est rattachée à ce compte.",
-    );
+    return refus("Aucune entreprise n’est rattachée à ce compte.");
   }
   const memberId = user.memberId;
-
-  const titre = texte(formData, "titre").slice(0, 160);
-  const extrait = texte(formData, "extrait").slice(0, 600);
-  const corps = texte(formData, "corps").slice(0, 12000);
-  if (!titre || !extrait || !corps) {
-    redirectWithErreur(retour, "Titre, résumé et texte sont obligatoires.");
+  const membre = await getMember(memberId);
+  if (!membre) return refus("Entreprise introuvable.");
+  // La page est déjà fermée à un membre restreint ; l'action, elle, est une
+  // porte à part entière.
+  if (isAccessLocked(membre)) {
+    return refus("Publier est réservé aux membres à jour de cotisation.");
   }
 
-  const membre = await prisma.member.findUnique({
-    where: { id: memberId },
-    select: { nom: true },
-  });
-  if (!membre) redirectWithErreur("/membre/actualites", "Entreprise introuvable.");
+  const corps = textePublication(formData.get("texte"));
+  const estPublique = texte(formData, "diffusion") === "public";
+  const avecPhotos = formData
+    .getAll("images")
+    .some((v) => (typeof v === "string" ? v.trim() !== "" : v.size > 0));
+  if (!corps && !avecPhotos) {
+    return refus("Écrivez quelques mots, ou ajoutez une photo.");
+  }
 
   // Une même entreprise ne remplit pas le fil à elle seule.
   const attente = tentative(
     `actualite:${memberId}`,
-    ACTUALITES_MEMBRE_PAR_HEURE,
+    PUBLICATIONS_PAR_HEURE,
     60 * 60 * 1000,
   );
   if (attente) {
-    redirectWithErreur(
-      retour,
+    return refus(
       `Trop de publications à la suite. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
     );
   }
 
-  const images = await photosDeLActualite(formData, [], retour);
+  // À partir d'ici, les photos envoyées d'avance sont consommées : si la
+  // publication échoue, il faudra les choisir à nouveau.
+  let images: string[];
+  try {
+    images = await lirePhotos(formData, []);
+  } catch (e) {
+    if (e instanceof PhotosRefusees) return refus(e.message, true);
+    throw e;
+  }
+  if (!corps && !images.length) {
+    return refus("Écrivez quelques mots, ou ajoutez une photo.", true);
+  }
 
   const n = await prisma.news.create({
     data: {
-      titre,
-      extrait,
+      titre: titreDePublication(corps, membre.nom),
+      extrait: extraitDePublication(corps),
       corps,
       // La catégorie reste à l'équipe ; le fil signe la publication du nom
       // de l'entreprise, ce qui la distingue déjà.
       cat: "vie_de_la_chambre",
       date: jourBase(),
       images,
-      public: false,
+      // Le membre choisit : les membres seulement, ou aussi la page publique.
+      public: estPublique,
+      libre: true,
       mediaType: "image",
       mediaTheme: Math.random() > 0.5 ? "navy" : "green",
       memberId,
@@ -287,22 +370,119 @@ export async function publierActualiteMembre(formData: FormData) {
       entite: "News",
       entiteId: n.id,
       acteur: user.nom,
-      detail: `« ${n.titre} » · publiée par ${membre.nom} · plateforme uniquement`,
+      detail: `« ${n.titre} » · publiée par ${membre.nom} · ${n.public ? "plateforme et page publique" : "plateforme uniquement"}`,
     },
   });
   after(() =>
     notifierEquipe({
-      titre: "Actualité publiée par un membre",
+      titre: n.public
+        ? "Publication d’un membre, sur la page publique"
+        : "Publication d’un membre",
       corps: `${membre.nom} · ${n.titre}`,
       url: `/admin/actualites/${n.id}`,
     }),
   );
 
   revalideTout();
-  redirectWithFlash(
-    `/membre/actualites/${n.id}`,
-    "Actualité publiée dans le fil des membres",
-  );
+  return { etape: "publiee", id: n.id };
+}
+
+/**
+ * La publication que le membre connecté a le droit de reprendre : celle de
+ * son entreprise. L'identifiant reçu ne fait pas foi.
+ */
+async function maPublication(id: string) {
+  const user = await getCurrentUser("membre");
+  if (!user.memberId || !id) return null;
+  const membre = await getMember(user.memberId);
+  if (!membre || isAccessLocked(membre)) return null;
+  const n = await prisma.news.findFirst({
+    where: { id, memberId: user.memberId },
+    select: { id: true, titre: true, images: true, libre: true },
+  });
+  return n ? { user, membre, n } : null;
+}
+
+/**
+ * Le membre reprend sa publication : le texte, les photos, à qui elle se
+ * montre. Comme à la publication, l'action rend son résultat à la fenêtre.
+ */
+export async function modifierPublication(
+  _avant: EtatPublication,
+  formData: FormData,
+): Promise<EtatPublication> {
+  const refus = (erreur: string, photosPerdues = false): EtatPublication => ({
+    etape: "erreur",
+    erreur,
+    photosPerdues,
+  });
+  const acces = await maPublication(texte(formData, "newsId"));
+  if (!acces) return refus("Cette publication n’est pas la vôtre.");
+  const { user, membre, n } = acces;
+
+  const corps = textePublication(formData.get("texte"));
+  let images: string[];
+  try {
+    images = await lirePhotos(formData, n.images);
+  } catch (e) {
+    if (e instanceof PhotosRefusees) return refus(e.message, true);
+    throw e;
+  }
+  if (!corps && !images.length) {
+    return refus("Écrivez quelques mots, ou gardez une photo.", true);
+  }
+
+  const maj = await prisma.news.update({
+    where: { id: n.id },
+    data: {
+      corps,
+      images,
+      public: texte(formData, "diffusion") === "public",
+      // Une publication libre garde un titre tiré de son texte ; devenue un
+      // article entre les mains de l'équipe, elle garde le titre de l'équipe.
+      ...(n.libre
+        ? {
+            titre: titreDePublication(corps, membre.nom),
+            extrait: extraitDePublication(corps),
+          }
+        : {}),
+    },
+  });
+  await prisma.auditLog.create({
+    data: {
+      action: "actualite_modifiee",
+      entite: "News",
+      entiteId: maj.id,
+      acteur: user.nom,
+      detail: `« ${maj.titre} » · modifiée par ${membre.nom} · ${maj.public ? "plateforme et page publique" : "plateforme uniquement"}`,
+    },
+  });
+  revalideTout();
+  return { etape: "publiee", id: maj.id };
+}
+
+/** Le membre retire sa propre publication. */
+export async function supprimerMaPublication(formData: FormData) {
+  const acces = await maPublication(texte(formData, "newsId"));
+  if (!acces) {
+    redirectWithErreur(
+      "/membre/actualites",
+      "Cette publication n’est pas la vôtre.",
+    );
+  }
+  const { user, membre, n } = acces;
+  await prisma.auditLog.create({
+    data: {
+      action: "actualite_supprimee",
+      entite: "News",
+      entiteId: n.id,
+      acteur: user.nom,
+      detail: `« ${n.titre} » · retirée par ${membre.nom}.`,
+    },
+  });
+  await prisma.news.delete({ where: { id: n.id } });
+  revalideTout();
+  redirectWithFlash("/membre/actualites", "Publication supprimée");
 }
 
 export async function deleteNews(formData: FormData) {

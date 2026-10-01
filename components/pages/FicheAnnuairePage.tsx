@@ -23,6 +23,7 @@ import { BtnLink, Card, Pill } from "@/components/ui";
 import { getContacts, getMember } from "@/lib/queries";
 import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
+import { positionObjet } from "@/lib/cadrage";
 
 /**
  * Fiche d'un membre dans l'annuaire, telle que la voient les adhérents. Dans
@@ -60,6 +61,7 @@ export async function FicheAnnuairePage({
         <Agrandir src={m.cover} alt={`Couverture de ${m.nom}`} legende={m.nom}>
           <Visuel
             src={m.cover}
+            position={positionObjet(m.cadrage)}
             alt=""
             seed={m.id}
             className="h-[190px] w-full sm:h-[260px]"
