@@ -28,7 +28,8 @@ import {
 } from "@/lib/presse-papier";
 import type { NewsCategory, ResourceCategory, Space } from "@/lib/types";
 import { after } from "next/server";
-import { notifierTousLesMembres } from "@/lib/push";
+import { minutes, tentative } from "@/lib/limite";
+import { notifierEquipe, notifierTousLesMembres } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
@@ -71,6 +72,60 @@ async function journal(
 const PHOTOS_PAR_ACTUALITE = 10;
 
 /**
+ * Les photos d'une publication, dans l'ordre choisi : celles qu'on garde et
+ * celles qui arrivent. Partagé par l'équipe et par les membres — mêmes
+ * limites, même champ de formulaire.
+ */
+async function photosDeLActualite(
+  formData: FormData,
+  actuelles: string[],
+  retour: string,
+): Promise<string[]> {
+  // Des fichiers, ou les jetons de leurs envois faits d'avance — dans
+  // l'ordre du champ, que `ordre` désigne par rang.
+  const fichiers = await fichiersRecus(formData.getAll("images"));
+  let ordre: string[];
+  try {
+    ordre = JSON.parse(texte(formData, "ordre") || "null") ?? [
+      ...actuelles.map((u) => `e:${u}`),
+      ...fichiers.map((_, i) => `n:${i}`),
+    ];
+  } catch {
+    redirectWithErreur(retour, "L’ordre des photos est illisible.");
+  }
+  if (ordre.length > PHOTOS_PAR_ACTUALITE) {
+    redirectWithErreur(
+      retour,
+      `${PHOTOS_PAR_ACTUALITE} photos au plus par publication.`,
+    );
+  }
+
+  const envoyees: (string | null)[] = [];
+  try {
+    for (const f of fichiers) {
+      envoyees.push(
+        await enregistrerImage(f, { prefixe: "actualite", largeur: 1600 }),
+      );
+    }
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
+    throw e;
+  }
+
+  return ordre
+    .map((jeton) =>
+      jeton.startsWith("e:")
+        ? actuelles.includes(jeton.slice(2))
+          ? jeton.slice(2)
+          : null
+        : jeton.startsWith("n:")
+          ? (envoyees[Number(jeton.slice(2))] ?? null)
+          : null,
+    )
+    .filter((u): u is string => Boolean(u));
+}
+
+/**
  * Publication ou modification d'une actualité.
  *
  * Plusieurs photos, dans l'ordre choisi : la première sert de couverture
@@ -106,48 +161,7 @@ export async function enregistrerActualite(formData: FormData) {
         })
       )?.images ?? [])
     : [];
-  // Des fichiers, ou les jetons de leurs envois faits d'avance — dans
-  // l'ordre du champ, que `ordre` désigne par rang.
-  const fichiers = await fichiersRecus(formData.getAll("images"));
-  let ordre: string[];
-  try {
-    ordre = JSON.parse(texte(formData, "ordre") || "null") ?? [
-      ...actuelles.map((u) => `e:${u}`),
-      ...fichiers.map((_, i) => `n:${i}`),
-    ];
-  } catch {
-    redirectWithErreur(retour, "L’ordre des photos est illisible.");
-  }
-  if (ordre.length > PHOTOS_PAR_ACTUALITE) {
-    redirectWithErreur(
-      retour,
-      `${PHOTOS_PAR_ACTUALITE} photos au plus par publication.`,
-    );
-  }
-
-  const envoyees: (string | null)[] = [];
-  try {
-    for (const f of fichiers) {
-      envoyees.push(
-        await enregistrerImage(f, { prefixe: "actualite", largeur: 1600 }),
-      );
-    }
-  } catch (e) {
-    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
-    throw e;
-  }
-
-  const images = ordre
-    .map((jeton) =>
-      jeton.startsWith("e:")
-        ? actuelles.includes(jeton.slice(2))
-          ? jeton.slice(2)
-          : null
-        : jeton.startsWith("n:")
-          ? (envoyees[Number(jeton.slice(2))] ?? null)
-          : null,
-    )
-    .filter((u): u is string => Boolean(u));
+  const images = await photosDeLActualite(formData, actuelles, retour);
 
   // Sans choix explicite, réservée aux membres, comme avant que la
   // diffusion se choisisse.
@@ -195,6 +209,99 @@ export async function enregistrerActualite(formData: FormData) {
       : n.public
         ? "Actualité publiée sur la plateforme et la page publique"
         : "Actualité publiée sur la plateforme",
+  );
+}
+
+/** Publications d'une même entreprise, en une heure. */
+const ACTUALITES_MEMBRE_PAR_HEURE = 5;
+
+/**
+ * Un membre publie une actualité au nom de son entreprise.
+ *
+ * Elle paraît aussitôt dans le fil des membres, signée de l'entreprise —
+ * jamais sur la page publique, qui reste à la chambre. L'équipe en est
+ * prévenue : elle peut la modifier ou la supprimer, comme toute actualité.
+ * Le membre, lui, ne peut ni la reprendre ni la retirer : ce qui est publié
+ * au nom du réseau passe par l'équipe.
+ */
+export async function publierActualiteMembre(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const retour = "/membre/actualites/nouvelle";
+  if (!user.memberId) {
+    redirectWithErreur(
+      "/membre/actualites",
+      "Aucune entreprise n’est rattachée à ce compte.",
+    );
+  }
+  const memberId = user.memberId;
+
+  const titre = texte(formData, "titre").slice(0, 160);
+  const extrait = texte(formData, "extrait").slice(0, 600);
+  const corps = texte(formData, "corps").slice(0, 12000);
+  if (!titre || !extrait || !corps) {
+    redirectWithErreur(retour, "Titre, résumé et texte sont obligatoires.");
+  }
+
+  const membre = await prisma.member.findUnique({
+    where: { id: memberId },
+    select: { nom: true },
+  });
+  if (!membre) redirectWithErreur("/membre/actualites", "Entreprise introuvable.");
+
+  // Une même entreprise ne remplit pas le fil à elle seule.
+  const attente = tentative(
+    `actualite:${memberId}`,
+    ACTUALITES_MEMBRE_PAR_HEURE,
+    60 * 60 * 1000,
+  );
+  if (attente) {
+    redirectWithErreur(
+      retour,
+      `Trop de publications à la suite. Réessayez dans ${minutes(attente)} minute${minutes(attente) > 1 ? "s" : ""}.`,
+    );
+  }
+
+  const images = await photosDeLActualite(formData, [], retour);
+
+  const n = await prisma.news.create({
+    data: {
+      titre,
+      extrait,
+      corps,
+      // La catégorie reste à l'équipe ; le fil signe la publication du nom
+      // de l'entreprise, ce qui la distingue déjà.
+      cat: "vie_de_la_chambre",
+      date: jourBase(),
+      images,
+      public: false,
+      mediaType: "image",
+      mediaTheme: Math.random() > 0.5 ? "navy" : "green",
+      memberId,
+      auteurNom: user.nom,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: "actualite_publiee",
+      entite: "News",
+      entiteId: n.id,
+      acteur: user.nom,
+      detail: `« ${n.titre} » · publiée par ${membre.nom} · plateforme uniquement`,
+    },
+  });
+  after(() =>
+    notifierEquipe({
+      titre: "Actualité publiée par un membre",
+      corps: `${membre.nom} · ${n.titre}`,
+      url: `/admin/actualites/${n.id}`,
+    }),
+  );
+
+  revalideTout();
+  redirectWithFlash(
+    `/membre/actualites/${n.id}`,
+    "Actualité publiée dans le fil des membres",
   );
 }
 

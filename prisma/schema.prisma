@@ -221,6 +221,7 @@ model Member {
   users        User[]
   produits     Produit[]
   offres       Offer[]
+  actualites   News[]
   factures     Invoice[]
   inscriptions Registration[]
   rendezvous   Rendezvous[]
@@ -487,10 +488,19 @@ model News {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// L'entreprise membre qui a publié, quand ce n'est pas la chambre.
+  /// `null` : une actualité de la chambre, écrite par l'équipe. Quelle que
+  /// soit son origine, l'équipe peut la modifier ou la supprimer.
+  memberId  String?
+  member    Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  /// La personne qui l'a écrite, telle qu'elle s'appelait ce jour-là.
+  auteurNom String?
+
   commentaires Comment[]
   jaimes       NewsLike[]
 
   @@index([date])
+  @@index([memberId])
   @@map("news")
 }
 
