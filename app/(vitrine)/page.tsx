@@ -12,7 +12,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselCartes } from "@/components/public/CarrouselCartes";
-import { Defile, SURVOL_CARTE } from "@/components/public/Defile";
+import { Rangee, SURVOL_CARTE } from "@/components/public/Rangee";
 import { FormulaireInfolettre } from "@/components/public/FormulaireInfolettre";
 import { LienAncre } from "@/components/public/LienAncre";
 import { CarteActualite } from "@/components/public/CarteActualite";
@@ -801,14 +801,11 @@ export default async function PublicHome() {
             </div>
 
             {/*
-              Les trois rangées glissent en boucle, en sens alternés : le
-              bureau vers la gauche, les conseillères vers la droite, l'équipe
-              vers la gauche. Trois cartes de front ici, quatre plus bas — sur
+              Trois cartes de front ici, quatre plus bas, immobiles. Sur
               téléphone, une seule, la suivante dépassant pour inviter à
-              glisser.
+              faire glisser la rangée.
             */}
-            <Defile
-              sens="gauche"
+            <Rangee
               ecart={36}
               className="mt-6"
               largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-2*var(--ecart))/3)]"
@@ -843,7 +840,7 @@ export default async function PublicHome() {
                   </h3>
                 </article>
               ))}
-            </Defile>
+            </Rangee>
           </div>
 
           {/* ---------- Les conseillères ---------- */}
@@ -857,8 +854,7 @@ export default async function PublicHome() {
               plus bas : une vignette ronde perdue dans un grand cadre laissait
               ces quatre-là plus effacées que le reste de la page.
             */}
-            <Defile
-              sens="droite"
+            <Rangee
               ecart={24}
               className="mt-6"
               largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
@@ -888,7 +884,7 @@ export default async function PublicHome() {
                   </h3>
                 </article>
               ))}
-            </Defile>
+            </Rangee>
           </div>
 
           {/* ---------- L'équipe permanente ---------- */}
@@ -919,8 +915,7 @@ export default async function PublicHome() {
               </p>
             </div>
 
-            <Defile
-              sens="gauche"
+            <Rangee
               ecart={28}
               className="mt-8"
               largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
@@ -951,7 +946,7 @@ export default async function PublicHome() {
                   </h3>
                 </article>
               ))}
-            </Defile>
+            </Rangee>
           </div>
         </div>
       </section>
