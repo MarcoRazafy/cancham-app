@@ -9,15 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { unstable_rethrow } from "next/navigation";
-import {
-  Globe,
-  Images,
-  LoaderCircle,
-  Pencil,
-  Trash2,
-  Users,
-  X,
-} from "lucide-react";
+import { Images, LoaderCircle, Pencil, Trash2, Users, X } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { JetonsEnvoyes, useEnvois } from "@/components/EnvoisSuivis";
 import {
@@ -60,13 +52,13 @@ export interface PublicationAModifier {
   id: string;
   texte: string;
   images: string[];
-  publique: boolean;
 }
 
 /**
  * Publier dans le fil, comme on le fait partout : une barre d'invite en
- * tête du fil, qui ouvre une fenêtre. Un texte, des photos, à qui on la
- * montre, un bouton — rien d'autre à remplir.
+ * tête du fil, qui ouvre une fenêtre. Un texte, des photos, un bouton —
+ * rien d'autre à remplir. La publication paraît dans le fil des membres,
+ * et là seulement : la page publique reste à la chambre.
  *
  * Avec `publication`, la même fenêtre sert à reprendre ce qu'on a publié :
  * le déclencheur est alors un crayon, posé sur la publication.
@@ -88,7 +80,6 @@ export function ComposeurPublication({
 }) {
   const [ouvert, setOuvert] = useState(false);
   const [texte, setTexte] = useState(publication?.texte ?? "");
-  const [publique, setPublique] = useState(publication?.publique ?? false);
   const [photos, setPhotos] = useState<Photo[]>(() =>
     (publication?.images ?? []).map((url) => ({
       cle: `e:${url}`,
@@ -167,7 +158,6 @@ export function ComposeurPublication({
           annoncer("Publication modifiée");
         } else {
           setTexte("");
-          setPublique(false);
           viderNouvelles();
           annoncer("Publication partagée dans le fil");
         }
@@ -301,11 +291,6 @@ export function ComposeurPublication({
             {publication ? (
               <input type="hidden" name="newsId" value={publication.id} />
             ) : null}
-            <input
-              type="hidden"
-              name="diffusion"
-              value={publique ? "public" : "membres"}
-            />
 
             <div className="flex items-center gap-2.5">
               {avatar}
@@ -313,34 +298,11 @@ export function ComposeurPublication({
                 <div className="truncate text-[14.2px] font-semibold">
                   {entreprise}
                 </div>
-                {/* À qui la publication se montre : le membre en décide. */}
-                <div
-                  role="radiogroup"
-                  aria-label="Qui peut voir cette publication"
-                  className="mt-1 inline-flex rounded-full bg-surface-2 p-0.5"
-                >
-                  <ChoixDiffusion
-                    actif={!publique}
-                    onClick={() => setPublique(false)}
-                    icone={<Users size={12} aria-hidden />}
-                  >
-                    Membres
-                  </ChoixDiffusion>
-                  <ChoixDiffusion
-                    actif={publique}
-                    onClick={() => setPublique(true)}
-                    icone={<Globe size={12} aria-hidden />}
-                  >
-                    Public
-                  </ChoixDiffusion>
-                </div>
+                <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[11.5px] font-semibold text-muted">
+                  <Users size={11} aria-hidden /> Visible par les membres
+                </span>
               </div>
             </div>
-            <p className="-mt-1.5 m-0 text-[12px] text-faint">
-              {publique
-                ? "Visible par tout le monde, aussi sur le site public de la chambre."
-                : "Visible par les membres seulement, sur la plateforme."}
-            </p>
 
             <textarea
               ref={zone}
@@ -472,35 +434,6 @@ export function ComposeurPublication({
         )}
       </Modal>
     </>
-  );
-}
-
-/** Une des deux options de diffusion, en pastille. */
-function ChoixDiffusion({
-  actif,
-  onClick,
-  icone,
-  children,
-}: {
-  actif: boolean;
-  onClick: () => void;
-  icone: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={actif}
-      onClick={onClick}
-      className={`inline-flex cursor-pointer items-center gap-1 rounded-full border-0 px-2.5 py-1 text-[11.8px] font-semibold transition-colors ${
-        actif
-          ? "bg-surface text-ink shadow-[0_1px_3px_rgba(15,29,44,0.18)]"
-          : "bg-transparent text-muted hover:text-ink"
-      }`}
-    >
-      {icone} {children}
-    </button>
   );
 }
 
