@@ -339,7 +339,9 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           src={member.cover}
           alt=""
           seed={member.id}
-          className="h-[104px] w-full"
+          // Assez haute pour qu'on reconnaisse la photo : à 104 px, une
+          // couverture n'était plus qu'un bandeau.
+          className="h-[150px] w-full"
           sizes="(max-width: 768px) 100vw, 380px"
           icon={
             member.type === "physique" ? (

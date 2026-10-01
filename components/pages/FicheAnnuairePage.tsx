@@ -62,7 +62,7 @@ export async function FicheAnnuairePage({
             src={m.cover}
             alt=""
             seed={m.id}
-            className="h-[190px] w-full"
+            className="h-[190px] w-full sm:h-[260px]"
             sizes="(max-width: 1024px) 100vw, 900px"
             icon={
               m.type === "physique" ? (
