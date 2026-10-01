@@ -33,6 +33,7 @@ export function TunnelCarte({
   titulaire,
   statut,
   raccorde,
+  marchand,
   retour,
 }: {
   reglementId: string;
@@ -44,6 +45,8 @@ export function TunnelCarte({
   statut: string;
   /** Vanilla Pay est-il branché ? Sans lui, rien ne part. */
   raccorde: boolean;
+  /** Le nom que la page de paiement affichera, s'il n'est pas le nôtre. */
+  marchand: string | null;
   retour: string;
 }) {
   const somme = fmtMontant(montant, devise);
@@ -174,7 +177,16 @@ export function TunnelCarte({
               <Lock size={15} aria-hidden className="text-[#b8860b]" />
               Paiement sécurisé
             </p>
-            {raccorde ? null : (
+            {raccorde ? (
+              marchand ? (
+                <p className="m-0 mt-3 rounded-[10px] bg-surface-2 px-4 py-3 text-[13px] leading-snug text-muted">
+                  Sur la page de paiement, le marchand affiché est{" "}
+                  <b className="text-ink">{marchand}</b> : il encaisse pour le
+                  compte de la CanCham. C’est aussi ce nom qui figurera sur
+                  votre relevé.
+                </p>
+              ) : null
+            ) : (
               <p className="m-0 mt-2 text-center text-[12.5px] leading-snug text-muted">
                 Le raccordement au prestataire est en cours de mise en place.
               </p>

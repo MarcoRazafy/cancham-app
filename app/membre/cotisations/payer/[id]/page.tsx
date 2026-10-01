@@ -22,6 +22,7 @@ import {
 import { aujourdhuiISO } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 import {
+  marchandAffiche,
   mobileMoneyEnLigne,
   MONTANT_MINIMUM_EN_LIGNE,
   vanillaPayActif,
@@ -87,6 +88,7 @@ export default async function PageReglement({
         }
         statut={p.statut}
         raccorde={vanillaPayActif()}
+        marchand={marchandAffiche()}
         retour={retour}
       />
     );
@@ -142,6 +144,7 @@ export default async function PageReglement({
           p.devise === "MGA" &&
           p.montant >= MONTANT_MINIMUM_EN_LIGNE
         }
+        marchand={marchandAffiche()}
       />
     );
   }
