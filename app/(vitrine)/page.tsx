@@ -91,6 +91,11 @@ const AVANTAGES = [
  * et le back-office n'a pas d'écran pour le tenir. Le jour où il en aura un,
  * cette constante partira ; en attendant, une élection se reporte en
  * modifiant ces lignes et en déposant les portraits dans `public/equipe/`.
+ *
+ * Un portrait qu'on remplace prend un nouveau nom de fichier (`…-2.jpg`) :
+ * une image optimisée reste quatre heures en cache, côté serveur comme dans
+ * les navigateurs, et un fichier écrasé sous le même nom continuerait
+ * d'afficher l'ancienne photo.
  */
 const PRESIDENTE = {
   nom: "Ando Lalaina RATOVOMANANA",
@@ -99,6 +104,19 @@ const PRESIDENTE = {
   citation:
     "Dix ans après sa création, la CanCham continue d’évoluer, portée par la motivation de celles et ceux qui la font vivre. Nous innovons dans nos formats, nos missions et nos outils, avec une seule boussole : ouvrir de vraies portes entre le Canada et Madagascar.",
 };
+
+/**
+ * Quelle partie d'un portrait garder quand sa carte le rogne.
+ *
+ * Une photo d'identité se cadre un peu sous son bord haut : centrée, on lui
+ * couperait le front. Un portrait posé — la série sur fond beige, prise à
+ * mi-corps — a la tête tout en haut de l'image : il se cale sur le bord
+ * supérieur, sinon ce sont les cheveux qui partent.
+ */
+const CADRAGE = {
+  identite: "object-[center_20%]",
+  pose: "object-top",
+} as const;
 
 /** Le bureau du Conseil : les élus, autour de la présidente. */
 const BUREAU = [
@@ -110,21 +128,32 @@ const BUREAU = [
   {
     nom: "Lalaina Alfred ANDRIANJATOVO",
     role: "Trésorier",
-    photo: "/equipe/alfred-andrianjatovo.jpg",
+    photo: "/equipe/alfred-andrianjatovo-2.jpg",
+    cadrage: CADRAGE.pose,
   },
   {
     nom: "Danie RABODOVOLOLONIAINA",
     role: "Secrétaire",
-    photo: "/equipe/danie-rabodovololoniaina.jpg",
+    photo: "/equipe/danie-rabodovololoniaina-2.jpg",
+    cadrage: CADRAGE.pose,
   },
 ];
 
 const CONSEILLERES = [
-  { nom: "Tiana RAKOTOMALALA", photo: "/equipe/tiana-rakotomalala.jpg" },
-  { nom: "Hope TARVERDIAN", photo: "/equipe/hope-tarverdian.jpg" },
+  {
+    nom: "Tiana RAKOTOMALALA",
+    photo: "/equipe/tiana-rakotomalala-2.jpg",
+    cadrage: CADRAGE.pose,
+  },
+  {
+    nom: "Hope TARVERDIAN",
+    photo: "/equipe/hope-tarverdian-2.jpg",
+    cadrage: CADRAGE.pose,
+  },
   {
     nom: "Anna Josée RANDRIAMAROLAHY",
-    photo: "/equipe/anna-josee-randriamarolahy.jpg",
+    photo: "/equipe/anna-josee-randriamarolahy-2.jpg",
+    cadrage: CADRAGE.pose,
   },
   { nom: "Elodie RABENIVO", photo: "/equipe/elodie-rabenivo.jpg" },
 ];
@@ -822,17 +851,14 @@ export default async function PublicHome() {
                   style={retard(160 + i * 80)}
                   className={`reveler reveler-zoom ${SURVOL_CARTE}`}
                 >
-                  {/*
-                    Cadrage haut : ces portraits sont des photos d'identité, et
-                    un cadre centré leur couperait le front.
-                  */}
+                  {/* Chaque portrait a son cadrage : voir `CADRAGE`. */}
                   <Image
                     src={m.photo}
                     alt={`Portrait de ${m.nom}`}
                     width={900}
                     height={900}
                     sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 400px"
-                    className="block w-full h-[clamp(240px,24vw,320px)] object-cover object-[center_20%] rounded-2xl"
+                    className={`block w-full h-[clamp(240px,24vw,320px)] object-cover ${m.cadrage ?? CADRAGE.identite} rounded-2xl`}
                   />
                   <span
                     aria-hidden
@@ -881,7 +907,7 @@ export default async function PublicHome() {
                     width={520}
                     height={520}
                     sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
-                    className="block h-[clamp(210px,20vw,260px)] w-full object-cover object-[center_20%]"
+                    className={`block h-[clamp(210px,20vw,260px)] w-full object-cover ${c.cadrage ?? CADRAGE.identite}`}
                   />
                   <h3
                     className={`${TITRE_GRAS} m-0 px-4 py-5 text-center text-[18px] leading-[1.3]`}
