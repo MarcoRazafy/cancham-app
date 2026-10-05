@@ -76,9 +76,10 @@ export function PresentationAvecVideo({
       <div className="min-w-0">{children}</div>
       {/*
         La vidéo se pose dans la place libre, et non dans le coin en haut à
-        droite : un peu plus bas que le nom, et un peu plus à gauche — près
-        du texte qu'elle accompagne, à un petit tiers de l'espace qui reste
-        sur un très grand écran, en retrait du bord droit sur un écran moyen.
+        droite : un peu plus bas que le nom, et un peu en retrait du bord
+        droit — il lui reste à droite un petit tiers de la place libre sur un
+        très grand écran, 24 px sur un écran moyen. Plus à gauche, elle
+        paraissait détachée du bord sans être vraiment centrée.
         Face à une présentation plus haute qu'elle, elle se centre aussi en
         hauteur, mais dans les 440 premiers pixels seulement : derrière un
         très long texte, elle descendrait sinon hors de vue.
@@ -90,7 +91,7 @@ export function PresentationAvecVideo({
             nom={nom}
             fichier={fichier}
             gestion={gestion}
-            className="max-w-[520px] xl:max-w-[440px] 2xl:ml-[calc((100%-440px)*0.3)]"
+            className="max-w-[520px] xl:max-w-[440px] 2xl:ml-[calc((100%-440px)*0.7)]"
           />
         </div>
       </div>
