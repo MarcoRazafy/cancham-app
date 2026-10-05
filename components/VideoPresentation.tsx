@@ -75,19 +75,22 @@ export function PresentationAvecVideo({
     <div className="grid gap-x-8 gap-y-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] 2xl:grid-cols-[minmax(0,640px)_minmax(0,1fr)]">
       <div className="min-w-0">{children}</div>
       {/*
-        La vidéo se pose au milieu de la place libre, et non dans le coin :
-        centrée en largeur, et en hauteur face au texte. En hauteur, on ne
-        la centre que dans les 440 premiers pixels — derrière une très
-        longue présentation, elle descendrait sinon hors de vue.
+        La vidéo se pose dans la place libre, et non dans le coin en haut à
+        droite : un peu plus bas que le nom, et un peu plus à gauche — près
+        du texte qu'elle accompagne, à un petit tiers de l'espace qui reste
+        sur un très grand écran, en retrait du bord droit sur un écran moyen.
+        Face à une présentation plus haute qu'elle, elle se centre aussi en
+        hauteur, mais dans les 440 premiers pixels seulement : derrière un
+        très long texte, elle descendrait sinon hors de vue.
       */}
-      <div className="min-w-0">
-        <div className="flex xl:min-h-[min(100%,440px)] xl:items-center xl:justify-center">
+      <div className="min-w-0 xl:pt-10 xl:pr-6 2xl:pr-0">
+        <div className="flex xl:min-h-[min(100%,440px)] xl:items-center xl:justify-center 2xl:justify-start">
           <VideoPresentation
             memberId={memberId}
             nom={nom}
             fichier={fichier}
             gestion={gestion}
-            className="max-w-[520px] xl:max-w-[440px]"
+            className="max-w-[520px] xl:max-w-[440px] 2xl:ml-[calc((100%-440px)*0.3)]"
           />
         </div>
       </div>
