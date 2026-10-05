@@ -35,6 +35,18 @@ const BOUTON =
  * Sans vidéo, rien ne change pour qui consulte la fiche : la place reste
  * vide, sans encadré ni mention. Seuls le membre, sur sa propre fiche, et
  * l'équipe y trouvent de quoi en ajouter une (`gestion`).
+ *
+ * Sur grand écran, la vidéo flotte à droite : le nom, le texte, puis les
+ * rubriques qui suivent coulent à sa gauche et reprennent toute la largeur
+ * une fois qu'elle est passée. Posée dans une colonne, elle imposait sa
+ * hauteur à la présentation — et laissait un grand vide sous un texte
+ * court. Le conteneur de la fiche doit donc être en `flow-root`, pour
+ * qu'elle n'en déborde pas.
+ *
+ * Sur un écran plus étroit, il n'y a pas la place de deux colonnes : elle
+ * vient sous le texte. Dans la page, elle est pourtant écrite avant lui —
+ * un élément flottant n'écarte que ce qui le suit ; c'est `order` qui la
+ * redescend.
  */
 export function PresentationAvecVideo({
   memberId,
@@ -55,46 +67,28 @@ export function PresentationAvecVideo({
   children: ReactNode;
 }) {
   if (!fichier && !gestion) return <>{children}</>;
-
-  // Sans vidéo, il n'y a qu'un bouton pour en ajouter une : il reste
-  // discret, en haut à droite.
-  if (!fichier) {
-    return (
-      <div className="grid items-start gap-x-8 gap-y-5 xl:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="min-w-0">{children}</div>
-        <VideoPresentation memberId={memberId} nom={nom} gestion={gestion} />
-      </div>
-    );
-  }
-
   return (
-    // Deux colonnes sur grand écran seulement : entre la barre latérale et
-    // une vidéo, le texte n'aurait plus la place de se lire. Sur un très
-    // grand écran, le texte garde la largeur où il se lit bien, et tout le
-    // reste revient à la vidéo, qui s'y centre.
-    <div className="grid gap-x-8 gap-y-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] 2xl:grid-cols-[minmax(0,640px)_minmax(0,1fr)]">
-      <div className="min-w-0">{children}</div>
-      {/*
-        La vidéo se pose dans la place libre, et non dans le coin en haut à
-        droite : un peu plus bas que le nom, et un peu en retrait du bord
-        droit — il lui reste à droite un petit tiers de la place libre sur un
-        très grand écran, 24 px sur un écran moyen. Plus à gauche, elle
-        paraissait détachée du bord sans être vraiment centrée.
-        Face à une présentation plus haute qu'elle, elle se centre aussi en
-        hauteur, mais dans les 440 premiers pixels seulement : derrière un
-        très long texte, elle descendrait sinon hors de vue.
-      */}
-      <div className="min-w-0 xl:pt-10 xl:pr-6 2xl:pr-0">
-        <div className="flex xl:min-h-[min(100%,440px)] xl:items-center xl:justify-center 2xl:justify-start">
-          <VideoPresentation
-            memberId={memberId}
-            nom={nom}
-            fichier={fichier}
-            gestion={gestion}
-            className="max-w-[520px] xl:max-w-[440px] 2xl:ml-[calc((100%-440px)*0.7)]"
-          />
-        </div>
+    <div className="flex flex-col xl:block">
+      <div
+        className={`order-2 xl:float-right xl:ml-8 ${
+          fichier
+            ? // Un peu plus bas que le nom, et un peu en retrait du bord
+              // droit de la carte.
+              "mt-5 xl:mb-4 xl:mr-6 xl:mt-10 xl:w-[416px] 2xl:mr-[calc((100%-1112px)*0.3)] 2xl:w-[440px]"
+            : // Sans vidéo, il n'y a qu'un bouton pour en ajouter une : il
+              // reste discret, en haut à droite.
+              "mt-4 xl:mb-3 xl:mt-0 xl:w-[280px]"
+        }`}
+      >
+        <VideoPresentation
+          memberId={memberId}
+          nom={nom}
+          fichier={fichier}
+          gestion={gestion}
+          className="max-w-[520px] xl:max-w-none"
+        />
       </div>
+      <div className="order-1 min-w-0">{children}</div>
     </div>
   );
 }

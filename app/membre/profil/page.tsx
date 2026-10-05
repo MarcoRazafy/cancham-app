@@ -211,7 +211,7 @@ export default async function ProfilPage() {
             />
           </Agrandir>
         </CouvertureReglable>
-        <div className="p-[22px]">
+        <div className="flow-root p-[22px]">
           {/*
             La vidéo de présentation tient à droite du nom et du texte. Le
             membre l'ajoute, la remplace ou la retire d'ici ; sans vidéo,
@@ -287,7 +287,9 @@ export default async function ProfilPage() {
             </>
           ) : null}
 
-          <div className="flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
+          {/* `clear-both` : les produits prennent toute la largeur, ils
+              attendent que la vidéo flottante soit passée. */}
+          <div className="clear-both flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
             <h2 className="text-[17px] font-semibold m-0">
               Produits &amp; services

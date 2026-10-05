@@ -76,7 +76,7 @@ export async function FicheAnnuairePage({
             }
           />
         </Agrandir>
-        <div className="p-[22px]">
+        <div className="flow-root p-[22px]">
           {/* La vidéo de présentation, à droite — s'il y en a une. */}
           <PresentationAvecVideo memberId={m.id} nom={m.nom} fichier={m.video}>
             <div className="flex gap-4 flex-wrap justify-between">
@@ -124,7 +124,9 @@ export async function FicheAnnuairePage({
 
           <NeedsAndInterests member={m} />
 
-          <div className="flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
+          {/* `clear-both` : les produits prennent toute la largeur, ils
+              attendent que la vidéo flottante soit passée. */}
+          <div className="clear-both flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
             <h2 className="text-[17px] font-semibold m-0">
               Produits &amp; services
