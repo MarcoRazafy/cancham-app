@@ -15,6 +15,7 @@ import { Jauge, LienFleche, Panneau, Vide } from "@/components/admin/ui";
 import { LigneJournal } from "@/components/admin/LigneJournal";
 import { Agrandir } from "@/components/Agrandir";
 import { CouvertureReglable } from "@/components/CouvertureReglable";
+import { VideoPresentation } from "@/components/VideoPresentation";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import {
@@ -217,6 +218,16 @@ export default async function AdminMembreDetail({
             <p className="m-0 mt-1.5 text-muted text-[14px] leading-relaxed max-w-[75ch] whitespace-pre-line">
               <TexteLie texte={m.desc} />
             </p>
+            {/* La vidéo de présentation : l'équipe peut la poser, la
+                remplacer ou la retirer pour le membre. */}
+            <div className="mt-4">
+              <VideoPresentation
+                memberId={m.id}
+                nom={m.nom}
+                fichier={m.video}
+                gestion={fiche}
+              />
+            </div>
             <NeedsAndInterests
               member={m}
               action={<AjouterBesoinButton memberId={m.id} retour={fiche} />}

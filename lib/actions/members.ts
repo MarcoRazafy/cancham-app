@@ -25,6 +25,7 @@ import {
   courrielRelanceCotisation,
 } from "@/lib/modeles-courriels";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
+import { supprimerVideo } from "@/lib/videos";
 import { normaliserSite } from "@/lib/liens";
 import { cadrageValide } from "@/lib/cadrage";
 import { PAYS, PROVISOIRE } from "@/lib/accueil";
@@ -923,6 +924,35 @@ export async function repositionnerCouverture(demande: {
   return { ok: true };
 }
 
+/**
+ * Retire la vidéo de présentation d'une fiche.
+ *
+ * L'ajout et le remplacement passent par `/api/fiche/video` : une vidéo
+ * arrive par morceaux, ce qu'un formulaire ne sait pas faire. Le retrait,
+ * lui, est un geste simple.
+ */
+export async function retirerVideoPresentation(formData: FormData) {
+  const retour = retourInterne(formData, "/membre/profil");
+  const { memberId: id, estEquipe } = await exigerFiche(
+    texte(formData, "memberId"),
+    retour,
+  );
+
+  const actuel = await prisma.member.findUnique({
+    where: { id },
+    select: { video: true },
+  });
+  if (!actuel) redirectWithErreur(retour, "Fiche introuvable.");
+
+  if (actuel.video) {
+    await prisma.member.update({ where: { id }, data: { video: null } });
+    await supprimerVideo(actuel.video);
+    await tracerEquipe(estEquipe, id, retour, "Vidéo de présentation retirée.");
+    revalideTout();
+  }
+  redirectWithFlash(retour, "Vidéo de présentation retirée");
+}
+
 /** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */
 const BESOINS_MAX = 15;
 
@@ -1070,6 +1100,7 @@ export async function deleteMember(formData: FormData) {
     where: { id },
     select: {
       ...SELECTION_DESTINATAIRE,
+      video: true,
       _count: { select: { factures: true } },
     },
   });
@@ -1095,6 +1126,9 @@ export async function deleteMember(formData: FormData) {
     }),
     prisma.member.delete({ where: { id } }),
   ]);
+  // Sa vidéo de présentation part avec lui : jusqu'à un gigaoctet, que plus
+  // rien ne désignerait.
+  await supprimerVideo(m.video);
 
   const factures = n
     ? ` · ${n} facture${n > 1 ? "s" : ""} conservée${n > 1 ? "s" : ""}`

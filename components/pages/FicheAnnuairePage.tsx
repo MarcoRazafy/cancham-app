@@ -15,6 +15,7 @@ import {
   Visuel,
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
+import { PresentationAvecVideo } from "@/components/VideoPresentation";
 import { TexteLie } from "@/components/TexteLie";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
@@ -76,47 +77,50 @@ export async function FicheAnnuairePage({
           />
         </Agrandir>
         <div className="p-[22px]">
-          <div className="flex gap-4 flex-wrap justify-between">
-            <div className="flex gap-4">
-              <Partage nom={`membre-${m.id}`}>
-                <div className="shrink-0">
-                  <LogoMark member={m} size={64} />
-                </div>
-              </Partage>
-              <div>
-                <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
-                <PuceSecteur secteur={m.secteur} grand />
-                {m.siteweb ? (
-                  <a
-                    href={m.siteweb}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-1 text-[13.2px] font-semibold text-accent no-underline hover:underline"
-                  >
-                    <Globe size={14} className="shrink-0" />
-                    {affichageSite(m.siteweb)}
-                  </a>
-                ) : null}
-                <div className="flex gap-1.5 flex-wrap pt-2.5">
-                  {m.type === "physique" ? (
-                    <Pill icon={<UserIcon size={10} />}>
-                      Indépendant · personne physique
-                    </Pill>
+          {/* La vidéo de présentation, à droite — s'il y en a une. */}
+          <PresentationAvecVideo memberId={m.id} nom={m.nom} fichier={m.video}>
+            <div className="flex gap-4 flex-wrap justify-between">
+              <div className="flex gap-4">
+                <Partage nom={`membre-${m.id}`}>
+                  <div className="shrink-0">
+                    <LogoMark member={m} size={64} />
+                  </div>
+                </Partage>
+                <div>
+                  <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
+                  <PuceSecteur secteur={m.secteur} grand />
+                  {m.siteweb ? (
+                    <a
+                      href={m.siteweb}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-1 text-[13.2px] font-semibold text-accent no-underline hover:underline"
+                    >
+                      <Globe size={14} className="shrink-0" />
+                      {affichageSite(m.siteweb)}
+                    </a>
                   ) : null}
-                  <Pill>
-                    Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}
-                  </Pill>
+                  <div className="flex gap-1.5 flex-wrap pt-2.5">
+                    {m.type === "physique" ? (
+                      <Pill icon={<UserIcon size={10} />}>
+                        Indépendant · personne physique
+                      </Pill>
+                    ) : null}
+                    <Pill>
+                      Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}
+                    </Pill>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <p className="mt-5 font-semibold text-[14.5px]">
-            <TexteLie texte={m.activite} />
-          </p>
-          <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch] whitespace-pre-line">
-            <TexteLie texte={m.desc} />
-          </p>
+            <p className="mt-5 font-semibold text-[14.5px]">
+              <TexteLie texte={m.activite} />
+            </p>
+            <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch] whitespace-pre-line">
+              <TexteLie texte={m.desc} />
+            </p>
+          </PresentationAvecVideo>
 
           <NeedsAndInterests member={m} />
 

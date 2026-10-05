@@ -20,6 +20,7 @@ import {
 } from "@/components/domain";
 import { Agrandir } from "@/components/Agrandir";
 import { CouvertureReglable } from "@/components/CouvertureReglable";
+import { PresentationAvecVideo } from "@/components/VideoPresentation";
 import { TexteLie } from "@/components/TexteLie";
 import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
@@ -211,48 +212,60 @@ export default async function ProfilPage() {
           </Agrandir>
         </CouvertureReglable>
         <div className="p-[22px]">
-          <div className="flex gap-4">
-            <LogoMark member={m} size={64} />
-            <div>
-              <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
-              <div className="flex gap-1.5 flex-wrap items-center">
-                <PuceSecteur secteur={m.secteur} grand />
-                <span className="inline-flex items-center gap-1 text-muted text-[13.4px]">
-                  <MapPin size={13} /> {m.ville}
-                  {m.pays ? ` · ${m.pays}` : ""}
-                </span>
-              </div>
-              {m.siteweb ? (
-                <a
-                  href={m.siteweb}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-1 text-[13.2px] font-semibold text-accent no-underline hover:underline"
-                >
-                  <Globe size={14} className="shrink-0" />
-                  {affichageSite(m.siteweb)}
-                </a>
-              ) : null}
-              <div className="flex gap-1.5 flex-wrap pt-2.5">
-                <StatusPill status={m.statut} />
-                {m.type === "physique" ? (
-                  <Pill icon={<UserIcon size={10} />}>
-                    Indépendant · personne physique
-                  </Pill>
+          {/*
+            La vidéo de présentation tient à droite du nom et du texte. Le
+            membre l'ajoute, la remplace ou la retire d'ici ; sans vidéo,
+            l'annuaire n'en montre aucune trace.
+          */}
+          <PresentationAvecVideo
+            memberId={m.id}
+            nom={m.nom}
+            fichier={m.video}
+            gestion="/membre/profil"
+          >
+            <div className="flex gap-4">
+              <LogoMark member={m} size={64} />
+              <div>
+                <h1 className="m-0 mb-2 text-[22px]">{m.nom}</h1>
+                <div className="flex gap-1.5 flex-wrap items-center">
+                  <PuceSecteur secteur={m.secteur} grand />
+                  <span className="inline-flex items-center gap-1 text-muted text-[13.4px]">
+                    <MapPin size={13} /> {m.ville}
+                    {m.pays ? ` · ${m.pays}` : ""}
+                  </span>
+                </div>
+                {m.siteweb ? (
+                  <a
+                    href={m.siteweb}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-1 text-[13.2px] font-semibold text-accent no-underline hover:underline"
+                  >
+                    <Globe size={14} className="shrink-0" />
+                    {affichageSite(m.siteweb)}
+                  </a>
                 ) : null}
-                <Pill>
-                  Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}
-                </Pill>
+                <div className="flex gap-1.5 flex-wrap pt-2.5">
+                  <StatusPill status={m.statut} />
+                  {m.type === "physique" ? (
+                    <Pill icon={<UserIcon size={10} />}>
+                      Indépendant · personne physique
+                    </Pill>
+                  ) : null}
+                  <Pill>
+                    Membre depuis {fmtDate(m.adhesion, { year: "numeric" })}
+                  </Pill>
+                </div>
               </div>
             </div>
-          </div>
 
-          <p className="mt-[18px] font-semibold text-[14.5px]">
-            <TexteLie texte={m.activite} />
-          </p>
-          <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch] whitespace-pre-line">
-            <TexteLie texte={m.desc} />
-          </p>
+            <p className="mt-[18px] font-semibold text-[14.5px]">
+              <TexteLie texte={m.activite} />
+            </p>
+            <p className="mt-1.5 text-muted text-[14px] leading-relaxed max-w-[70ch] whitespace-pre-line">
+              <TexteLie texte={m.desc} />
+            </p>
+          </PresentationAvecVideo>
 
           <NeedsAndInterests
             member={m}

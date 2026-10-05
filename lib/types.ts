@@ -115,6 +115,8 @@ export interface Member {
   photo?: string | null;
   /** Logo de l'organisation. Prime sur `photo` partout où l'on identifie le membre. */
   logo?: string | null;
+  /** Vidéo de présentation : le nom de son fichier. `null` = aucune. */
+  video?: string | null;
   /** Inscription pas encore complétée : l'accueil pas à pas reste à finir. */
   accueilEnCours?: boolean;
 }

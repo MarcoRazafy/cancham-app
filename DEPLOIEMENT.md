@@ -28,6 +28,11 @@ La configuration de Railway est versionnée dans le dépôt :
 > plusieurs répliques, et la limitation des tentatives de connexion vit en
 > mémoire. Laissez le nombre de répliques à 1.
 
+> **La taille du volume.** Chaque membre peut joindre à sa fiche une vidéo de
+> présentation, d'un gigaoctet au plus (dossier `videos/` du volume). Prévoyez
+> la place en conséquence, et surveillez-la : un volume plein fait échouer
+> tous les envois de fichiers.
+
 ## 2. Les variables
 
 Sur le service de l'application, onglet **Variables** :

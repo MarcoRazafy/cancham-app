@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 import { redirectWithErreur } from "@/lib/flash";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, utilisateurConnecte } from "@/lib/session";
 import type { User } from "@/lib/types";
 
 /**
@@ -74,6 +74,60 @@ export async function exigerFiche(
     redirectWithErreur(retour, REFUS);
   }
   return { user, memberId: user.memberId, estEquipe: false };
+}
+
+/**
+ * La même règle qu'`exigerFiche`, pour une route d'API : elle répond au lieu
+ * de rediriger — un envoi de fichier n'a que faire d'une page de connexion.
+ *
+ * Le proxy ne couvre pas `/api` : chaque route s'en remet donc à ceci. C'est
+ * le rôle de la personne qui dit d'où elle agit ; l'équipe vise la fiche
+ * qu'elle nomme, un membre la sienne, quoi qu'il envoie.
+ */
+export async function ficheParApi(memberIdDemande: string): Promise<
+  | {
+      ok: true;
+      userId: string;
+      nom: string;
+      memberId: string;
+      estEquipe: boolean;
+    }
+  | { ok: false; statut: 401 | 403 | 404; erreur: string }
+> {
+  const user = await utilisateurConnecte();
+  if (!user) return { ok: false, statut: 401, erreur: "Connexion requise." };
+
+  if (user.role === "admin") {
+    const existe = memberIdDemande
+      ? await prisma.member.findUnique({
+          where: { id: memberIdDemande },
+          select: { id: true },
+        })
+      : null;
+    return existe
+      ? {
+          ok: true,
+          userId: user.id,
+          nom: user.nom,
+          memberId: existe.id,
+          estEquipe: true,
+        }
+      : { ok: false, statut: 404, erreur: "Fiche introuvable." };
+  }
+  if (
+    user.role !== "membre" ||
+    !user.memberId ||
+    (memberIdDemande && memberIdDemande !== user.memberId)
+  ) {
+    return { ok: false, statut: 403, erreur: REFUS };
+  }
+  return {
+    ok: true,
+    userId: user.id,
+    nom: user.nom,
+    memberId: user.memberId,
+    estEquipe: false,
+  };
 }
 
 /** Action sur un produit ou service : il doit appartenir à la fiche autorisée. */

@@ -13,6 +13,7 @@ import { hacher, motDePasseProvisoire } from "@/lib/mots-de-passe";
 import { getCurrentUser } from "@/lib/session";
 import type { NiveauEquipe } from "@/lib/types";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
+import { supprimerVideo } from "@/lib/videos";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
@@ -211,6 +212,7 @@ export async function promouvoirAdmin(formData: FormData) {
           id: true,
           nom: true,
           statut: true,
+          video: true,
           _count: {
             select: {
               users: true,
@@ -252,6 +254,7 @@ export async function promouvoirAdmin(formData: FormData) {
   });
   if (supprimer && fiche) {
     await prisma.member.delete({ where: { id: fiche.id } });
+    await supprimerVideo(fiche.video);
   }
 
   await rattacherEquipe();
