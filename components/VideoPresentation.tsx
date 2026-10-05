@@ -55,24 +55,42 @@ export function PresentationAvecVideo({
   children: ReactNode;
 }) {
   if (!fichier && !gestion) return <>{children}</>;
+
+  // Sans vidéo, il n'y a qu'un bouton pour en ajouter une : il reste
+  // discret, en haut à droite.
+  if (!fichier) {
+    return (
+      <div className="grid items-start gap-x-8 gap-y-5 xl:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="min-w-0">{children}</div>
+        <VideoPresentation memberId={memberId} nom={nom} gestion={gestion} />
+      </div>
+    );
+  }
+
   return (
     // Deux colonnes sur grand écran seulement : entre la barre latérale et
-    // une vidéo, le texte n'aurait plus la place de se lire.
-    <div
-      className={`grid items-start gap-x-8 gap-y-5 ${
-        fichier
-          ? "xl:grid-cols-[minmax(0,1fr)_minmax(320px,440px)]"
-          : "xl:grid-cols-[minmax(0,1fr)_auto]"
-      }`}
-    >
+    // une vidéo, le texte n'aurait plus la place de se lire. Sur un très
+    // grand écran, le texte garde la largeur où il se lit bien, et tout le
+    // reste revient à la vidéo, qui s'y centre.
+    <div className="grid gap-x-8 gap-y-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,440px)] 2xl:grid-cols-[minmax(0,640px)_minmax(0,1fr)]">
       <div className="min-w-0">{children}</div>
-      <VideoPresentation
-        memberId={memberId}
-        nom={nom}
-        fichier={fichier}
-        gestion={gestion}
-        className="max-w-[520px] xl:max-w-none"
-      />
+      {/*
+        La vidéo se pose au milieu de la place libre, et non dans le coin :
+        centrée en largeur, et en hauteur face au texte. En hauteur, on ne
+        la centre que dans les 440 premiers pixels — derrière une très
+        longue présentation, elle descendrait sinon hors de vue.
+      */}
+      <div className="min-w-0">
+        <div className="flex xl:min-h-[min(100%,440px)] xl:items-center xl:justify-center">
+          <VideoPresentation
+            memberId={memberId}
+            nom={nom}
+            fichier={fichier}
+            gestion={gestion}
+            className="max-w-[520px] xl:max-w-[440px]"
+          />
+        </div>
+      </div>
     </div>
   );
 }
