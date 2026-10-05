@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { delivrerBillets, delivrerBilletsPublics } from "@/lib/billets";
 import { prisma } from "@/lib/db";
+import { jourBase } from "@/lib/format";
 import { nomFacture } from "@/lib/factures";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
@@ -118,7 +119,7 @@ export async function conclurePaiement(
       : [
           prisma.invoice.update({
             where: { id: f.id },
-            data: { statut: "payee" },
+            data: { statut: "payee", payeeLe: jourBase() },
           }),
         ]),
     ...(cotisation

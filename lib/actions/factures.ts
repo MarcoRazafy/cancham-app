@@ -69,6 +69,8 @@ export async function creerFacture(formData: FormData) {
         montant,
         devise,
         statut: payee ? "payee" : "envoyee",
+        // Émise déjà réglée : sa date est celle du règlement.
+        payeeLe: payee ? date : null,
         memberId,
       },
     });
@@ -154,7 +156,12 @@ export async function marquerFacturePayee(formData: FormData) {
   const montant = fmtMontant(f.montant, f.devise);
 
   await prisma.$transaction([
-    prisma.invoice.update({ where: { id }, data: { statut: "payee" } }),
+    prisma.invoice.update({
+      where: { id },
+      // Le jour saisi par l'équipe : celui où l'argent est arrivé, qui
+      // n'est pas forcément celui où elle l'enregistre.
+      data: { statut: "payee", payeeLe: date },
+    }),
     ...(cotisation
       ? [
           prisma.member.update({
@@ -297,7 +304,9 @@ export async function modifierDateReglement(formData: FormData) {
   await prisma.$transaction([
     prisma.invoice.update({
       where: { id: derniere.id },
-      data: { date: jourBase(jour) },
+      // Le jour imprimé sur la facture — « Paiement reçu le… » — suit la
+      // correction : c'est bien la date du règlement qu'on reprend ici.
+      data: { date: jourBase(jour), payeeLe: jourBase(jour) },
     }),
     ...(noteAJour
       ? [

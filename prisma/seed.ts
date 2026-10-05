@@ -387,6 +387,8 @@ async function main() {
         montant: f.montant,
         devise: f.devise,
         statut: f.statut,
+        // Les factures de démonstration sont émises déjà réglées.
+        payeeLe: f.statut === "payee" ? d(f.date) : null,
         memberId: f.membreId,
       },
     });

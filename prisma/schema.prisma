@@ -761,6 +761,11 @@ model Invoice {
   montant Int
   devise  Devise        @default(MGA)
   statut  InvoiceStatus @default(envoyee)
+  /// Le jour où le règlement a été reçu — celui que la facture imprime :
+  /// « Paiement reçu le… ». Pour une facture émise déjà réglée, c'est sa
+  /// propre date ; pour une facture réglée plus tard, le jour du paiement.
+  /// `null` tant qu'elle n'est pas payée.
+  payeeLe DateTime?     @db.Date
 
   /// Le membre facturé. `null` une fois le membre supprimé : la facture est
   /// une pièce comptable, elle reste — avec son destinataire figé ci-dessous.

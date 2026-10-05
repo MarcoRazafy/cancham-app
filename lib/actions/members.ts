@@ -573,6 +573,8 @@ export async function registerPayment(formData: FormData) {
         montant,
         devise,
         statut: "payee",
+        // Émise déjà réglée : la date saisie est celle du règlement.
+        payeeLe: date,
         memberId: id,
       },
     }),

@@ -108,13 +108,35 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
               </td>
             </tr>
           </tbody>
+          {/*
+            Le décompte, comme sur toute facture : ce qui est dû, ce qui a
+            été reçu et quand, ce qui reste. Une facture réglée finit sur un
+            reste à payer de zéro — c'est ce chiffre-là qu'on cherche.
+          */}
           <tfoot>
             <tr>
-              <td className="px-4 pt-4 text-right font-semibold">
-                Total à régler
-              </td>
-              <td className="px-4 pt-4 text-right text-[18px] font-bold tabular-nums">
+              <td className="px-4 pt-4 text-right font-semibold">Total</td>
+              <td className="px-4 pt-4 text-right font-semibold tabular-nums">
                 {fmtMontant(f.montant, f.devise)}
+              </td>
+            </tr>
+            {payee ? (
+              <tr className="text-[#5b6b7a]">
+                <td className="px-4 pt-1.5 pb-3 text-right">
+                  Paiement reçu
+                  {f.payeeLe ? ` le ${fmtDate(f.payeeLe)}` : ""}
+                </td>
+                <td className="px-4 pt-1.5 pb-3 text-right tabular-nums">
+                  {fmtMontant(f.montant, f.devise)}
+                </td>
+              </tr>
+            ) : null}
+            <tr className={payee ? "border-t border-[#dfe5ec]" : ""}>
+              <td className="px-4 pt-3 text-right font-semibold">
+                Reste à payer
+              </td>
+              <td className="px-4 pt-3 text-right text-[18px] font-bold tabular-nums">
+                {fmtMontant(payee ? 0 : f.montant, f.devise)}
               </td>
             </tr>
           </tfoot>

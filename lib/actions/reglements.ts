@@ -12,7 +12,7 @@ import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { ajouterJours, estJourISO } from "@/lib/agenda";
-import { aujourdhuiISO, fmtDate } from "@/lib/format";
+import { aujourdhuiISO, fmtDate, jourBase } from "@/lib/format";
 import { fmtMontant } from "@/lib/membership";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -405,7 +405,7 @@ export async function confirmerReglement(formData: FormData) {
       ? [
           prisma.invoice.update({
             where: { id: p.invoice.id },
-            data: { statut: "payee" },
+            data: { statut: "payee", payeeLe: jourBase() },
           }),
         ]
       : []),

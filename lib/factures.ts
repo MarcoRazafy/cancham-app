@@ -105,6 +105,8 @@ export interface FactureDetaillee extends Invoice {
   contact: { nom: string; email: string; tel: string | null } | null;
   /** Enregistrement du règlement, lu dans le journal. */
   reglement: string | null;
+  /** Le jour où le règlement a été reçu. `null` tant qu'elle n'est pas payée. */
+  payeeLe: string | null;
 }
 
 /** Une facture, avec ce qu'il faut pour l'imprimer. */
@@ -154,5 +156,6 @@ export async function getFacture(id: string): Promise<FactureDetaillee | null> {
     },
     contact: d.contact,
     reglement: trace?.detail ?? null,
+    payeeLe: f.payeeLe ? toISODate(f.payeeLe) : null,
   };
 }
