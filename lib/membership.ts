@@ -21,6 +21,9 @@ import type { Member, MemberStatus } from "@/lib/types";
  */
 export const PHOTOS_PAR_PRODUIT = 5;
 
+/** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */
+export const BESOINS_PAR_FICHE = 15;
+
 /** Au-delà de ce nombre de jours de retard, l'accès est coupé automatiquement. */
 export const RETARD_BLOCAGE_JOURS = 30;
 

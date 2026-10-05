@@ -30,7 +30,7 @@ import { normaliserSite } from "@/lib/liens";
 import { cadrageValide } from "@/lib/cadrage";
 import { PAYS, PROVISOIRE } from "@/lib/accueil";
 import { estSecteur, secteurOuProvisoire } from "@/lib/secteurs";
-import { PHOTOS_PAR_PRODUIT } from "@/lib/membership";
+import { BESOINS_PAR_FICHE, PHOTOS_PAR_PRODUIT } from "@/lib/membership";
 import {
   champsProduit,
   creerProduit,
@@ -955,9 +955,6 @@ export async function retirerVideoPresentation(formData: FormData) {
   redirectWithFlash(retour, "Vidéo de présentation retirée");
 }
 
-/** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */
-const BESOINS_MAX = 15;
-
 /** Ajoute un besoin à la liste « Besoins & intérêts » de sa fiche. */
 export async function ajouterBesoin(formData: FormData) {
   const retour = retourInterne(formData, "/membre/profil");
@@ -979,10 +976,10 @@ export async function ajouterBesoin(formData: FormData) {
     .flatMap((t) => (t ?? "").split("\n"))
     .map((l) => l.trim())
     .filter(Boolean);
-  if (lignes.length >= BESOINS_MAX) {
+  if (lignes.length >= BESOINS_PAR_FICHE) {
     redirectWithErreur(
       retour,
-      `${BESOINS_MAX} besoins au plus : retirez-en un en modifiant la fiche.`,
+      `${BESOINS_PAR_FICHE} besoins au plus : retirez-en un en modifiant la fiche.`,
     );
   }
 

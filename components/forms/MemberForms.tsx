@@ -15,7 +15,7 @@ import {
 import { OptionsFormules } from "@/components/OptionsFormules";
 import { OptionsSecteurs } from "@/components/OptionsSecteurs";
 import { PAYS } from "@/lib/accueil";
-import { useState } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -47,6 +47,7 @@ import {
   ajouterBesoin,
 } from "@/lib/actions/members";
 import {
+  BESOINS_PAR_FICHE,
   FORMULES,
   fmtMontant,
   libelleFormule,
@@ -728,17 +729,9 @@ export function EditProfileButton({
             {/* Un seul champ : besoins et intérêts se lisent en une liste
                 unique sur la fiche. Les intérêts déjà saisis y sont repris à la
                 suite, pour que rien ne se perde à l'enregistrement. */}
-            <Field
-              label="Besoins actuels"
-              hint="Ce que vous recherchez : partenaires, distributeurs, financement… Une ligne par besoin : chacune devient un tiret sur votre fiche."
-            >
-              <textarea
-                name="besoins"
-                rows={4}
-                defaultValue={[besoins, interets].filter(Boolean).join("\n")}
-                className={INPUT}
-              />
-            </Field>
+            <ChampBesoins
+              initial={[besoins, interets].filter(Boolean).join("\n")}
+            />
             <Field
               label="Motivation à rejoindre CanCham"
               hint="Ce que vous attendez de la chambre. L’équipe la lit en examinant votre adhésion."
@@ -778,6 +771,146 @@ export function EditProfileButton({
         </form>
       )}
     </Modal>
+  );
+}
+
+/**
+ * Les besoins de la fiche : un par ligne, et un bouton pour en ajouter.
+ *
+ * Le formulaire n'envoie toujours qu'un champ, `besoins`, où chaque besoin
+ * tient sur une ligne — comme la zone de texte que cette liste remplace.
+ * Mais il n'y a plus à savoir qu'un retour à la ligne fait un tiret.
+ */
+function ChampBesoins({ initial }: { initial: string }) {
+  const titre = useId();
+  const [lignes, setLignes] = useState(() => {
+    const saisies = initial
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    // Une fiche sans besoin s'ouvre sur une ligne à remplir.
+    return (saisies.length ? saisies : [""]).map((texte, id) => ({
+      id,
+      texte,
+    }));
+  });
+  /** La ligne tout juste ajoutée : c'est elle qui prend le curseur. */
+  const [nouvelle, setNouvelle] = useState<number | null>(null);
+
+  const champ = (id: number) => `${titre}-${id}`;
+  const prochain = () => Math.max(-1, ...lignes.map((l) => l.id)) + 1;
+  const plein = lignes.length >= BESOINS_PAR_FICHE;
+
+  const ajouter = () => {
+    // Une ligne encore vide attend déjà : on y va, sans en empiler une autre.
+    const vide = lignes.find((l) => !l.texte.trim());
+    if (vide) {
+      document.getElementById(champ(vide.id))?.focus();
+      return;
+    }
+    if (plein) return;
+    const id = prochain();
+    setLignes([...lignes, { id, texte: "" }]);
+    setNouvelle(id);
+  };
+
+  const retirer = (id: number) => {
+    const reste = lignes.filter((l) => l.id !== id);
+    setLignes(reste.length ? reste : [{ id: prochain(), texte: "" }]);
+  };
+
+  const ecrire = (id: number, valeur: string) => {
+    // Un texte collé sur plusieurs lignes fait autant de besoins.
+    const [premiere, ...suite] = valeur.split(/\r?\n/);
+    let suivant = prochain();
+    setLignes(
+      lignes.flatMap((l) =>
+        l.id !== id
+          ? [l]
+          : [
+              { id, texte: premiere },
+              ...suite
+                .filter((t) => t.trim())
+                .map((texte) => ({ id: suivant++, texte })),
+            ],
+      ),
+    );
+  };
+
+  // Entrée passe au besoin suivant : elle n'enregistre pas la fiche, et ne
+  // coupe pas un besoin en deux.
+  const touche = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    ajouter();
+  };
+
+  return (
+    <div role="group" aria-labelledby={titre}>
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <span id={titre} className="text-[12.3px] font-semibold text-muted">
+          Besoins actuels
+        </span>
+        <button
+          type="button"
+          onClick={ajouter}
+          disabled={plein}
+          className={`${BTN_LINE} text-[12.4px] px-[11px] py-1.5 disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          <Plus size={14} /> Ajouter
+        </button>
+      </div>
+      <input
+        type="hidden"
+        name="besoins"
+        value={lignes
+          .map((l) => l.texte.trim())
+          .filter(Boolean)
+          .join("\n")}
+      />
+      <div className="flex flex-col gap-2">
+        {lignes.map((l, i) => (
+          <div key={l.id} className="flex items-start gap-2">
+            {/* La zone de saisie grandit avec son texte : elle prend la
+                hauteur d'un calque invisible qui porte le même texte, dans
+                la même case de la grille. */}
+            <div className="grid min-w-0 flex-1">
+              <div
+                aria-hidden
+                className={`${INPUT} invisible whitespace-pre-wrap break-words [grid-area:1/1]`}
+              >
+                {`${l.texte} `}
+              </div>
+              <textarea
+                id={champ(l.id)}
+                rows={1}
+                value={l.texte}
+                onChange={(e) => ecrire(l.id, e.target.value)}
+                onKeyDown={touche}
+                autoFocus={l.id === nouvelle}
+                aria-label={`Besoin ${i + 1}`}
+                placeholder="Ex. Un distributeur bio établi au Québec"
+                className={`${INPUT} resize-none overflow-hidden [grid-area:1/1]`}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => retirer(l.id)}
+              aria-label={`Retirer le besoin ${i + 1}`}
+              title="Retirer"
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius-s)] border border-line bg-transparent text-muted hover:bg-surface-2 hover:text-bad"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <span className="mt-1 block text-[11.5px] text-faint">
+        Ce que vous recherchez : partenaires, distributeurs, financement… Chaque
+        besoin devient un tiret sur votre fiche.
+        {plein ? ` ${BESOINS_PAR_FICHE} besoins au plus.` : null}
+      </span>
+    </div>
   );
 }
 

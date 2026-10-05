@@ -26,7 +26,6 @@ import { CarrouselSection } from "@/components/CarrouselSection";
 import { CarteService } from "@/components/CarteService";
 import {
   AddContactButton,
-  AjouterBesoinButton,
   AjouterServiceButton,
   ModifierServiceButton,
   SupprimerServiceButton,
@@ -267,10 +266,8 @@ export default async function ProfilPage() {
             </p>
           </PresentationAvecVideo>
 
-          <NeedsAndInterests
-            member={m}
-            action={<AjouterBesoinButton memberId={m.id} />}
-          />
+          {/* Les besoins s'ajoutent dans « Modifier ma fiche ». */}
+          <NeedsAndInterests member={m} aRemplir />
 
           {m.motivation ? (
             <>

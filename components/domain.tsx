@@ -436,16 +436,22 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
 export function NeedsAndInterests({
   member,
   action,
+  aRemplir = false,
 }: {
   member: Member;
-  /** Bouton d'ajout, sur sa propre fiche : la section s'affiche alors même vide. */
+  /** Bouton d'ajout, côté équipe : la section s'affiche alors même vide. */
   action?: ReactNode;
+  /**
+   * Sur sa propre fiche : la section s'affiche même vide, et dit où la
+   * remplir — les besoins s'ajoutent dans « Modifier ma fiche ».
+   */
+  aRemplir?: boolean;
 }) {
   const lignes = [member.besoins, member.interets]
     .flatMap((texte) => (texte ?? "").split("\n"))
     .map((ligne) => ligne.replace(/^\s*[-–—•*]\s*/, "").trim())
     .filter(Boolean);
-  if (!lignes.length && !action) return null;
+  if (!lignes.length && !action && !aRemplir) return null;
 
   return (
     <>
@@ -465,6 +471,9 @@ export function NeedsAndInterests({
         <p className="m-0 text-[13.4px] text-muted">
           Dites ce que vous recherchez — partenaires, distributeurs,
           financement… : c’est ce qui déclenche les mises en relation.
+          {aRemplir
+            ? " Ajoutez vos besoins depuis « Modifier ma fiche »."
+            : null}
         </p>
       ) : null}
       {lignes.length ? (
