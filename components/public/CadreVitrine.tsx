@@ -68,6 +68,8 @@ export const retard = (ms: number): CSSProperties =>
 const LIENS = [
   { href: "/", libelle: "Accueil" },
   { href: "/#evenements", libelle: "Événements" },
+  // Le Gala des 10 ans a sa page à lui, hors de la liste des événements.
+  { href: "/la-traversee", libelle: "La Traversée" },
   { href: "/#actualites", libelle: "Actualités" },
   { href: "/auth/inscription", libelle: "Devenir membre" },
 ];
@@ -213,6 +215,7 @@ const COLONNES = [
     liens: [
       { libelle: "Accueil", href: "/" },
       { libelle: "Événements", href: "/#evenements" },
+      { libelle: "La Traversée", href: "/la-traversee" },
       { libelle: "Actualités", href: "/#actualites" },
     ],
   },
