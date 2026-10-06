@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { LienAncre } from "@/components/public/LienAncre";
+import { NavigationPublique } from "@/components/public/NavigationPublique";
 import { LogoOfficiel } from "@/components/public/Marque";
 import { chiffres, COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate } from "@/lib/format";
@@ -68,14 +69,20 @@ export const retard = (ms: number): CSSProperties =>
 const LIENS = [
   { href: "/", libelle: "Accueil" },
   { href: "/#evenements", libelle: "Événements" },
-  // Le Gala des 10 ans a sa page à lui, hors de la liste des événements.
-  { href: "/la-traversee", libelle: "La Traversée" },
   { href: "/#actualites", libelle: "Actualités" },
   { href: "/auth/inscription", libelle: "Devenir membre" },
+  // Le Gala des 10 ans a sa page à lui, hors de la liste des événements.
+  { href: "/la-traversee", libelle: "La Traversée" },
 ];
 
+/**
+ * Un lien de la barre. Sous celui de la page où l'on est — `aria-current`,
+ * posé par `NavigationPublique` —, un trait rouge vers vert ; sous les autres,
+ * il se déroule au survol. La graisse ne change pas : un lien qui s'élargit
+ * ferait bouger toute la barre au fil du défilement.
+ */
 const lien =
-  "inline-flex items-center px-2.5 md:px-3 lg:px-4 py-1.5 md:py-2 rounded-[6px] text-[13.5px] md:text-[14.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] hover:bg-[#f3f5f8]";
+  "relative inline-flex items-center px-2.5 md:px-3 lg:px-4 py-1.5 md:py-2 text-[13.5px] md:text-[14.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] aria-[current=page]:text-[var(--marque-nuit)] after:absolute after:left-2.5 after:right-2.5 md:after:left-3 md:after:right-3 lg:after:left-4 lg:after:right-4 after:bottom-0.5 after:h-[2px] after:rounded-full after:bg-[linear-gradient(90deg,var(--marque-rouge),var(--marque-vert))] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 aria-[current=page]:after:scale-x-100";
 
 /** Ce que le bandeau annonce quand aucun événement n'est programmé. */
 const ANNONCES_PAR_DEFAUT = [
@@ -196,11 +203,7 @@ export async function EnTetePublique() {
             aria-label="Navigation principale"
             className="order-3 md:order-2 w-full md:w-auto flex items-center gap-1 md:gap-2 mt-1.5 md:mt-0 -mx-1 px-1 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {LIENS.map((l) => (
-              <LienAncre key={l.href} href={l.href} className={lien}>
-                {l.libelle}
-              </LienAncre>
-            ))}
+            <NavigationPublique liens={LIENS} className={lien} />
           </nav>
         </div>
       </div>
@@ -215,8 +218,8 @@ const COLONNES = [
     liens: [
       { libelle: "Accueil", href: "/" },
       { libelle: "Événements", href: "/#evenements" },
-      { libelle: "La Traversée", href: "/la-traversee" },
       { libelle: "Actualités", href: "/#actualites" },
+      { libelle: "La Traversée", href: "/la-traversee" },
     ],
   },
   {

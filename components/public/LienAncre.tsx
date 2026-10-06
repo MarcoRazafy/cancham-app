@@ -19,11 +19,14 @@ import type { MouseEvent, ReactNode } from "react";
 export function LienAncre({
   href,
   className,
+  actif = false,
   children,
 }: {
   /** « #section » sur la page même, ou « /#section » depuis ailleurs. */
   href: string;
   className?: string;
+  /** Le lien de la page où l'on est : il le dit aux lecteurs d'écran, et le style le marque. */
+  actif?: boolean;
   children: ReactNode;
 }) {
   const chemin = usePathname();
@@ -48,7 +51,12 @@ export function LienAncre({
   };
 
   return (
-    <Link href={href} className={className} onClick={cliquer}>
+    <Link
+      href={href}
+      className={className}
+      aria-current={actif ? "page" : undefined}
+      onClick={cliquer}
+    >
       {children}
     </Link>
   );
