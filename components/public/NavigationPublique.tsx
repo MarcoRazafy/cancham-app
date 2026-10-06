@@ -8,6 +8,11 @@ export interface LienNavigation {
   /** « / », « /#section » ou « /page ». */
   href: string;
   libelle: string;
+  /**
+   * Sur ordinateur, ce lien vit ailleurs — en bouton, à côté de
+   * « Se connecter » — et n'apparaît ici que sur téléphone.
+   */
+  mobileSeulement?: boolean;
 }
 
 /**
@@ -97,7 +102,7 @@ export function NavigationPublique({
         <LienAncre
           key={l.href}
           href={l.href}
-          className={className}
+          className={`${className} ${l.mobileSeulement ? "md:hidden" : ""}`}
           actif={actif(l.href)}
         >
           {l.libelle}
