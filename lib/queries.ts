@@ -1613,6 +1613,45 @@ export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
 }
 
 /**
+ * Le prochain événement public dont le titre porte ce nom.
+ *
+ * La page de la Traversée mène à la fiche de son événement sans en
+ * connaître l'identifiant : la chambre crée l'événement dans le back-office,
+ * et la page le retrouve à son titre. `null` tant qu'il n'existe pas.
+ */
+export async function getProchainEvenementIntitule(
+  nom: string,
+): Promise<CanchamEvent | null> {
+  const e = await prisma.event.findFirst({
+    where: {
+      public: true,
+      date: { gte: jourBase() },
+      titre: { contains: nom, mode: "insensitive" },
+    },
+    include: { _count: { select: { participants: true } } },
+    orderBy: { date: "asc" },
+  });
+  if (!e) return null;
+  return {
+    id: e.id,
+    titre: e.titre,
+    date: toISODate(e.date),
+    lieu: e.lieu,
+    format: EVENT_FORMAT_LABEL[e.format],
+    cap: e.cap,
+    inscrits: e._count.participants,
+    payant: e.payant,
+    prix: e.prix,
+    public: e.public,
+    prixPublic: e.prixPublic,
+    desc: e.desc,
+    photo: e.photo,
+    debut: e.debut,
+    fin: e.fin,
+  };
+}
+
+/**
  * Entreprises déjà inscrites à un événement.
  *
  * On renvoie les noms d'entreprise dédupliqués, pas les personnes : un membre

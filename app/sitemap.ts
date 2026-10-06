@@ -29,6 +29,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.8,
     },
+    // La page du Gala des 10 ans, écrite à la main : elle ne vient pas de la base.
+    { url: `${base}/la-traversee`, changeFrequency: "weekly", priority: 0.9 },
     ...evenements.map((e) => ({
       url: `${base}/evenements/${e.id}`,
       lastModified: new Date(e.date),

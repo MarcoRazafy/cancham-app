@@ -1,0 +1,2591 @@
+/* ============================================================
+   LA TRAVERSÉE · Gala des 10 ans de la CanCham
+   Page de la vitrine : app/(vitrine)/la-traversee
+
+   Charte CanCham : bleu nuit, rouge, vert, blanc. Montserrat en gras
+   pour les titres, Open Sans pour le texte, comme la page « Polices »
+   de la charte le prescrit ; la page les charge elle-même (page.tsx),
+   le reste de la vitrine garde Hammersmith One et Inter.
+
+   Concept : une ligne qui traverse la page du rouge (Canada) au
+   vert (Madagascar), comme le pont que la chambre construit depuis
+   dix ans.
+
+   Portée. Chaque règle est préfixée par `.marque .vitrine-claire.la-traversee` : rien
+   ici ne touche l'en-tête, le pied ni les autres pages, et la page passe
+   devant les règles que la vitrine pose sur les mêmes noms de classes —
+   `surtitre`, `saillant`, `apparition`, `scene` et ses `reveler`. Les
+   boutons `btn-action` et `btn-contour` sont ceux de la vitrine ; la page
+   n'en redit que les couleurs sur fond sombre et sur fond clair.
+
+   Apparitions. `Scenes`, dans la mise en page de la vitrine, pose
+   `data-visible` sur chaque `scene` qui entre à l'écran : la page n'a pas
+   d'observateur à elle. Les noms d'animations portent le préfixe
+   `traversee-`, les animations étant globales.
+   ============================================================ */
+.marque .vitrine-claire.la-traversee {
+  /* Les jetons de la page, raccordés à ceux de la vitrine (globals.css,
+     vitrine.css) : la charte n'est écrite qu'une fois. */
+  --nuit: var(--marque-nuit);
+  --nuit-2: var(--marque-nuit-2);
+  --nuit-3: var(--marque-nuit-3);
+  --nuit-4: #24405f;
+  --rouge: var(--marque-rouge);
+  --rouge-fort: var(--accent-strong);
+  --rouge-pale: var(--accent-soft);
+  --vert: var(--marque-vert);
+  --vert-fort: var(--success-strong);
+  --vert-pale: var(--success-soft);
+  /* Sur fond bleu nuit, le rouge et le vert pleins s'éteignent : leurs
+     déclinaisons claires, celles de `.vitrine-sombre`. */
+  --rouge-clair: #d81f3a;
+  --rouge-vif: #d81f3a;
+  --vert-clair: #2fae6a;
+  --vert-vif: #3fc98a;
+  --blanc: #ffffff;
+  --papier: var(--surface-2);
+  --papier-2: var(--surface-3);
+  --ligne: var(--border);
+  --texte: var(--text);
+  --texte-2: var(--text-muted);
+  --texte-3: var(--text-faint);
+  --or: #c9a24a;
+  --degrade: var(--marque-degrade);
+  --degrade-fond: linear-gradient(
+    135deg,
+    #7a0a1c 0%,
+    #ad0707 22%,
+    #0f1d2c 52%,
+    #0f5028 82%,
+    #007140 100%
+  );
+  /* `--bouton-rouge` et `--bouton-rouge-survol` viennent de globals.css. */
+  --ombre: var(--shadow);
+  --ombre-sombre:
+    0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -24px rgb(0 0 0 / 0.7);
+  --r-s: var(--radius-s);
+  --r-m: var(--radius-m);
+  --r-l: var(--radius-l);
+  --titre: var(--font-montserrat), -apple-system, "Segoe UI", sans-serif;
+  --texte-police: var(--font-open-sans), -apple-system, "Segoe UI", sans-serif;
+  --courbe: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  font-family: var(--texte-police);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.marque .vitrine-claire.la-traversee h1,
+.marque .vitrine-claire.la-traversee h2,
+.marque .vitrine-claire.la-traversee h3 {
+  font-family: var(--titre);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.marque .vitrine-claire.la-traversee .sombre :focus-visible {
+  outline-color: #fff;
+}
+.marque .vitrine-claire.la-traversee .tnum {
+  font-variant-numeric: tabular-nums;
+}
+/* Une section visée par une ancre s'arrête sous l'en-tête collant de la vitrine. */
+.marque .vitrine-claire.la-traversee [id] {
+  scroll-margin-top: 124px;
+}
+.marque .vitrine-claire.la-traversee .conteneur {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .marque .vitrine-claire.la-traversee .conteneur {
+    padding-inline: 40px;
+  }
+}
+
+/* ---------- Typographie ---------- */
+.marque .vitrine-claire.la-traversee .surtitre {
+  font-family: var(--texte-police);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.marque .vitrine-claire.la-traversee .surtitre::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.8;
+}
+.marque .vitrine-claire.la-traversee .saillant {
+  font-family: var(--titre);
+  font-size: inherit;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.marque .vitrine-claire.la-traversee .titre-section {
+  font-size: clamp(32px, 4.4vw, 56px);
+  line-height: 1.06;
+}
+.marque .vitrine-claire.la-traversee .titre-bloc {
+  font-size: clamp(22px, 2.4vw, 28px);
+  line-height: 1.2;
+}
+.marque .vitrine-claire.la-traversee .chapeau {
+  font-size: clamp(16px, 1.3vw, 18px);
+  line-height: 1.65;
+  color: var(--texte-2);
+  max-width: 62ch;
+}
+.marque .vitrine-claire.la-traversee .sombre {
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .sombre .chapeau {
+  color: rgb(255 255 255 / 0.74);
+}
+.marque .vitrine-claire.la-traversee .sombre .saillant {
+  color: var(--vert-vif);
+}
+.marque .vitrine-claire.la-traversee .clair .saillant {
+  color: var(--vert);
+}
+.marque .vitrine-claire.la-traversee .clair .saillant.rouge {
+  color: var(--rouge);
+}
+.marque .vitrine-claire.la-traversee .sombre .saillant.rouge,
+.marque .vitrine-claire.la-traversee .final .saillant.rouge {
+  color: var(--rouge-clair);
+}
+.marque .vitrine-claire.la-traversee .rouge {
+  color: var(--rouge);
+}
+.marque .vitrine-claire.la-traversee .sombre .rouge {
+  color: var(--rouge-vif);
+}
+
+/* ---------- Boutons (repris de CanCham Connect) ---------- */
+/* Les boutons sont ceux de la vitrine ; ils prennent seulement la police de la page. */
+.marque .vitrine-claire.la-traversee .btn-action,
+.marque .vitrine-claire.la-traversee .btn-contour {
+  font-family: var(--texte-police);
+}
+.marque .vitrine-claire.la-traversee .btn-contour {
+  background: transparent;
+  border-color: rgb(255 255 255 / 0.55);
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .btn-contour:hover {
+  background: rgb(255 255 255 / 0.1);
+  border-color: #fff;
+  transform: translateY(-1px);
+}
+.marque .vitrine-claire.la-traversee .clair .btn-contour {
+  border-color: var(--nuit);
+  color: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .clair .btn-contour:hover {
+  background: var(--nuit);
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .btn-blanc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 26px;
+  border: 1px solid #fff;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 48px;
+  background: #fff;
+  color: var(--vert-fort);
+  transition:
+    transform 0.15s var(--courbe),
+    box-shadow 0.15s ease,
+    background 0.15s;
+}
+.marque .vitrine-claire.la-traversee .btn-blanc:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -14px rgb(0 0 0 / 0.5);
+  background: #f4f6f9;
+}
+.marque .vitrine-claire.la-traversee .btn-blanc:active {
+  transform: translateY(0);
+}
+.marque .vitrine-claire.la-traversee .btn-action .fleche,
+.marque .vitrine-claire.la-traversee .btn-contour .fleche {
+  transition: transform 0.2s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .btn-action:hover .fleche,
+.marque .vitrine-claire.la-traversee .btn-contour:hover .fleche {
+  transform: translateX(4px);
+}
+
+/* ============================================================
+   LA LIGNE DE TRAVERSÉE : filet vertical qui suit tout le site
+   ============================================================ */
+.marque .vitrine-claire.la-traversee .traversee {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  z-index: 30;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    var(--rouge-clair) 0%,
+    var(--rouge) 30%,
+    rgb(255 255 255 / 0.35) 50%,
+    var(--vert) 70%,
+    var(--vert-vif) 100%
+  );
+  transform-origin: top;
+  transform: scaleY(var(--progression, 0));
+  opacity: 0.9;
+}
+.marque .vitrine-claire.la-traversee .traversee::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(0, 50%);
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 0.25);
+}
+@media (max-width: 767px) {
+  .marque .vitrine-claire.la-traversee .traversee {
+    display: none;
+  }
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.marque .vitrine-claire.la-traversee .hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--nuit);
+  isolation: isolate;
+}
+.marque .vitrine-claire.la-traversee .hero-photo {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+.marque .vitrine-claire.la-traversee .hero-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+}
+/* Diaporama : la photo active apparaît en fondu et zoome lentement ; les
+   autres attendent, invisibles, déjà chargées. Sans animation demandée, la
+   première reste seule à l'écran. */
+.marque .vitrine-claire.la-traversee .diapo .diapo-img {
+  opacity: 0;
+  transition: opacity 2.2s ease-in-out;
+  transform: scale(1);
+}
+.marque .vitrine-claire.la-traversee .diapo .diapo-img.active {
+  opacity: 1;
+}
+/* Le zoom ne s'arrête jamais : chaque photo va et vient entre 1 et 1,08 en
+   continu, visible ou non, décalée des autres. Quand elle revient à l'écran,
+   elle est déjà en mouvement : pas de retour brusque au cadrage initial. */
+.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img {
+  animation: traversee-diapo-zoom 14s ease-in-out infinite alternate;
+}
+.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(2) {
+  animation-delay: -7s;
+}
+.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(3) {
+  animation-delay: -3.5s;
+}
+.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(4) {
+  animation-delay: -10.5s;
+}
+.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(5) {
+  animation-delay: -5s;
+}
+@keyframes traversee-diapo-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+.marque .vitrine-claire.la-traversee .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      rgb(15 29 44 / 0.96) 0%,
+      rgb(15 29 44 / 0.86) 38%,
+      rgb(15 29 44 / 0.55) 70%,
+      rgb(15 29 44 / 0.35) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(15 29 44 / 0.2) 0%,
+      rgb(15 29 44 / 0) 40%,
+      rgb(15 29 44 / 0.95) 100%
+    );
+}
+/* Grille fine du hero : mailles larges, traits très pâles et légèrement
+   flous, pour une texture qui se devine sans se lire. */
+.marque .vitrine-claire.la-traversee .hero-grille {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.022) 1px, transparent 1px);
+  background-size: 112px 112px;
+  filter: blur(0.6px);
+  mask-image: linear-gradient(
+    180deg,
+    transparent,
+    #000 30%,
+    #000 70%,
+    transparent
+  );
+}
+.marque .vitrine-claire.la-traversee .hero-in {
+  position: relative;
+  display: grid;
+  gap: 40px;
+  padding-block: 56px 48px;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .hero-in {
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+    align-items: end;
+    padding-block: 88px 64px;
+    gap: 48px;
+  }
+}
+.marque .vitrine-claire.la-traversee .hero h1 {
+  font-size: clamp(38px, 5.6vw, 80px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  margin: 22px 0 24px;
+  max-width: 14ch;
+}
+.marque .vitrine-claire.la-traversee .hero h1 .l {
+  display: block;
+}
+.marque .vitrine-claire.la-traversee .hero h1 .saillant {
+  font-size: 0.78em;
+  padding-right: 0.12em;
+}
+.marque .vitrine-claire.la-traversee .hero h1 .saillant.vert {
+  color: var(--vert-vif);
+}
+.marque .vitrine-claire.la-traversee .hero h1 .saillant.rouge {
+  color: var(--rouge-vif);
+}
+.marque .vitrine-claire.la-traversee .hero .chapeau {
+  max-width: 56ch;
+  color: rgb(255 255 255 / 0.8);
+}
+.marque .vitrine-claire.la-traversee .hero-infos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  margin: 26px 0 30px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.marque .vitrine-claire.la-traversee .hero-infos span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.marque .vitrine-claire.la-traversee .hero-infos svg {
+  color: rgb(255 255 255 / 0.85);
+  flex-shrink: 0;
+}
+.marque .vitrine-claire.la-traversee .hero-infos .places {
+  color: #ffd2d8;
+}
+.marque .vitrine-claire.la-traversee .hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+/* Colonne droite : badge 10 ans + compte à rebours */
+.marque .vitrine-claire.la-traversee .hero-droite {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .hero-droite {
+    align-items: flex-end;
+    text-align: right;
+  }
+}
+.marque .vitrine-claire.la-traversee .badge-10 {
+  width: min(300px, 70%);
+  height: auto;
+  filter: drop-shadow(0 18px 30px rgb(0 0 0 / 0.45));
+  animation: traversee-levitation 7s ease-in-out infinite;
+}
+@keyframes traversee-levitation {
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.marque .vitrine-claire.la-traversee .compte {
+  display: inline-grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--r-m);
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(8px);
+}
+.marque .vitrine-claire.la-traversee .compte div {
+  min-width: 64px;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: var(--r-s);
+  background: rgb(15 29 44 / 0.55);
+}
+.marque .vitrine-claire.la-traversee .compte b {
+  display: block;
+  font-family: var(--titre);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1;
+  color: #fff;
+  transition:
+    transform 0.25s var(--courbe),
+    opacity 0.25s;
+}
+.marque .vitrine-claire.la-traversee .compte b.tic {
+  animation: traversee-tic 0.35s var(--courbe);
+}
+@keyframes traversee-tic {
+  0% {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+.marque .vitrine-claire.la-traversee .compte span {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgb(255 255 255 / 0.6);
+  font-weight: 700;
+}
+.marque .vitrine-claire.la-traversee .compte-legende {
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.6);
+}
+/* Pont du hero : le dégradé qui traverse */
+.marque .vitrine-claire.la-traversee .pont {
+  height: 3px;
+  background: var(--degrade);
+  transform-origin: left;
+}
+/* Les lots à gagner : une barre en verre fumé où les lots défilent
+   (Lots.tsx). Le lot actif monte en place, le précédent sort par le haut. */
+.marque .vitrine-claire.la-traversee .lots-barre {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 30px;
+  padding: 8px 8px 8px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  backdrop-filter: blur(10px);
+  max-width: 680px;
+  overflow: hidden;
+  transition:
+    background 0.3s,
+    border-color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .lots-barre:hover {
+  background: rgb(255 255 255 / 0.1);
+  border-color: rgb(255 255 255 / 0.28);
+}
+.marque .vitrine-claire.la-traversee .lots-etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background-image: var(--bouton-rouge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .lots-pouls {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 0 rgb(255 255 255 / 0.6);
+  animation: traversee-pulse 1.8s infinite;
+}
+.marque .vitrine-claire.la-traversee .lots-fenetre {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+}
+.marque .vitrine-claire.la-traversee .lots-item {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  transition:
+    transform 0.55s var(--courbe),
+    opacity 0.45s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .lots-item.attente {
+  transform: translateY(110%);
+  opacity: 0;
+}
+.marque .vitrine-claire.la-traversee .lots-item.actif {
+  transform: none;
+  opacity: 1;
+}
+.marque .vitrine-claire.la-traversee .lots-item.sorti {
+  transform: translateY(-110%);
+  opacity: 0;
+}
+.marque .vitrine-claire.la-traversee .lots-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: rgb(255 255 255 / 0.1);
+}
+.marque .vitrine-claire.la-traversee .lots-ico {
+  color: rgb(255 255 255 / 0.85);
+}
+.marque .vitrine-claire.la-traversee .lots-texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+.marque .vitrine-claire.la-traversee .lots-texte b {
+  font-family: var(--titre);
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.marque .vitrine-claire.la-traversee .lots-texte small {
+  font-size: 12px;
+  color: rgb(255 255 255 / 0.68);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.marque .vitrine-claire.la-traversee .lots-points {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.marque .vitrine-claire.la-traversee .lots-points button {
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.3);
+  cursor: pointer;
+  transition:
+    background 0.3s,
+    width 0.3s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .lots-points button.on {
+  width: 18px;
+  border-radius: 3px;
+  background: #fff;
+}
+.marque .vitrine-claire.la-traversee .lots-lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.marque .vitrine-claire.la-traversee .lots-lien:hover {
+  background: rgb(255 255 255 / 0.12);
+  border-color: #fff;
+}
+.marque .vitrine-claire.la-traversee .lots-lien svg {
+  transition: transform 0.25s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .lots-lien:hover svg {
+  transform: translateX(3px);
+}
+/* Reflet qui balaie la barre toutes les sept secondes. */
+.marque .vitrine-claire.la-traversee .lots-reflet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  width: 30%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgb(255 255 255 / 0.12),
+    transparent
+  );
+  transform: skewX(-18deg);
+  animation: traversee-lots-balayage 7s var(--courbe) infinite;
+}
+@keyframes traversee-lots-balayage {
+  0%,
+  70% {
+    left: -40%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+.marque .vitrine-claire.la-traversee .lots-barre[data-pause] .lots-reflet {
+  animation-play-state: paused;
+}
+@media (max-width: 640px) {
+  .marque .vitrine-claire.la-traversee .lots-barre {
+    flex-wrap: wrap;
+    border-radius: var(--r-l);
+    padding: 10px;
+    gap: 10px;
+  }
+  .marque .vitrine-claire.la-traversee .lots-fenetre {
+    flex-basis: 100%;
+    order: 3;
+    height: 46px;
+  }
+  .marque .vitrine-claire.la-traversee .lots-points {
+    order: 2;
+    margin-left: auto;
+  }
+  .marque .vitrine-claire.la-traversee .lots-lien {
+    order: 4;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- Preuves : bande sur le dégradé ---------- */
+.marque .vitrine-claire.la-traversee .preuves {
+  background: var(--degrade-fond);
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .preuves-in {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: rgb(255 255 255 / 0.14);
+  border-radius: var(--r-m);
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .marque .vitrine-claire.la-traversee .preuves-in {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.marque .vitrine-claire.la-traversee .preuves-in div {
+  background: rgb(15 29 44 / 0.55);
+  padding: 26px 22px;
+  backdrop-filter: blur(4px);
+}
+.marque .vitrine-claire.la-traversee .preuves b {
+  display: block;
+  font-family: var(--titre);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: clamp(34px, 3.6vw, 52px);
+  line-height: 1;
+}
+.marque .vitrine-claire.la-traversee .preuves .lbl {
+  display: block;
+  margin-top: 6px;
+  font-size: 14px;
+  color: rgb(255 255 255 / 0.75);
+  line-height: 1.4;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.marque .vitrine-claire.la-traversee .section {
+  padding-block: 72px;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .section {
+    padding-block: 104px;
+  }
+}
+.marque .vitrine-claire.la-traversee .clair {
+  background: var(--blanc);
+  color: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .clair.papier {
+  background: var(--papier);
+}
+.marque .vitrine-claire.la-traversee .sombre {
+  background: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .tete {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 760px;
+  margin-bottom: 44px;
+}
+.marque .vitrine-claire.la-traversee .tete .surtitre {
+  color: var(--rouge);
+}
+.marque .vitrine-claire.la-traversee .sombre .tete .surtitre {
+  color: var(--rouge-vif);
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .tete.ligne {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    max-width: none;
+  }
+  .marque .vitrine-claire.la-traversee .tete.ligne > div {
+    max-width: 620px;
+  }
+  .marque .vitrine-claire.la-traversee .tete.ligne .chapeau {
+    max-width: 44ch;
+    margin-bottom: 6px;
+  }
+}
+
+/* ---------- Le parcours de la journée ----------
+   Quatre cartes égales sous la ligne de traversée. La ligne se trace quand la
+   section entre à l'écran ; chaque point grossit au survol de sa carte. */
+.marque .vitrine-claire.la-traversee .parcours {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  padding-left: 34px;
+}
+.marque .vitrine-claire.la-traversee .parcours::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--rouge), var(--vert));
+  transform-origin: top;
+  border-radius: 2px;
+}
+.marque .vitrine-claire.la-traversee .scene[data-visible] .parcours::before {
+  animation: traversee-tracer-v 1.4s var(--courbe) both;
+}
+@keyframes traversee-tracer-v {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: none;
+  }
+}
+.marque .vitrine-claire.la-traversee .etape {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--ligne);
+  border-radius: var(--r-m);
+  box-shadow: var(--ombre);
+  transition:
+    transform 0.35s var(--courbe),
+    box-shadow 0.35s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .etape:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px -28px rgb(15 29 44 / 0.45);
+}
+.marque .vitrine-claire.la-traversee .etape::before {
+  content: "";
+  position: absolute;
+  left: -30px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--rouge);
+  box-shadow: 0 0 0 5px var(--blanc);
+  transition:
+    transform 0.3s var(--courbe),
+    background 0.3s;
+  z-index: 2;
+}
+.marque .vitrine-claire.la-traversee .etape:nth-child(2)::before {
+  border-color: #6d2a2a;
+}
+.marque .vitrine-claire.la-traversee .etape:nth-child(3)::before {
+  border-color: #2a5a3a;
+}
+.marque .vitrine-claire.la-traversee .etape:nth-child(4)::before {
+  border-color: var(--vert);
+  background: var(--vert);
+}
+.marque .vitrine-claire.la-traversee .etape:hover::before {
+  transform: scale(1.5);
+}
+.marque .vitrine-claire.la-traversee .etape figure {
+  margin: 0;
+  position: relative;
+  aspect-ratio: 16/10;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--nuit);
+  border-radius: var(--r-m) var(--r-m) 0 0;
+}
+.marque .vitrine-claire.la-traversee .etape figure img {
+  transition: transform 1.2s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .etape:hover figure img {
+  transform: scale(1.06);
+}
+.marque .vitrine-claire.la-traversee .etape figcaption {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(15 29 44 / 0.75);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+.marque .vitrine-claire.la-traversee .etape-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px 22px;
+  flex: 1;
+}
+.marque .vitrine-claire.la-traversee .etape time {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--rouge-pale);
+  color: var(--rouge);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .etape h3 {
+  font-size: clamp(20px, 1.7vw, 23px);
+}
+.marque .vitrine-claire.la-traversee .etape p {
+  color: var(--texte-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+/* La carte du Gala : bleu nuit, halo vert, horaire en vert. */
+.marque .vitrine-claire.la-traversee .etape.phare {
+  background: var(--nuit);
+  color: #fff;
+  border-color: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .etape.phare .etape-corps {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 var(--r-m) var(--r-m);
+}
+.marque .vitrine-claire.la-traversee .etape.phare .etape-corps::after {
+  content: "";
+  position: absolute;
+  inset: auto -30% -30% auto;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(0 113 64 / 0.45), transparent 70%);
+  pointer-events: none;
+}
+.marque .vitrine-claire.la-traversee .etape.phare .etape-corps > * {
+  position: relative;
+  z-index: 1;
+}
+.marque .vitrine-claire.la-traversee .etape.phare time {
+  background: rgb(255 255 255 / 0.12);
+  color: var(--vert-vif);
+}
+.marque .vitrine-claire.la-traversee .etape.phare p {
+  color: rgb(255 255 255 / 0.8);
+}
+.marque .vitrine-claire.la-traversee .etape.phare .mention {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  background-image: var(--bouton-rouge);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.marque .vitrine-claire.la-traversee .etape.phare ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.marque .vitrine-claire.la-traversee .etape.phare li {
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  border: 1px solid rgb(255 255 255 / 0.14);
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .marque .vitrine-claire.la-traversee .parcours {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .parcours {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+    padding-left: 0;
+    padding-top: 34px;
+    align-items: stretch;
+  }
+  .marque .vitrine-claire.la-traversee .parcours::before {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+    bottom: auto;
+    height: 2px;
+    width: auto;
+    background: var(--degrade);
+    transform-origin: left;
+  }
+  .marque .vitrine-claire.la-traversee .scene[data-visible] .parcours::before {
+    animation-name: traversee-tracer-h;
+  }
+  @keyframes traversee-tracer-h {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: none;
+    }
+  }
+  .marque .vitrine-claire.la-traversee .etape::before {
+    left: 0;
+    top: -32px;
+  }
+}
+
+/* ---------- Pourquoi venir : bento ----------
+   Deux rangées en zigzag : grande photo à gauche puis deux tuiles, deux
+   tuiles puis grande photo à droite. Le numéro de chaque raison est posé en
+   grand filigrane dans le coin. */
+.marque .vitrine-claire.la-traversee .bento {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .marque .vitrine-claire.la-traversee .bento {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .marque .vitrine-claire.la-traversee .bento .grande {
+    grid-column: span 2;
+  }
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .bento {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(280px, auto);
+  }
+  .marque .vitrine-claire.la-traversee .bento .grande {
+    grid-column: span 2;
+  }
+}
+.marque .vitrine-claire.la-traversee .raison {
+  position: relative;
+  border-radius: var(--r-m);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid var(--ligne);
+  min-height: 220px;
+  transition:
+    transform 0.35s var(--courbe),
+    box-shadow 0.35s var(--courbe),
+    border-color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .raison:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ombre);
+  border-color: transparent;
+}
+.marque .vitrine-claire.la-traversee .raison .num {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: var(--titre);
+  font-weight: 800;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgb(15 29 44 / 0.07);
+  transition: color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .raison:hover .num {
+  color: rgb(173 7 7 / 0.14);
+}
+.marque .vitrine-claire.la-traversee .raison h3 {
+  font-size: clamp(19px, 1.6vw, 22px);
+}
+.marque .vitrine-claire.la-traversee .raison p {
+  color: var(--texte-2);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.marque .vitrine-claire.la-traversee .raison .ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--papier);
+  color: var(--nuit);
+  border: 1px solid var(--ligne);
+  margin-bottom: auto;
+  transition:
+    background 0.3s,
+    color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .raison:hover .ico {
+  background: var(--nuit);
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .raison.grande {
+  color: #fff;
+  border: 0;
+  min-height: 300px;
+  background: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .raison.grande img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.4s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .raison.grande:hover img {
+  transform: scale(1.06);
+}
+.marque .vitrine-claire.la-traversee .raison.grande::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(15 29 44 / 0.05) 20%,
+    rgb(15 29 44 / 0.92) 90%
+  );
+}
+.marque .vitrine-claire.la-traversee .raison.grande > *:not(img) {
+  position: relative;
+  z-index: 1;
+}
+.marque .vitrine-claire.la-traversee .raison.grande .num {
+  position: absolute;
+  z-index: 1;
+  color: rgb(255 255 255 / 0.22);
+}
+.marque .vitrine-claire.la-traversee .raison.grande:hover .num {
+  color: rgb(255 255 255 / 0.4);
+}
+.marque .vitrine-claire.la-traversee .raison.grande p {
+  color: rgb(255 255 255 / 0.82);
+}
+.marque .vitrine-claire.la-traversee .raison.grande h3 {
+  font-size: clamp(24px, 2.2vw, 32px);
+}
+
+/* ---------- Défis ---------- */
+.marque .vitrine-claire.la-traversee .defis {
+  background: var(--degrade-fond);
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.marque .vitrine-claire.la-traversee .defis::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+  background-size: 68px 68px;
+  pointer-events: none;
+}
+.marque .vitrine-claire.la-traversee .defis .conteneur {
+  position: relative;
+}
+.marque .vitrine-claire.la-traversee .defis .tete .surtitre {
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .cartes-defis {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .marque .vitrine-claire.la-traversee .cartes-defis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.marque .vitrine-claire.la-traversee .defi {
+  background: #fff;
+  color: var(--nuit);
+  border-radius: var(--r-m);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--ombre-sombre);
+  transition:
+    transform 0.4s var(--courbe),
+    box-shadow 0.4s var(--courbe);
+  position: relative;
+}
+.marque .vitrine-claire.la-traversee .defi:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px -28px rgb(0 0 0 / 0.7);
+}
+.marque .vitrine-claire.la-traversee .defi-visuel {
+  position: relative;
+  aspect-ratio: 4/3;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .defi-visuel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.9s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .defi:hover .defi-visuel img {
+  transform: scale(1.06);
+}
+.marque .vitrine-claire.la-traversee .defi-num {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--titre);
+  font-size: 20px;
+  color: #fff;
+  background-image: var(--bouton-rouge);
+  box-shadow: 0 8px 18px -8px rgb(0 0 0 / 0.6);
+}
+.marque .vitrine-claire.la-traversee .defi-quand {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  color: var(--nuit);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .defi-corps {
+  padding: 22px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.marque .vitrine-claire.la-traversee .defi h3 {
+  font-size: 24px;
+}
+.marque .vitrine-claire.la-traversee .defi .lot {
+  font-family: var(--titre);
+  font-size: clamp(28px, 2.6vw, 34px);
+  color: var(--vert);
+  line-height: 1;
+}
+.marque .vitrine-claire.la-traversee .defi p {
+  color: var(--texte-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.marque .vitrine-claire.la-traversee .defi .regle {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--ligne);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--nuit);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.marque .vitrine-claire.la-traversee .defi .regle svg {
+  color: var(--texte-2);
+  flex-shrink: 0;
+}
+.marque .vitrine-claire.la-traversee .defi::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--degrade);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .defi:hover::after {
+  transform: none;
+}
+.marque .vitrine-claire.la-traversee .defis .note {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: rgb(255 255 255 / 0.78);
+}
+.marque .vitrine-claire.la-traversee .defis .note a {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ---------- Ambiance : mosaïque ----------
+   Sur ordinateur, chaque photo occupe la zone que le composant lui donne
+   (`--zone`, grille 6 × 3). Plus étroit, deux colonnes et l'ordre naturel. */
+.marque .vitrine-claire.la-traversee .mosaique {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 170px;
+}
+.marque .vitrine-claire.la-traversee .mosaique figure {
+  margin: 0;
+  position: relative;
+  border-radius: var(--r-m);
+  overflow: hidden;
+  background: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .mosaique figure:first-child {
+  grid-column: span 2;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .mosaique {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: repeat(3, 210px);
+    grid-auto-rows: 210px;
+  }
+  .marque .vitrine-claire.la-traversee .mosaique figure,
+  .marque .vitrine-claire.la-traversee .mosaique figure:first-child {
+    grid-area: var(--zone);
+  }
+}
+.marque .vitrine-claire.la-traversee .mosaique img {
+  transition: transform 1.1s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .mosaique figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 55%,
+    rgb(15 29 44 / 0.7) 100%
+  );
+  opacity: 0.9;
+  transition: opacity 0.4s;
+}
+.marque .vitrine-claire.la-traversee .mosaique figure:hover img {
+  transform: scale(1.07);
+}
+.marque .vitrine-claire.la-traversee .mosaique figure:hover::after {
+  opacity: 1;
+}
+.marque .vitrine-claire.la-traversee .mosaique figcaption {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 1;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.4);
+  transition: transform 0.4s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .mosaique figure:hover figcaption {
+  transform: translateY(-4px);
+}
+.marque .vitrine-claire.la-traversee .legende {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--texte-3);
+}
+
+/* ---------- Application ---------- */
+.marque .vitrine-claire.la-traversee .appli {
+  position: relative;
+  overflow: hidden;
+}
+.marque .vitrine-claire.la-traversee .appli::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      700px 500px at 12% 60%,
+      rgb(0 113 64 / 0.32),
+      transparent 60%
+    ),
+    radial-gradient(700px 500px at 92% 10%, rgb(173 7 7 / 0.3), transparent 60%);
+  pointer-events: none;
+}
+.marque .vitrine-claire.la-traversee .appli .conteneur {
+  position: relative;
+  display: grid;
+  gap: 48px;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .appli .conteneur {
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 80px;
+  }
+}
+/* Le cadre lévite ; le téléphone, dedans, s'incline vers la souris
+   (Telephone.tsx pose --rx, --ry pour l'angle et --gx, --gy pour le reflet). */
+.marque .vitrine-claire.la-traversee .telephone-cadre {
+  width: 300px;
+  max-width: 100%;
+  margin: 0 auto;
+  animation: traversee-levitation 6s ease-in-out infinite;
+  perspective: 1200px;
+}
+.marque .vitrine-claire.la-traversee .telephone {
+  border-radius: 44px;
+  background: #0a1426;
+  padding: 12px;
+  box-shadow:
+    0 50px 80px -40px rgb(0 0 0 / 0.8),
+    inset 0 0 0 2px #26334d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.6s var(--courbe),
+    box-shadow 0.6s var(--courbe);
+  will-change: transform;
+}
+.marque .vitrine-claire.la-traversee .telephone.suivi {
+  transition:
+    transform 0.08s linear,
+    box-shadow 0.6s var(--courbe);
+  box-shadow:
+    0 70px 90px -40px rgb(0 0 0 / 0.85),
+    inset 0 0 0 2px #35466a;
+}
+.marque .vitrine-claire.la-traversee .ecran {
+  position: relative;
+}
+.marque .vitrine-claire.la-traversee .ecran::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    260px 260px at var(--gx, 50%) var(--gy, 30%),
+    rgb(255 255 255 / 0.16),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.marque .vitrine-claire.la-traversee .telephone.suivi .ecran::after {
+  opacity: 1;
+}
+@media (hover: none) {
+  .marque .vitrine-claire.la-traversee .telephone {
+    transform: none;
+  }
+}
+.marque .vitrine-claire.la-traversee .ecran {
+  border-radius: 34px;
+  overflow: hidden;
+  background: var(--papier);
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+.marque .vitrine-claire.la-traversee .e-haut {
+  background: var(--nuit);
+  color: #fff;
+  padding: 14px 14px 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.marque .vitrine-claire.la-traversee .e-haut img {
+  width: 110px;
+  height: auto;
+}
+.marque .vitrine-claire.la-traversee .e-cd {
+  background-image: var(--bouton-rouge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 14px;
+  letter-spacing: 0.04em;
+}
+.marque .vitrine-claire.la-traversee .e-corps {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: var(--nuit);
+  flex: 1;
+}
+.marque .vitrine-claire.la-traversee .e-corps h4 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--titre);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+.marque .vitrine-claire.la-traversee .e-carte {
+  background: #fff;
+  border-radius: 12px;
+  display: flex;
+  overflow: hidden;
+  min-height: 92px;
+}
+.marque .vitrine-claire.la-traversee .e-carte .e-img {
+  position: relative;
+  width: 84px;
+  flex-shrink: 0;
+}
+.marque .vitrine-claire.la-traversee .e-carte img {
+  object-fit: cover;
+}
+.marque .vitrine-claire.la-traversee .e-carte div {
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--texte-2);
+}
+.marque .vitrine-claire.la-traversee .e-carte b {
+  font-family: var(--titre);
+  font-weight: 700;
+  color: var(--nuit);
+  font-size: 14px;
+}
+.marque .vitrine-claire.la-traversee .e-carte strong {
+  font-family: var(--titre);
+  font-weight: 700;
+  color: var(--vert);
+  font-size: 16px;
+}
+.marque .vitrine-claire.la-traversee .e-carte .go {
+  margin-top: 4px;
+  background-image: var(--bouton-rouge);
+  color: #fff;
+  border-radius: 4px;
+  font-weight: 700;
+  padding: 4px 8px;
+  align-self: flex-start;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .e-onglets {
+  background: #fff;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 10px 4px 14px;
+  font-size: 9px;
+  text-align: center;
+  color: var(--texte-2);
+  font-weight: 700;
+}
+.marque .vitrine-claire.la-traversee .e-onglets span:first-child {
+  color: var(--rouge);
+}
+.marque .vitrine-claire.la-traversee .fonctions {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .marque .vitrine-claire.la-traversee .fonctions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.marque .vitrine-claire.la-traversee .fonction {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px;
+  border-radius: var(--r-m);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.05);
+  transition:
+    border-color 0.3s,
+    transform 0.3s var(--courbe),
+    background 0.3s;
+}
+.marque .vitrine-claire.la-traversee .fonction:hover {
+  border-color: rgb(255 255 255 / 0.3);
+  transform: translateX(4px);
+  background: rgb(255 255 255 / 0.08);
+}
+.marque .vitrine-claire.la-traversee .fonction::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--degrade);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .fonction:hover::after {
+  transform: none;
+}
+.marque .vitrine-claire.la-traversee .fonction-num {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-s);
+  background: rgb(255 255 255 / 0.08);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  font-family: var(--titre);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+  color: rgb(255 255 255 / 0.9);
+  transition:
+    background 0.3s,
+    color 0.3s,
+    transform 0.3s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .fonction:hover .fonction-num {
+  background: #fff;
+  color: var(--nuit);
+  transform: rotate(-6deg);
+}
+.marque .vitrine-claire.la-traversee .fonction b {
+  display: block;
+  color: #fff;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+.marque .vitrine-claire.la-traversee .fonction span {
+  color: rgb(255 255 255 / 0.72);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+/* ---------- Billet ---------- */
+.marque .vitrine-claire.la-traversee .billet-grille {
+  display: grid;
+  gap: 22px;
+  align-items: stretch;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .billet-grille {
+    grid-template-columns: 1.2fr 1fr;
+  }
+}
+.marque .vitrine-claire.la-traversee .pass {
+  background: #fff;
+  border: 1px solid var(--ligne);
+  border-radius: var(--r-l);
+  box-shadow: var(--ombre);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.marque .vitrine-claire.la-traversee .pass-haut {
+  background-image: var(--bouton-rouge);
+  color: #fff;
+  padding: 26px 28px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+}
+.marque .vitrine-claire.la-traversee .pass-haut::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.08);
+}
+.marque .vitrine-claire.la-traversee .pass-haut .surtitre {
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .pass-haut .surtitre::before {
+  background: #fff;
+}
+.marque .vitrine-claire.la-traversee .pass-prix {
+  font-family: var(--titre);
+  font-size: clamp(40px, 4vw, 54px);
+  line-height: 1;
+  margin-top: 10px;
+}
+.marque .vitrine-claire.la-traversee .pass-prix small {
+  font-size: 0.45em;
+  font-family: var(--texte-police);
+  font-weight: 600;
+  margin-left: 6px;
+}
+.marque .vitrine-claire.la-traversee .pass-haut .quand {
+  font-size: 13.5px;
+  color: rgb(255 255 255 / 0.9);
+  font-weight: 600;
+  text-align: right;
+  line-height: 1.5;
+}
+.marque .vitrine-claire.la-traversee .perfo {
+  height: 0;
+  border-top: 2px dashed var(--ligne);
+  margin: 0 26px;
+  position: relative;
+}
+.marque .vitrine-claire.la-traversee .perfo::before,
+.marque .vitrine-claire.la-traversee .perfo::after {
+  content: "";
+  position: absolute;
+  top: -13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--papier);
+}
+.marque .vitrine-claire.la-traversee .perfo::before {
+  left: -39px;
+}
+.marque .vitrine-claire.la-traversee .perfo::after {
+  right: -39px;
+}
+.marque .vitrine-claire.la-traversee .pass-corps {
+  padding: 26px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+.marque .vitrine-claire.la-traversee .inclus {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .marque .vitrine-claire.la-traversee .inclus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.marque .vitrine-claire.la-traversee .inclus li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.marque .vitrine-claire.la-traversee .inclus svg {
+  flex-shrink: 0;
+  color: var(--nuit);
+  margin-top: 3px;
+}
+.marque .vitrine-claire.la-traversee .inclus b {
+  color: var(--nuit);
+}
+/* Carrousel des moyens de paiement : défilement continu vers la gauche,
+   arrêt au survol. Les bords de la fenêtre sont fondus. */
+.marque .vitrine-claire.la-traversee .paiements {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.marque .vitrine-claire.la-traversee .paiements-lbl {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--texte-2);
+  font-weight: 600;
+}
+.marque .vitrine-claire.la-traversee .paiements-fenetre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+}
+.marque .vitrine-claire.la-traversee .paiements-piste {
+  display: flex;
+  width: max-content;
+  animation: traversee-paiements-defile 22s linear infinite;
+}
+.marque .vitrine-claire.la-traversee .paiements-fenetre:hover .paiements-piste,
+.marque
+  .vitrine-claire.la-traversee
+  .paiements-fenetre:focus-within
+  .paiements-piste {
+  animation-play-state: paused;
+}
+.marque .vitrine-claire.la-traversee .paiements-piste ul {
+  display: flex;
+  gap: 10px;
+  padding-right: 10px;
+  flex-shrink: 0;
+}
+.marque .vitrine-claire.la-traversee .paiements-piste li {
+  width: 120px;
+  height: 60px;
+  border-radius: var(--r-s);
+  overflow: hidden;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .paiements-piste li:hover {
+  transform: translateY(-2px);
+}
+.marque .vitrine-claire.la-traversee .paiements-piste img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@keyframes traversee-paiements-defile {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marque .vitrine-claire.la-traversee .paiements-fenetre {
+    mask-image: none;
+    overflow-x: auto;
+  }
+  .marque .vitrine-claire.la-traversee .paiements-piste ul[aria-hidden] {
+    display: none;
+  }
+}
+.marque .vitrine-claire.la-traversee .pass .btn-action {
+  align-self: flex-start;
+}
+.marque .vitrine-claire.la-traversee .encarts {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.marque .vitrine-claire.la-traversee .encart {
+  flex: 1;
+  position: relative;
+  border-radius: var(--r-l);
+  padding: 28px;
+  background: var(--nuit);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  overflow: hidden;
+}
+.marque .vitrine-claire.la-traversee .encart.photo {
+  min-height: 240px;
+  justify-content: flex-end;
+}
+.marque .vitrine-claire.la-traversee .encart.photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.42;
+}
+.marque .vitrine-claire.la-traversee .encart.photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(15 29 44 / 0.1), rgb(15 29 44 / 0.9));
+}
+.marque .vitrine-claire.la-traversee .encart > *:not(img) {
+  position: relative;
+  z-index: 1;
+}
+.marque .vitrine-claire.la-traversee .encart h3 {
+  font-size: clamp(22px, 2vw, 26px);
+}
+.marque .vitrine-claire.la-traversee .encart p {
+  color: rgb(255 255 255 / 0.78);
+  font-size: 15px;
+}
+.marque .vitrine-claire.la-traversee .pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .pulse i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rouge-vif);
+  box-shadow: 0 0 0 0 rgb(255 90 110 / 0.7);
+  animation: traversee-pulse 1.8s infinite;
+}
+@keyframes traversee-pulse {
+  70% {
+    box-shadow: 0 0 0 12px rgb(255 90 110 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 90 110 / 0);
+  }
+}
+.marque .vitrine-claire.la-traversee .encart .btn-contour {
+  align-self: flex-start;
+}
+
+/* ---------- Solidarité ---------- */
+.marque .vitrine-claire.la-traversee .hope {
+  border-radius: var(--r-l);
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, #0f5028 0%, #007140 60%, #1b7e3e 100%);
+  display: grid;
+}
+@media (min-width: 900px) {
+  .marque .vitrine-claire.la-traversee .hope {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.marque .vitrine-claire.la-traversee .hope-img {
+  position: relative;
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+}
+.marque .vitrine-claire.la-traversee .hope-img > div {
+  position: relative;
+  min-height: 300px;
+}
+.marque .vitrine-claire.la-traversee .hope-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.marque .vitrine-claire.la-traversee .hope-txt {
+  padding: 40px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+@media (min-width: 900px) {
+  .marque .vitrine-claire.la-traversee .hope-txt {
+    padding: 56px 52px;
+  }
+}
+.marque .vitrine-claire.la-traversee .hope-txt .surtitre {
+  color: #fff;
+}
+.marque .vitrine-claire.la-traversee .hope-txt h2 {
+  font-size: clamp(30px, 3.6vw, 46px);
+}
+.marque .vitrine-claire.la-traversee .hope-txt p {
+  color: #ddf1e6;
+  font-size: 17px;
+}
+.marque .vitrine-claire.la-traversee .hope-nums {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.marque .vitrine-claire.la-traversee .hope-nums b {
+  display: block;
+  font-family: var(--titre);
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1;
+}
+.marque .vitrine-claire.la-traversee .hope-nums span {
+  font-size: 13.5px;
+  color: #bfe6d1;
+  font-weight: 600;
+}
+.marque .vitrine-claire.la-traversee .hope .btn-blanc {
+  align-self: flex-start;
+}
+
+/* ---------- Partenaires ---------- */
+.marque .vitrine-claire.la-traversee .partenaires {
+  position: relative;
+  overflow: hidden;
+}
+.marque .vitrine-claire.la-traversee .partenaires::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      800px 420px at 100% 0%,
+      rgb(173 7 7 / 0.28),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 420px at 0% 100%,
+      rgb(0 113 64 / 0.26),
+      transparent 60%
+    );
+  pointer-events: none;
+}
+.marque .vitrine-claire.la-traversee .partenaires .conteneur {
+  position: relative;
+}
+.marque .vitrine-claire.la-traversee .sponsors {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 768px) {
+  .marque .vitrine-claire.la-traversee .sponsors {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.marque .vitrine-claire.la-traversee .sponsor {
+  position: relative;
+  border-radius: var(--r-m);
+  overflow: hidden;
+  min-height: 180px;
+  display: flex;
+  align-items: flex-end;
+  text-decoration: none;
+  color: #fff;
+  background: var(--nuit-2);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  transition:
+    transform 0.35s var(--courbe),
+    border-color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .sponsor:hover {
+  transform: translateY(-4px);
+  border-color: rgb(255 255 255 / 0.3);
+}
+.marque .vitrine-claire.la-traversee .sponsor img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  filter: saturate(0.6);
+  transition:
+    transform 0.9s var(--courbe),
+    opacity 0.5s;
+}
+.marque .vitrine-claire.la-traversee .sponsor:hover img {
+  transform: scale(1.06);
+  opacity: 0.5;
+}
+.marque .vitrine-claire.la-traversee .sponsor::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(15 29 44 / 0.1) 10%,
+    rgb(15 29 44 / 0.92) 100%
+  );
+}
+.marque .vitrine-claire.la-traversee .sponsor-in {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.marque .vitrine-claire.la-traversee .sponsor .niveau {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffd5db;
+}
+.marque .vitrine-claire.la-traversee .marque-vide {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  color: var(--nuit);
+  border-radius: 6px;
+  padding: 6px 12px 6px 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.marque .vitrine-claire.la-traversee .marque-vide i {
+  font-style: normal;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  background: var(--nuit);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--titre);
+  font-size: 12px;
+}
+.marque .vitrine-claire.la-traversee .sponsor.officiel {
+  grid-column: 1/-1;
+  min-height: 260px;
+}
+.marque .vitrine-claire.la-traversee .sponsor.officiel .marque-vide {
+  font-size: 19px;
+  padding: 8px 16px 8px 8px;
+}
+.marque .vitrine-claire.la-traversee .sponsor.officiel .marque-vide i {
+  width: 40px;
+  height: 40px;
+  background-image: var(--bouton-rouge);
+  font-size: 16px;
+}
+.marque .vitrine-claire.la-traversee .sponsor .sous {
+  font-size: 13px;
+  color: rgb(255 255 255 / 0.78);
+}
+.marque .vitrine-claire.la-traversee .partenaires .legende {
+  color: rgb(255 255 255 / 0.5);
+}
+.marque .vitrine-claire.la-traversee .offres {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .marque .vitrine-claire.la-traversee .offres {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.marque .vitrine-claire.la-traversee .offre {
+  border-radius: var(--r-l);
+  padding: 28px;
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.marque .vitrine-claire.la-traversee .offre h3 {
+  font-size: clamp(22px, 2vw, 26px);
+}
+.marque .vitrine-claire.la-traversee .offre p {
+  color: rgb(255 255 255 / 0.74);
+  font-size: 15px;
+}
+.marque .vitrine-claire.la-traversee .offre .btn-contour,
+.marque .vitrine-claire.la-traversee .offre .btn-action {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* ---------- FAQ ---------- */
+.marque .vitrine-claire.la-traversee .faq-grille {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .faq-grille {
+    grid-template-columns: 1.4fr 1fr;
+    gap: 36px;
+  }
+}
+.marque .vitrine-claire.la-traversee .faq {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.marque .vitrine-claire.la-traversee .faq details {
+  border-radius: var(--r-m);
+  background: #fff;
+  border: 1px solid var(--ligne);
+  padding: 0 22px;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.marque .vitrine-claire.la-traversee .faq details[open] {
+  border-color: var(--nuit);
+  box-shadow: var(--ombre);
+}
+.marque .vitrine-claire.la-traversee .faq summary {
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-weight: 600;
+  font-size: 16.5px;
+  color: var(--nuit);
+  cursor: pointer;
+  list-style: none;
+  padding-block: 12px;
+}
+.marque .vitrine-claire.la-traversee .faq summary::-webkit-details-marker {
+  display: none;
+}
+.marque .vitrine-claire.la-traversee .faq summary::after {
+  content: "";
+  margin-left: auto;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid var(--rouge);
+  border-bottom: 2px solid var(--rouge);
+  transform: rotate(45deg);
+  transition: transform 0.3s var(--courbe);
+  flex-shrink: 0;
+}
+.marque .vitrine-claire.la-traversee .faq details[open] summary::after {
+  transform: rotate(-135deg);
+}
+.marque .vitrine-claire.la-traversee .faq p {
+  padding: 0 0 20px;
+  color: var(--texte-2);
+  line-height: 1.6;
+}
+/* Carte de contact : photo de l'équipe en haut, corps blanc, deux lignes de
+   contact copiables et le bouton rouge. Collante sur ordinateur. */
+.marque .vitrine-claire.la-traversee .contact-carte {
+  border-radius: var(--r-l);
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--ligne);
+  box-shadow: var(--ombre);
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.35s var(--courbe),
+    box-shadow 0.35s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .contact-carte:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 48px -28px rgb(15 29 44 / 0.45);
+}
+.marque .vitrine-claire.la-traversee .contact-photo {
+  margin: 0;
+  position: relative;
+  aspect-ratio: 16/9;
+  max-width: 100%;
+  background: var(--nuit);
+  overflow: hidden;
+}
+.marque .vitrine-claire.la-traversee .contact-photo img {
+  transition: transform 1.2s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .contact-carte:hover .contact-photo img {
+  transform: scale(1.05);
+}
+.marque .vitrine-claire.la-traversee .contact-photo::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--degrade);
+}
+.marque .vitrine-claire.la-traversee .contact-photo figcaption {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgb(15 29 44 / 0.75);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
+.marque .vitrine-claire.la-traversee .contact-corps {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.marque .vitrine-claire.la-traversee .contact-corps h3 {
+  font-size: clamp(22px, 2.2vw, 26px);
+}
+.marque .vitrine-claire.la-traversee .contact-corps > p {
+  color: var(--texte-2);
+  font-size: 15px;
+}
+.marque .vitrine-claire.la-traversee .contact-lignes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.marque .vitrine-claire.la-traversee .contact-lignes li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-m);
+  background: var(--papier);
+  border: 1px solid var(--ligne);
+}
+.marque .vitrine-claire.la-traversee .contact-lignes svg {
+  flex-shrink: 0;
+  color: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .contact-lignes span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+.marque .vitrine-claire.la-traversee .contact-lignes small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texte-3);
+}
+.marque .vitrine-claire.la-traversee .contact-lignes b {
+  font-size: 15px;
+  color: var(--nuit);
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.marque .vitrine-claire.la-traversee .contact-corps .btn-action {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .contact-carte {
+    position: sticky;
+    top: 110px;
+  }
+}
+
+/* ---------- Final ---------- */
+.marque .vitrine-claire.la-traversee .final {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+  background: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .final > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+}
+.marque .vitrine-claire.la-traversee .final::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgb(139 10 31 / 0.82) 0%,
+    rgb(15 29 44 / 0.9) 50%,
+    rgb(15 80 40 / 0.82) 100%
+  );
+}
+.marque .vitrine-claire.la-traversee .final-in {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-block: 88px;
+}
+.marque .vitrine-claire.la-traversee .final h2 {
+  font-size: clamp(34px, 5vw, 64px);
+  max-width: 18ch;
+}
+.marque .vitrine-claire.la-traversee .final p {
+  color: rgb(255 255 255 / 0.85);
+  font-size: 17px;
+  max-width: 56ch;
+}
+.marque .vitrine-claire.la-traversee .final .compte {
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* ---------- Barre de réservation flottante ----------
+   Elle s'arrête avant le coin inférieur droit : la bulle d'assistance de la
+   vitrine y vit, sur toutes les pages. */
+.marque .vitrine-claire.la-traversee .flottante {
+  position: fixed;
+  left: 12px;
+  right: 84px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 18px;
+  border-radius: var(--r-m);
+  background: rgb(15 29 44 / 0.96);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  box-shadow: 0 20px 40px -16px rgb(0 0 0 / 0.6);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  transform: translateY(140%);
+  transition: transform 0.45s var(--courbe);
+}
+.marque .vitrine-claire.la-traversee .flottante.visible {
+  transform: none;
+}
+.marque .vitrine-claire.la-traversee .flottante > div {
+  flex: 1;
+  line-height: 1.25;
+  min-width: 0;
+}
+.marque .vitrine-claire.la-traversee .flottante b {
+  display: block;
+  font-size: 14px;
+}
+.marque .vitrine-claire.la-traversee .flottante span {
+  font-size: 12px;
+  color: rgb(255 255 255 / 0.65);
+}
+.marque .vitrine-claire.la-traversee .flottante .btn-action {
+  padding: 12px 16px;
+  min-height: 44px;
+  font-size: 12px;
+}
+/* Sur téléphone, la place manque pour deux lignes à côté du bouton : le titre suffit. */
+@media (max-width: 640px) {
+  .marque .vitrine-claire.la-traversee .flottante span {
+    display: none;
+  }
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee .flottante {
+    left: auto;
+    right: 96px;
+    bottom: 24px;
+    width: 420px;
+  }
+}
+
+/* ============================================================
+   MOTION : apparitions au défilement (contenu visible au repos)
+   ============================================================ */
+@keyframes traversee-reveler {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes traversee-reveler-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes traversee-reveler-gauche {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes traversee-reveler-trait {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes traversee-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (scripting: enabled) {
+  .marque .vitrine-claire.la-traversee .scene .reveler,
+  .marque .vitrine-claire.la-traversee .scene .reveler-zoom,
+  .marque .vitrine-claire.la-traversee .scene .reveler-gauche,
+  .marque .vitrine-claire.la-traversee .scene .reveler-trait {
+    animation: traversee-reveler 0.6s var(--courbe) var(--retard, 0ms) backwards
+      paused;
+  }
+  .marque .vitrine-claire.la-traversee .scene .reveler-zoom {
+    animation-name: traversee-reveler-zoom;
+  }
+  .marque .vitrine-claire.la-traversee .scene .reveler-gauche {
+    animation-name: traversee-reveler-gauche;
+  }
+  .marque .vitrine-claire.la-traversee .scene .reveler-trait {
+    animation-name: traversee-reveler-trait;
+    animation-duration: 0.9s;
+    transform-origin: left center;
+  }
+  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler,
+  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler-zoom,
+  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler-gauche,
+  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler-trait {
+    animation-play-state: running;
+  }
+}
+.marque .vitrine-claire.la-traversee .apparition {
+  animation: traversee-apparition 0.8s var(--courbe) var(--retard, 0ms) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marque .vitrine-claire.la-traversee *,
+  .marque .vitrine-claire.la-traversee *::before,
+  .marque .vitrine-claire.la-traversee *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .marque .vitrine-claire.la-traversee .traversee {
+    transform: none;
+  }
+}
