@@ -70,8 +70,6 @@ const LIENS = [
   { href: "/", libelle: "Accueil" },
   { href: "/#evenements", libelle: "Événements" },
   { href: "/#actualites", libelle: "Actualités" },
-  // Le Gala des 10 ans a sa page à lui, hors de la liste des événements.
-  { href: "/la-traversee", libelle: "La Traversée" },
   // Une action, pas une page à lire : sur ordinateur, elle devient le bouton
   // à côté de « Se connecter ». Sur téléphone, la place manque sur la
   // première ligne, et elle reste dans la rangée des liens.
@@ -241,7 +239,6 @@ const COLONNES = [
       { libelle: "Accueil", href: "/" },
       { libelle: "Événements", href: "/#evenements" },
       { libelle: "Actualités", href: "/#actualites" },
-      { libelle: "La Traversée", href: "/la-traversee" },
     ],
   },
   {
