@@ -701,7 +701,7 @@ export async function basculerJaimeCommentaire(formData: FormData) {
  * la ressource ne soit annoncée prête.
  */
 export async function enregistrerRessource(formData: FormData) {
-  const equipe = await exigerEquipe();
+  await exigerEquipe();
   const id = texte(formData, "resourceId");
   const retour = id
     ? `/admin/ressources/${id}/modifier`
@@ -710,14 +710,7 @@ export async function enregistrerRessource(formData: FormData) {
   const titre = texte(formData, "titre");
   const description = texte(formData, "description").slice(0, 600) || null;
   const cat = RESOURCE_CAT_DB[texte(formData, "cat") as ResourceCategory];
-  // « Accès » : inclus dans l'adhésion, payant, ou réservé aux entreprises
-  // cochées — et à elles seules.
-  const acces = texte(formData, "acces");
-  const type = acces === "payant" ? "payant" : "gratuit";
-  const restreinte = acces === "personnalise";
-  const membres = restreinte
-    ? [...new Set(formData.getAll("membre").map(String).filter(Boolean))]
-    : [];
+  const type = texte(formData, "type") === "payant" ? "payant" : "gratuit";
   const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
   const fichier = await fichierRecu(formData.get("fichier"));
   // Le dossier où la ranger. Vide = à la racine de la bibliothèque.
@@ -731,12 +724,6 @@ export async function enregistrerRessource(formData: FormData) {
   if (!id && !fichier) {
     redirectWithErreur(retour, "Joignez le fichier de la ressource.");
   }
-  if (restreinte && !membres.length) {
-    redirectWithErreur(
-      retour,
-      "Choisissez au moins une entreprise pour un accès personnalisé.",
-    );
-  }
   if (dossierId) {
     const existe = await prisma.dossierRessource.count({
       where: { id: dossierId },
@@ -748,7 +735,7 @@ export async function enregistrerRessource(formData: FormData) {
   const r = id
     ? await prisma.resource.update({
         where: { id },
-        data: { titre, description, cat, type, prix, restreinte, dossierId },
+        data: { titre, description, cat, type, prix, dossierId },
       })
     : await prisma.resource.create({
         data: {
@@ -757,17 +744,12 @@ export async function enregistrerRessource(formData: FormData) {
           cat,
           type,
           prix,
-          restreinte,
           dossierId,
           fmt: "pdf",
           taille: "—",
           date: jourBase(),
         },
       });
-  // La liste des entreprises, telle que cochée : elle fait foi.
-  const listees = restreinte
-    ? await synchroniserAcces(r.id, membres, equipe.nom)
-    : null;
 
   if (fichier) {
     try {
@@ -803,11 +785,7 @@ export async function enregistrerRessource(formData: FormData) {
       entite: "Resource",
       entiteId: r.id,
       acteur: await acteurEquipe(),
-      detail: `« ${titre} »${fichier ? ` · fichier ${fichier.name}` : ""}${
-        listees
-          ? ` · réservée à ${listees} entreprise${listees > 1 ? "s" : ""}`
-          : ""
-      }.`,
+      detail: `« ${titre} »${fichier ? ` · fichier ${fichier.name}` : ""}.`,
     },
   });
 
@@ -816,35 +794,6 @@ export async function enregistrerRessource(formData: FormData) {
     "/admin/ressources",
     id ? `« ${titre} » mise à jour` : `« ${titre} » ajoutée à la bibliothèque`,
   );
-}
-
-/**
- * La liste des entreprises d'une ressource réservée, telle que le formulaire
- * l'a cochée : celles qui n'y sont plus perdent l'accès, les nouvelles le
- * reçoivent, celles qui l'avaient le gardent tel quel. Un identifiant qui ne
- * désigne aucune entreprise est ignoré. Rend le nombre d'entreprises listées.
- */
-async function synchroniserAcces(
-  resourceId: string,
-  membreIds: string[],
-  ouvertPar: string,
-): Promise<number> {
-  const valides = (
-    await prisma.member.findMany({
-      where: { id: { in: membreIds } },
-      select: { id: true },
-    })
-  ).map((m) => m.id);
-  await prisma.$transaction([
-    prisma.accesRessource.deleteMany({
-      where: { resourceId, memberId: { notIn: valides } },
-    }),
-    prisma.accesRessource.createMany({
-      data: valides.map((memberId) => ({ resourceId, memberId, ouvertPar })),
-      skipDuplicates: true,
-    }),
-  ]);
-  return valides.length;
 }
 
 /**
@@ -1216,13 +1165,64 @@ async function estDansSaDescendance(
   return false;
 }
 
+/**
+ * Ce que le formulaire dit de l'accès à un dossier : ouvert à tous les
+ * membres, ou réservé aux entreprises cochées.
+ */
+function accesSaisi(formData: FormData) {
+  const restreint = texte(formData, "acces") === "personnalise";
+  const membres = restreint
+    ? [...new Set(formData.getAll("membre").map(String).filter(Boolean))]
+    : [];
+  return { restreint, membres };
+}
+
+/**
+ * La liste des entreprises d'un dossier réservé, telle que le formulaire l'a
+ * cochée : celles qui n'y sont plus perdent l'accès, les nouvelles le
+ * reçoivent, celles qui l'avaient le gardent tel quel. Un identifiant qui ne
+ * désigne aucune entreprise est ignoré. Rend le nombre d'entreprises listées.
+ *
+ * Une liste vide retire tout : c'est ce qui arrive quand le dossier
+ * redevient ouvert à tous.
+ */
+async function synchroniserAccesDossier(
+  dossierId: string,
+  membreIds: string[],
+  ouvertPar: string,
+): Promise<number> {
+  const valides = (
+    await prisma.member.findMany({
+      where: { id: { in: membreIds } },
+      select: { id: true },
+    })
+  ).map((m) => m.id);
+  await prisma.$transaction([
+    prisma.accesDossier.deleteMany({
+      where: { dossierId, memberId: { notIn: valides } },
+    }),
+    prisma.accesDossier.createMany({
+      data: valides.map((memberId) => ({ dossierId, memberId, ouvertPar })),
+      skipDuplicates: true,
+    }),
+  ]);
+  return valides.length;
+}
+
+const ACCES_SANS_ENTREPRISE =
+  "Choisissez au moins une entreprise pour un accès personnalisé.";
+
 export async function creerDossier(formData: FormData) {
-  await exigerEquipe();
+  const equipe = await exigerEquipe();
   const parentId = texte(formData, "parent") || null;
   const retour = retourDossier(parentId);
 
   const nom = texte(formData, "nom");
+  const { restreint, membres } = accesSaisi(formData);
   if (!nom) redirectWithErreur(retour, "Donnez un nom au dossier.");
+  if (restreint && !membres.length) {
+    redirectWithErreur(retour, ACCES_SANS_ENTREPRISE);
+  }
   if (nom.length > NOM_DOSSIER_MAX) {
     redirectWithErreur(retour, `Le nom dépasse ${NOM_DOSSIER_MAX} caractères.`);
   }
@@ -1240,9 +1240,61 @@ export async function creerDossier(formData: FormData) {
     }
   }
 
-  await prisma.dossierRessource.create({ data: { nom, parentId } });
+  const d = await prisma.dossierRessource.create({
+    data: { nom, parentId, restreint },
+  });
+  if (restreint) {
+    const n = await synchroniserAccesDossier(d.id, membres, equipe.nom);
+    await journal(
+      "dossier_acces",
+      "DossierRessource",
+      d.id,
+      `« ${nom} » · réservé à ${n} entreprise${n > 1 ? "s" : ""}`,
+    );
+  }
   revalideTout();
   redirectWithFlash(retour, `Dossier « ${nom} » créé`);
+}
+
+/**
+ * Qui voit un dossier : tous les membres, ou les entreprises cochées.
+ *
+ * Un dossier réservé n'existe que pour ces entreprises, avec tout ce qu'il
+ * contient — ressources et sous-dossiers.
+ */
+export async function reglerAccesDossier(formData: FormData) {
+  const equipe = await exigerEquipe();
+  const id = texte(formData, "dossierId");
+
+  const d = await prisma.dossierRessource.findUnique({
+    where: { id },
+    select: { nom: true, parentId: true },
+  });
+  if (!d) redirectWithErreur("/admin/ressources", "Dossier introuvable.");
+  const retour = retourDossier(d.parentId);
+
+  const { restreint, membres } = accesSaisi(formData);
+  if (restreint && !membres.length) {
+    redirectWithErreur(retour, ACCES_SANS_ENTREPRISE);
+  }
+
+  await prisma.dossierRessource.update({ where: { id }, data: { restreint } });
+  const n = await synchroniserAccesDossier(id, membres, equipe.nom);
+  await journal(
+    "dossier_acces",
+    "DossierRessource",
+    id,
+    restreint
+      ? `« ${d.nom} » · réservé à ${n} entreprise${n > 1 ? "s" : ""}`
+      : `« ${d.nom} » · ouvert à tous les membres`,
+  );
+  revalideTout();
+  redirectWithFlash(
+    retour,
+    restreint
+      ? `« ${d.nom} » réservé à ${n} entreprise${n > 1 ? "s" : ""}`
+      : `« ${d.nom} » ouvert à tous les membres`,
+  );
 }
 
 export async function renommerDossier(formData: FormData) {
@@ -1468,7 +1520,7 @@ export async function collerRessources(formData: FormData) {
 
 /**
  * Ouvre l'accès d'une ou plusieurs entreprises à une ou plusieurs ressources
- * payantes ou réservées.
+ * payantes.
  *
  * En lot, parce que l'équipe accorde rarement un seul accès : une formation
  * s'ouvre à la douzaine d'entreprises qui l'ont suivie, d'un coup.
@@ -1488,10 +1540,7 @@ export async function ouvrirAccesRessources(formData: FormData) {
     redirectWithErreur(retour, "Choisissez au moins une entreprise.");
 
   const payantes = await prisma.resource.findMany({
-    where: {
-      id: { in: ressources },
-      OR: [{ type: "payant" }, { restreinte: true }],
-    },
+    where: { id: { in: ressources }, type: "payant" },
     select: { id: true, titre: true },
   });
   if (!payantes.length) {
@@ -1594,9 +1643,9 @@ export async function ouvrirAccesPour(resourceId: string, membreIds: string[]) {
 
   const r = await prisma.resource.findUnique({
     where: { id: resourceId },
-    select: { id: true, titre: true, type: true, restreinte: true },
+    select: { id: true, titre: true, type: true },
   });
-  if (!r || (r.type !== "payant" && !r.restreinte)) return;
+  if (!r || r.type !== "payant") return;
 
   await prisma.accesRessource.createMany({
     data: membreIds.map((memberId) => ({

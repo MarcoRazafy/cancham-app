@@ -518,23 +518,64 @@ export async function aDesActualitesPubliques(): Promise<boolean> {
 }
 
 /**
- * Ce qu'une personne a le droit de voir de la bibliothèque.
+ * Les dossiers qu'une personne n'a pas à voir : ceux que l'équipe a réservés
+ * à d'autres entreprises que la sienne, et tout ce qu'ils contiennent — un
+ * sous-dossier suit le sort de celui qui le range. Vide pour l'équipe.
  *
- * Une ressource réservée (`restreinte`) n'existe que pour les entreprises à
- * qui l'équipe l'a ouverte : les autres ne la voient ni dans la liste, ni
- * dans les comptes, ni dans la recherche. L'équipe voit tout.
+ * L'arborescence est petite : on la lit en entier, et l'on descend depuis
+ * chaque dossier fermé.
  */
-function visibiliteRessources(
+export async function dossiersInterdits(
   user: { role: string; memberId: string | null } | null,
-): Prisma.ResourceWhereInput {
-  if (user?.role === "admin") return {};
+): Promise<string[]> {
+  if (user?.role === "admin") return [];
+  const dossiers = await prisma.dossierRessource.findMany({
+    select: { id: true, parentId: true, restreint: true },
+  });
+  if (!dossiers.some((d) => d.restreint)) return [];
+
+  const ouverts = new Set(
+    user?.memberId
+      ? (
+          await prisma.accesDossier.findMany({
+            where: { memberId: user.memberId },
+            select: { dossierId: true },
+          })
+        ).map((a) => a.dossierId)
+      : [],
+  );
+  const enfantsDe = new Map<string, string[]>();
+  for (const d of dossiers) {
+    if (d.parentId) {
+      enfantsDe.set(d.parentId, [...(enfantsDe.get(d.parentId) ?? []), d.id]);
+    }
+  }
+  const interdits = new Set<string>();
+  const fermer = (id: string) => {
+    if (interdits.has(id)) return;
+    interdits.add(id);
+    for (const enfant of enfantsDe.get(id) ?? []) fermer(enfant);
+  };
+  for (const d of dossiers) {
+    if (d.restreint && !ouverts.has(d.id)) fermer(d.id);
+  }
+  return [...interdits];
+}
+
+/**
+ * Ce qu'une personne a le droit de voir de la bibliothèque : tout, sauf ce
+ * qui est rangé dans un dossier qui lui est fermé. Ces ressources-là
+ * n'existent pour elle ni dans la liste, ni dans les comptes, ni dans la
+ * recherche.
+ */
+async function visibiliteRessources(
+  user: { role: string; memberId: string | null } | null,
+): Promise<Prisma.ResourceWhereInput> {
+  const interdits = await dossiersInterdits(user);
+  if (!interdits.length) return {};
+  // `notIn` écarte aussi les valeurs nulles : la racine se redit à part.
   return {
-    OR: [
-      { restreinte: false },
-      ...(user?.memberId
-        ? [{ acces: { some: { memberId: user.memberId } } }]
-        : []),
-    ],
+    AND: [{ OR: [{ dossierId: null }, { dossierId: { notIn: interdits } }] }],
   };
 }
 
@@ -552,7 +593,7 @@ export async function getResources(
   const user = await utilisateurConnecte();
   const rows = await prisma.resource.findMany({
     where: {
-      ...visibiliteRessources(user),
+      ...(await visibiliteRessources(user)),
       ...(type ? { type } : {}),
       // Chercher dans un seul dossier n'aurait pas de sens : on cherche
       // précisément ce qu'on ne sait plus où l'on a rangé.
@@ -564,16 +605,14 @@ export async function getResources(
   });
 
   // Ce que la personne connectée peut ouvrir : l'équipe voit tout, un membre
-  // ne lit une ressource facturée ou réservée que si son accès a été ouvert.
-  const aOuvrir = rows
-    .filter((r) => r.type === "payant" || r.restreinte)
-    .map((r) => r.id);
+  // ne lit une ressource facturée que si son accès a été ouvert.
+  const payantes = rows.filter((r) => r.type === "payant").map((r) => r.id);
   const ouverts =
-    user && user.role !== "admin" && user.memberId && aOuvrir.length
+    user && user.role !== "admin" && user.memberId && payantes.length
       ? new Set(
           (
             await prisma.accesRessource.findMany({
-              where: { memberId: user.memberId, resourceId: { in: aOuvrir } },
+              where: { memberId: user.memberId, resourceId: { in: payantes } },
               select: { resourceId: true },
             })
           ).map((a) => a.resourceId),
@@ -588,23 +627,21 @@ export async function getResources(
     date: toISODate(r.date),
     type: r.type,
     prix: r.prix,
-    restreinte: r.restreinte,
     description: r.description,
     commentaires: versCommentaires(r.commentaires),
     cover: r.cover,
     dossierId: r.dossierId,
     pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
     accessible:
-      (r.type === "gratuit" && !r.restreinte) ||
-      user?.role === "admin" ||
-      ouverts.has(r.id),
+      r.type === "gratuit" || user?.role === "admin" || ouverts.has(r.id),
   }));
 }
 
 /**
  * Une ressource, pour sa page de lecture — `null` si elle n'existe pas, ou
- * si la personne connectée n'a pas à la voir : une ressource réservée ne
- * livre ni son titre ni sa description à qui n'en est pas.
+ * si la personne connectée n'a pas à la voir : une ressource rangée dans
+ * un dossier réservé ne livre ni son titre ni sa description à qui n'en est
+ * pas.
  */
 export async function getRessourceLisible(id: string): Promise<{
   titre: string;
@@ -613,7 +650,10 @@ export async function getRessourceLisible(id: string): Promise<{
   description: string | null;
 } | null> {
   return prisma.resource.findFirst({
-    where: { id, ...visibiliteRessources(await utilisateurConnecte()) },
+    where: {
+      id,
+      ...(await visibiliteRessources(await utilisateurConnecte())),
+    },
     select: { titre: true, fmt: true, taille: true, description: true },
   });
 }
@@ -625,7 +665,7 @@ export async function getResourceCounts(
 ) {
   const q = recherche?.trim();
   const ou = {
-    ...visibiliteRessources(await utilisateurConnecte()),
+    ...(await visibiliteRessources(await utilisateurConnecte())),
     ...(dossierId !== undefined && !q ? { dossierId } : {}),
     ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
   };
@@ -648,14 +688,24 @@ export async function getResourceCounts(
 export async function getSousDossiers(
   parentId: string | null,
 ): Promise<DossierRessource[]> {
+  const user = await utilisateurConnecte();
+  const equipe = user?.role === "admin";
+  // Un dossier fermé à la personne n'existe pas pour elle, ni dans la
+  // liste, ni dans le compte de ce que contient son parent.
+  const interdits = await dossiersInterdits(user);
+  const visibles = interdits.length ? { id: { notIn: interdits } } : {};
   const rows = await prisma.dossierRessource.findMany({
-    where: { parentId },
+    where: { parentId, ...visibles },
     orderBy: { nom: "asc" },
     select: {
       id: true,
       nom: true,
       parentId: true,
-      _count: { select: { enfants: true, ressources: true } },
+      restreint: true,
+      acces: { select: { memberId: true } },
+      _count: {
+        select: { enfants: { where: visibles }, ressources: true },
+      },
     },
   });
   return rows.map((d) => ({
@@ -664,14 +714,18 @@ export async function getSousDossiers(
     parentId: d.parentId,
     dossiers: d._count.enfants,
     ressources: d._count.ressources,
+    restreint: d.restreint,
+    // Qui d'autre y a accès ne regarde que l'équipe.
+    acces: equipe ? d.acces.map((a) => a.memberId) : [],
   }));
 }
 
 /**
  * Le chemin d'un dossier, de la racine jusqu'à lui — le fil d'Ariane.
  *
- * `null` quand le dossier n'existe pas : la page ouvre alors la racine
- * plutôt que d'afficher une erreur pour un lien devenu caduc.
+ * `null` quand le dossier n'existe pas, ou qu'il est fermé à la personne
+ * connectée — lui ou l'un de ceux qui le rangent : la page ouvre alors la
+ * racine plutôt que d'afficher une erreur pour un lien devenu caduc.
  */
 export async function getFilDossier(
   id: string,
@@ -691,16 +745,20 @@ export async function getFilDossier(
     fil.push({ id: d.id, nom: d.nom });
     courant = d.parentId;
   }
+  const interdits = new Set(
+    await dossiersInterdits(await utilisateurConnecte()),
+  );
+  if (fil.some((m) => interdits.has(m.id))) return null;
   return fil.reverse();
 }
 
 /** Tous les dossiers à plat, avec leur profondeur : pour une liste déroulante. */
 export async function getArborescenceDossiers(): Promise<
-  { id: string; nom: string; profondeur: number }[]
+  { id: string; nom: string; profondeur: number; restreint: boolean }[]
 > {
   const tous = await prisma.dossierRessource.findMany({
     orderBy: { nom: "asc" },
-    select: { id: true, nom: true, parentId: true },
+    select: { id: true, nom: true, parentId: true, restreint: true },
   });
 
   const enfantsDe = new Map<string | null, typeof tous>();
@@ -709,10 +767,15 @@ export async function getArborescenceDossiers(): Promise<
     enfantsDe.set(cle, [...(enfantsDe.get(cle) ?? []), d]);
   }
 
-  const sortie: { id: string; nom: string; profondeur: number }[] = [];
+  const sortie: {
+    id: string;
+    nom: string;
+    profondeur: number;
+    restreint: boolean;
+  }[] = [];
   const descendre = (parent: string | null, profondeur: number) => {
     for (const d of enfantsDe.get(parent) ?? []) {
-      sortie.push({ id: d.id, nom: d.nom, profondeur });
+      sortie.push({ id: d.id, nom: d.nom, profondeur, restreint: d.restreint });
       descendre(d.id, profondeur + 1);
     }
   };
@@ -1461,7 +1524,7 @@ export async function rechercher(
   const base = space === "admin" ? "/admin" : "/membre";
 
   const admin = space === "admin";
-  const utilisateur = await utilisateurConnecte();
+  const visibles = await visibiliteRessources(await utilisateurConnecte());
   const [membres, evenements, actualites, ressources, contacts, factures] =
     await Promise.all([
       prisma.member.findMany({
@@ -1492,14 +1555,8 @@ export async function rechercher(
         orderBy: { date: "desc" },
       }),
       prisma.resource.findMany({
-        where: { ...visibiliteRessources(utilisateur), titre: like },
-        select: {
-          id: true,
-          titre: true,
-          taille: true,
-          type: true,
-          restreinte: true,
-        },
+        where: { ...visibles, titre: like },
+        select: { id: true, titre: true, taille: true, type: true },
         take: 8,
         orderBy: { date: "desc" },
       }),
@@ -1578,7 +1635,7 @@ export async function rechercher(
       type: "ressource" as const,
       id: r.id,
       titre: r.titre,
-      detail: `${r.taille} · ${r.restreinte ? "réservée" : r.type === "payant" ? "payante" : "incluse"}`,
+      detail: `${r.taille} · ${r.type === "payant" ? "payante" : "incluse"}`,
       href: admin ? `/admin/ressources/${r.id}/modifier` : `${base}/ressources`,
     })),
     ...contacts.map((c) => ({

@@ -85,13 +85,11 @@ export async function RessourcesPage({
       admin ? lirePressePapier() : Promise.resolve(null),
     ]);
 
-  // Les accès de toutes les ressources payantes ou réservées affichées, en
-  // une requête : la fenêtre « qui y a accès » s'ouvre alors sans attendre.
+  // Les accès de toutes les ressources payantes affichées, en une requête :
+  // la fenêtre « qui y a accès » s'ouvre alors sans attendre.
   const acces = admin
     ? await getAccesDesRessources(
-        list
-          .filter((r) => r.type === "payant" || r.restreinte)
-          .map((r) => r.id),
+        list.filter((r) => r.type === "payant").map((r) => r.id),
       )
     : {};
 
@@ -102,7 +100,7 @@ export async function RessourcesPage({
         action={
           admin ? (
             <div className="flex flex-wrap items-center gap-2">
-              <BoutonNouveauDossier parentId={dossierId} />
+              <BoutonNouveauDossier parentId={dossierId} membres={membres} />
               <Link
                 href={`/admin/ressources/nouvelle${dossierId ? `?dossier=${dossierId}` : ""}`}
                 className="btn-action btn-action-sm no-underline"
@@ -216,6 +214,7 @@ export async function RessourcesPage({
               space={space}
               admin={admin}
               arborescence={arborescence}
+              membres={membres}
             />
           ))}
         </div>
@@ -275,10 +274,9 @@ export async function RessourcesPage({
                           <AlertTriangle size={13} /> Fichier manquant
                         </span>
                       )}
-                      {/* L'œil ne vaut que pour une ressource facturée ou
-                          réservée : une ressource incluse n'a pas de liste
-                          d'accès. */}
-                      {r.type === "payant" || r.restreinte ? (
+                      {/* L'œil ne vaut que pour une ressource facturée : une
+                          ressource incluse n'a pas de liste d'accès. */}
+                      {r.type === "payant" ? (
                         <BoutonAcces
                           resourceId={r.id}
                           titre={r.titre}

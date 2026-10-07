@@ -4,7 +4,6 @@ import { EnTeteAdmin } from "@/components/admin/ui";
 import { FormulaireRessource } from "@/components/forms/AdminContenuForms";
 import { Saillant } from "@/components/ui";
 import { getArborescenceDossiers } from "@/lib/queries";
-import { getMembresPourAcces } from "@/lib/queries-admin";
 
 export default async function NouvelleRessource({
   searchParams,
@@ -12,10 +11,7 @@ export default async function NouvelleRessource({
   searchParams: Promise<{ dossier?: string }>;
 }) {
   const { dossier } = await searchParams;
-  const [dossiers, membres] = await Promise.all([
-    getArborescenceDossiers(),
-    getMembresPourAcces(),
-  ]);
+  const dossiers = await getArborescenceDossiers();
   return (
     <>
       <Link
@@ -35,11 +31,7 @@ export default async function NouvelleRessource({
         Elle apparaît dans la bibliothèque des membres dès que son fichier est
         prêt.
       </EnTeteAdmin>
-      <FormulaireRessource
-        dossiers={dossiers}
-        membres={membres}
-        dossierParDefaut={dossier}
-      />
+      <FormulaireRessource dossiers={dossiers} dossierParDefaut={dossier} />
     </>
   );
 }

@@ -24,8 +24,8 @@ export async function LectureRessourcePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // Introuvable aussi pour qui n'a pas à la voir : une ressource réservée
-  // n'a pas de page pour les autres.
+  // Introuvable aussi pour qui n'a pas à la voir : une ressource rangée
+  // dans un dossier réservé n'a pas de page pour les autres.
   const r = await getRessourceLisible(id);
   if (!r) notFound();
 

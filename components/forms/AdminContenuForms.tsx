@@ -10,10 +10,8 @@ import {
   LoaderCircle,
   Pencil,
   Plus,
-  Search,
   Star,
   Trash2,
-  Users,
   X,
 } from "lucide-react";
 import { Modal } from "@/components/Modal";
@@ -46,7 +44,6 @@ import {
 import { ChoixDiffusion } from "@/components/forms/ChoixDiffusion";
 import { CouvertureRessource } from "@/components/forms/CouvertureRessource";
 import { EMPLACEMENTS_OFFRE, type EmplacementOffre } from "@/lib/offres";
-import type { MembreChoisissable } from "@/components/forms/BibliothequeOutils";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
 
 const CATEGORIES: NewsCategory[] = [
@@ -399,10 +396,6 @@ export interface RessourceEditee {
   cat: string;
   type: "gratuit" | "payant";
   prix: number;
-  /** Réservée aux entreprises de `acces`, et à elles seules. */
-  restreinte: boolean;
-  /** Les entreprises à qui l'accès a été ouvert. */
-  acces: string[];
   fmt: "pdf" | "docx" | "video" | "image";
   taille: string;
   pret: boolean;
@@ -411,32 +404,24 @@ export interface RessourceEditee {
   dossierId: string | null;
 }
 
-/** À qui une ressource s'ouvre. */
-type Acces = "adhesion" | "payant" | "personnalise";
-
 /** Ajout ou modification d'une ressource, fichier compris. */
 export function FormulaireRessource({
   ressource,
   dossiers,
-  membres,
   dossierParDefaut,
 }: {
   ressource?: RessourceEditee;
   /** Les dossiers de la bibliothèque, à plat, pour la liste déroulante. */
-  dossiers: { id: string; nom: string; profondeur: number }[];
-  /** Les entreprises à qui réserver la ressource, pour l'accès personnalisé. */
-  membres: MembreChoisissable[];
+  dossiers: {
+    id: string;
+    nom: string;
+    profondeur: number;
+    restreint?: boolean;
+  }[];
   /** Le dossier ouvert quand on a cliqué « Nouvelle ressource ». */
   dossierParDefaut?: string;
 }) {
-  const [acces, setAcces] = useState<Acces>(
-    ressource?.restreinte
-      ? "personnalise"
-      : ressource?.type === "payant"
-        ? "payant"
-        : "adhesion",
-  );
-  const payant = acces === "payant";
+  const [payant, setPayant] = useState(ressource?.type === "payant");
   const [fichier, setFichier] = useState<File | null>(null);
   const trop = fichier ? fichier.size > PLAFOND_MO * 1024 * 1024 : false;
   // Le fichier part dès qu'on le choisit — une vidéo de plusieurs centaines
@@ -482,16 +467,13 @@ export function FormulaireRessource({
           </Field>
           <Field label="Accès">
             <select
-              name="acces"
-              value={acces}
-              onChange={(e) => setAcces(e.target.value as Acces)}
+              name="type"
+              value={payant ? "payant" : "gratuit"}
+              onChange={(e) => setPayant(e.target.value === "payant")}
               className={INPUT}
             >
-              <option value="adhesion">Inclus dans l’adhésion</option>
+              <option value="gratuit">Inclus dans l’adhésion</option>
               <option value="payant">Payant</option>
-              <option value="personnalise">
-                Personnalisé — entreprises choisies
-              </option>
             </select>
           </Field>
         </div>
@@ -508,15 +490,9 @@ export function FormulaireRessource({
             className={INPUT}
           />
         </Field>
-        {acces === "personnalise" ? (
-          <ChoixEntreprises
-            membres={membres}
-            initiales={ressource?.acces ?? []}
-          />
-        ) : null}
         <Field
           label="Dossier"
-          hint="Où la ranger dans la bibliothèque. Vide, elle reste à la racine."
+          hint="Où la ranger dans la bibliothèque. Vide, elle reste à la racine. Dans un dossier réservé, seules ses entreprises la voient."
         >
           <select
             name="dossier"
@@ -526,7 +502,7 @@ export function FormulaireRessource({
             <option value="">Racine de la bibliothèque</option>
             {dossiers.map((d) => (
               <option key={d.id} value={d.id}>
-                {`${"\u00a0\u00a0".repeat(d.profondeur)}${d.profondeur ? "└ " : ""}${d.nom}`}
+                {`${"\u00a0\u00a0".repeat(d.profondeur)}${d.profondeur ? "└ " : ""}${d.nom}${d.restreint ? " — accès réservé" : ""}`}
               </option>
             ))}
           </select>
@@ -612,105 +588,6 @@ export function FormulaireRessource({
         </SubmitButton>
       </div>
     </form>
-  );
-}
-
-/**
- * Les entreprises à qui une ressource personnalisée est réservée.
- *
- * Une liste à cocher, avec une recherche pour la parcourir. Les choix sont
- * portés par des champs cachés, un par entreprise : une case que la
- * recherche a masquée ne disparaît pas du formulaire.
- */
-function ChoixEntreprises({
-  membres,
-  initiales,
-}: {
-  membres: MembreChoisissable[];
-  /** Déjà cochées : les entreprises à qui l'accès est ouvert. */
-  initiales: string[];
-}) {
-  const [q, setQ] = useState("");
-  const [choisies, setChoisies] = useState<Set<string>>(
-    () => new Set(initiales),
-  );
-  const filtre = q.trim().toLowerCase();
-  const liste = filtre
-    ? membres.filter((m) => m.nom.toLowerCase().includes(filtre))
-    : membres;
-
-  const basculer = (id: string) =>
-    setChoisies((v) => {
-      const suite = new Set(v);
-      if (suite.has(id)) suite.delete(id);
-      else suite.add(id);
-      return suite;
-    });
-
-  return (
-    <div role="group" aria-labelledby="titre-entreprises">
-      <div className="mb-1.5 flex items-center justify-between gap-3">
-        <span
-          id="titre-entreprises"
-          className="text-[12.3px] font-semibold text-muted"
-        >
-          Entreprises qui y ont accès
-        </span>
-        <span className="inline-flex items-center gap-1.5 text-[12.3px] font-semibold text-ink">
-          <Users size={14} className="text-accent" />
-          {choisies.size} choisie{choisies.size > 1 ? "s" : ""}
-        </span>
-      </div>
-      {[...choisies].map((id) => (
-        <input key={id} type="hidden" name="membre" value={id} />
-      ))}
-      <label className="relative block">
-        <Search
-          size={14}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
-        />
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Chercher une entreprise…"
-          className={`${INPUT} pl-9 rounded-b-none`}
-        />
-      </label>
-      <div className="max-h-[260px] overflow-y-auto rounded-b-[var(--radius-s)] border border-t-0 border-line">
-        {liste.length ? (
-          liste.map((m) => (
-            <label
-              key={m.id}
-              className="flex cursor-pointer items-center gap-3 border-b border-line px-3.5 py-2.5 text-[13.4px] last:border-b-0 hover:bg-surface-2"
-            >
-              <input
-                type="checkbox"
-                checked={choisies.has(m.id)}
-                onChange={() => basculer(m.id)}
-                className="h-4 w-4 shrink-0 accent-[var(--accent)]"
-              />
-              <span className="min-w-0 flex-1 truncate">{m.nom}</span>
-              {m.statut !== "a_jour" ? (
-                <span className="shrink-0 text-[11.5px] text-faint">
-                  cotisation en retard
-                </span>
-              ) : null}
-            </label>
-          ))
-        ) : (
-          <p className="m-0 px-4 py-5 text-center text-[13px] text-muted">
-            {filtre
-              ? "Aucune entreprise ne correspond."
-              : "Aucune entreprise à proposer."}
-          </p>
-        )}
-      </div>
-      <span className="mt-1 block text-[11.5px] text-faint">
-        Seules ces entreprises voient la ressource dans leur bibliothèque. La
-        liste se complète aussi depuis l’œil de la carte.
-      </span>
-    </div>
   );
 }
 

@@ -103,6 +103,11 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "contenu",
     ton: "bad",
   },
+  dossier_acces: {
+    libelle: "Accès à un dossier réglé",
+    famille: "contenu",
+    ton: "info",
+  },
   ressource_achetee: {
     libelle: "Demande d’achat de ressource",
     famille: "finance",

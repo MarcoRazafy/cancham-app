@@ -227,16 +227,17 @@ model Member {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users        User[]
-  produits     Produit[]
-  offres       Offer[]
-  actualites   News[]
-  factures     Invoice[]
-  inscriptions Registration[]
-  rendezvous   Rendezvous[]
-  notes        NoteMembre[]
-  acces        AccesRessource[]
-  reglements   Paiement[]
+  users         User[]
+  produits      Produit[]
+  offres        Offer[]
+  actualites    News[]
+  factures      Invoice[]
+  inscriptions  Registration[]
+  rendezvous    Rendezvous[]
+  notes         NoteMembre[]
+  acces         AccesRessource[]
+  accesDossiers AccesDossier[]
+  reglements    Paiement[]
 
   @@index([statut])
   @@map("members")
@@ -559,12 +560,9 @@ model Resource {
   description String?
 
   /// Inclus dans l'adhésion, ou facturé en supplément.
-  type       PricingType @default(gratuit)
+  type PricingType @default(gratuit)
   /// En Ariary. 0 si gratuit.
-  prix       Int         @default(0)
-  /// Réservée aux entreprises que l'équipe a choisies (`acces`), quel que
-  /// soit le tarif : les autres membres ne la voient pas.
-  restreinte Boolean     @default(false)
+  prix Int         @default(0)
 
   /// Dossier qui la range. `null` = à la racine de la bibliothèque.
   /// `SetNull` et non `Cascade` : supprimer un classeur ne doit jamais
@@ -618,8 +616,11 @@ model AccesRessource {
 /// on ne retrouve plus rien. Les dossiers s'imbriquent, et une ressource se
 /// dépose dans celui qu'on veut — ou à la racine, comme avant.
 model DossierRessource {
-  id  String @id @default(cuid())
-  nom String
+  id        String  @id @default(cuid())
+  nom       String
+  /// Réservé aux entreprises que l'équipe a choisies (`acces`) : les autres
+  /// membres ne voient ni le dossier, ni rien de ce qu'il contient.
+  restreint Boolean @default(false)
 
   /// `null` = dossier de premier niveau.
   parentId String?
@@ -627,12 +628,34 @@ model DossierRessource {
   enfants  DossierRessource[] @relation("Arborescence")
 
   ressources Resource[]
+  acces      AccesDossier[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([parentId])
   @@map("dossiers_ressources")
+}
+
+/// Une entreprise à qui un dossier réservé est ouvert. Comme pour une
+/// ressource payante, l'accès va à l'entreprise, pas à la personne.
+model AccesDossier {
+  id String @id @default(cuid())
+
+  dossierId String
+  dossier   DossierRessource @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  /// Qui de l'équipe a ouvert l'accès. Recopié : un compte supprimé ne doit
+  /// pas rendre la décision anonyme.
+  ouvertPar String
+
+  createdAt DateTime @default(now())
+
+  @@unique([dossierId, memberId])
+  @@index([memberId])
+  @@map("acces_dossiers")
 }
 
 /// Commentaire sur une actualité ou sur une ressource.

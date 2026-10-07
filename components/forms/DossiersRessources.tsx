@@ -1,7 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Folder, FolderPlus, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Check,
+  Folder,
+  FolderLock,
+  FolderPlus,
+  Pencil,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
@@ -12,9 +21,12 @@ import {
   SubmitButton,
 } from "@/components/form-bits";
 import { Card } from "@/components/ui";
+import type { MembreChoisissable } from "@/components/forms/BibliothequeOutils";
+import { ChoixEntreprises } from "@/components/forms/ChoixEntreprises";
 import {
   creerDossier,
   deplacerDossier,
+  reglerAccesDossier,
   renommerDossier,
   supprimerDossier,
 } from "@/lib/actions/content";
@@ -25,11 +37,59 @@ export type Arborescence = { id: string; nom: string; profondeur: number }[];
 
 const decalage = (n: number) => `${"  ".repeat(n)}${n ? "└ " : ""}`;
 
+/**
+ * Qui voit un dossier : tous les membres, ou les entreprises que l'équipe
+ * coche une à une. Le choix part avec le formulaire qui l'entoure (`acces`,
+ * puis un `membre` par entreprise).
+ */
+function ChampAccesDossier({
+  membres,
+  restreint = false,
+  acces = [],
+}: {
+  membres: MembreChoisissable[];
+  /** L'état actuel du dossier, quand on le règle. */
+  restreint?: boolean;
+  acces?: string[];
+}) {
+  const [personnalise, setPersonnalise] = useState(restreint);
+  return (
+    <>
+      <Field
+        label="Accès"
+        hint={
+          personnalise
+            ? undefined
+            : "Tous les membres à jour voient ce dossier."
+        }
+      >
+        <select
+          name="acces"
+          value={personnalise ? "personnalise" : "tous"}
+          onChange={(e) => setPersonnalise(e.target.value === "personnalise")}
+          className={INPUT}
+        >
+          <option value="tous">Tous les membres</option>
+          <option value="personnalise">
+            Personnalisé — entreprises choisies
+          </option>
+        </select>
+      </Field>
+      {personnalise ? (
+        <ChoixEntreprises membres={membres} initiales={acces} />
+      ) : null}
+    </>
+  );
+}
+
 /** Nouveau dossier, dans celui qui est ouvert. */
 export function BoutonNouveauDossier({
   parentId,
+  membres,
 }: {
   parentId: string | null;
+  /** Les entreprises à qui l'on peut réserver le dossier. */
+  membres: MembreChoisissable[];
 }) {
   return (
     <Modal
@@ -67,6 +127,7 @@ export function BoutonNouveauDossier({
                 className={INPUT}
               />
             </Field>
+            <ChampAccesDossier membres={membres} />
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
@@ -91,11 +152,14 @@ export function CarteDossier({
   space,
   admin,
   arborescence,
+  membres,
 }: {
   dossier: DossierRessource;
   space: Space;
   admin: boolean;
   arborescence: Arborescence;
+  /** Les entreprises à qui l'on peut réserver le dossier. Équipe seulement. */
+  membres: MembreChoisissable[];
 }) {
   const contenu = [
     d.dossiers ? `${d.dossiers} dossier${d.dossiers > 1 ? "s" : ""}` : null,
@@ -103,6 +167,13 @@ export function CarteDossier({
       ? `${d.ressources} ressource${d.ressources > 1 ? "s" : ""}`
       : null,
   ].filter(Boolean);
+  // Un dossier réservé le dit : à l'équipe, pour combien d'entreprises ; au
+  // membre qui le voit, que c'est pour la sienne.
+  const reserve = !d.restreint
+    ? null
+    : admin
+      ? `Réservé à ${d.acces.length} entreprise${d.acces.length > 1 ? "s" : ""}`
+      : "Réservé à votre entreprise";
 
   return (
     <Card className="flex items-center gap-3 p-3.5 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
@@ -111,7 +182,7 @@ export function CarteDossier({
         className="flex min-w-0 flex-1 items-center gap-3 no-underline"
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-surface-2 text-accent">
-          <Folder size={18} />
+          {d.restreint ? <FolderLock size={18} /> : <Folder size={18} />}
         </span>
         <span className="min-w-0">
           <span className="block truncate text-[14.5px] font-semibold text-ink">
@@ -120,11 +191,17 @@ export function CarteDossier({
           <span className="block text-[12.3px] text-muted">
             {contenu.length ? contenu.join(" · ") : "Vide"}
           </span>
+          {reserve ? (
+            <span className="block text-[11.8px] font-semibold text-warn">
+              {reserve}
+            </span>
+          ) : null}
         </span>
       </Link>
 
       {admin ? (
         <div className="flex shrink-0 items-center gap-1">
+          <AccesDossier dossier={d} membres={membres} />
           <ReglagesDossier dossier={d} arborescence={arborescence} />
           <SupprimerDossier dossier={d} />
         </div>
@@ -135,6 +212,60 @@ export function CarteDossier({
 
 const BTN_ICONE =
   "flex h-8 w-8 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted cursor-pointer";
+
+/**
+ * Qui voit le dossier : tous les membres, ou les entreprises cochées. Dans
+ * sa propre fenêtre, à part du nom et du rangement : c'est une autre
+ * décision, et la liste des entreprises prend de la place.
+ */
+function AccesDossier({
+  dossier: d,
+  membres,
+}: {
+  dossier: DossierRessource;
+  membres: MembreChoisissable[];
+}) {
+  return (
+    <Modal
+      title="Qui voit ce dossier"
+      largeur="max-w-[620px]"
+      trigger={(ouvrir) => (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Qui voit « ${d.nom} »`}
+          title="Qui voit ce dossier"
+          className={`${BTN_ICONE} hover:border-faint hover:text-ink ${d.restreint ? "border-warn text-warn" : ""}`}
+        >
+          <Users size={14} />
+        </button>
+      )}
+    >
+      {(fermer) => (
+        <form action={reglerAccesDossier}>
+          <input type="hidden" name="dossierId" value={d.id} />
+          <ModalBody>
+            <p className="m-0 text-[13.4px] text-muted">
+              <b className="text-ink">{d.nom}</b> — l’accès vaut pour tout ce
+              que le dossier contient : ses ressources et ses sous-dossiers.
+            </p>
+            <ChampAccesDossier
+              membres={membres}
+              restreint={d.restreint}
+              acces={d.acces}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <CancelButton onClick={fermer} />
+            <SubmitButton pendingLabel="Enregistrement…">
+              <Check size={15} /> Enregistrer l’accès
+            </SubmitButton>
+          </ModalFooter>
+        </form>
+      )}
+    </Modal>
+  );
+}
 
 /** Renommer, et ranger ailleurs : les deux se font dans la même fenêtre. */
 function ReglagesDossier({
@@ -251,6 +382,13 @@ function SupprimerDossier({ dossier: d }: { dossier: DossierRessource }) {
               ) : (
                 " Il est vide."
               )}
+              {d.restreint && contenu ? (
+                <>
+                  {" "}
+                  <b className="text-ink">Ce dossier est réservé</b> : une fois
+                  remonté, son contenu suit l’accès du dossier qui le reçoit.
+                </>
+              ) : null}
             </p>
           </ModalBody>
           <ModalFooter>

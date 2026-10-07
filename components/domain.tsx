@@ -1100,7 +1100,6 @@ export function ResourceCard({
           <Pill tone={resource.type === "gratuit" ? "ok" : "muted"}>
             {resource.type === "gratuit" ? "Gratuit" : fmtMoney(resource.prix)}
           </Pill>
-          {resource.restreinte ? <Pill tone="warn">Accès réservé</Pill> : null}
         </div>
         <h3 className="m-0 mb-1.5 text-[15.5px]">{resource.titre}</h3>
         {resource.description ? (

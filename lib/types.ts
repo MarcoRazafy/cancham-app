@@ -312,11 +312,6 @@ export interface Resource {
   type: "gratuit" | "payant";
   /** En Ariary. 0 si gratuit. */
   prix: number;
-  /**
-   * Réservée aux entreprises que l'équipe a choisies : un membre ne la voit
-   * que si son entreprise en est.
-   */
-  restreinte?: boolean;
   /** Quelques lignes sous le titre, pour dire ce qu'elle contient. */
   description?: string | null;
   commentaires: Comment[];
@@ -345,6 +340,13 @@ export interface DossierRessource {
   parentId: string | null;
   dossiers: number;
   ressources: number;
+  /**
+   * Réservé aux entreprises que l'équipe a choisies : les autres membres ne
+   * voient ni le dossier, ni ce qu'il contient.
+   */
+  restreint: boolean;
+  /** Ces entreprises. Renseigné pour l'équipe seulement. */
+  acces: string[];
 }
 
 /** Un maillon du fil d'Ariane, de la racine au dossier ouvert. */
