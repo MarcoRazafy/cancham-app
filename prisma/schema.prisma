@@ -550,16 +550,21 @@ model Resource {
   /// Nom du fichier source, rangé dans le stockage privé des ressources —
   /// jamais dans `public/`, sans quoi il suffirait de son URL pour le récupérer.
   /// `null` = ressource sans contenu consultable.
-  fichier String?
+  fichier     String?
   /// Nombre de pages rendues en images, pour un document. `null` pour une vidéo.
-  pages   Int?
+  pages       Int?
   /// Visuel de la carte dans la bibliothèque. `null` = motif décoratif.
-  cover   String?
+  cover       String?
+  /// Quelques lignes sous le titre, pour dire ce qu'elle contient.
+  description String?
 
   /// Inclus dans l'adhésion, ou facturé en supplément.
-  type PricingType @default(gratuit)
+  type       PricingType @default(gratuit)
   /// En Ariary. 0 si gratuit.
-  prix Int         @default(0)
+  prix       Int         @default(0)
+  /// Réservée aux entreprises que l'équipe a choisies (`acces`), quel que
+  /// soit le tarif : les autres membres ne la voient pas.
+  restreinte Boolean     @default(false)
 
   /// Dossier qui la range. `null` = à la racine de la bibliothèque.
   /// `SetNull` et non `Cascade` : supprimer un classeur ne doit jamais

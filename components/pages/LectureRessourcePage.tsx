@@ -7,7 +7,7 @@ import {
 } from "@/components/LecteurProtege";
 import { BtnLink, Card, Kicker } from "@/components/ui";
 import { verifierAcces } from "@/lib/acces-ressources";
-import { prisma } from "@/lib/db";
+import { getRessourceLisible } from "@/lib/queries";
 
 /**
  * Lecture d'une ressource dans la plateforme, côté membre comme côté équipe.
@@ -24,10 +24,9 @@ export async function LectureRessourcePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const r = await prisma.resource.findUnique({
-    where: { id },
-    select: { titre: true, cat: true, fmt: true, taille: true },
-  });
+  // Introuvable aussi pour qui n'a pas à la voir : une ressource réservée
+  // n'a pas de page pour les autres.
+  const r = await getRessourceLisible(id);
   if (!r) notFound();
 
   const acces = await verifierAcces(id);
@@ -47,6 +46,11 @@ export async function LectureRessourcePage({
           {r.taille}
         </Kicker>
         <h1 className="m-0 mt-1.5 text-[26px]">{r.titre}</h1>
+        {r.description ? (
+          <p className="m-0 mt-2 max-w-[70ch] text-[14px] leading-relaxed text-muted whitespace-pre-line">
+            {r.description}
+          </p>
+        ) : null}
       </div>
 
       {acces.ok ? (

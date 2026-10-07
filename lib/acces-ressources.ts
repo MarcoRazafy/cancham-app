@@ -45,17 +45,24 @@ export async function verifierAcces(id: string): Promise<Acces> {
 
   const r = await prisma.resource.findUnique({
     where: { id },
-    select: { id: true, titre: true, fichier: true, pages: true, type: true },
+    select: {
+      id: true,
+      titre: true,
+      fichier: true,
+      pages: true,
+      type: true,
+      restreinte: true,
+    },
   });
   if (!r?.fichier) {
     return { ok: false, statut: 404, message: "Ressource introuvable." };
   }
 
-  // Une ressource facturée ne s'ouvre qu'aux entreprises à qui l'équipe l'a
-  // ouverte. L'accès est donné à l'entreprise, pas à la personne : la
-  // cotisation est celle de l'entreprise, et ses collaborateurs travaillent
-  // sur les mêmes documents.
-  if (r.type === "payant" && !equipe) {
+  // Une ressource facturée, ou réservée, ne s'ouvre qu'aux entreprises à qui
+  // l'équipe l'a ouverte. L'accès est donné à l'entreprise, pas à la
+  // personne : la cotisation est celle de l'entreprise, et ses
+  // collaborateurs travaillent sur les mêmes documents.
+  if ((r.type === "payant" || r.restreinte) && !equipe) {
     const ouvert = user.memberId
       ? await prisma.accesRessource.count({
           where: { resourceId: r.id, memberId: user.memberId },
@@ -65,7 +72,9 @@ export async function verifierAcces(id: string): Promise<Acces> {
       return {
         ok: false,
         statut: 403,
-        message: "Ressource payante : accès après achat.",
+        message: r.restreinte
+          ? "Ressource réservée : l’équipe n’a pas ouvert l’accès à votre entreprise."
+          : "Ressource payante : accès après achat.",
       };
     }
   }

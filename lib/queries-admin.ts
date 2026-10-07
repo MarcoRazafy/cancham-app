@@ -252,6 +252,11 @@ export interface RessourceAdmin {
   date: string;
   type: "gratuit" | "payant";
   prix: number;
+  /** Réservée aux entreprises de `acces`, et à elles seules. */
+  restreinte: boolean;
+  /** Les entreprises à qui l'accès a été ouvert. */
+  acces: string[];
+  description: string | null;
   /** Fichier prêt pour la lecture. */
   pret: boolean;
   pages: number | null;
@@ -265,7 +270,10 @@ export interface RessourceAdmin {
 export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
   const [rows, demandes] = await Promise.all([
     prisma.resource.findMany({
-      include: { _count: { select: { commentaires: true } } },
+      include: {
+        _count: { select: { commentaires: true } },
+        acces: { select: { memberId: true } },
+      },
       orderBy: { date: "desc" },
     }),
     prisma.auditLog.groupBy({
@@ -286,6 +294,9 @@ export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
     date: r.date.toISOString().slice(0, 10),
     type: r.type,
     prix: r.prix,
+    restreinte: r.restreinte,
+    acces: r.acces.map((a) => a.memberId),
+    description: r.description,
     pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
     pages: r.pages,
     cover: r.cover,

@@ -85,11 +85,13 @@ export async function RessourcesPage({
       admin ? lirePressePapier() : Promise.resolve(null),
     ]);
 
-  // Les accès de toutes les ressources payantes affichées, en une requête :
-  // la fenêtre « qui y a accès » s'ouvre alors sans attendre.
+  // Les accès de toutes les ressources payantes ou réservées affichées, en
+  // une requête : la fenêtre « qui y a accès » s'ouvre alors sans attendre.
   const acces = admin
     ? await getAccesDesRessources(
-        list.filter((r) => r.type === "payant").map((r) => r.id),
+        list
+          .filter((r) => r.type === "payant" || r.restreinte)
+          .map((r) => r.id),
       )
     : {};
 
@@ -273,9 +275,10 @@ export async function RessourcesPage({
                           <AlertTriangle size={13} /> Fichier manquant
                         </span>
                       )}
-                      {/* L'œil ne vaut que pour une ressource facturée : une
-                          ressource incluse n'a pas de liste d'accès. */}
-                      {r.type === "payant" ? (
+                      {/* L'œil ne vaut que pour une ressource facturée ou
+                          réservée : une ressource incluse n'a pas de liste
+                          d'accès. */}
+                      {r.type === "payant" || r.restreinte ? (
                         <BoutonAcces
                           resourceId={r.id}
                           titre={r.titre}

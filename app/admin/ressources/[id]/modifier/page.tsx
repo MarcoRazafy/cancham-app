@@ -5,7 +5,7 @@ import { EnTeteAdmin } from "@/components/admin/ui";
 import { FormulaireRessource } from "@/components/forms/AdminContenuForms";
 import { Saillant } from "@/components/ui";
 import { getArborescenceDossiers } from "@/lib/queries";
-import { getRessourcesAdmin } from "@/lib/queries-admin";
+import { getMembresPourAcces, getRessourcesAdmin } from "@/lib/queries-admin";
 
 export default async function ModifierRessource({
   params,
@@ -13,9 +13,10 @@ export default async function ModifierRessource({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [ressources, dossiers] = await Promise.all([
+  const [ressources, dossiers, membres] = await Promise.all([
     getRessourcesAdmin(),
     getArborescenceDossiers(),
+    getMembresPourAcces(),
   ]);
   const r = ressources.find((x) => x.id === id);
   if (!r) notFound();
@@ -38,7 +39,11 @@ export default async function ModifierRessource({
       >
         {r.titre}
       </EnTeteAdmin>
-      <FormulaireRessource ressource={r} dossiers={dossiers} />
+      <FormulaireRessource
+        ressource={r}
+        dossiers={dossiers}
+        membres={membres}
+      />
     </>
   );
 }

@@ -312,6 +312,13 @@ export interface Resource {
   type: "gratuit" | "payant";
   /** En Ariary. 0 si gratuit. */
   prix: number;
+  /**
+   * Réservée aux entreprises que l'équipe a choisies : un membre ne la voit
+   * que si son entreprise en est.
+   */
+  restreinte?: boolean;
+  /** Quelques lignes sous le titre, pour dire ce qu'elle contient. */
+  description?: string | null;
   commentaires: Comment[];
   /** Visuel de la carte. `null` = motif décoratif. */
   cover?: string | null;

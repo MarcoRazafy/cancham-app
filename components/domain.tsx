@@ -1100,8 +1100,14 @@ export function ResourceCard({
           <Pill tone={resource.type === "gratuit" ? "ok" : "muted"}>
             {resource.type === "gratuit" ? "Gratuit" : fmtMoney(resource.prix)}
           </Pill>
+          {resource.restreinte ? <Pill tone="warn">Accès réservé</Pill> : null}
         </div>
         <h3 className="m-0 mb-1.5 text-[15.5px]">{resource.titre}</h3>
+        {resource.description ? (
+          <p className="m-0 mb-1.5 text-[12.8px] text-muted leading-relaxed line-clamp-2">
+            {resource.description}
+          </p>
+        ) : null}
         <div className="text-[12.3px] text-muted flex gap-3 flex-wrap mt-1">
           <span className="inline-flex items-center gap-1">
             <CalendarDays size={13} /> {fmtDateShort(resource.date)}

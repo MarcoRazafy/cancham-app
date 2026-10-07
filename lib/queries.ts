@@ -27,6 +27,7 @@ import {
 } from "@/lib/codes-accueil";
 import { visiteurDuFil } from "@/lib/support-visiteur";
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { utilisateurConnecte } from "@/lib/session";
 import { nomFacture } from "@/lib/factures";
 import { aujourdhuiISO, jourBase } from "@/lib/format";
@@ -516,6 +517,27 @@ export async function aDesActualitesPubliques(): Promise<boolean> {
   return (await prisma.news.count({ where: { public: true } })) > 0;
 }
 
+/**
+ * Ce qu'une personne a le droit de voir de la bibliothèque.
+ *
+ * Une ressource réservée (`restreinte`) n'existe que pour les entreprises à
+ * qui l'équipe l'a ouverte : les autres ne la voient ni dans la liste, ni
+ * dans les comptes, ni dans la recherche. L'équipe voit tout.
+ */
+function visibiliteRessources(
+  user: { role: string; memberId: string | null } | null,
+): Prisma.ResourceWhereInput {
+  if (user?.role === "admin") return {};
+  return {
+    OR: [
+      { restreinte: false },
+      ...(user?.memberId
+        ? [{ acces: { some: { memberId: user.memberId } } }]
+        : []),
+    ],
+  };
+}
+
 export async function getResources(
   type?: "gratuit" | "payant",
   /**
@@ -527,8 +549,10 @@ export async function getResources(
   recherche?: string,
 ): Promise<Resource[]> {
   const q = recherche?.trim();
+  const user = await utilisateurConnecte();
   const rows = await prisma.resource.findMany({
     where: {
+      ...visibiliteRessources(user),
       ...(type ? { type } : {}),
       // Chercher dans un seul dossier n'aurait pas de sens : on cherche
       // précisément ce qu'on ne sait plus où l'on a rangé.
@@ -540,15 +564,16 @@ export async function getResources(
   });
 
   // Ce que la personne connectée peut ouvrir : l'équipe voit tout, un membre
-  // ne lit une ressource facturée que si son accès a été ouvert.
-  const user = await utilisateurConnecte();
-  const payantes = rows.filter((r) => r.type === "payant").map((r) => r.id);
+  // ne lit une ressource facturée ou réservée que si son accès a été ouvert.
+  const aOuvrir = rows
+    .filter((r) => r.type === "payant" || r.restreinte)
+    .map((r) => r.id);
   const ouverts =
-    user && user.role !== "admin" && user.memberId && payantes.length
+    user && user.role !== "admin" && user.memberId && aOuvrir.length
       ? new Set(
           (
             await prisma.accesRessource.findMany({
-              where: { memberId: user.memberId, resourceId: { in: payantes } },
+              where: { memberId: user.memberId, resourceId: { in: aOuvrir } },
               select: { resourceId: true },
             })
           ).map((a) => a.resourceId),
@@ -563,13 +588,34 @@ export async function getResources(
     date: toISODate(r.date),
     type: r.type,
     prix: r.prix,
+    restreinte: r.restreinte,
+    description: r.description,
     commentaires: versCommentaires(r.commentaires),
     cover: r.cover,
     dossierId: r.dossierId,
     pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
     accessible:
-      r.type === "gratuit" || user?.role === "admin" || ouverts.has(r.id),
+      (r.type === "gratuit" && !r.restreinte) ||
+      user?.role === "admin" ||
+      ouverts.has(r.id),
   }));
+}
+
+/**
+ * Une ressource, pour sa page de lecture — `null` si elle n'existe pas, ou
+ * si la personne connectée n'a pas à la voir : une ressource réservée ne
+ * livre ni son titre ni sa description à qui n'en est pas.
+ */
+export async function getRessourceLisible(id: string): Promise<{
+  titre: string;
+  fmt: "pdf" | "docx" | "video" | "image";
+  taille: string;
+  description: string | null;
+} | null> {
+  return prisma.resource.findFirst({
+    where: { id, ...visibiliteRessources(await utilisateurConnecte()) },
+    select: { titre: true, fmt: true, taille: true, description: true },
+  });
 }
 
 /** Compte des ressources par tarif, dans le dossier ouvert. */
@@ -579,6 +625,7 @@ export async function getResourceCounts(
 ) {
   const q = recherche?.trim();
   const ou = {
+    ...visibiliteRessources(await utilisateurConnecte()),
     ...(dossierId !== undefined && !q ? { dossierId } : {}),
     ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
   };
@@ -1414,6 +1461,7 @@ export async function rechercher(
   const base = space === "admin" ? "/admin" : "/membre";
 
   const admin = space === "admin";
+  const utilisateur = await utilisateurConnecte();
   const [membres, evenements, actualites, ressources, contacts, factures] =
     await Promise.all([
       prisma.member.findMany({
@@ -1444,8 +1492,14 @@ export async function rechercher(
         orderBy: { date: "desc" },
       }),
       prisma.resource.findMany({
-        where: { titre: like },
-        select: { id: true, titre: true, taille: true, type: true },
+        where: { ...visibiliteRessources(utilisateur), titre: like },
+        select: {
+          id: true,
+          titre: true,
+          taille: true,
+          type: true,
+          restreinte: true,
+        },
         take: 8,
         orderBy: { date: "desc" },
       }),
@@ -1524,7 +1578,7 @@ export async function rechercher(
       type: "ressource" as const,
       id: r.id,
       titre: r.titre,
-      detail: `${r.taille} · ${r.type === "payant" ? "payante" : "incluse"}`,
+      detail: `${r.taille} · ${r.restreinte ? "réservée" : r.type === "payant" ? "payante" : "incluse"}`,
       href: admin ? `/admin/ressources/${r.id}/modifier` : `${base}/ressources`,
     })),
     ...contacts.map((c) => ({
