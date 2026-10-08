@@ -53,6 +53,7 @@ import {
 } from "@/lib/blocs";
 import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 import { ACCEPT_VIDEO, formatVideo } from "@/lib/video-presentation";
+import { ChoixCouleur } from "./ChoixCouleur";
 import { VideoEnLien } from "./PageRessource";
 import { TexteRiche } from "./TexteRiche";
 
@@ -85,6 +86,7 @@ type EditeTitre = {
   texte: string;
   niveau: 2 | 3;
   alignement?: Alignement;
+  couleur?: string;
 };
 type EditeTexte = { cle: string; type: "texte"; lignes: Ligne[] };
 type EditePhoto = {
@@ -403,8 +405,8 @@ export function EditeurPage({
       JSON.stringify(
         blocs.map((b) => {
           if (b.type === "titre") {
-            const { type, texte, niveau, alignement } = b;
-            return { type, texte, niveau, alignement };
+            const { type, texte, niveau, alignement, couleur } = b;
+            return { type, texte, niveau, alignement, couleur };
           }
           if (b.type === "texte") return { type: b.type, lignes: b.lignes };
           // Le fichier qu'on vient d'envoyer, sinon celui déjà rangé.
@@ -872,41 +874,49 @@ function BlocTitre({
   return (
     <>
       {actif ? (
-        <div className="mb-2 flex flex-wrap items-center gap-1">
-          <button
-            type="button"
-            aria-pressed={bloc.niveau === 2}
-            onClick={() => onChange({ niveau: 2 })}
-            className={choix(bloc.niveau === 2)}
-          >
-            Grand titre
-          </button>
-          <button
-            type="button"
-            aria-pressed={bloc.niveau === 3}
-            onClick={() => onChange({ niveau: 3 })}
-            className={choix(bloc.niveau === 3)}
-          >
-            Sous-titre
-          </button>
-          <span className="mx-1 h-5 w-px bg-line" aria-hidden />
-          {ALIGNEMENTS.map(({ valeur, nom, Icone }) => (
+        <div className="mb-2 rounded-[var(--radius-m)] border border-line bg-surface shadow-[0_8px_20px_-14px_rgb(15_29_44/0.45)]">
+          <div className="flex flex-wrap items-center gap-1 px-1.5 py-1.5">
             <button
-              key={nom}
               type="button"
-              title={nom}
-              aria-label={nom}
-              aria-pressed={bloc.alignement === valeur}
-              onClick={() => onChange({ alignement: valeur })}
-              className={`flex h-7 w-7 items-center justify-center rounded-full ${
-                bloc.alignement === valeur
-                  ? "bg-accent-soft text-accent"
-                  : "text-muted hover:text-ink"
-              }`}
+              aria-pressed={bloc.niveau === 2}
+              onClick={() => onChange({ niveau: 2 })}
+              className={choix(bloc.niveau === 2)}
             >
-              <Icone size={15} />
+              Grand titre
             </button>
-          ))}
+            <button
+              type="button"
+              aria-pressed={bloc.niveau === 3}
+              onClick={() => onChange({ niveau: 3 })}
+              className={choix(bloc.niveau === 3)}
+            >
+              Sous-titre
+            </button>
+            <span className="mx-1 h-5 w-px bg-line" aria-hidden />
+            {ALIGNEMENTS.map(({ valeur, nom, Icone }) => (
+              <button
+                key={nom}
+                type="button"
+                title={nom}
+                aria-label={nom}
+                aria-pressed={bloc.alignement === valeur}
+                onClick={() => onChange({ alignement: valeur })}
+                className={`flex h-7 w-7 items-center justify-center rounded-full ${
+                  bloc.alignement === valeur
+                    ? "bg-accent-soft text-accent"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                <Icone size={15} />
+              </button>
+            ))}
+          </div>
+          <ChoixCouleur
+            libelle="Couleur du titre"
+            actuelle={bloc.couleur ?? null}
+            onChoisir={(couleur) => onChange({ couleur: couleur ?? undefined })}
+            className="border-t border-line px-2.5 py-2"
+          />
         </div>
       ) : null}
       <ChampAuto
@@ -915,6 +925,7 @@ function BlocTitre({
         placeholder={bloc.niveau === 2 ? "Titre" : "Sous-titre"}
         aria-label={bloc.niveau === 2 ? "Titre" : "Sous-titre"}
         onChange={(e) => onChange({ texte: e.target.value })}
+        style={bloc.couleur ? { color: bloc.couleur } : undefined}
         className={`titre ${
           bloc.niveau === 2
             ? "text-[26px] leading-tight"
@@ -1131,6 +1142,7 @@ function BlocVideo({
       ? `/api/ressources/${resourceId}/blocs/${bloc.fichier}`
       : null);
   const lien = bloc.url.trim();
+  const video = lien ? lienVideo(lien) : null;
   const choisir = (f: File) => {
     if (!formatVideo(f.name)) {
       onRefus(`« ${f.name} » : envoyez une vidéo MP4, WebM ou MOV.`);
@@ -1175,23 +1187,37 @@ function BlocVideo({
             inputMode="url"
             value={bloc.url}
             maxLength={500}
-            placeholder="https://www.youtube.com/watch?v=… ou https://vimeo.com/…"
+            placeholder="Lien YouTube, Vimeo ou Google Drive"
             aria-label="Lien de la vidéo"
             onChange={(e) => onChange({ url: e.target.value })}
             className={INPUT}
           />
           {!lien ? (
             <p className="m-0 mt-1.5 text-[12px] text-faint">
-              YouTube ou Vimeo : la vidéo se lira dans la page, sans quitter la
-              plateforme.
+              YouTube, Vimeo ou Google Drive : la vidéo se lira dans la page,
+              sans quitter la plateforme.
             </p>
-          ) : lienVideo(lien) ? (
+          ) : video ? (
             <div className="mt-2.5">
               <VideoEnLien url={lien} titre="Aperçu de la vidéo" />
+              {video.plateforme === "drive" ? (
+                <p className="m-0 mt-2 flex items-start gap-1.5 text-[12.4px] text-muted">
+                  <TriangleAlert
+                    size={14}
+                    className="mt-0.5 shrink-0 text-warn"
+                  />
+                  <span>
+                    Dans Google Drive, partagez le fichier à «{"\u00a0"}Tous les
+                    utilisateurs disposant du lien{"\u00a0"}». Sinon, les
+                    membres verront une demande d’accès à la place de la vidéo.
+                  </span>
+                </p>
+              ) : null}
             </div>
           ) : (
             <p className="m-0 mt-1.5 text-[12.4px] font-semibold text-accent">
-              Lien non reconnu : collez l’adresse d’une vidéo YouTube ou Vimeo.
+              Lien non reconnu : collez l’adresse d’une vidéo YouTube, Vimeo ou
+              Google Drive.
             </p>
           )}
         </>

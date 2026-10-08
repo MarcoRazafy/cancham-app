@@ -10,17 +10,11 @@ import {
   Link2,
   List,
   ListOrdered,
-  Palette,
   Underline,
   X,
 } from "lucide-react";
-import {
-  PALETTE_TEXTE,
-  TAILLES,
-  lienSur,
-  type Ligne,
-  type Taille,
-} from "@/lib/blocs";
+import { TAILLES, lienSur, type Ligne, type Taille } from "@/lib/blocs";
+import { ChoixCouleur } from "./ChoixCouleur";
 import {
   TAILLE_NAVIGATEUR,
   enHex,
@@ -291,60 +285,18 @@ export function TexteRiche({
 
           {/* Les couleurs restent sous les yeux : rangées derrière un
               bouton, on ne les trouvait pas. */}
-          <div
-            role="group"
-            aria-label="Couleur du texte"
-            className="flex flex-wrap items-center gap-2 border-t border-line px-2.5 py-2"
-          >
-            <span className="flex items-center gap-1.5 pr-0.5 text-[12px] font-semibold text-muted">
-              <Palette size={14} /> Couleur
-            </span>
-
-            {PALETTE_TEXTE.map((c) => (
-              <button
-                key={c.valeur}
-                type="button"
-                title={c.nom}
-                aria-label={c.nom}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => colorer(c.valeur)}
-                className="h-7 w-7 rounded-full border border-black/10 shadow-sm hover:scale-110"
-                style={{ background: c.valeur }}
-              />
-            ))}
-            <label
-              title="Choisir une autre couleur"
-              className="flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface-2 pl-1 pr-2.5 text-[12px] font-semibold text-ink"
-            >
-              <input
-                type="color"
-                aria-label="Autre couleur"
-                defaultValue="#ad0707"
-                // L'événement natif `change` : une fois la couleur arrêtée,
-                // pas à chaque mouvement dans le nuancier — reprendre le
-                // curseur à ce moment-là fermerait le nuancier.
-                ref={(el) => {
-                  if (el) el.onchange = () => colorer(el.value);
-                }}
-                className="h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent p-0"
-              />
-              Personnalisée
-            </label>
-            <button
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                // La couleur du texte courant : la relecture n'en garde rien.
-                const base = zone.current
-                  ? enHex(getComputedStyle(zone.current).color)
-                  : null;
-                colorer(base ?? "#0f1d2c");
-              }}
-              className="h-7 rounded-full border border-line px-2.5 text-[12px] font-semibold text-muted hover:text-ink"
-            >
-              Par défaut
-            </button>
-          </div>
+          <ChoixCouleur
+            libelle="Couleur du texte"
+            onChoisir={(couleur) => {
+              // « Par défaut » : la couleur du texte courant, dont la
+              // relecture ne garde rien.
+              const base = zone.current
+                ? enHex(getComputedStyle(zone.current).color)
+                : null;
+              colorer(couleur ?? base ?? "#0f1d2c");
+            }}
+            className="border-t border-line px-2.5 py-2"
+          />
 
           {volet === "lien" ? (
             <div className="border-t border-line px-2.5 py-2">

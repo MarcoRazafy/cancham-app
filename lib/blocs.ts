@@ -42,6 +42,8 @@ export interface BlocTitre {
   texte: string;
   niveau: 2 | 3;
   alignement?: Alignement;
+  /** Couleur du titre entier, en `#rrggbb`. */
+  couleur?: string;
 }
 export interface BlocTexte {
   type: "texte";
@@ -136,13 +138,18 @@ export function lienSur(saisie: string): string | null {
 /**
  * La vidéo qu'un lien désigne, et l'adresse où elle se lit dans un cadre.
  *
- * Seuls YouTube et Vimeo : ce sont les deux hébergeurs que la politique de
- * sécurité de la plateforme autorise à s'afficher dans ses pages. `null`
- * pour tout autre lien.
+ * Seuls YouTube, Vimeo et Google Drive : ce sont les hébergeurs que la
+ * politique de sécurité de la plateforme autorise à s'afficher dans ses
+ * pages. `null` pour tout autre lien.
+ *
+ * Une vidéo de Google Drive ne se lit que si son fichier est partagé à
+ * « Tous les utilisateurs disposant du lien » : sinon, c'est la demande
+ * d'accès de Google qui s'affiche à la place.
  */
-export function lienVideo(
-  saisie: string,
-): { plateforme: "youtube" | "vimeo"; integration: string } | null {
+export function lienVideo(saisie: string): {
+  plateforme: "youtube" | "vimeo" | "drive";
+  integration: string;
+} | null {
   let url: URL;
   try {
     const lien = saisie.trim();
@@ -183,6 +190,28 @@ export function lienVideo(
       }`,
     };
   }
+
+  if (hote === "drive.google.com" || hote === "docs.google.com") {
+    // drive.google.com/file/d/ID/view, …/file/u/1/d/ID/preview,
+    // drive.google.com/open?id=ID, drive.google.com/uc?id=ID. Un dossier
+    // (`/drive/folders/…`) n'est pas une vidéo.
+    const d = morceaux.indexOf("d");
+    const id =
+      morceaux[0] === "file" && d > 0
+        ? morceaux[d + 1]
+        : morceaux[0] === "open" || morceaux[0] === "uc"
+          ? url.searchParams.get("id")
+          : null;
+    if (!id || !/^[A-Za-z0-9_-]{15,100}$/.test(id)) return null;
+    // La clé que Google ajoute aux liens des fichiers anciens.
+    const cle = url.searchParams.get("resourcekey") ?? "";
+    return {
+      plateforme: "drive",
+      integration: `https://drive.google.com/file/d/${id}/preview${
+        /^[A-Za-z0-9_-]{1,60}$/.test(cle) ? `?resourcekey=${cle}` : ""
+      }`,
+    };
+  }
   return null;
 }
 
@@ -201,6 +230,13 @@ const propre = (t: string) =>
 
 const alignementDe = (v: unknown): Alignement | undefined =>
   v === "centre" || v === "droite" ? v : undefined;
+
+/** Une couleur en `#rrggbb`, et rien d'autre : elle finit dans un style. */
+function couleurDe(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  const couleur = v.toLowerCase();
+  return COULEUR.test(couleur) ? couleur : undefined;
+}
 
 const memesMarques = (a: Passage, b: Passage) =>
   a.g === b.g &&
@@ -231,10 +267,8 @@ function lirePassages(
       const lien = lienSur(p.lien);
       if (lien) passage.lien = lien;
     }
-    if (typeof p.couleur === "string") {
-      const couleur = p.couleur.toLowerCase();
-      if (COULEUR.test(couleur)) passage.couleur = couleur;
-    }
+    const couleur = couleurDe(p.couleur);
+    if (couleur) passage.couleur = couleur;
     if (
       p.taille === "petit" ||
       p.taille === "grand" ||
@@ -318,11 +352,13 @@ export function lireBlocs(valeur: unknown): Lecture {
       const texte = propre(b.texte).replace(/\s+/g, " ").trim().slice(0, 200);
       if (!texte) continue;
       const alignement = alignementDe(b.alignement);
+      const couleur = couleurDe(b.couleur);
       blocs.push({
         type: "titre",
         texte,
         niveau: b.niveau === 3 ? 3 : 2,
         ...(alignement ? { alignement } : {}),
+        ...(couleur ? { couleur } : {}),
       });
     } else if (b.type === "texte") {
       const lignes = lireLignes(b.lignes);
@@ -351,7 +387,7 @@ export function lireBlocs(valeur: unknown): Lecture {
         if (!lienVideo(url)) {
           return {
             erreur:
-              "Lien de vidéo non reconnu : collez l’adresse d’une vidéo YouTube ou Vimeo.",
+              "Lien de vidéo non reconnu : collez l’adresse d’une vidéo YouTube, Vimeo ou Google Drive.",
           };
         }
         blocs.push({ type: "video", source: "lien", url });

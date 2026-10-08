@@ -94,6 +94,42 @@ describe("vidéos données par un lien", () => {
     ).toBe("vimeo");
   });
 
+  it("reconnaît les fichiers Google Drive, pas ses dossiers", () => {
+    const id = "1A2b3C4d5E6f7G8h9I0jK1L2m3N4o5P6q";
+    const attendu = {
+      plateforme: "drive",
+      integration: `https://drive.google.com/file/d/${id}/preview`,
+    };
+    for (const lien of [
+      `https://drive.google.com/file/d/${id}/view?usp=sharing`,
+      `https://drive.google.com/file/d/${id}/view?usp=drive_link`,
+      `https://drive.google.com/file/u/1/d/${id}/preview`,
+      `https://drive.google.com/open?id=${id}`,
+      `https://drive.google.com/uc?id=${id}&export=download`,
+      `drive.google.com/file/d/${id}/view`,
+    ]) {
+      expect(lienVideo(lien), lien).toEqual(attendu);
+    }
+    expect(
+      lienVideo(
+        `https://drive.google.com/file/d/${id}/view?resourcekey=0-AbC_dEf-123`,
+      )?.integration,
+    ).toBe(
+      `https://drive.google.com/file/d/${id}/preview?resourcekey=0-AbC_dEf-123`,
+    );
+    for (const lien of [
+      `https://drive.google.com/drive/folders/${id}`,
+      `https://drive.google.com/drive/u/0/my-drive`,
+      `https://drive.google.com.pirate.example/file/d/${id}/view`,
+      `https://pirate.example/drive.google.com/file/d/${id}/view`,
+      "https://drive.google.com/file/d/../view",
+      `https://drive.google.com/file/d/${id}%22onload/view`,
+      "https://drive.google.com/open?id=court",
+    ]) {
+      expect(lienVideo(lien), lien).toBeNull();
+    }
+  });
+
   it("refuse tout autre hébergeur, et les adresses qui en imitent un", () => {
     for (const lien of [
       "https://exemple.com/video.mp4",
@@ -255,6 +291,23 @@ describe("lecture d'une page saisie", () => {
     });
   });
 
+  it("garde la couleur d'un titre, si c'en est une", () => {
+    expect(
+      blocs([
+        { type: "titre", texte: "Rouge", niveau: 2, couleur: "#AD0707" },
+        {
+          type: "titre",
+          texte: "Rien",
+          niveau: 3,
+          couleur: "red;display:none",
+        },
+      ]),
+    ).toEqual([
+      { type: "titre", texte: "Rouge", niveau: 2, couleur: "#ad0707" },
+      { type: "titre", texte: "Rien", niveau: 3 },
+    ]);
+  });
+
   it("ramène un titre à une ligne, et un niveau inconnu au grand titre", () => {
     expect(
       blocs([{ type: "titre", texte: "  Un\n  titre\t long ", niveau: 7 }]),
@@ -297,7 +350,7 @@ describe("lecture d'une page saisie", () => {
       lireBlocs([
         { type: "video", source: "lien", url: "https://exemple.com/v.mp4" },
       ]).erreur,
-    ).toMatch(/YouTube ou Vimeo/);
+    ).toMatch(/YouTube, Vimeo ou Google Drive/);
   });
 
   it("borne le nombre de blocs d'une page", () => {

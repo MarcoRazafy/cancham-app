@@ -125,10 +125,15 @@ function BlocLu({
 }) {
   if (bloc.type === "titre") {
     const classe = `m-0 [overflow-wrap:anywhere] ${bloc.alignement ? ALIGNEMENT[bloc.alignement] : ""}`;
+    const style = bloc.couleur ? { color: bloc.couleur } : undefined;
     return bloc.niveau === 2 ? (
-      <h2 className={`${classe} text-[26px] leading-tight`}>{bloc.texte}</h2>
+      <h2 className={`${classe} text-[26px] leading-tight`} style={style}>
+        {bloc.texte}
+      </h2>
     ) : (
-      <h3 className={`${classe} text-[20px] leading-snug`}>{bloc.texte}</h3>
+      <h3 className={`${classe} text-[20px] leading-snug`} style={style}>
+        {bloc.texte}
+      </h3>
     );
   }
   if (bloc.type === "texte") return <TexteMisEnForme lignes={bloc.lignes} />;

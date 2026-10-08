@@ -25,9 +25,10 @@ function politiqueContenu(dev: boolean): string {
     // tiers, lui, ne peut toujours pas nous enfermer dans une iframe.
     "frame-ancestors 'self'",
     // Les vidéos données par un lien, dans une page de ressource, se lisent
-    // dans le cadre de leur hébergeur : YouTube (sans cookie) et Vimeo, et
-    // eux seuls. `'self'` reste pour le cadre qui imprime le certificat.
-    "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com",
+    // dans le cadre de leur hébergeur : YouTube (sans cookie), Vimeo et
+    // Google Drive, et eux seuls. `'self'` reste pour le cadre qui imprime
+    // le certificat.
+    "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com",
     "form-action 'self'",
     "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com",
     "media-src 'self' blob:",
