@@ -26,6 +26,7 @@ import {
   extraireCode,
 } from "@/lib/codes-accueil";
 import { visiteurDuFil } from "@/lib/support-visiteur";
+import { blocsEnregistres, type Bloc } from "@/lib/blocs";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { utilisateurConnecte } from "@/lib/session";
@@ -680,7 +681,9 @@ export async function getResources(
     commentaires: versCommentaires(r.commentaires),
     cover: r.cover,
     dossierId: r.dossierId,
-    pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
+    pret:
+      r.fmt === "page" ||
+      (Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages))),
     accessible:
       r.type === "gratuit" || user?.role === "admin" || ouverts.has(r.id),
   }));
@@ -694,9 +697,11 @@ export async function getResources(
  */
 export async function getRessourceLisible(id: string): Promise<{
   titre: string;
-  fmt: "pdf" | "docx" | "video" | "image";
+  fmt: "pdf" | "docx" | "video" | "image" | "page";
   taille: string;
   description: string | null;
+  /** Les blocs d'une page composée. Vide pour une ressource faite d'un fichier. */
+  blocs: Bloc[];
   /** Le dossier qui la range : c'est là qu'on revient. */
   dossierId: string | null;
   /** Étape déjà terminée par la personne connectée. */
@@ -710,6 +715,7 @@ export async function getRessourceLisible(id: string): Promise<{
       fmt: true,
       taille: true,
       description: true,
+      contenu: true,
       dossierId: true,
       lectures: user
         ? { where: { userId: user.id }, select: { id: true } }
@@ -717,8 +723,12 @@ export async function getRessourceLisible(id: string): Promise<{
     },
   });
   if (!r) return null;
-  const { lectures, ...reste } = r;
-  return { ...reste, terminee: Boolean(lectures?.length) };
+  const { lectures, contenu, ...reste } = r;
+  return {
+    ...reste,
+    blocs: r.fmt === "page" ? blocsEnregistres(contenu) : [],
+    terminee: Boolean(lectures?.length),
+  };
 }
 
 /* -------------------------- Dossiers -------------------------- */

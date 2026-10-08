@@ -1,7 +1,9 @@
 import { execFile } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import {
   cp,
   mkdir,
+  open,
   readdir,
   readFile,
   rename,
@@ -12,8 +14,11 @@ import {
 import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
+import { estFichierBloc } from "@/lib/blocs";
 import { PLAFOND_FICHIER } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
+import { envoiEnAttente } from "@/lib/televersements";
+import { formatVideo, signatureVideo } from "@/lib/video-presentation";
 
 const executer = promisify(execFile);
 
@@ -284,4 +289,112 @@ export async function dupliquerRessource(
   if (!(await existe(depuis))) return;
   await mkdir(path.dirname(dossierRessource(cible)), { recursive: true });
   await cp(depuis, dossierRessource(cible), { recursive: true });
+}
+
+/* -------------------------------------------------------------------------- */
+/* Les fichiers des blocs d'une page composée                                 */
+/* -------------------------------------------------------------------------- */
+
+const dossierBlocs = (id: string) => path.join(dossierRessource(id), "blocs");
+
+/** Chemin du fichier d'un bloc — la photo ou la vidéo d'une page composée. */
+export function cheminBloc(id: string, fichier: string): string {
+  // Le nom vient d'une adresse ou de la base : seul le motif de ceux qu'on
+  // fabrique atteint le disque.
+  if (!estFichierBloc(fichier)) throw new Error("Nom de fichier invalide.");
+  return path.join(dossierBlocs(id), fichier);
+}
+
+/**
+ * Range le fichier d'un bloc, envoyé d'avance sous un jeton, et rend le nom
+ * qu'il porte désormais.
+ *
+ * Une photo est redimensionnée et recompressée en WebP — l'orientation de
+ * l'appareil appliquée, les métadonnées retirées, coordonnées GPS comprises.
+ * Une vidéo n'est jamais chargée en mémoire : on vérifie que son début est
+ * bien celui d'une vidéo, puis on la déplace.
+ */
+export async function recevoirFichierBloc(
+  id: string,
+  genre: "photo" | "video",
+  jeton: string,
+): Promise<string> {
+  const envoi = await envoiEnAttente(jeton);
+  if (!envoi) {
+    throw new FichierRefuse(
+      genre === "photo"
+        ? "Une photo de la page n’est pas arrivée : choisissez-la de nouveau."
+        : "Une vidéo de la page n’est pas arrivée : choisissez-la de nouveau.",
+    );
+  }
+  await mkdir(dossierBlocs(id), { recursive: true });
+  const alea = randomBytes(8).toString("hex");
+
+  try {
+    if (genre === "photo") {
+      const nom = `photo-${alea}.webp`;
+      try {
+        await sharp(envoi.chemin)
+          .rotate()
+          .resize(1800, 1800, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 82 })
+          .toFile(cheminBloc(id, nom));
+      } catch {
+        await rm(cheminBloc(id, nom), { force: true });
+        throw new FichierRefuse(
+          `« ${envoi.nom} » n’est pas une image lisible. Essayez en JPEG ou en PNG.`,
+        );
+      }
+      return nom;
+    }
+
+    const format = formatVideo(envoi.nom);
+    const debut = Buffer.alloc(12);
+    const ouvert = await open(envoi.chemin, "r");
+    try {
+      await ouvert.read(debut, 0, 12, 0);
+    } finally {
+      await ouvert.close();
+    }
+    if (!format || !signatureVideo(debut, format)) {
+      throw new FichierRefuse(
+        `« ${envoi.nom} » n’est pas une vidéo lisible : envoyez un fichier MP4, WebM ou MOV.`,
+      );
+    }
+    const nom = `video-${alea}.${format}`;
+    await rename(envoi.chemin, cheminBloc(id, nom));
+    return nom;
+  } finally {
+    await envoi.oublier();
+  }
+}
+
+/** Efface les fichiers de blocs que la page n'emploie plus. */
+export async function menageBlocs(id: string, gardes: string[]): Promise<void> {
+  let noms: string[];
+  try {
+    noms = await readdir(dossierBlocs(id));
+  } catch {
+    return;
+  }
+  for (const nom of noms) {
+    if (!gardes.includes(nom)) {
+      await rm(path.join(dossierBlocs(id), nom), { force: true });
+    }
+  }
+}
+
+/** La couverture d'une page composée : sa première photo, en vignette. */
+export async function couvertureDepuisBloc(
+  id: string,
+  fichier: string,
+): Promise<Buffer> {
+  return (
+    sharp(cheminBloc(id, fichier))
+      // Une image à fond transparent se pose sur du blanc, pas sur du noir.
+      .flatten({ background: "#ffffff" })
+      .resize(800, null, { withoutEnlargement: true })
+      .jpeg({ quality: 78, mozjpeg: true })
+      .toBuffer()
+  );
 }

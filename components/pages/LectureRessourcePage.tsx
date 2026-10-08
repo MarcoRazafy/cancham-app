@@ -6,6 +6,7 @@ import {
   VideoProtegee,
 } from "@/components/LecteurProtege";
 import { SubmitButton } from "@/components/form-bits";
+import { PageRessource } from "@/components/ressources/PageRessource";
 import { BtnLink, Card, Kicker } from "@/components/ui";
 import { terminerRessource } from "@/lib/actions/content";
 import { verifierAcces } from "@/lib/acces-ressources";
@@ -36,6 +37,8 @@ export async function LectureRessourcePage({
 
   const acces = await verifierAcces(id);
   const video = r.fmt === "video";
+  // Une page composée dans la plateforme : des blocs, pas un fichier.
+  const page = r.fmt === "page";
   // On revient au dossier qui range la ressource, pas à la racine.
   const retour = `/${space}/ressources${r.dossierId ? `?dossier=${r.dossierId}` : ""}`;
 
@@ -50,8 +53,14 @@ export async function LectureRessourcePage({
 
       <div className="mb-5">
         <Kicker>
-          {video ? "Vidéo" : r.fmt === "image" ? "Photo" : "Document"} ·{" "}
-          {r.taille}
+          {page
+            ? "Page"
+            : video
+              ? "Vidéo"
+              : r.fmt === "image"
+                ? "Photo"
+                : "Document"}{" "}
+          · {r.taille}
         </Kicker>
         <h1 className="m-0 mt-1.5 text-[26px]">{r.titre}</h1>
         {r.description ? (
@@ -61,7 +70,9 @@ export async function LectureRessourcePage({
         ) : null}
       </div>
 
-      {acces.ok ? (
+      {acces.ok && page ? (
+        <PageRessource id={id} titre={r.titre} blocs={r.blocs} />
+      ) : acces.ok ? (
         <LecteurProtege>
           {video ? (
             <VideoProtegee id={id} titre={r.titre} />

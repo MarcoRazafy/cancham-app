@@ -91,6 +91,8 @@ enum ResourceFormat {
   docx  @map("DOCX")
   video @map("Vidéo")
   image @map("Photo")
+  /// Une page composée dans la plateforme : des blocs, pas un fichier.
+  page  @map("Page")
 }
 
 /// Gratuit ou facturé. Partagé par les services de la chambre et les ressources.
@@ -559,6 +561,10 @@ model Resource {
   cover       String?
   /// Quelques lignes sous le titre, pour dire ce qu'elle contient.
   description String?
+  /// Les blocs d'une page composée dans la plateforme — titre, texte, photo,
+  /// vidéo —, dans l'ordre (voir `lib/blocs.ts`). `null` pour une ressource
+  /// faite d'un fichier.
+  contenu     Json?
 
   /// Inclus dans l'adhésion, ou facturé en supplément.
   type PricingType @default(gratuit)

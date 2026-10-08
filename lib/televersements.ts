@@ -123,6 +123,47 @@ export async function fichierRecu(
   return new File([new Uint8Array(octets)], fiche.nom, { type: fiche.type });
 }
 
+/**
+ * Le fichier qu'un jeton désigne, laissé sur le disque.
+ *
+ * `fichierRecu` charge le fichier en mémoire : très bien pour une photo, pas
+ * pour une vidéo de plusieurs centaines de mégaoctets. Ici on ne rend que son
+ * chemin — à l'appelant de le lire ou de le déplacer, puis d'appeler
+ * `oublier`. Mêmes règles : le jeton ne vaut que pour qui a envoyé le
+ * fichier, et pas au-delà d'une journée.
+ */
+export async function envoiEnAttente(jeton: string): Promise<{
+  chemin: string;
+  nom: string;
+  taille: number;
+  /** Efface ce qui reste de l'envoi, une fois le fichier repris. */
+  oublier: () => Promise<void>;
+} | null> {
+  if (!jeton.startsWith(PREFIXE)) return null;
+  const id = jeton.slice(PREFIXE.length);
+  if (!IDENTIFIANT.test(id)) return null;
+  const chemin = path.join(DOSSIER, id);
+
+  let fiche: Fiche;
+  try {
+    fiche = JSON.parse(await readFile(`${chemin}.json`, "utf8")) as Fiche;
+  } catch {
+    return null;
+  }
+  const session = await sessionCourante();
+  if (!session || session.userId !== fiche.userId) return null;
+  if (Date.now() - fiche.creeLe > DUREE_DE_VIE) {
+    await effacer(id);
+    return null;
+  }
+  return {
+    chemin,
+    nom: fiche.nom,
+    taille: fiche.taille,
+    oublier: () => effacer(id),
+  };
+}
+
 /** Tous les fichiers d'un champ multiple, dans l'ordre du formulaire. */
 export async function fichiersRecus(
   entrees: FormDataEntryValue[],

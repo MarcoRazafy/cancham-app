@@ -1357,3 +1357,81 @@ html:has(.espace-admin) {
     animation: none !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Texte mis en forme d'une page de ressource — le même à la saisie, dans
+   l'éditeur, et à la lecture. Les tailles sont dites en pixels, pas en
+   proportion : un passage « normal » posé dans un passage « grand » doit
+   redevenir normal, et non hériter de sa taille.
+   -------------------------------------------------------------------------- */
+.texte-riche {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+/* Un paragraphe est un <p> à la lecture, un <div> pendant la saisie. */
+.texte-riche p,
+.texte-riche ul,
+.texte-riche ol {
+  margin: 0;
+}
+.texte-riche > * + * {
+  margin-top: 0.65em;
+}
+.texte-riche ul,
+.texte-riche ol {
+  padding-left: 1.6em;
+}
+.texte-riche ul {
+  list-style: disc;
+}
+.texte-riche ol {
+  list-style: decimal;
+}
+.texte-riche li + li {
+  margin-top: 0.3em;
+}
+.texte-riche a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.texte-riche b,
+.texte-riche strong {
+  font-weight: 700;
+}
+/* `font[size]` : ce que le navigateur pose pendant la saisie. */
+.texte-riche font[size="2"],
+.texte-riche [data-taille="petit"] {
+  font-size: 13.5px;
+}
+.texte-riche font[size="3"] {
+  font-size: 16px;
+}
+.texte-riche font[size="5"],
+.texte-riche [data-taille="grand"] {
+  font-size: 21px;
+  line-height: 1.5;
+}
+.texte-riche font[size="6"],
+.texte-riche [data-taille="tres-grand"] {
+  font-size: 28px;
+  line-height: 1.35;
+}
+/* L'invite d'une zone de texte encore vide, dans l'éditeur. */
+.texte-riche[data-vide="oui"]::before {
+  content: attr(data-invite);
+  color: var(--text-faint);
+  pointer-events: none;
+  position: absolute;
+}
+/*
+ * Dans l'éditeur de page, les champs se fondent dans la page : le titre, le
+ * texte, la légende se saisissent là où ils s'afficheront. C'est le cadre du
+ * bloc qui dit où l'on écrit — un contour de plus ferait double emploi.
+ */
+.champ-fondu:focus,
+.champ-fondu:focus-visible {
+  outline: none;
+}

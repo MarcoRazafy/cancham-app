@@ -396,7 +396,7 @@ export interface RessourceEditee {
   cat: string;
   type: "gratuit" | "payant";
   prix: number;
-  fmt: "pdf" | "docx" | "video" | "image";
+  fmt: "pdf" | "docx" | "video" | "image" | "page";
   taille: string;
   pret: boolean;
   pages: number | null;

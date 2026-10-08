@@ -1,5 +1,6 @@
 import "server-only";
 
+import { blocsEnregistres, type Bloc } from "@/lib/blocs";
 import { prisma } from "@/lib/db";
 import { RESOURCE_CAT_LABEL } from "@/lib/enums";
 import { jourBase } from "@/lib/format";
@@ -247,7 +248,7 @@ export interface RessourceAdmin {
   id: string;
   titre: string;
   cat: string;
-  fmt: "pdf" | "docx" | "video" | "image";
+  fmt: "pdf" | "docx" | "video" | "image" | "page";
   taille: string;
   date: string;
   type: "gratuit" | "payant";
@@ -288,13 +289,24 @@ export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
     type: r.type,
     prix: r.prix,
     description: r.description,
-    pret: Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages)),
+    pret:
+      r.fmt === "page" ||
+      (Boolean(r.fichier) && (r.fmt === "video" || Boolean(r.pages))),
     pages: r.pages,
     cover: r.cover,
     dossierId: r.dossierId,
     commentaires: r._count.commentaires,
     demandes: parRessource.get(r.id) ?? 0,
   }));
+}
+
+/** Les blocs d'une page composée, pour la rouvrir dans l'éditeur. */
+export async function getBlocsRessource(id: string): Promise<Bloc[]> {
+  const r = await prisma.resource.findUnique({
+    where: { id },
+    select: { contenu: true },
+  });
+  return blocsEnregistres(r?.contenu);
 }
 
 /* ============================ Comptes et accès ============================ */

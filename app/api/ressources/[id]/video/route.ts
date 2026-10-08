@@ -16,6 +16,10 @@ export async function GET(
   const acces = await verifierAcces(id);
   if (!acces.ok) return new Response(acces.message, { status: acces.statut });
 
+  // Une page composée n'a pas de fichier : ses vidéos sont celles de ses blocs.
+  if (!acces.ressource.fichier)
+    return new Response("Vidéo introuvable.", { status: 404 });
+
   const chemin = cheminFichier(id, acces.ressource.fichier);
   if (!(await existe(chemin)))
     return new Response("Vidéo introuvable.", { status: 404 });

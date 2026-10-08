@@ -22,6 +22,7 @@ export type Acces =
       ressource: {
         id: string;
         titre: string;
+        /** Vide pour une page composée, qui n'a pas de fichier. */
         fichier: string;
         pages: number | null;
       };
@@ -51,10 +52,13 @@ export async function verifierAcces(id: string): Promise<Acces> {
       fichier: true,
       pages: true,
       type: true,
+      fmt: true,
       dossierId: true,
     },
   });
-  if (!r?.fichier) {
+  // Une page composée dans la plateforme n'a pas de fichier : ses blocs
+  // tiennent lieu de contenu.
+  if (!r || (!r.fichier && r.fmt !== "page")) {
     return { ok: false, statut: 404, message: "Ressource introuvable." };
   }
 
@@ -85,7 +89,12 @@ export async function verifierAcces(id: string): Promise<Acces> {
 
   return {
     ok: true,
-    ressource: { id: r.id, titre: r.titre, fichier: r.fichier, pages: r.pages },
+    ressource: {
+      id: r.id,
+      titre: r.titre,
+      fichier: r.fichier ?? "",
+      pages: r.pages,
+    },
   };
 }
 

@@ -15,14 +15,30 @@ import { getCurrentUser } from "@/lib/session";
 import { verifierAcces } from "@/lib/acces-ressources";
 import {
   FichierRefuse,
+  couvertureDepuisBloc,
   couvertureDepuisPage,
   dupliquerRessource,
   effacerRessource,
+  menageBlocs,
+  recevoirFichierBloc,
   recevoirRessource,
   type FichierRecu,
 } from "@/lib/stockage-ressources";
 import { ImageRefusee, enregistrerImage } from "@/lib/uploads";
-import { fichierRecu, fichiersRecus } from "@/lib/televersements";
+import {
+  envoiEnAttente,
+  fichierRecu,
+  fichiersRecus,
+} from "@/lib/televersements";
+import {
+  blocsEnregistres,
+  estJeton,
+  etiquettePage,
+  fichiersDesBlocs,
+  lireBlocs,
+  type Bloc,
+} from "@/lib/blocs";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import {
   lirePressePapier,
   poserPressePapier,
@@ -980,6 +996,207 @@ async function couvertureDuContenu(
   }
 }
 
+/**
+ * Enregistre une page composée dans la plateforme : une ressource faite de
+ * blocs — titres, textes, photos, vidéos —, pas d'un fichier.
+ *
+ * Appelée par l'éditeur, sans rechargement : un refus revient sous forme de
+ * message, et la page en cours de composition reste à l'écran. Une
+ * redirection ferait perdre tout ce qui n'était pas encore enregistré.
+ *
+ * Les photos et les vidéos sont parties d'avance, sous un jeton : c'est ici
+ * qu'elles rejoignent le dossier privé de la ressource. Un bloc qui cite un
+ * fichier déjà rangé ne peut citer que l'un de ceux de cette page.
+ */
+export async function enregistrerPageRessource(formData: FormData): Promise<{
+  erreur: string;
+  /** Les fichiers envoyés d'avance ont été consommés : il faut les renvoyer. */
+  renvoyer?: boolean;
+}> {
+  await exigerEquipe();
+  const id = texte(formData, "resourceId");
+
+  const titre = texte(formData, "titre").slice(0, 200);
+  const description = texte(formData, "description").slice(0, 600) || null;
+  const cat = RESOURCE_CAT_DB[texte(formData, "cat") as ResourceCategory];
+  const type: "payant" | "gratuit" =
+    texte(formData, "type") === "payant" ? "payant" : "gratuit";
+  const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
+  const dossierId = texte(formData, "dossier") || null;
+
+  if (!titre) return { erreur: "Donnez un titre à la page." };
+  if (!cat) return { erreur: "Catégorie inconnue." };
+  if (type === "payant" && (!Number.isFinite(prix) || prix <= 0)) {
+    return { erreur: "Indiquez le prix d’une ressource payante." };
+  }
+
+  let saisie: unknown;
+  try {
+    saisie = JSON.parse(String(formData.get("contenu") ?? ""));
+  } catch {
+    return { erreur: "Le contenu de la page est illisible." };
+  }
+  const lecture = lireBlocs(saisie);
+  if (lecture.erreur !== undefined) return { erreur: lecture.erreur };
+  if (!lecture.blocs.length) {
+    return { erreur: "La page est vide : ajoutez-y au moins un bloc." };
+  }
+
+  if (dossierId) {
+    const existe = await prisma.dossierRessource.count({
+      where: { id: dossierId },
+    });
+    if (!existe) return { erreur: "Ce dossier n’existe plus." };
+  }
+
+  const avant = id
+    ? await prisma.resource.findUnique({
+        where: { id },
+        select: { fmt: true, contenu: true, dossierId: true, cover: true },
+      })
+    : null;
+  if (id && !avant) return { erreur: "Cette ressource n’existe plus." };
+  if (avant && avant.fmt !== "page") {
+    return {
+      erreur:
+        "Cette ressource est un fichier : elle ne se modifie pas dans l’éditeur de page.",
+    };
+  }
+
+  // Tout est vérifié avant de déplacer le moindre fichier : un envoi qui
+  // manque ne doit pas laisser la page à moitié rangée.
+  const dejaLa = avant ? fichiersDesBlocs(blocsEnregistres(avant.contenu)) : [];
+  for (const fichier of fichiersDesBlocs(lecture.blocs)) {
+    const connu = estJeton(fichier)
+      ? Boolean(await envoiEnAttente(fichier))
+      : dejaLa.includes(fichier);
+    if (!connu) {
+      return {
+        erreur:
+          "Un fichier de la page n’est pas arrivé : choisissez-le de nouveau, puis enregistrez.",
+      };
+    }
+  }
+
+  // Dans un dossier que l'équipe a rangé, une page qui arrive — neuve, ou
+  // venue d'un autre dossier — prend place au bout.
+  const arrive = !avant || avant.dossierId !== dossierId;
+  const champs = {
+    titre,
+    description,
+    cat,
+    type,
+    prix,
+    dossierId,
+    ...(arrive ? { ordre: await prochainRang(dossierId) } : {}),
+  };
+  // La ligne d'abord, pour une page neuve : son identifiant nomme le dossier
+  // de ses fichiers.
+  const rid = avant
+    ? id
+    : (
+        await prisma.resource.create({
+          data: {
+            ...champs,
+            fmt: "page",
+            taille: "Page",
+            date: jourBase(),
+            contenu: [],
+          },
+          select: { id: true },
+        })
+      ).id;
+
+  const blocs: Bloc[] = [];
+  try {
+    for (const b of lecture.blocs) {
+      if (b.type === "photo" && estJeton(b.fichier)) {
+        const fichier = await recevoirFichierBloc(rid, "photo", b.fichier);
+        blocs.push({ ...b, fichier });
+      } else if (
+        b.type === "video" &&
+        b.source === "fichier" &&
+        estJeton(b.fichier)
+      ) {
+        const fichier = await recevoirFichierBloc(rid, "video", b.fichier);
+        blocs.push({ ...b, fichier });
+      } else {
+        blocs.push(b);
+      }
+    }
+  } catch (e) {
+    if (!(e instanceof FichierRefuse)) throw e;
+    if (avant) {
+      // La page garde ce qu'elle avait : seuls les fichiers de cet essai
+      // s'en vont.
+      await menageBlocs(rid, dejaLa);
+    } else {
+      // Une page neuve qui n'a pas pu se ranger n'a pas lieu d'exister.
+      await prisma.resource.delete({ where: { id: rid } });
+      await effacerRessource(rid);
+    }
+    return { erreur: e.message, renvoyer: true };
+  }
+
+  // La couverture : celle qu'on envoie ; sinon celle en place ; sinon la
+  // première photo de la page. Une couverture ratée ne fait pas échouer
+  // l'enregistrement.
+  let cover = avant?.cover ?? null;
+  try {
+    const envoyee = await enregistrerImage(formData.get("couverture"), {
+      prefixe: `ressource-${rid}`,
+      largeur: 800,
+    });
+    if (envoyee) cover = envoyee;
+    else if (formData.get("retirerCouverture")) cover = null;
+    else if (!cover) {
+      const photo = blocs.find((b) => b.type === "photo");
+      if (photo) {
+        cover = await enregistrerImage(
+          new File(
+            [new Uint8Array(await couvertureDepuisBloc(rid, photo.fichier))],
+            "couverture.jpg",
+            { type: "image/jpeg" },
+          ),
+          { prefixe: `ressource-${rid}`, largeur: 800 },
+        );
+      }
+    }
+  } catch (e) {
+    if (!(e instanceof ImageRefusee)) throw e;
+  }
+
+  await prisma.resource.update({
+    where: { id: rid },
+    data: {
+      ...champs,
+      contenu: blocs as unknown as Prisma.InputJsonValue,
+      taille: etiquettePage(blocs),
+      cover,
+    },
+  });
+  // Les fichiers des blocs retirés ne servent plus à rien.
+  await menageBlocs(rid, fichiersDesBlocs(blocs));
+
+  await prisma.auditLog.create({
+    data: {
+      action: avant ? "ressource_modifiee" : "ressource_ajoutee",
+      entite: "Resource",
+      entiteId: rid,
+      acteur: await acteurEquipe(),
+      detail: `« ${titre} » · page de ${blocs.length} bloc${blocs.length > 1 ? "s" : ""}.`,
+    },
+  });
+
+  revalideTout();
+  redirectWithFlash(
+    `/admin/ressources${dossierId ? `?dossier=${dossierId}` : ""}`,
+    avant
+      ? `« ${titre} » mise à jour`
+      : `« ${titre} » ajoutée à la bibliothèque`,
+  );
+}
+
 export async function deleteResource(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "resourceId");
@@ -1728,6 +1945,11 @@ export async function collerRessources(formData: FormData) {
           fichier: r.fichier,
           pages: r.pages,
           cover: r.cover,
+          // Les blocs d'une page composée suivent ; leurs photos et leurs
+          // vidéos sont recopiées avec le dossier, juste après.
+          ...(r.contenu === null
+            ? {}
+            : { contenu: r.contenu as Prisma.InputJsonValue }),
           type: r.type,
           prix: r.prix,
           dossierId,

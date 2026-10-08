@@ -330,8 +330,7 @@ export async function VueDossier({
               cadrage={
                 !dossier.cover &&
                 couverture &&
-                couverture.fmt !== "Vidéo" &&
-                couverture.fmt !== "Photo"
+                (couverture.fmt === "PDF" || couverture.fmt === "DOCX")
                   ? "object-top"
                   : "object-center"
               }

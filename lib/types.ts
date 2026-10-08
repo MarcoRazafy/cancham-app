@@ -305,7 +305,8 @@ export interface Resource {
   id: string;
   titre: string;
   cat: ResourceCategory;
-  fmt: "PDF" | "DOCX" | "Vidéo" | "Photo";
+  /** « Page » : composée dans la plateforme, bloc après bloc. */
+  fmt: "PDF" | "DOCX" | "Vidéo" | "Photo" | "Page";
   taille: string;
   date: string;
   /** Accès inclus dans l'adhésion, ou facturé en supplément. */

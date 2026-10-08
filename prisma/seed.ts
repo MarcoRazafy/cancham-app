@@ -60,6 +60,7 @@ const RES_FMT = {
   DOCX: "docx",
   Vidéo: "video",
   Photo: "image",
+  Page: "page",
 } as const;
 
 /* ---- Participants aux événements ---- */
