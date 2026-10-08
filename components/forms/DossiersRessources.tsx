@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import {
@@ -98,7 +97,7 @@ function ChampsPresentation({ dossier: d }: { dossier?: DossierRessource }) {
         retirer="retirerCover"
         apercu={d?.cover}
         libelle="Couverture"
-        aide="Facultatif. L’image du dossier, sur sa carte et en tête de sa page. Paysage de préférence."
+        aide="Facultatif. L’image du dossier, en tête de sa page. Paysage de préférence."
       />
       <fieldset className="m-0 flex flex-col gap-3.5 rounded-[var(--radius-m)] border border-line p-4">
         <legend className="px-1.5 text-[12.3px] font-semibold text-muted">
@@ -211,8 +210,8 @@ export function BoutonNouveauDossier({
 /**
  * Un dossier de la bibliothèque, en carte.
  *
- * À gauche, sa couverture sur toute la hauteur ; à défaut, une tuile rose
- * à l'icône de dossier. Son nom, ce qu'il contient, et un chevron qui dit
+ * À gauche, une tuile rose à l'icône de dossier — jamais sa couverture, qui
+ * se garde pour sa page. Son nom, ce qu'il contient, et un chevron qui dit
  * que la carte s'ouvre. La carte entière mène au dossier — c'est le lien de
  * son nom, étendu à la carte ; le menu de l'équipe reste au-dessus de lui.
  */
@@ -247,36 +246,21 @@ export function CarteDossier({
 
   return (
     <Card className="relative flex min-h-[96px] items-stretch overflow-hidden p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
-      {d.cover ? (
-        <Image
-          src={d.cover}
-          alt=""
-          width={160}
-          height={200}
-          className="w-[78px] shrink-0 object-cover"
+      {/* Toujours la tuile à l'icône de dossier : la couverture d'un dossier
+          se montre en tête de sa page, pas sur sa carte. */}
+      <span className="m-3 flex w-[70px] shrink-0 items-center justify-center rounded-[var(--radius-m)] bg-accent-soft text-accent/65">
+        <Icone
+          size={32}
+          fill={d.restreint ? "none" : "currentColor"}
+          strokeWidth={d.restreint ? 1.8 : 0}
         />
-      ) : (
-        <span className="m-3 flex w-[70px] shrink-0 items-center justify-center rounded-[var(--radius-m)] bg-accent-soft text-accent/65">
-          <Icone
-            size={32}
-            fill={d.restreint ? "none" : "currentColor"}
-            strokeWidth={d.restreint ? 1.8 : 0}
-          />
-        </span>
-      )}
+      </span>
 
-      <div
-        className={`flex min-w-0 flex-1 flex-col justify-center py-3 pr-10 ${d.cover ? "pl-4" : "pl-1"}`}
-      >
+      <div className="flex min-w-0 flex-1 flex-col justify-center py-3 pl-1 pr-10">
         <Link
           href={`/${space}/ressources?dossier=${d.id}`}
           className="flex min-w-0 items-center gap-2 no-underline after:absolute after:inset-0"
         >
-          {/* Sur une couverture, l'icône passe devant le nom : c'est elle
-              qui dit encore « dossier ». */}
-          {d.cover ? (
-            <Icone size={17} className="shrink-0 text-accent" />
-          ) : null}
           <span className="truncate text-[14.8px] font-semibold text-ink">
             {d.nom}
           </span>
