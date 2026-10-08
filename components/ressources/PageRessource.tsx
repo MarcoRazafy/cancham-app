@@ -186,7 +186,7 @@ export function PageRessource({
   blocs: Bloc[];
 }) {
   return (
-    <article className="mx-auto flex w-full max-w-[860px] flex-col gap-6 rounded-[var(--radius-m)] border border-line bg-surface px-5 py-7 sm:px-10 sm:py-9">
+    <article className="flex w-full flex-col gap-6 rounded-[var(--radius-m)] border border-line bg-surface px-5 py-7 sm:px-10 sm:py-9">
       {blocs.map((bloc, i) => (
         <BlocLu key={i} id={id} bloc={bloc} titre={titre} />
       ))}
