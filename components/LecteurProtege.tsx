@@ -85,7 +85,7 @@ export function LecteurProtege({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="lecteur-protege">
+    <div className="lecteur-protege" data-masque={masque ? "oui" : undefined}>
       <div className="flex items-center gap-2 text-[12.4px] text-muted mb-3">
         <ShieldCheck size={15} className="text-success-strong shrink-0" />
         Consultation réservée aux membres. Contenu protégé.

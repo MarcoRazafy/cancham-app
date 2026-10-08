@@ -6,6 +6,7 @@ import {
   type Ligne,
   type Passage,
 } from "@/lib/blocs";
+import { PhotoPleinEcran } from "./PhotoPleinEcran";
 import { VideoPrivee } from "./VideoPrivee";
 
 /**
@@ -147,25 +148,9 @@ function BlocLu({
 
   const source = (fichier: string) => `/api/ressources/${id}/blocs/${fichier}`;
   if (bloc.type === "photo") {
+    // Un clic l'ouvre en plein écran : une capture ne se lit pas en colonne.
     return (
-      <figure className="m-0">
-        {/*
-          Une <img> ordinaire, pas next/image : son optimiseur mettrait la
-          photo en cache sous une adresse publique, hors du contrôle d'accès.
-        */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={source(bloc.fichier)}
-          alt={bloc.legende ?? ""}
-          loading="lazy"
-          className="block h-auto w-full rounded-[var(--radius-m)]"
-        />
-        {bloc.legende ? (
-          <figcaption className="mt-2 text-center text-[13px] text-muted">
-            {bloc.legende}
-          </figcaption>
-        ) : null}
-      </figure>
+      <PhotoPleinEcran src={source(bloc.fichier)} legende={bloc.legende} />
     );
   }
 
