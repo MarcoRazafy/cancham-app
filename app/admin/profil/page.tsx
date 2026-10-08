@@ -20,11 +20,7 @@ export default async function MonProfil() {
             Mon <Saillant>profil</Saillant>
           </>
         }
-      >
-        Vos nom, fonction, coordonnées, photo et mot de passe. C’est ainsi que
-        les membres vous voient dans la messagerie, et que l’équipe vous
-        retrouve au journal d’activité.
-      </EnTeteAdmin>
+      />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
         <div className="flex flex-col gap-4 min-w-0">

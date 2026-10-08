@@ -104,10 +104,7 @@ export default async function AdminServices() {
           </>
         }
         actions={<ServiceFormButton rendezvous={rendezvous} />}
-      >
-        Ce que la chambre propose à ses membres, inclus dans l’adhésion ou
-        facturé. L’ordre choisi ici est celui que voient les membres.
-      </EnTeteAdmin>
+      />
 
       <div className="grid gap-4 mb-7 sm:grid-cols-3">
         <Compteur

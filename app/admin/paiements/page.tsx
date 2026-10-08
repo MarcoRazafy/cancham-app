@@ -90,10 +90,7 @@ export default async function AdminPaiements({
             />
           </>
         }
-      >
-        Cotisations, participations et prestations. Chaque règlement enregistré
-        génère sa facture et remet le membre à jour quand c’est une cotisation.
-      </EnTeteAdmin>
+      />
 
       <div className="grid gap-4 mb-6 sm:grid-cols-2 xl:grid-cols-4">
         <Compteur

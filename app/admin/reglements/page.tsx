@@ -55,12 +55,7 @@ export default async function Reglements() {
             <Settings2 size={15} /> Coordonnées de paiement
           </Link>
         }
-      >
-        Ce que des membres, ou des visiteurs inscrits à un événement, disent
-        avoir réglé hors ligne. Confirmez dès que l’argent est constaté : la
-        facture se solde et l’adhésion repasse à jour — ou, pour un visiteur,
-        ses billets partent.
-      </ViewHead>
+      />
 
       {annonces.length ? (
         <div className="grid gap-3">

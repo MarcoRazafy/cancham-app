@@ -31,11 +31,7 @@ export async function OffresCanchamPage() {
 
   return (
     <>
-      <ViewHead title={<>Offres {<Saillant ton="vert">CanCham</Saillant>}</>}>
-        L’ensemble des services proposés par la chambre à ses membres, gratuits
-        ou payants, en complément des promotions publiées par les membres
-        eux-mêmes.
-      </ViewHead>
+      <ViewHead title={<>Offres {<Saillant ton="vert">CanCham</Saillant>}</>} />
 
       <SectionTitle>Services gratuits</SectionTitle>
       <div className="cascade grid gap-4 mb-7 md:grid-cols-2 lg:grid-cols-3">

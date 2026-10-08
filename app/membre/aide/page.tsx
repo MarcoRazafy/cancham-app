@@ -58,8 +58,6 @@ const ACCES = [
 ];
 
 export default function AidePage() {
-  const nombre = THEMES.reduce((n, t) => n + t.questions.length, 0);
-
   return (
     <>
       {/*
@@ -75,10 +73,7 @@ export default function AidePage() {
                 Besoin d’<Saillant>aide</Saillant> ?
               </>
             }
-          >
-            Les réponses aux questions les plus fréquentes sur la plateforme —{" "}
-            {nombre} questions, classées par thème.
-          </ViewHead>
+          />
           <CentreAide themes={THEMES} />
         </div>
 

@@ -105,11 +105,7 @@ export async function MessageriePage({
               Messa<Saillant>gerie</Saillant>
             </>
           }
-        >
-          {space === "admin"
-            ? "Échangez avec les membres et les comités depuis l’espace d’administration."
-            : "Échangez directement avec un autre membre ou un groupe : comités, organisateurs d’événements, équipe CanCham."}
-        </ViewHead>
+        />
       </div>
 
       {/* Sur téléphone, le cadre suit la hauteur de la liste : la conversation,

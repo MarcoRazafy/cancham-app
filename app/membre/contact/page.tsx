@@ -56,10 +56,7 @@ export default async function ContactPage({
             Contacter l’<Saillant>équipe</Saillant>
           </>
         }
-      >
-        Une question sur votre adhésion, un événement ou une mise en relation ?
-        Écrivez-nous, ou joignez-nous directement.
-      </ViewHead>
+      />
 
       {envoye ? (
         <div className="mb-5">

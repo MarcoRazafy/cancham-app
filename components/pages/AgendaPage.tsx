@@ -126,11 +126,7 @@ export async function AgendaPage({
             />
           </div>
         }
-      >
-        {espace === "admin"
-          ? "Les événements, les rendez-vous, les factures à encaisser, les accès qui vont se restreindre et vos rappels, au même endroit."
-          : "Les événements de la chambre, vos rendez-vous avec l’équipe, vos échéances de cotisation et de factures, et vos rappels, au même endroit."}
-      </ViewHead>
+      />
 
       {/* ==================== Barre d'outils ==================== */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-3">

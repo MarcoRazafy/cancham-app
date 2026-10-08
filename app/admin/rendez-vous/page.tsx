@@ -15,7 +15,7 @@ import {
 } from "@/components/ui";
 import { fmtHeure } from "@/lib/agenda";
 import { aujourdhuiISO } from "@/lib/format";
-import { JOURS_SEMAINE, MENTION_FUSEAU } from "@/lib/rendezvous";
+import { JOURS_SEMAINE } from "@/lib/rendezvous";
 import {
   getRendezvousEquipe,
   getTypesRendezvous,
@@ -56,10 +56,7 @@ export default async function RendezvousEquipePage() {
 
   return (
     <>
-      <ViewHead title="Rendez-vous" action={<NouveauType />}>
-        Les membres réservent un créneau parmi ceux que vous laissez ouverts.
-        Toutes les heures sont à l’{MENTION_FUSEAU}.
-      </ViewHead>
+      <ViewHead title="Rendez-vous" action={<NouveauType />} />
 
       {manque ? (
         <div className="mb-5">

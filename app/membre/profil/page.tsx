@@ -115,10 +115,7 @@ export default async function ProfilPage() {
             ) : null}
           </div>
         }
-      >
-        La fiche de votre organisation telle qu’elle apparaît dans l’annuaire,
-        votre statut d’adhésion et l’historique de facturation.
-      </ViewHead>
+      />
 
       {m.accueilEnCours ? (
         <div className="mb-5">

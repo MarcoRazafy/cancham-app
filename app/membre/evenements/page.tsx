@@ -43,10 +43,7 @@ export default async function EvenementsPage({
 
   return (
     <>
-      <ViewHead title="Événements">
-        Inscrivez-vous en quelques clics : confirmation par courriel, rappel
-        automatique et code d’accès QR pour l’accueil.
-      </ViewHead>
+      <ViewHead title="Événements" />
 
       <div className="flex gap-1 border-b border-line mb-[18px]">
         {tabs.map((t) => (

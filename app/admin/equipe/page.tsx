@@ -55,11 +55,7 @@ export default async function AdminEquipe({
             Équipe &amp; <Saillant>accès</Saillant>
           </>
         }
-      >
-        {gere
-          ? "Les comptes qui ouvrent le back-office. Ajoutez un membre de l’équipe avec son adresse, sa fonction et son rôle : il reçoit ses accès par e-mail."
-          : "Les comptes qui ouvrent le back-office. Seuls les administrateurs ajoutent ou retirent un membre de l’équipe."}
-      </EnTeteAdmin>
+      />
 
       <div className="grid gap-4 items-start lg:grid-cols-[1fr_380px]">
         {gere ? (

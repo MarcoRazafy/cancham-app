@@ -4,7 +4,6 @@ import { Reservation } from "@/components/rendezvous/Reservation";
 import { Banner, EmptyState, SectionTitle, ViewHead } from "@/components/ui";
 import { estHeure, estJourISO } from "@/lib/agenda";
 import { aujourdhuiISO } from "@/lib/format";
-import { MENTION_FUSEAU } from "@/lib/rendezvous";
 import {
   getCreneaux,
   getMesRendezvous,
@@ -40,11 +39,7 @@ export default async function RendezvousPage({
 
   return (
     <>
-      <ViewHead title="Rendez-vous">
-        Réservez un créneau avec l’équipe de la chambre : elle reçoit la demande
-        confirmée, sans échange de courriels pour trouver une heure. Toutes les
-        heures sont à l’{MENTION_FUSEAU}.
-      </ViewHead>
+      <ViewHead title="Rendez-vous" />
 
       <SectionTitle>Vos rendez-vous à venir</SectionTitle>
       <div className="mb-7">

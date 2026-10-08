@@ -50,10 +50,7 @@ export async function AnnuairePage({
 
   return (
     <>
-      <ViewHead title={<>Annuaire des {<Saillant>membres</Saillant>}</>}>
-        {visibles.length} entreprises membres, classées par ordre alphabétique.
-        Logo, contact et produits phares pour faciliter la mise en relation.
-      </ViewHead>
+      <ViewHead title={<>Annuaire des {<Saillant>membres</Saillant>}</>} />
 
       <FiltresAuto className="flex gap-3 flex-wrap mb-[18px]">
         <div className="relative w-full sm:max-w-[340px] sm:flex-1 sm:min-w-[240px]">

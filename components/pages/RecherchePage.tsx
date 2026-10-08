@@ -50,17 +50,14 @@ export async function RecherchePage({ space, q }: { space: Space; q: string }) {
 
   return (
     <>
-      <ViewHead title={terme ? `Recherche : « ${terme} »` : "Recherche"}>
-        {terme.length >= 2
-          ? `${resultats.length} résultat${resultats.length > 1 ? "s" : ""} dans l’annuaire, les événements, les actualités et les ressources.`
-          : "Saisissez au moins deux caractères dans le champ de recherche, en haut de la page."}
-      </ViewHead>
+      <ViewHead title={terme ? `Recherche : « ${terme} »` : "Recherche"} />
 
       {terme.length < 2 ? (
         <EmptyState>
           <Search size={20} className="mx-auto mb-2 text-faint" />
-          La recherche porte sur le nom, le secteur et la ville des membres,
-          ainsi que sur les titres et les descriptions des contenus.
+          Saisissez au moins deux caractères dans le champ de recherche, en haut
+          de la page. La recherche porte sur le nom, le secteur et la ville des
+          membres, ainsi que sur les titres et les descriptions des contenus.
         </EmptyState>
       ) : resultats.length ? (
         <div className="flex flex-col gap-6">

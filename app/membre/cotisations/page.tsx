@@ -72,9 +72,9 @@ export default async function CotisationsPage({
 
   return (
     <>
-      <ViewHead title={<>Cotisations &amp; {<Saillant>factures</Saillant>}</>}>
-        Votre statut d’adhésion et l’historique de vos règlements.
-      </ViewHead>
+      <ViewHead
+        title={<>Cotisations &amp; {<Saillant>factures</Saillant>}</>}
+      />
 
       <div className="grid gap-4 mb-6 lg:grid-cols-[1.4fr_1fr] items-start">
         <Card className="p-6">

@@ -27,10 +27,7 @@ export default async function NouvelleRessource({
             Nouvelle <Saillant>ressource</Saillant>
           </>
         }
-      >
-        Elle apparaît dans la bibliothèque des membres dès que son fichier est
-        prêt.
-      </EnTeteAdmin>
+      />
       <FormulaireRessource dossiers={dossiers} dossierParDefaut={dossier} />
     </>
   );

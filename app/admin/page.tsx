@@ -87,10 +87,7 @@ export default async function TableauDeBord() {
           </>
         }
         actions={<AddMemberButton />}
-      >
-        L’état de la chambre aujourd’hui : adhésions, cotisations, programme et
-        échanges.
-      </EnTeteAdmin>
+      />
 
       {/* ==================== Compteurs ==================== */}
       <div className="cascade grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">

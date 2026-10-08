@@ -107,10 +107,7 @@ export async function ActualitesPage({
                 </Link>
               ) : undefined
             }
-          >
-            Le fil d’actualité de la chambre : programmation, retours
-            d’événements et vie institutionnelle, dans l’ordre chronologique.
-          </ViewHead>
+          />
 
           {/*
             Le membre publie d'ici, en tête du fil : une barre, qui ouvre la

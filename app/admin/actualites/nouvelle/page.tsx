@@ -20,9 +20,7 @@ export default function NouvelleActualite() {
             Nouvelle <Saillant>actualité</Saillant>
           </>
         }
-      >
-        Elle apparaît dans le fil des membres dès la publication.
-      </EnTeteAdmin>
+      />
       <FormulaireActualite />
     </>
   );

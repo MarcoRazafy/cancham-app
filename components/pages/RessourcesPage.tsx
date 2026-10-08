@@ -114,11 +114,6 @@ export async function RessourcesPage({
       <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-4">
         <div className="min-w-0 flex-1 basis-[300px]">
           <h1 className="m-0 text-[28px] font-semibold">Ressources</h1>
-          <p className="m-0 mt-1.5 max-w-[54ch] text-[14.2px] leading-relaxed text-muted">
-            Documents, modèles et formations mis à disposition des membres.
-            Certains livrables de fond sont facturés en supplément de la
-            cotisation.
-          </p>
         </div>
         {/* L'illustration de la bibliothèque, sur sa tache rose. Purement
             décorative : elle s'efface quand la place manque. */}

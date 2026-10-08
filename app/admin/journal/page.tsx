@@ -49,11 +49,7 @@ export default async function Journal({
             Journal <Saillant>d’activité</Saillant>
           </>
         }
-      >
-        Chaque opération sensible laisse une trace : paiements, validations,
-        suppressions, publications. Rien ne disparaît sans qu’on sache qui, quoi
-        et quand.
-      </EnTeteAdmin>
+      />
 
       <Onglets
         actif={famille ?? "tout"}

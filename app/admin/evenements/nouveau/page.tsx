@@ -20,10 +20,7 @@ export default function NouvelEvenement() {
             Nouvel <Saillant>événement</Saillant>
           </>
         }
-      >
-        Il est publié aux membres dès l’enregistrement, et les inscriptions
-        s’ouvrent aussitôt.
-      </EnTeteAdmin>
+      />
       <FormulaireEvenement />
     </>
   );

@@ -29,9 +29,6 @@ export default async function AdminEvenements({
     .sort((a, b) => b.date.localeCompare(a.date));
   const liste = periode === "passes" ? passes : aVenir;
 
-  const inscritsAVenir = aVenir.reduce((n, e) => n + e.inscrits, 0);
-  const placesAVenir = aVenir.reduce((n, e) => n + e.cap, 0);
-
   return (
     <>
       <EnTeteAdmin
@@ -49,11 +46,7 @@ export default async function AdminEvenements({
             <Plus size={15} /> Nouvel événement
           </Link>
         }
-      >
-        {aVenir.length} rendez-vous à venir, {inscritsAVenir} inscrits pour{" "}
-        {placesAVenir} places. Créez, suivez les inscriptions, pointez les
-        arrivées le jour J.
-      </EnTeteAdmin>
+      />
 
       <Onglets
         actif={periode}
