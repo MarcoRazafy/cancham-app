@@ -815,8 +815,7 @@ export default async function PublicHome() {
         <div className={`${CONTENEUR} py-16 md:py-24`}>
           {/*
             Le titre à gauche, la parole de la présidente à droite, dans son
-            encadré : sur grand écran, l'encadré descend d'un cran pour que
-            son haut tombe sous le titre plutôt qu'à sa hauteur. Plus étroit,
+            encadré, dont le haut s'aligne sur celui du titre. Plus étroit,
             l'encadré passe sous le texte.
           */}
           <div className="scene grid gap-x-12 gap-y-12 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] xl:items-start">
@@ -845,7 +844,7 @@ export default async function PublicHome() {
             {/* L'encadré vient de la droite, et son guillemet surgit en dernier. */}
             <figure
               style={retard(150)}
-              className="reveler reveler-droite relative m-0 flex flex-col gap-x-7 gap-y-5 rounded-[22px] bg-surface p-4 sm:flex-row sm:p-[18px] xl:mt-[7.5rem]"
+              className="reveler reveler-droite relative m-0 flex flex-col gap-x-7 gap-y-5 rounded-[22px] bg-surface p-4 sm:flex-row sm:p-[18px]"
             >
               {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à
                   cette taille. Il déborde du coin de l'encadré. */}
