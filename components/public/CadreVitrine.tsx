@@ -70,9 +70,9 @@ const LIENS = [
   { href: "/", libelle: "Accueil" },
   { href: "/#evenements", libelle: "Événements" },
   { href: "/#actualites", libelle: "Actualités" },
-  // Une action, pas une page à lire : sur ordinateur, elle devient le bouton
-  // à côté de « Se connecter ». Sur téléphone, la place manque sur la
-  // première ligne, et elle reste dans la rangée des liens.
+  // Une action, pas une page à lire : sur grand écran, elle devient le bouton
+  // à côté de « Se connecter ». En deçà, deux boutons ne tiennent pas sur la
+  // ligne avec le logo et les liens : elle reste dans la rangée des liens.
   {
     href: "/auth/inscription",
     libelle: "Devenir membre",
@@ -87,7 +87,7 @@ const LIENS = [
  * ferait bouger toute la barre au fil du défilement.
  */
 const lien =
-  "relative inline-flex items-center min-h-11 md:min-h-0 px-2.5 md:px-3 lg:px-4 py-1.5 md:py-2 text-[14px] md:text-[14.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] aria-[current=page]:text-[var(--marque-nuit)] after:absolute after:left-2.5 after:right-2.5 md:after:left-3 md:after:right-3 lg:after:left-4 lg:after:right-4 after:bottom-0.5 after:h-[2px] after:rounded-full after:bg-[linear-gradient(90deg,var(--marque-rouge),var(--marque-vert))] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 aria-[current=page]:after:scale-x-100";
+  "relative inline-flex items-center min-h-11 lg:min-h-0 px-2.5 md:px-3 lg:px-4 py-1.5 md:py-2 text-[14px] md:text-[14.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] aria-[current=page]:text-[var(--marque-nuit)] after:absolute after:left-2.5 after:right-2.5 md:after:left-3 md:after:right-3 lg:after:left-4 lg:after:right-4 after:bottom-0.5 after:h-[2px] after:rounded-full after:bg-[linear-gradient(90deg,var(--marque-rouge),var(--marque-vert))] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 aria-[current=page]:after:scale-x-100";
 
 /** Ce que le bandeau annonce quand aucun événement n'est programmé. */
 const ANNONCES_PAR_DEFAUT = [
@@ -180,12 +180,12 @@ export async function EnTetePublique() {
           au-dessus du contenu, et doit s'en détacher. */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-[#e3e8ee] text-[#3d4b5c] shadow-[0_6px_24px_-18px_rgba(15,29,44,0.35)]">
         {/*
-          Sur téléphone, les liens passent d'eux-mêmes sous le logo : cinq
-          entrées et un logo ne tiennent pas sur 390 pixels, et les cacher
+          Sur téléphone et sur tablette, les liens passent sous le logo : ils
+          ne tiennent pas sur la ligne avec lui et le bouton, et les cacher
           rendrait le site impraticable là où on le consulte le plus.
         */}
         <div
-          className={`${CONTENEUR} flex flex-wrap items-center justify-between gap-x-4 py-2.5 md:py-0 md:h-[72px]`}
+          className={`${CONTENEUR} flex flex-wrap items-center justify-between gap-x-4 py-2.5 lg:py-0 lg:h-[72px]`}
         >
           <Link
             href="/"
@@ -203,8 +203,8 @@ export async function EnTetePublique() {
             et se connecter, en plein. Toujours « Se connecter », même pour
             qui l'est déjà : `/auth` renvoie alors directement vers son espace.
           */}
-          <div className="order-2 md:order-3 flex items-center gap-2 shrink-0">
-            <div className="hidden md:block">
+          <div className="order-2 lg:order-3 flex items-center gap-2 shrink-0">
+            <div className="hidden xl:block">
               <Link
                 href="/auth/inscription"
                 className="btn-contour text-[var(--marque-nuit)] border-[#c9d2dc] hover:border-[var(--marque-nuit)] hover:bg-[#f3f5f8]"
@@ -221,7 +221,7 @@ export async function EnTetePublique() {
             aria-label="Navigation principale"
             // Sur téléphone, la rangée se fait glisser : le bord droit se
             // fond, pour qu'on devine qu'elle continue.
-            className="order-3 md:order-2 w-full md:w-auto flex items-center gap-1 md:gap-2 mt-1 md:mt-0 -mx-1 px-1 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:[mask-image:linear-gradient(90deg,#000_calc(100%-36px),transparent)]"
+            className="order-3 lg:order-2 w-full lg:w-auto flex items-center gap-1 md:gap-2 mt-1 lg:mt-0 -mx-1 px-1 lg:mx-0 lg:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-lg:[mask-image:linear-gradient(90deg,#000_calc(100%-36px),transparent)]"
           >
             <NavigationPublique liens={LIENS} className={lien} />
           </nav>

@@ -9,8 +9,9 @@ export interface LienNavigation {
   href: string;
   libelle: string;
   /**
-   * Sur ordinateur, ce lien vit ailleurs — en bouton, à côté de
-   * « Se connecter » — et n'apparaît ici que sur téléphone.
+   * Sur grand écran, ce lien vit ailleurs — en bouton, à côté de
+   * « Se connecter » — et n'apparaît ici qu'en deçà, où deux boutons ne
+   * tiennent pas sur la ligne.
    */
   mobileSeulement?: boolean;
 }
@@ -102,7 +103,7 @@ export function NavigationPublique({
         <LienAncre
           key={l.href}
           href={l.href}
-          className={`${className} ${l.mobileSeulement ? "md:hidden" : ""}`}
+          className={`${className} ${l.mobileSeulement ? "xl:hidden" : ""}`}
           actif={actif(l.href)}
         >
           {l.libelle}
