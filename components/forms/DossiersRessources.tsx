@@ -210,8 +210,8 @@ export function BoutonNouveauDossier({
 /**
  * Un dossier de la bibliothèque, en carte.
  *
- * À gauche, une tuile rose à l'icône de dossier — jamais sa couverture, qui
- * se garde pour sa page. Son nom, ce qu'il contient, et un chevron qui dit
+ * À gauche, l'icône de dossier, seule — jamais sa couverture, qui se garde
+ * pour sa page. Son nom, ce qu'il contient, et un chevron qui dit
  * que la carte s'ouvre. La carte entière mène au dossier — c'est le lien de
  * son nom, étendu à la carte ; le menu de l'équipe reste au-dessus de lui.
  */
@@ -246,9 +246,10 @@ export function CarteDossier({
 
   return (
     <Card className="relative flex min-h-[96px] items-stretch overflow-hidden p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
-      {/* Toujours la tuile à l'icône de dossier : la couverture d'un dossier
-          se montre en tête de sa page, pas sur sa carte. */}
-      <span className="m-3 flex w-[70px] shrink-0 items-center justify-center rounded-[var(--radius-m)] bg-accent-soft text-accent/65">
+      {/* Toujours l'icône de dossier, seule, sans fond ni cadre : la
+          couverture d'un dossier se montre en tête de sa page, pas sur sa
+          carte. */}
+      <span className="m-3 flex w-[70px] shrink-0 items-center justify-center text-accent/65">
         <Icone
           size={32}
           fill={d.restreint ? "none" : "currentColor"}
