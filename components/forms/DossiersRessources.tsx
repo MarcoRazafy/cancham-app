@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -14,6 +15,7 @@ import {
 import { Modal } from "@/components/Modal";
 import {
   CancelButton,
+  ChampPhoto,
   Field,
   INPUT,
   ModalBody,
@@ -27,7 +29,7 @@ import {
   creerDossier,
   deplacerDossier,
   reglerAccesDossier,
-  renommerDossier,
+  modifierDossier,
   supprimerDossier,
 } from "@/lib/actions/content";
 import type { DossierRessource, Space } from "@/lib/types";
@@ -82,6 +84,67 @@ function ChampAccesDossier({
   );
 }
 
+/**
+ * Comment un dossier se présente : sa couverture, et qui l'a conçu. Les
+ * mêmes champs à la création et dans ses réglages.
+ */
+function ChampsPresentation({ dossier: d }: { dossier?: DossierRessource }) {
+  return (
+    <>
+      <ChampPhoto
+        name="cover"
+        retirer="retirerCover"
+        apercu={d?.cover}
+        libelle="Couverture"
+        aide="Facultatif. L’image du dossier, sur sa page et sur sa carte. Paysage de préférence."
+      />
+      <fieldset className="m-0 flex flex-col gap-3.5 rounded-[var(--radius-m)] border border-line p-4">
+        <legend className="px-1.5 text-[12.3px] font-semibold text-muted">
+          Auteur
+        </legend>
+        <div className="grid gap-3.5 sm:grid-cols-2">
+          <Field label="Nom" hint="Vide : le dossier n’affiche pas d’auteur.">
+            <input
+              name="auteurNom"
+              maxLength={120}
+              defaultValue={d?.auteur?.nom ?? ""}
+              placeholder="Ex. Alice Ratisbonne"
+              className={INPUT}
+            />
+          </Field>
+          <Field label="Fonction">
+            <input
+              name="auteurRole"
+              maxLength={160}
+              defaultValue={d?.auteur?.role ?? ""}
+              placeholder="Ex. Directrice exécutive, CanCham"
+              className={INPUT}
+            />
+          </Field>
+        </div>
+        <Field label="Présentation">
+          <textarea
+            name="auteurBio"
+            rows={3}
+            maxLength={800}
+            defaultValue={d?.auteur?.bio ?? ""}
+            placeholder="Quelques lignes sur son parcours, et ce qu’elle ou il apporte à ce dossier."
+            className={INPUT}
+          />
+        </Field>
+        <ChampPhoto
+          name="auteurPhoto"
+          retirer="retirerAuteurPhoto"
+          apercu={d?.auteur?.photo}
+          libelle="Portrait"
+          aide="Facultatif. Un portrait cadré sur le visage."
+          rond
+        />
+      </fieldset>
+    </>
+  );
+}
+
 /** Nouveau dossier, dans celui qui est ouvert. */
 export function BoutonNouveauDossier({
   parentId,
@@ -93,6 +156,7 @@ export function BoutonNouveauDossier({
 }) {
   return (
     <Modal
+      wide
       title="Nouveau dossier"
       trigger={(ouvrir) => (
         <button
@@ -128,6 +192,7 @@ export function BoutonNouveauDossier({
               />
             </Field>
             <ChampAccesDossier membres={membres} />
+            <ChampsPresentation />
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
@@ -181,9 +246,19 @@ export function CarteDossier({
         href={`/${space}/ressources?dossier=${d.id}`}
         className="flex min-w-0 flex-1 items-center gap-3 no-underline"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-surface-2 text-accent">
-          {d.restreint ? <FolderLock size={18} /> : <Folder size={18} />}
-        </span>
+        {d.cover ? (
+          <Image
+            src={d.cover}
+            alt=""
+            width={96}
+            height={96}
+            className="h-10 w-10 shrink-0 rounded-[var(--radius-s)] object-cover"
+          />
+        ) : (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-surface-2 text-accent">
+            {d.restreint ? <FolderLock size={18} /> : <Folder size={18} />}
+          </span>
+        )}
         <span className="min-w-0">
           <span className="block truncate text-[14.5px] font-semibold text-ink">
             {d.nom}
@@ -290,7 +365,10 @@ function AccesDossier({
   );
 }
 
-/** Renommer, et ranger ailleurs : les deux se font dans la même fenêtre. */
+/**
+ * Les réglages d'un dossier : son nom, sa couverture et son auteur d'un
+ * côté, son rangement de l'autre — deux décisions, deux boutons.
+ */
 function ReglagesDossier({
   dossier: d,
   arborescence,
@@ -300,13 +378,14 @@ function ReglagesDossier({
 }) {
   return (
     <Modal
+      wide
       title="Réglages du dossier"
       trigger={(ouvrir) => (
         <button
           type="button"
           onClick={ouvrir}
           aria-label={`Réglages de « ${d.nom} »`}
-          title="Renommer ou déplacer"
+          title="Nom, couverture, auteur, rangement"
           className={`${BTN_ICONE} hover:border-faint hover:text-ink`}
         >
           <Pencil size={14} />
@@ -315,7 +394,7 @@ function ReglagesDossier({
     >
       {(fermer) => (
         <>
-          <form action={renommerDossier}>
+          <form action={modifierDossier}>
             <input type="hidden" name="dossierId" value={d.id} />
             <ModalBody>
               <Field label="Nom">
@@ -327,11 +406,12 @@ function ReglagesDossier({
                   className={INPUT}
                 />
               </Field>
+              <ChampsPresentation dossier={d} />
             </ModalBody>
             <ModalFooter>
               <CancelButton onClick={fermer} />
               <SubmitButton sm pendingLabel="Enregistrement…">
-                Renommer
+                <Check size={14} /> Enregistrer
               </SubmitButton>
             </ModalFooter>
           </form>

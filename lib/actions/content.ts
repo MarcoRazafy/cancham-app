@@ -11,7 +11,7 @@ import { estCheminFerme, normaliserLien, normaliserSite } from "@/lib/liens";
 import { ADRESSE_PLATEFORME, urlPublique } from "@/lib/courriel";
 import { headers } from "next/headers";
 import { exigerEquipe } from "@/lib/autorisations";
-import { getCurrentUser, utilisateurConnecte } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { verifierAcces } from "@/lib/acces-ressources";
 import {
   FichierRefuse,
@@ -798,28 +798,40 @@ export async function enregistrerRessource(formData: FormData) {
 }
 
 /**
- * Note qu'un membre a ouvert une ressource : la vue de son dossier la coche
- * et avance sa progression.
+ * « Terminer », en fin de lecture : le membre dit qu'il a fini cette étape.
+ * La vue de son dossier la coche et avance sa progression, et c'est là
+ * qu'il revient.
  *
- * Appelée par la page de lecture une fois affichée. L'identifiant reçu ne
- * fait pas foi : on ne note que ce que la personne a vraiment le droit de
- * lire. L'équipe n'a pas de progression à tenir.
+ * L'identifiant reçu ne fait pas foi : on ne note que ce que la personne a
+ * vraiment le droit de lire. L'équipe n'a pas de progression à tenir.
  */
-export async function marquerRessourceLue(resourceId: string) {
-  const user = await utilisateurConnecte();
-  if (!user || user.role === "admin") return;
-  if (!(await verifierAcces(resourceId)).ok) return;
+export async function terminerRessource(formData: FormData) {
+  const resourceId = texte(formData, "resourceId");
+  const user = await getCurrentUser("membre");
+  if (!(await verifierAcces(resourceId)).ok) {
+    redirectWithErreur("/membre/ressources", "Ressource introuvable.");
+  }
 
   try {
     await prisma.lectureRessource.create({
       data: { userId: user.id, resourceId },
     });
   } catch (e) {
-    // Déjà notée : rien à faire, et rien à rafraîchir.
-    if ((e as { code?: string }).code === "P2002") return;
-    throw e;
+    // Déjà terminée : un second clic ne change rien.
+    if ((e as { code?: string }).code !== "P2002") throw e;
   }
+
+  const r = await prisma.resource.findUnique({
+    where: { id: resourceId },
+    select: { dossierId: true },
+  });
   revalidatePath("/membre/ressources");
+  redirectWithFlash(
+    r?.dossierId
+      ? `/membre/ressources?dossier=${r.dossierId}`
+      : "/membre/ressources",
+    "Étape terminée",
+  );
 }
 
 /**
@@ -1238,6 +1250,39 @@ async function synchroniserAccesDossier(
 const ACCES_SANS_ENTREPRISE =
   "Choisissez au moins une entreprise pour un accès personnalisé.";
 
+/**
+ * Ce que le formulaire dit de la présentation d'un dossier : sa couverture,
+ * et qui l'a conçu. Les images reçues sont enregistrées ici ; un champ image
+ * laissé vide garde celle qui est en place, et la retirer se coche.
+ *
+ * Lève `ImageRefusee` quand un fichier n'est pas une image lisible.
+ */
+async function presentationSaisie(formData: FormData) {
+  const cover = await enregistrerImage(formData.get("cover"), {
+    prefixe: "dossier",
+    largeur: 1280,
+  });
+  const photo = await enregistrerImage(formData.get("auteurPhoto"), {
+    prefixe: "auteur",
+    largeur: 400,
+  });
+  const auteurNom = texte(formData, "auteurNom").slice(0, 120) || null;
+  return {
+    cover,
+    retirerCover: texte(formData, "retirerCover") === "1",
+    photo,
+    retirerPhoto: texte(formData, "retirerAuteurPhoto") === "1",
+    auteurNom,
+    // Sans nom, il n'y a pas d'auteur à présenter : le reste ne se garde pas.
+    auteurRole: auteurNom
+      ? texte(formData, "auteurRole").slice(0, 160) || null
+      : null,
+    auteurBio: auteurNom
+      ? texte(formData, "auteurBio").slice(0, 800) || null
+      : null,
+  };
+}
+
 export async function creerDossier(formData: FormData) {
   const equipe = await exigerEquipe();
   const parentId = texte(formData, "parent") || null;
@@ -1266,8 +1311,25 @@ export async function creerDossier(formData: FormData) {
     }
   }
 
+  let p: Awaited<ReturnType<typeof presentationSaisie>>;
+  try {
+    p = await presentationSaisie(formData);
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
+    throw e;
+  }
+
   const d = await prisma.dossierRessource.create({
-    data: { nom, parentId, restreint },
+    data: {
+      nom,
+      parentId,
+      restreint,
+      cover: p.cover,
+      auteurNom: p.auteurNom,
+      auteurRole: p.auteurRole,
+      auteurBio: p.auteurBio,
+      auteurPhoto: p.auteurNom ? p.photo : null,
+    },
   });
   if (restreint) {
     const n = await synchroniserAccesDossier(d.id, membres, equipe.nom);
@@ -1323,7 +1385,8 @@ export async function reglerAccesDossier(formData: FormData) {
   );
 }
 
-export async function renommerDossier(formData: FormData) {
+/** Le nom d'un dossier, sa couverture et son auteur. */
+export async function modifierDossier(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "dossierId");
   const nom = texte(formData, "nom");
@@ -1340,9 +1403,34 @@ export async function renommerDossier(formData: FormData) {
     redirectWithErreur(retour, `Le nom dépasse ${NOM_DOSSIER_MAX} caractères.`);
   }
 
-  await prisma.dossierRessource.update({ where: { id }, data: { nom } });
+  let p: Awaited<ReturnType<typeof presentationSaisie>>;
+  try {
+    p = await presentationSaisie(formData);
+  } catch (e) {
+    if (e instanceof ImageRefusee) redirectWithErreur(retour, e.message);
+    throw e;
+  }
+
+  await prisma.dossierRessource.update({
+    where: { id },
+    data: {
+      nom,
+      ...(p.cover ? { cover: p.cover } : p.retirerCover ? { cover: null } : {}),
+      auteurNom: p.auteurNom,
+      auteurRole: p.auteurRole,
+      auteurBio: p.auteurBio,
+      // Plus d'auteur : son portrait part avec lui.
+      ...(!p.auteurNom
+        ? { auteurPhoto: null }
+        : p.photo
+          ? { auteurPhoto: p.photo }
+          : p.retirerPhoto
+            ? { auteurPhoto: null }
+            : {}),
+    },
+  });
   revalideTout();
-  redirectWithFlash(retour, `Dossier renommé « ${nom} »`);
+  redirectWithFlash(retour, `Dossier « ${nom} » mis à jour`);
 }
 
 /**

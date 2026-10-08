@@ -624,8 +624,8 @@ export async function getResources(
           ).map((a) => a.resourceId),
         )
       : new Set<string>();
-  // Ce qu'un membre a déjà ouvert : la vue d'un dossier le coche.
-  const lues =
+  // Les étapes qu'un membre a terminées : la vue d'un dossier les coche.
+  const terminees =
     user && user.role !== "admin" && rows.length
       ? new Set(
           (
@@ -648,7 +648,7 @@ export async function getResources(
     date: toISODate(r.date),
     type: r.type,
     prix: r.prix,
-    lue: lues.has(r.id),
+    terminee: terminees.has(r.id),
     description: r.description,
     commentaires: versCommentaires(r.commentaires),
     cover: r.cover,
@@ -670,14 +670,28 @@ export async function getRessourceLisible(id: string): Promise<{
   fmt: "pdf" | "docx" | "video" | "image";
   taille: string;
   description: string | null;
+  /** Le dossier qui la range : c'est là qu'on revient. */
+  dossierId: string | null;
+  /** Étape déjà terminée par la personne connectée. */
+  terminee: boolean;
 } | null> {
-  return prisma.resource.findFirst({
-    where: {
-      id,
-      ...(await visibiliteRessources(await utilisateurConnecte())),
+  const user = await utilisateurConnecte();
+  const r = await prisma.resource.findFirst({
+    where: { id, ...(await visibiliteRessources(user)) },
+    select: {
+      titre: true,
+      fmt: true,
+      taille: true,
+      description: true,
+      dossierId: true,
+      lectures: user
+        ? { where: { userId: user.id }, select: { id: true } }
+        : false,
     },
-    select: { titre: true, fmt: true, taille: true, description: true },
   });
+  if (!r) return null;
+  const { lectures, ...reste } = r;
+  return { ...reste, terminee: Boolean(lectures?.length) };
 }
 
 /** Compte des ressources par tarif, dans le dossier ouvert. */
@@ -701,6 +715,57 @@ export async function getResourceCounts(
 
 /* -------------------------- Dossiers -------------------------- */
 
+/** Ce qu'on lit d'un dossier pour le présenter, hors ce qu'il range. */
+const CHAMPS_DOSSIER = {
+  id: true,
+  nom: true,
+  parentId: true,
+  restreint: true,
+  cover: true,
+  auteurNom: true,
+  auteurRole: true,
+  auteurBio: true,
+  auteurPhoto: true,
+  acces: { select: { memberId: true } },
+} as const;
+
+/** Un dossier tel qu'on l'affiche. `equipe` : qui y a accès ne regarde qu'elle. */
+function versDossier(
+  d: {
+    id: string;
+    nom: string;
+    parentId: string | null;
+    restreint: boolean;
+    cover: string | null;
+    auteurNom: string | null;
+    auteurRole: string | null;
+    auteurBio: string | null;
+    auteurPhoto: string | null;
+    acces: { memberId: string }[];
+  },
+  compte: { dossiers: number; ressources: number },
+  equipe: boolean,
+): DossierRessource {
+  return {
+    id: d.id,
+    nom: d.nom,
+    parentId: d.parentId,
+    dossiers: compte.dossiers,
+    ressources: compte.ressources,
+    cover: d.cover,
+    auteur: d.auteurNom
+      ? {
+          nom: d.auteurNom,
+          role: d.auteurRole,
+          bio: d.auteurBio,
+          photo: d.auteurPhoto,
+        }
+      : null,
+    restreint: d.restreint,
+    acces: equipe ? d.acces.map((a) => a.memberId) : [],
+  };
+}
+
 /**
  * Les dossiers rangés directement dans `parentId` — la racine si `null`.
  *
@@ -720,26 +785,19 @@ export async function getSousDossiers(
     where: { parentId, ...visibles },
     orderBy: { nom: "asc" },
     select: {
-      id: true,
-      nom: true,
-      parentId: true,
-      restreint: true,
-      acces: { select: { memberId: true } },
+      ...CHAMPS_DOSSIER,
       _count: {
         select: { enfants: { where: visibles }, ressources: true },
       },
     },
   });
-  return rows.map((d) => ({
-    id: d.id,
-    nom: d.nom,
-    parentId: d.parentId,
-    dossiers: d._count.enfants,
-    ressources: d._count.ressources,
-    restreint: d.restreint,
-    // Qui d'autre y a accès ne regarde que l'équipe.
-    acces: equipe ? d.acces.map((a) => a.memberId) : [],
-  }));
+  return rows.map((d) =>
+    versDossier(
+      d,
+      { dossiers: d._count.enfants, ressources: d._count.ressources },
+      equipe,
+    ),
+  );
 }
 
 /**
@@ -759,13 +817,7 @@ export async function getSectionsDossier(
   const tous = (
     await prisma.dossierRessource.findMany({
       orderBy: { nom: "asc" },
-      select: {
-        id: true,
-        nom: true,
-        parentId: true,
-        restreint: true,
-        acces: { select: { memberId: true } },
-      },
+      select: CHAMPS_DOSSIER,
     })
   ).filter((d) => !interdits.has(d.id));
 
@@ -796,15 +848,11 @@ export async function getSectionsDossier(
       const sections = construire(d.id);
       const ressources = parDossier.get(d.id) ?? [];
       return {
-        dossier: {
-          id: d.id,
-          nom: d.nom,
-          parentId: d.parentId,
-          dossiers: sections.length,
-          ressources: ressources.length,
-          restreint: d.restreint,
-          acces: equipe ? d.acces.map((a) => a.memberId) : [],
-        },
+        dossier: versDossier(
+          d,
+          { dossiers: sections.length, ressources: ressources.length },
+          equipe,
+        ),
         ressources,
         sections,
       };
@@ -820,24 +868,16 @@ export async function getDossierOuvert(
   const d = await prisma.dossierRessource.findUnique({
     where: { id },
     select: {
-      id: true,
-      nom: true,
-      parentId: true,
-      restreint: true,
-      acces: { select: { memberId: true } },
+      ...CHAMPS_DOSSIER,
       _count: { select: { enfants: true, ressources: true } },
     },
   });
   if (!d) return null;
-  return {
-    id: d.id,
-    nom: d.nom,
-    parentId: d.parentId,
-    dossiers: d._count.enfants,
-    ressources: d._count.ressources,
-    restreint: d.restreint,
-    acces: user?.role === "admin" ? d.acces.map((a) => a.memberId) : [],
-  };
+  return versDossier(
+    d,
+    { dossiers: d._count.enfants, ressources: d._count.ressources },
+    user?.role === "admin",
+  );
 }
 
 /**

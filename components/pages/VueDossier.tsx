@@ -42,7 +42,7 @@ import {
 import { Card, EmptyState, Pill } from "@/components/ui";
 import { copierRessources } from "@/lib/actions/content";
 import { LOGO_EQUIPE } from "@/lib/avatars";
-import { fmtDateShort, fmtMoney } from "@/lib/format";
+import { fmtDateShort, fmtMoney, initials } from "@/lib/format";
 import { lirePressePapier } from "@/lib/presse-papier";
 import {
   getArborescenceDossiers,
@@ -103,8 +103,9 @@ const filtrer = (
  * En tête, un bandeau à son nom, qui mène droit à sa première ressource.
  * Dessous, ce qu'il range : chacun de ses sous-dossiers est une section
  * qu'on déplie, ses ressources des lignes — vignette, titre, description —
- * avec, à droite, ce qu'on peut en faire. La colonne de côté résume le
- * dossier et dit à qui s'adresser.
+ * avec, à droite, ce qu'on peut en faire. La colonne de côté porte sa
+ * couverture, dit au membre où il en est — chaque ressource est une étape,
+ * qu'il termine en fin de lecture — et présente son auteur.
  *
  * L'équipe y retrouve toutes ses commandes : la sélection pour copier,
  * couper et ouvrir des accès, et sur chaque ligne et chaque section, de quoi
@@ -169,10 +170,11 @@ export async function VueDossier({
   const ouvrables = affichees.filter(
     (r) => r.pret && (admin || (r.accessible ?? r.type === "gratuit")),
   );
-  const premiere = ouvrables.find((r) => !r.lue) ?? ouvrables[0];
-  // Où le membre en est : ce qu'il a ouvert, sur tout ce que le dossier range.
-  const lues = toutes.filter((r) => r.lue).length;
-  const termine = toutes.length > 0 && lues === toutes.length;
+  const premiere = ouvrables.find((r) => !r.terminee) ?? ouvrables[0];
+  // Où le membre en est : chaque ressource est une étape, terminée quand il
+  // l'a dit en fin de lecture.
+  const terminees = toutes.filter((r) => r.terminee).length;
+  const termine = toutes.length > 0 && terminees === toutes.length;
   const couverture = toutes.find((r) => r.cover);
   const videos = toutes.filter((r) => r.fmt === "Vidéo").length;
 
@@ -228,7 +230,11 @@ export async function VueDossier({
               href={`/${space}/ressources/${premiere.id}`}
               className="btn-action mt-6 no-underline shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)]"
             >
-              {admin || !lues ? "Commencer" : termine ? "Revoir" : "Continuer"}{" "}
+              {admin || !terminees
+                ? "Commencer"
+                : termine
+                  ? "Revoir"
+                  : "Continuer"}{" "}
               <ArrowRight size={15} />
             </Link>
           ) : null}
@@ -293,13 +299,16 @@ export async function VueDossier({
         {/* ---------- La colonne de côté ---------- */}
         <aside className="flex flex-col gap-4 lg:sticky lg:top-[88px]">
           <Card className="p-3.5">
+            {/* La couverture du dossier ; à défaut, celle d'une de ses
+                ressources — la première page d'un document se cale en haut. */}
             <Visuel
-              src={couverture?.cover}
+              src={dossier.cover ?? couverture?.cover}
               alt=""
               seed={dossier.id}
               className="aspect-[16/9] w-full rounded-[var(--radius-s)]"
               sizes="320px"
               cadrage={
+                !dossier.cover &&
                 couverture &&
                 couverture.fmt !== "Vidéo" &&
                 couverture.fmt !== "Photo"
@@ -313,26 +322,26 @@ export async function VueDossier({
                 {pluriel(toutes.length, "ressource")} dans ce dossier
               </div>
             ) : (
-              /* Où le membre en est, comme sur la page d'un cours. */
+              /* Où le membre en est, étape par étape. */
               <>
                 <div className="mt-3.5 text-[14.5px] font-semibold text-ink">
-                  {lues > 1
-                    ? `${lues} ressources consultées`
-                    : `${lues} ressource consultée`}{" "}
+                  {terminees > 1
+                    ? `${terminees} étapes terminées`
+                    : `${terminees} étape terminée`}{" "}
                   sur {toutes.length}
                 </div>
                 <div
                   role="progressbar"
-                  aria-label="Ressources consultées dans ce dossier"
+                  aria-label="Étapes terminées dans ce dossier"
                   aria-valuemin={0}
                   aria-valuemax={toutes.length}
-                  aria-valuenow={lues}
+                  aria-valuenow={terminees}
                   className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-3"
                 >
                   <div
                     className="h-full rounded-full bg-success transition-[width] duration-500"
                     style={{
-                      width: `${toutes.length ? (lues / toutes.length) * 100 : 0}%`,
+                      width: `${toutes.length ? (terminees / toutes.length) * 100 : 0}%`,
                     }}
                   />
                 </div>
@@ -367,9 +376,46 @@ export async function VueDossier({
             ) : null}
           </Card>
 
-          {/* Un parcours a quelqu'un pour l'accompagner : ici, c'est l'équipe
-              de la chambre, et c'est à elle qu'on écrit. */}
-          {admin ? null : (
+          {/* Qui a conçu le dossier. Tant que l'équipe ne l'a pas dit, le
+              membre trouve à la place à qui écrire : la chambre. */}
+          {dossier.auteur ? (
+            <Card className="p-5">
+              <h2 className="m-0 text-[16px]">Auteur</h2>
+              <div className="mt-3.5 flex items-center gap-3">
+                {dossier.auteur.photo ? (
+                  <Image
+                    src={dossier.auteur.photo}
+                    alt=""
+                    width={112}
+                    height={112}
+                    className="h-14 w-14 shrink-0 rounded-[var(--radius-s)] object-cover"
+                  />
+                ) : (
+                  <span
+                    aria-hidden
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-navy-soft text-[17px] font-bold text-navy"
+                  >
+                    {initials(dossier.auteur.nom)}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <div className="text-[14.5px] font-semibold text-ink">
+                    {dossier.auteur.nom}
+                  </div>
+                  {dossier.auteur.role ? (
+                    <div className="text-[12.6px] text-accent">
+                      {dossier.auteur.role}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+              {dossier.auteur.bio ? (
+                <p className="m-0 mt-3.5 text-[13px] leading-relaxed text-muted whitespace-pre-line">
+                  {dossier.auteur.bio}
+                </p>
+              ) : null}
+            </Card>
+          ) : admin ? null : (
             <Card className="p-5">
               <h2 className="m-0 text-[16px]">Votre interlocuteur</h2>
               <div className="mt-3.5 flex items-center gap-3">
@@ -711,12 +757,12 @@ function Ligne({ r, ctx }: { r: Resource; ctx: Contexte }) {
             />
             <SupprimerRessourceButton resourceId={r.id} titre={r.titre} />
           </>
-        ) : r.lue ? (
+        ) : r.terminee ? (
           <span
-            title="Déjà consultée"
+            title="Étape terminée"
             className="flex h-9 w-9 items-center justify-center text-success"
           >
-            <CheckCircle2 size={22} aria-label="Déjà consultée" />
+            <CheckCircle2 size={22} aria-label="Étape terminée" />
           </span>
         ) : accessible ? (
           // Un simple repère : sur téléphone, où il passerait seul à la

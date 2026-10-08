@@ -326,8 +326,11 @@ export interface Resource {
    * été ouvert à son entreprise. L'équipe ouvre tout.
    */
   accessible?: boolean;
-  /** Déjà ouverte par la personne connectée. Suivi pour les membres seulement. */
-  lue?: boolean;
+  /**
+   * Étape terminée par la personne connectée : elle l'a dit en fin de
+   * lecture. Suivi pour les membres seulement.
+   */
+  terminee?: boolean;
 }
 
 /**
@@ -336,12 +339,24 @@ export interface Resource {
  * Il dit ce qu'il contient : sans ce compte, un dossier vide et un dossier
  * plein se ressemblent, et l'on clique pour rien.
  */
+/** Qui a conçu un dossier, tel que sa vue le présente. */
+export interface AuteurDossier {
+  nom: string;
+  role: string | null;
+  bio: string | null;
+  photo: string | null;
+}
+
 export interface DossierRessource {
   id: string;
   nom: string;
   parentId: string | null;
   dossiers: number;
   ressources: number;
+  /** Son visuel. `null` : la vue prend la couverture d'une de ses ressources. */
+  cover: string | null;
+  /** `null` tant que l'équipe n'a pas nommé d'auteur. */
+  auteur: AuteurDossier | null;
   /**
    * Réservé aux entreprises que l'équipe a choisies : les autres membres ne
    * voient ni le dossier, ni ce qu'il contient.
