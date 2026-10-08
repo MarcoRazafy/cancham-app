@@ -42,7 +42,7 @@ import {
   titreDePublication,
   type EtatPublication,
 } from "@/lib/publications";
-import { getMember } from "@/lib/queries";
+import { getMember, ORDRE_RESSOURCES } from "@/lib/queries";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
@@ -733,10 +733,27 @@ export async function enregistrerRessource(formData: FormData) {
   }
 
   // La ligne d'abord : son identifiant nomme le dossier du fichier.
+  // Dans un dossier que l'équipe a rangé, une ressource qui arrive — neuve,
+  // ou venue d'un autre dossier — prend place au bout.
+  const avant = id
+    ? await prisma.resource.findUnique({
+        where: { id },
+        select: { dossierId: true },
+      })
+    : null;
+  const arrive = !avant || avant.dossierId !== dossierId;
   const r = id
     ? await prisma.resource.update({
         where: { id },
-        data: { titre, description, cat, type, prix, dossierId },
+        data: {
+          titre,
+          description,
+          cat,
+          type,
+          prix,
+          dossierId,
+          ...(arrive ? { ordre: await prochainRang(dossierId) } : {}),
+        },
       })
     : await prisma.resource.create({
         data: {
@@ -746,6 +763,7 @@ export async function enregistrerRessource(formData: FormData) {
           type,
           prix,
           dossierId,
+          ordre: await prochainRang(dossierId),
           fmt: "pdf",
           taille: "—",
           date: jourBase(),
@@ -795,6 +813,70 @@ export async function enregistrerRessource(formData: FormData) {
     "/admin/ressources",
     id ? `« ${titre} » mise à jour` : `« ${titre} » ajoutée à la bibliothèque`,
   );
+}
+
+/**
+ * Le rang d'une ressource qui arrive dans un dossier.
+ *
+ * Si l'équipe y a rangé les ressources, elle prend place au bout. Sinon —
+ * rang 0 partout —, elle garde 0 : la date continue de départager, et la
+ * dernière arrivée reste en tête, comme avant tout rangement.
+ */
+async function prochainRang(dossierId: string | null): Promise<number> {
+  const { _max } = await prisma.resource.aggregate({
+    where: { dossierId },
+    _max: { ordre: true },
+  });
+  const dernier = _max.ordre ?? 0;
+  return dernier > 0 ? dernier + 1 : 0;
+}
+
+/**
+ * Déplace une ressource parmi celles de son dossier : d'un rang, tout en
+ * tête, ou tout au bout.
+ *
+ * Appelée avec des arguments, sans formulaire ni redirection : la page se
+ * rafraîchit sur place, et l'on peut enchaîner les déplacements.
+ */
+export async function deplacerRessource(
+  id: string,
+  vers: "haut" | "bas" | "premier" | "dernier",
+) {
+  await exigerEquipe();
+  const r = await prisma.resource.findUnique({
+    where: { id },
+    select: { dossierId: true },
+  });
+  if (!r) return;
+
+  // La liste telle que la page la montre.
+  const liste = await prisma.resource.findMany({
+    where: { dossierId: r.dossierId },
+    orderBy: ORDRE_RESSOURCES,
+    select: { id: true },
+  });
+  const i = liste.findIndex((x) => x.id === id);
+  const j =
+    vers === "premier"
+      ? 0
+      : vers === "dernier"
+        ? liste.length - 1
+        : i + (vers === "haut" ? -1 : 1);
+  if (i < 0 || j < 0 || j >= liste.length || j === i) return;
+
+  const [deplacee] = liste.splice(i, 1);
+  liste.splice(j, 0, deplacee);
+  // Renuméroter toute la liste, à partir de 1 : tant que les rangs sont à 0,
+  // c'est la date qui range, et un seul rang changé ne déplacerait rien.
+  await prisma.$transaction(
+    liste.map((x, rang) =>
+      prisma.resource.update({
+        where: { id: x.id },
+        data: { ordre: rang + 1 },
+      }),
+    ),
+  );
+  revalideTout();
 }
 
 /**
@@ -1595,16 +1677,23 @@ export async function collerRessources(formData: FormData) {
     redirectWithErreur(retour, "Ces ressources n’existent plus.");
   }
 
+  // Ce qui arrive dans un dossier rangé prend place au bout.
+  const ordre = await prochainRang(dossierId);
   if (presse.mode === "couper") {
     await prisma.resource.updateMany({
-      where: { id: { in: sources.map((r) => r.id) } },
-      data: { dossierId },
+      // Collée dans son propre dossier, une ressource ne bouge pas.
+      where: {
+        id: { in: sources.map((r) => r.id) },
+        NOT: { dossierId },
+      },
+      data: { dossierId, ordre },
     });
   } else {
     for (const r of sources) {
       const copie = await prisma.resource.create({
         data: {
           titre: `${r.titre} (copie)`,
+          description: r.description,
           cat: r.cat,
           fmt: r.fmt,
           taille: r.taille,
@@ -1615,6 +1704,7 @@ export async function collerRessources(formData: FormData) {
           type: r.type,
           prix: r.prix,
           dossierId,
+          ordre,
         },
       });
       await dupliquerRessource(r.id, copie.id);

@@ -25,6 +25,7 @@ import {
   BarreSelection,
   BoutonAcces,
   MenuRessource,
+  OrdreRessource,
   type AccesOuvert,
   type MembreChoisissable,
 } from "@/components/forms/BibliothequeOutils";
@@ -77,6 +78,12 @@ interface Contexte {
   acces: Record<string, AccesOuvert[]>;
   membres: MembreChoisissable[];
   arborescence: Arborescence;
+  /**
+   * On peut ranger les ressources : côté équipe, et sans filtre de tarif —
+   * une liste filtrée ne montre pas tous les rangs, et monter « d'un cran »
+   * n'y voudrait plus rien dire.
+   */
+  rangeable: boolean;
 }
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
@@ -157,6 +164,7 @@ export async function VueDossier({
       )
     : {};
   const ctx: Contexte = {
+    rangeable: admin && actif === "tout",
     space,
     admin,
     dossierId,
@@ -645,8 +653,14 @@ function Lignes({
 }) {
   return (
     <ul className="m-0 list-none p-0">
-      {ressources.map((r) => (
-        <Ligne key={r.id} r={r} ctx={ctx} />
+      {ressources.map((r, i) => (
+        <Ligne
+          key={r.id}
+          r={r}
+          ctx={ctx}
+          premier={i === 0}
+          dernier={i === ressources.length - 1}
+        />
       ))}
     </ul>
   );
@@ -662,7 +676,18 @@ const BTN_LIGNE =
  * Quand on peut l'ouvrir, toute la ligne y mène — c'est le lien du titre,
  * étendu à la ligne. Les boutons restent au-dessus de lui.
  */
-function Ligne({ r, ctx }: { r: Resource; ctx: Contexte }) {
+function Ligne({
+  r,
+  ctx,
+  premier,
+  dernier,
+}: {
+  r: Resource;
+  ctx: Contexte;
+  /** Sa place dans la liste : les flèches s'éteignent aux deux bouts. */
+  premier: boolean;
+  dernier: boolean;
+}) {
   const { space, admin } = ctx;
   const video = r.fmt === "Vidéo";
   const accessible = admin || (r.accessible ?? r.type === "gratuit");
@@ -671,20 +696,34 @@ function Ligne({ r, ctx }: { r: Resource; ctx: Contexte }) {
 
   return (
     <li className="relative flex flex-wrap items-start gap-x-4 gap-y-3 border-t border-line px-4 py-4 hover:bg-surface-2 sm:flex-nowrap sm:px-6">
+      {/* La colonne de l'équipe : la case de la sélection, entre les deux
+          flèches qui montent et descendent la ressource d'un rang. */}
       {admin ? (
-        <label
-          title="Sélectionner"
-          className="relative z-10 mt-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center"
-        >
-          <input
-            type="checkbox"
-            name="ressource"
-            value={r.id}
-            form={FORMULAIRE}
-            aria-label={`Sélectionner « ${r.titre} »`}
-            className="h-4 w-4 accent-[var(--accent)]"
-          />
-        </label>
+        <div className="relative z-10 flex shrink-0 flex-col items-center gap-0.5 self-center">
+          {ctx.rangeable ? (
+            <OrdreRessource
+              id={r.id}
+              titre={r.titre}
+              premier={premier}
+              dernier={dernier}
+            />
+          ) : null}
+          <label
+            title="Sélectionner"
+            // `order-2` : entre « monter » (1) et « descendre » (3), que
+            // `OrdreRessource` rend ensemble.
+            className="order-2 flex h-6 w-6 cursor-pointer items-center justify-center"
+          >
+            <input
+              type="checkbox"
+              name="ressource"
+              value={r.id}
+              form={FORMULAIRE}
+              aria-label={`Sélectionner « ${r.titre} »`}
+              className="h-4 w-4 accent-[var(--accent)]"
+            />
+          </label>
+        </div>
       ) : null}
 
       {/* La couverture est tirée du fichier : la première page d'un

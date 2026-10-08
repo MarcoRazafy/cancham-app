@@ -580,6 +580,18 @@ async function visibiliteRessources(
   };
 }
 
+/**
+ * L'ordre des ressources d'un dossier : le rang que l'équipe leur a donné ;
+ * tant qu'elle n'a rien rangé — rang 0 partout —, les plus récentes d'abord.
+ * L'identifiant départage les ex æquo, pour que l'ordre affiché soit celui
+ * que le déplacement d'une ressource renumérote.
+ */
+export const ORDRE_RESSOURCES = [
+  { ordre: "asc" },
+  { date: "desc" },
+  { id: "asc" },
+] satisfies Prisma.ResourceOrderByWithRelationInput[];
+
 export async function getResources(
   type?: "gratuit" | "payant",
   /**
@@ -607,7 +619,9 @@ export async function getResources(
       ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
     },
     include: { commentaires: commentairesInclude() },
-    orderBy: { date: "desc" },
+    // Une recherche traverse les dossiers, où les rangs ne se comparent
+    // pas : elle rend le plus récent d'abord.
+    orderBy: q ? { date: "desc" } : ORDRE_RESSOURCES,
   });
 
   // Ce que la personne connectée peut ouvrir : l'équipe voit tout, un membre

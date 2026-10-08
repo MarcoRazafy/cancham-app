@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
+  ArrowDownToLine,
+  ArrowUpToLine,
   CheckSquare,
+  ChevronDown,
+  ChevronUp,
   ClipboardPaste,
   Copy,
   Eye,
@@ -29,6 +33,7 @@ import {
   annulerPressePapier,
   collerRessources,
   couperRessources,
+  deplacerRessource,
   mettreUneAuPressePapier,
   ouvrirAccesPour,
   ouvrirAccesRessources,
@@ -114,6 +119,28 @@ export function MenuRessource({
                   });
                 }}
               />
+              <Choix
+                icone={<ArrowUpToLine size={16} />}
+                titre="Mettre en premier"
+                detail="Elle passe en tête des ressources de son dossier."
+                onClick={() => {
+                  fermer();
+                  demarrer(() => {
+                    void deplacerRessource(id, "premier");
+                  });
+                }}
+              />
+              <Choix
+                icone={<ArrowDownToLine size={16} />}
+                titre="Mettre en dernier"
+                detail="Elle passe au bout des ressources de son dossier."
+                onClick={() => {
+                  fermer();
+                  demarrer(() => {
+                    void deplacerRessource(id, "dernier");
+                  });
+                }}
+              />
               <Link
                 href={`/admin/ressources/${id}/modifier`}
                 className="flex items-start gap-3 rounded-[var(--radius-m)] border border-line bg-surface px-4 py-3 text-left no-underline hover:border-faint hover:bg-surface-2"
@@ -141,6 +168,62 @@ export function MenuRessource({
   );
 }
 
+/**
+ * Monter ou descendre une ressource d'un rang, d'un clic, sur sa ligne.
+ *
+ * Deux petites flèches plutôt qu'un menu : ranger un dossier, c'est une
+ * suite de petits déplacements, et la page se rafraîchit sur place.
+ *
+ * Elles se posent dans une colonne, de part et d'autre de la case à cocher
+ * de la ligne : « monter » en tête (`order-1`), « descendre » au pied
+ * (`order-3`).
+ */
+export function OrdreRessource({
+  id,
+  titre,
+  premier,
+  dernier,
+}: {
+  id: string;
+  titre: string;
+  /** Déjà en tête : rien au-dessus. */
+  premier: boolean;
+  /** Déjà au bout : rien en dessous. */
+  dernier: boolean;
+}) {
+  const [enCours, demarrer] = useTransition();
+  const fleche =
+    "flex h-[18px] w-6 cursor-pointer items-center justify-center rounded-[4px] border-0 bg-transparent p-0 text-muted hover:bg-surface-3 hover:text-ink disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent";
+  const deplacer = (vers: "haut" | "bas") =>
+    demarrer(() => {
+      void deplacerRessource(id, vers);
+    });
+  return (
+    <>
+      <button
+        type="button"
+        disabled={premier || enCours}
+        onClick={() => deplacer("haut")}
+        aria-label={`Monter « ${titre} »`}
+        title="Monter"
+        className={`${fleche} order-1`}
+      >
+        <ChevronUp size={15} />
+      </button>
+      <button
+        type="button"
+        disabled={dernier || enCours}
+        onClick={() => deplacer("bas")}
+        aria-label={`Descendre « ${titre} »`}
+        title="Descendre"
+        className={`${fleche} order-3`}
+      >
+        <ChevronDown size={15} />
+      </button>
+    </>
+  );
+}
+
 function Choix({
   icone,
   titre,
@@ -160,7 +243,9 @@ function Choix({
     >
       <span className="mt-px shrink-0 text-accent">{icone}</span>
       <span>
-        <span className="block text-[14px] font-semibold text-ink">{titre}</span>
+        <span className="block text-[14px] font-semibold text-ink">
+          {titre}
+        </span>
         <span className="block text-[12.4px] text-muted">{detail}</span>
       </span>
     </button>
@@ -237,7 +322,9 @@ function ContenuAcces({
     .filter((m) => !filtre || m.nom.toLowerCase().includes(filtre));
 
   const basculer = (id: string) =>
-    setChoisis((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
+    setChoisis((v) =>
+      v.includes(id) ? v.filter((x) => x !== id) : [...v, id],
+    );
 
   return (
     <>
@@ -479,8 +566,8 @@ function BoutonOuvrirAcces({
             <input type="hidden" name="dossier" value={dossierId ?? ""} />
             <p className="m-0 text-[13px] text-muted">
               L’accès s’ouvre pour toutes les ressources cochées. Les ressources
-              incluses dans l’adhésion sont écartées : tout membre à jour les lit
-              déjà.
+              incluses dans l’adhésion sont écartées : tout membre à jour les
+              lit déjà.
             </p>
 
             <label className="relative block">

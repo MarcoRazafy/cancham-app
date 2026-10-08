@@ -565,6 +565,11 @@ model Resource {
   /// En Ariary. 0 si gratuit.
   prix Int         @default(0)
 
+  /// Son rang parmi les ressources du même dossier, du plus petit au plus
+  /// grand. 0 tant que l'équipe n'a rien rangé : la date départage alors,
+  /// les plus récentes d'abord.
+  ordre Int @default(0)
+
   /// Dossier qui la range. `null` = à la racine de la bibliothèque.
   /// `SetNull` et non `Cascade` : supprimer un classeur ne doit jamais
   /// emporter les documents qu'il contenait.
