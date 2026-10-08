@@ -12,7 +12,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselCartes } from "@/components/public/CarrouselCartes";
-import { Rangee, SURVOL_CARTE } from "@/components/public/Rangee";
+import { SURVOL_CARTE } from "@/components/public/Rangee";
 import { FormulaireInfolettre } from "@/components/public/FormulaireInfolettre";
 import { LienAncre } from "@/components/public/LienAncre";
 import { CarteActualite } from "@/components/public/CarteActualite";
@@ -118,73 +118,115 @@ const CADRAGE = {
   pose: "object-top",
 } as const;
 
+/**
+ * Une élue ou un élu du Conseil, tel que sa carte le montre : le prénom sur
+ * une ligne, le nom sur la suivante.
+ */
+interface Elu {
+  prenom: string;
+  nom: string;
+  /** Sa fonction au bureau. Les conseillères n'en portent pas. */
+  role?: string;
+  photo: string;
+  cadrage?: string;
+}
+
 /** Le bureau du Conseil : les élus, autour de la présidente. */
-const BUREAU = [
+const BUREAU: Elu[] = [
   {
-    nom: "Rojonirina Patrick ANDRIANTSOAMANALINA",
-    role: "Vice-Président",
+    prenom: "Rojonirina Patrick",
+    nom: "ANDRIANTSOAMANALINA",
+    role: "Vice-président",
     photo: "/equipe/patrick-andriantsoamanalina.jpg",
   },
   {
-    nom: "Lalaina Alfred ANDRIANJATOVO",
+    prenom: "Lalaina Alfred",
+    nom: "ANDRIANJATOVO",
     role: "Trésorier",
     photo: "/equipe/alfred-andrianjatovo-2.jpg",
     cadrage: CADRAGE.pose,
   },
   {
-    nom: "Danie RABODOVOLOLONIAINA",
+    prenom: "Danie",
+    nom: "RABODOVOLOLONIAINA",
     role: "Secrétaire",
     photo: "/equipe/danie-rabodovololoniaina-2.jpg",
     cadrage: CADRAGE.pose,
   },
 ];
 
-const CONSEILLERES = [
+const CONSEILLERES: Elu[] = [
   {
-    nom: "Tiana RAKOTOMALALA",
+    prenom: "Tiana",
+    nom: "RAKOTOMALALA",
     photo: "/equipe/tiana-rakotomalala-2.jpg",
     cadrage: CADRAGE.pose,
   },
   {
-    nom: "Hope TARVERDIAN",
+    prenom: "Hope",
+    nom: "TARVERDIAN",
     photo: "/equipe/hope-tarverdian-2.jpg",
     cadrage: CADRAGE.pose,
   },
   {
-    nom: "Anna Josée RANDRIAMAROLAHY",
+    prenom: "Anna Josée",
+    nom: "RANDRIAMAROLAHY",
     photo: "/equipe/anna-josee-randriamarolahy-2.jpg",
     cadrage: CADRAGE.pose,
   },
-  { nom: "Elodie RABENIVO", photo: "/equipe/elodie-rabenivo.jpg" },
+  { prenom: "Elodie", nom: "RABENIVO", photo: "/equipe/elodie-rabenivo.jpg" },
 ];
 
 /**
- * L'équipe permanente, salariée — à ne pas confondre avec le Conseil, qui est
- * élu. D'où le bloc à part et le vert : ce sont les personnes qu'un membre a
- * au téléphone.
+ * La carte d'une élue ou d'un élu : son portrait à gauche, en vignette
+ * carrée, son prénom et son nom à droite sur deux lignes, sa fonction dessous
+ * quand elle ou il en porte une.
  */
-const EQUIPE = [
-  {
-    nom: "Alice RATISBONNE",
-    role: "Directrice Exécutive",
-    photo: "/equipe/alice-ratisbonne.jpg",
-  },
-  {
-    nom: "Tahina RAZAFIMAMONJY",
-    role: "Représentant au Canada",
-    photo: "/equipe/tahina-razafimamonjy.jpg",
-  },
-  {
-    nom: "Narindrasoa RAVOAVINIRINA",
-    role: "Adjointe de direction",
-    photo: "/equipe/rindra-razafindrakoto.jpg",
-  },
-  {
-    nom: "Onja ANDRIATSITOHAINA",
-    role: "Chargée administrative",
-    photo: "/equipe/onja-randrianarisoa.jpg",
-  },
-];
+function CarteElu({
+  elu,
+  serree = false,
+  className = "",
+  style,
+}: {
+  elu: Elu;
+  /**
+   * Quatre cartes de front : le portrait et le nom se resserrent, pour que
+   * le plus long des noms tienne sur sa ligne.
+   */
+  serree?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <article
+      style={style}
+      className={`flex items-center rounded-xl bg-surface p-1.5 ${serree ? "gap-3 pr-2.5" : "gap-3.5 pr-3.5 sm:gap-4"} ${SURVOL_CARTE} ${className}`}
+    >
+      {/* Chaque portrait a son cadrage : voir `CADRAGE`. */}
+      <Image
+        src={elu.photo}
+        alt={`Portrait de ${elu.prenom} ${elu.nom}`}
+        width={360}
+        height={360}
+        sizes="130px"
+        className={`block ${serree ? "w-[clamp(92px,7.2vw,104px)]" : "w-[clamp(92px,9vw,128px)]"} shrink-0 aspect-square object-cover ${elu.cadrage ?? CADRAGE.identite} rounded-[9px]`}
+      />
+      <div className="min-w-0">
+        {/* Un nom malgache est long : plutôt que de sortir de la carte, il
+            passe à la ligne. */}
+        <h3
+          className={`m-0 font-[family-name:var(--font-texte)]! font-medium! tracking-normal! ${serree ? "text-[clamp(15.5px,1.2vw,17px)]" : "text-[clamp(15.5px,1.3vw,19.5px)]"} leading-[1.45] [overflow-wrap:anywhere]`}
+        >
+          <span className="block">{elu.prenom}</span>
+          <span className="block">{elu.nom}</span>
+        </h3>
+        {elu.role ? (
+          <p className="m-0 mt-1.5 text-[13.5px] text-white/80">{elu.role}</p>
+        ) : null}
+      </div>
+    </article>
+  );
+}
 
 /**
  * Le filet rouge-vert de la charte, posé sur le bleu nuit.
@@ -195,10 +237,6 @@ const EQUIPE = [
  */
 const FILET =
   "bg-[linear-gradient(90deg,var(--marque-rouge-clair),var(--marque-vert-clair))]";
-
-/** Le même filet, tout en vert : il signale l'équipe salariée, pas les élus. */
-const FILET_VERT =
-  "bg-[linear-gradient(90deg,var(--marque-vert-clair),#3fc98a)]";
 
 /** L'accueil porte le titre du site, sans suffixe : il l'est déjà. */
 export const metadata: Metadata = {
@@ -743,242 +781,121 @@ export default async function PublicHome() {
         />
 
         <div className={`${CONTENEUR} py-16 md:py-24`}>
-          <div className="scene max-w-[780px]">
-            <h2 className={`${TITRE_SECTION} reveler`}>
-              Celles et ceux qui portent <Saillant>la chambre.</Saillant>
-            </h2>
-            <span
-              aria-hidden
-              style={retard(200)}
-              className={`reveler reveler-trait block w-[140px] h-1.5 rounded-full mt-6 ${FILET}`}
-            />
-            <p
-              style={retard(120)}
-              className="reveler m-0 mt-6 text-[17px] leading-[1.6] text-white/72"
-            >
-              Notre Conseil d’Administration et notre direction exécutive,
-              engagés entre le Canada et Madagascar, orientent notre action et
-              veillent à ce que chaque membre y trouve sa place.
-            </p>
-          </div>
-
-          {/* ---------- La présidente ---------- */}
           {/*
-            Trois colonnes et le même écart que le bureau plus bas : le
-            portrait de la présidente fait exactement la largeur d'une carte
-            d'élu, et la citation s'aligne sur la deuxième.
+            Le titre à gauche, la parole de la présidente à droite, dans son
+            encadré : sur grand écran, l'encadré descend d'un cran pour que
+            son haut tombe sous le titre plutôt qu'à sa hauteur. Plus étroit,
+            l'encadré passe sous le texte.
           */}
-          {/* Le portrait grandit sur place, la citation vient de la droite et
-              son guillemet surgit en dernier. */}
-          <div className="scene mt-14 grid gap-9 lg:grid-cols-3 lg:items-center overflow-x-clip">
-            <div
-              className={`reveler reveler-zoom rounded-[22px] p-1.5 ${FILET}`}
-            >
-              <Image
-                src={PRESIDENTE.photo}
-                alt={`Portrait d’${PRESIDENTE.nom}`}
-                width={880}
-                height={1100}
-                sizes="(max-width: 1024px) 80vw, 420px"
-                className="block w-full aspect-[4/5] object-cover rounded-[17px]"
+          <div className="scene grid gap-x-12 gap-y-12 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] xl:items-start">
+            <div>
+              {/* Un cran sous l’échelle commune sur grand écran : le titre
+                  tient alors en deux lignes dans sa colonne. */}
+              <h2 className={`${TITRE_SECTION} reveler xl:text-[50px]`}>
+                Celles et ceux qui portent <Saillant>la chambre.</Saillant>
+              </h2>
+              <span
+                aria-hidden
+                style={retard(200)}
+                className={`reveler reveler-trait block w-[140px] h-1.5 rounded-full mt-6 ${FILET}`}
               />
+              <p
+                style={retard(120)}
+                className="reveler m-0 mt-6 max-w-[52ch] text-[17px] leading-[1.6] text-white/85"
+              >
+                Notre Conseil d’Administration et notre direction exécutive,
+                engagés entre le Canada et Madagascar, orientent notre action et
+                veillent à ce que chaque membre y trouve sa place.
+              </p>
             </div>
 
+            {/* ---------- La présidente ---------- */}
+            {/* L'encadré vient de la droite, et son guillemet surgit en dernier. */}
             <figure
               style={retard(150)}
-              className="reveler reveler-droite m-0 min-w-0 lg:col-span-2"
+              className="reveler reveler-droite relative m-0 flex flex-col gap-x-7 gap-y-5 rounded-[22px] bg-surface p-4 sm:flex-row sm:p-[18px] xl:mt-[7.5rem]"
             >
-              {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à cette taille. */}
+              {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à
+                  cette taille. Il déborde du coin de l'encadré. */}
               <svg
-                width="62"
-                height="44"
+                width="64"
+                height="46"
                 viewBox="0 0 64 46"
                 aria-hidden="true"
                 style={retard(380)}
-                className="reveler reveler-pop block fill-white/90"
+                className="reveler reveler-pop absolute -top-6 right-2 block fill-white/90"
               >
                 <path d="M0 31C0 15 9 4 24 0l2.5 5C18 8.5 13.5 14 12.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S21.9 45 15 45C6.2 45 0 39.5 0 31zM34 31c0-16 9-27 24-31l2.5 5C52 8.5 47.5 14 46.5 21c1-.3 2-.4 3-.4 6.4 0 11.5 5 11.5 12S55.9 45 49 45c-8.8 0-15-5.5-15-14z" />
               </svg>
 
-              {/*
-                En italique d'Inter, comme les mots saillants des titres : la
-                vitrine n'a que deux fontes, et Hammersmith One n'existe
-                qu'en romain.
-              */}
-              <blockquote className="m-0 mt-5 max-w-[62ch] text-[clamp(17px,1.65vw,23px)] font-medium italic leading-[1.5]">
-                {PRESIDENTE.citation}
-              </blockquote>
+              <Image
+                src={PRESIDENTE.photo}
+                alt={`Portrait d’${PRESIDENTE.nom}`}
+                width={528}
+                height={632}
+                sizes="180px"
+                className="block w-[132px] shrink-0 self-start aspect-[5/6] object-cover object-top rounded-xl sm:w-[176px]"
+              />
 
-              <figcaption className="mt-6">
-                <span
-                  className={`${TITRE_GRAS} block text-[clamp(17px,1.5vw,21px)] leading-[1.25]`}
-                >
-                  {PRESIDENTE.nom}
-                </span>
-                <span className="block mt-1 text-[14px] text-white/72">
-                  {PRESIDENTE.role}
-                </span>
-              </figcaption>
+              <div className="flex min-w-0 flex-1 flex-col sm:pt-3.5 sm:pr-3.5">
+                {/*
+                  En italique d'Inter, comme les mots saillants des titres :
+                  la vitrine n'a que deux fontes, et Hammersmith One n'existe
+                  qu'en romain.
+                */}
+                <blockquote className="m-0 text-[clamp(16px,1.42vw,20px)] font-semibold italic leading-[1.42]">
+                  {PRESIDENTE.citation}
+                </blockquote>
+
+                <figcaption className="mt-auto pt-5 pb-1.5 text-right">
+                  <span className="block font-medium text-[clamp(17px,1.5vw,21px)] leading-[1.25]">
+                    {PRESIDENTE.nom}
+                  </span>
+                  <span className="block mt-1 text-[14px] text-white/85">
+                    {PRESIDENTE.role}
+                  </span>
+                </figcaption>
+              </div>
             </figure>
           </div>
 
           {/* ---------- Le bureau du Conseil ---------- */}
-          <div className="scene mt-16">
-            <span
-              aria-hidden
-              className={`reveler reveler-trait block h-0.5 ${FILET}`}
-            />
-            <div
-              style={retard(100)}
-              className="reveler surtitre text-white/72 mt-7"
-            >
+          <div className="scene mt-12">
+            <div className="reveler surtitre text-white">
               Le bureau du Conseil
             </div>
-
-            {/*
-              Trois cartes de front ici, quatre plus bas, immobiles. Sur
-              téléphone, une seule, la suivante dépassant pour inviter à
-              faire glisser la rangée.
-            */}
-            <Rangee
-              ecart={36}
-              className="mt-6"
-              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-2*var(--ecart))/3)]"
-            >
+            {/* Trois cartes de front sur grand écran ; deux, puis une seule,
+                quand les noms n'y tiendraient plus. */}
+            <div className="mt-6 grid gap-5 min-[52rem]:grid-cols-2 xl:grid-cols-3">
               {BUREAU.map((m, i) => (
-                <article
+                <CarteElu
                   key={m.nom}
-                  style={retard(160 + i * 80)}
-                  className={`reveler reveler-zoom ${SURVOL_CARTE}`}
-                >
-                  {/* Chaque portrait a son cadrage : voir `CADRAGE`. */}
-                  <Image
-                    src={m.photo}
-                    alt={`Portrait de ${m.nom}`}
-                    width={900}
-                    height={900}
-                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 400px"
-                    className={`block w-full h-[clamp(240px,24vw,320px)] object-cover ${m.cadrage ?? CADRAGE.identite} rounded-2xl`}
-                  />
-                  <span
-                    aria-hidden
-                    className={`block w-12 h-1 rounded-full mt-4 ${FILET}`}
-                  />
-                  <div className="surtitre mt-4 text-white">{m.role}</div>
-                  <h3
-                    className={`${TITRE_GRAS} m-0 mt-2 text-[19px] leading-[1.3]`}
-                  >
-                    {m.nom}
-                  </h3>
-                </article>
+                  elu={m}
+                  style={retard(100 + i * 80)}
+                  className="reveler reveler-zoom"
+                />
               ))}
-            </Rangee>
+            </div>
           </div>
 
           {/* ---------- Les conseillères ---------- */}
-          <div className="scene mt-14">
-            <div className="reveler surtitre text-white/72">
-              Les conseillères
-            </div>
-
-            {/*
-              Le portrait remplit la carte, à la hauteur de ceux de l'équipe
-              plus bas : une vignette ronde perdue dans un grand cadre laissait
-              ces quatre-là plus effacées que le reste de la page.
-            */}
-            <Rangee
-              ecart={24}
-              className="mt-6"
-              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
-            >
+          <div className="scene mt-10">
+            <div className="reveler surtitre text-white">Les conseillères</div>
+            {/* Quatre de front là où le conteneur atteint sa pleine largeur.
+                Les seuils sont en rem, comme ceux de Tailwind : en pixels,
+                ils se rangeraient mal parmi eux, et le plus petit
+                l’emporterait. */}
+            <div className="mt-6 grid gap-5 min-[44rem]:grid-cols-2 min-[87.5rem]:grid-cols-4">
               {CONSEILLERES.map((c, i) => (
-                <article
+                <CarteElu
                   key={c.nom}
+                  elu={c}
+                  serree
                   style={retard(100 + i * 70)}
-                  className={`reveler reveler-zoom relative flex flex-col overflow-hidden rounded-2xl bg-surface ${SURVOL_CARTE}`}
-                >
-                  <span
-                    aria-hidden
-                    className={`absolute inset-x-0 top-0 z-10 h-[3px] ${FILET}`}
-                  />
-                  <Image
-                    src={c.photo}
-                    alt={`Portrait de ${c.nom}`}
-                    width={520}
-                    height={520}
-                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
-                    className={`block h-[clamp(210px,20vw,260px)] w-full object-cover ${c.cadrage ?? CADRAGE.identite}`}
-                  />
-                  <h3
-                    className={`${TITRE_GRAS} m-0 px-4 py-5 text-center text-[18px] leading-[1.3]`}
-                  >
-                    {c.nom}
-                  </h3>
-                </article>
+                  className="reveler reveler-zoom"
+                />
               ))}
-            </Rangee>
-          </div>
-
-          {/* ---------- L'équipe permanente ---------- */}
-          {/*
-            Dans son propre cadre, et en vert : le Conseil est élu, l'équipe
-            est salariée. Ce sont deux choses différentes, et ce sont ces
-            personnes-là qu'un membre a au téléphone.
-          */}
-          <div className="scene reveler relative mt-16 overflow-hidden rounded-3xl bg-[var(--marque-nuit-2)] p-7 md:p-12">
-            <span
-              aria-hidden
-              style={retard(250)}
-              className={`reveler reveler-trait absolute inset-x-0 top-0 h-1 ${FILET_VERT}`}
-            />
-
-            <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
-              <div>
-                <div className="surtitre text-marque-vert">
-                  L’équipe exécutive
-                </div>
-                <h3 className={`${TITRE_BLOC} mt-2.5`}>
-                  Au quotidien, à vos côtés.
-                </h3>
-              </div>
-              <p className="m-0 max-w-[52ch] text-[15.5px] leading-[1.6] text-white/72">
-                L’équipe permanente met en œuvre les orientations du Conseil et
-                accompagne chaque membre dans ses projets.
-              </p>
             </div>
-
-            <Rangee
-              ecart={28}
-              className="mt-8"
-              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
-            >
-              {EQUIPE.map((m, i) => (
-                <article
-                  key={m.nom}
-                  style={retard(200 + i * 70)}
-                  className={`reveler reveler-zoom ${SURVOL_CARTE}`}
-                >
-                  <Image
-                    src={m.photo}
-                    alt={`Portrait de ${m.nom}`}
-                    width={900}
-                    height={900}
-                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
-                    className="block w-full h-[clamp(210px,20vw,260px)] object-cover object-[center_20%] rounded-2xl"
-                  />
-                  <span
-                    aria-hidden
-                    className={`block w-12 h-1 rounded-full mt-4 ${FILET_VERT}`}
-                  />
-                  <div className="surtitre mt-4 text-marque-vert">{m.role}</div>
-                  <h3
-                    className={`${TITRE_GRAS} m-0 mt-2 text-[19px] leading-[1.3]`}
-                  >
-                    {m.nom}
-                  </h3>
-                </article>
-              ))}
-            </Rangee>
           </div>
         </div>
       </section>
