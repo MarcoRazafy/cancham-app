@@ -102,7 +102,7 @@ export function TexteRiche({
   const memoire = useRef<Range | null>(null);
   const [etat, setEtat] = useState(NEUTRE);
   const [vide, setVide] = useState(() => !lignes.length);
-  const [volet, setVolet] = useState<"couleur" | "lien" | null>(null);
+  const [volet, setVolet] = useState<"lien" | null>(null);
   const [adresse, setAdresse] = useState("");
   const [refus, setRefus] = useState("");
 
@@ -175,10 +175,7 @@ export function TexteRiche({
     relire();
   };
 
-  const colorer = (couleur: string) => {
-    commande("foreColor", couleur);
-    setVolet(null);
-  };
+  const colorer = (couleur: string) => commande("foreColor", couleur);
 
   const lier = () => {
     const lien = lienSur(adresse);
@@ -250,13 +247,6 @@ export function TexteRiche({
               ))}
             </select>
             <Outil
-              libelle="Couleur du texte"
-              enfonce={volet === "couleur"}
-              onClick={() => setVolet(volet === "couleur" ? null : "couleur")}
-            >
-              <Palette size={16} />
-            </Outil>
-            <Outil
               libelle="Lien"
               enfonce={volet === "lien"}
               onClick={() => {
@@ -299,54 +289,62 @@ export function TexteRiche({
             </Outil>
           </div>
 
-          {volet === "couleur" ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-line px-2.5 py-2">
-              {PALETTE_TEXTE.map((c) => (
-                <button
-                  key={c.valeur}
-                  type="button"
-                  title={c.nom}
-                  aria-label={c.nom}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => colorer(c.valeur)}
-                  className="h-7 w-7 rounded-full border border-black/10 shadow-sm hover:scale-110"
-                  style={{ background: c.valeur }}
-                />
-              ))}
-              <label
-                title="Choisir une autre couleur"
-                className="flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface-2 pl-1 pr-2.5 text-[12px] font-semibold text-ink"
-              >
-                <input
-                  type="color"
-                  aria-label="Autre couleur"
-                  defaultValue="#ad0707"
-                  // L'événement natif `change` : une fois la couleur arrêtée,
-                  // pas à chaque mouvement dans le nuancier — reprendre le
-                  // curseur à ce moment-là fermerait le nuancier.
-                  ref={(el) => {
-                    if (el) el.onchange = () => colorer(el.value);
-                  }}
-                  className="h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent p-0"
-                />
-                Personnalisée
-              </label>
+          {/* Les couleurs restent sous les yeux : rangées derrière un
+              bouton, on ne les trouvait pas. */}
+          <div
+            role="group"
+            aria-label="Couleur du texte"
+            className="flex flex-wrap items-center gap-2 border-t border-line px-2.5 py-2"
+          >
+            <span className="flex items-center gap-1.5 pr-0.5 text-[12px] font-semibold text-muted">
+              <Palette size={14} /> Couleur
+            </span>
+
+            {PALETTE_TEXTE.map((c) => (
               <button
+                key={c.valeur}
                 type="button"
+                title={c.nom}
+                aria-label={c.nom}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  // La couleur du texte courant : la relecture n'en garde rien.
-                  const base = zone.current
-                    ? enHex(getComputedStyle(zone.current).color)
-                    : null;
-                  colorer(base ?? "#0f1d2c");
+                onClick={() => colorer(c.valeur)}
+                className="h-7 w-7 rounded-full border border-black/10 shadow-sm hover:scale-110"
+                style={{ background: c.valeur }}
+              />
+            ))}
+            <label
+              title="Choisir une autre couleur"
+              className="flex h-7 cursor-pointer items-center gap-1.5 rounded-full border border-line bg-surface-2 pl-1 pr-2.5 text-[12px] font-semibold text-ink"
+            >
+              <input
+                type="color"
+                aria-label="Autre couleur"
+                defaultValue="#ad0707"
+                // L'événement natif `change` : une fois la couleur arrêtée,
+                // pas à chaque mouvement dans le nuancier — reprendre le
+                // curseur à ce moment-là fermerait le nuancier.
+                ref={(el) => {
+                  if (el) el.onchange = () => colorer(el.value);
                 }}
-                className="h-7 rounded-full border border-line px-2.5 text-[12px] font-semibold text-muted hover:text-ink"
-              >
-                Par défaut
-              </button>
-            </div>
-          ) : null}
+                className="h-5 w-5 cursor-pointer rounded-full border-0 bg-transparent p-0"
+              />
+              Personnalisée
+            </label>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                // La couleur du texte courant : la relecture n'en garde rien.
+                const base = zone.current
+                  ? enHex(getComputedStyle(zone.current).color)
+                  : null;
+                colorer(base ?? "#0f1d2c");
+              }}
+              className="h-7 rounded-full border border-line px-2.5 text-[12px] font-semibold text-muted hover:text-ink"
+            >
+              Par défaut
+            </button>
+          </div>
 
           {volet === "lien" ? (
             <div className="border-t border-line px-2.5 py-2">
