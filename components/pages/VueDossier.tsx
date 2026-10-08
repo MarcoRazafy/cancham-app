@@ -68,13 +68,14 @@ import type {
  * les commandes d'un dossier ont leurs propres formulaires, et un
  * formulaire ne s'imbrique pas dans un autre.
  */
-const FORMULAIRE = "selection-bibliotheque";
+export const FORMULAIRE = "selection-bibliotheque";
 
 /** Ce dont une ligne a besoin pour se dessiner, partout pareil. */
-interface Contexte {
+export interface Contexte {
   space: Space;
   admin: boolean;
-  dossierId: string;
+  /** Le dossier ouvert ; `null` à la racine de la bibliothèque. */
+  dossierId: string | null;
   acces: Record<string, AccesOuvert[]>;
   membres: MembreChoisissable[];
   arborescence: Arborescence;
@@ -84,6 +85,12 @@ interface Contexte {
    * « entre deux autres » ne voudrait plus rien dire.
    */
   rangeable: boolean;
+  /**
+   * Les ressources suivent l'ordre que l'équipe leur donne : dans un
+   * dossier ouvert. À la racine et dans une recherche, un tri les range, et
+   * le menu ne propose pas de les mettre en premier ou en dernier.
+   */
+  ordonne: boolean;
 }
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
@@ -165,6 +172,7 @@ export async function VueDossier({
     : {};
   const ctx: Contexte = {
     rangeable: admin && actif === "tout",
+    ordonne: true,
     space,
     admin,
     dossierId,
@@ -652,7 +660,7 @@ const CLASSE_LIGNE =
  * Les ressources d'un dossier, en lignes. L'équipe les range à la souris
  * (`ListeTriable`) ; pour le membre, et sous un filtre, la liste est fixe.
  */
-function Lignes({
+export function Lignes({
   ressources,
   ctx,
 }: {
@@ -809,6 +817,7 @@ function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
               id={r.id}
               titre={r.titre}
               dossierId={ctx.dossierId}
+              rangement={ctx.ordonne}
             />
             <SupprimerRessourceButton resourceId={r.id} titre={r.titre} />
           </>

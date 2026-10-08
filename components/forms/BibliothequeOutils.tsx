@@ -67,10 +67,17 @@ export function MenuRessource({
   id,
   titre,
   dossierId,
+  rangement = true,
 }: {
   id: string;
   titre: string;
   dossierId: string | null;
+  /**
+   * Proposer « Mettre en premier / en dernier ». À la racine et dans les
+   * résultats d'une recherche, la liste suit un tri : un rang n'y changerait
+   * rien à l'écran.
+   */
+  rangement?: boolean;
 }) {
   const [enCours, demarrer] = useTransition();
 
@@ -117,28 +124,32 @@ export function MenuRessource({
                   });
                 }}
               />
-              <Choix
-                icone={<ArrowUpToLine size={16} />}
-                titre="Mettre en premier"
-                detail="Elle passe en tête des ressources de son dossier."
-                onClick={() => {
-                  fermer();
-                  demarrer(() => {
-                    void deplacerRessource(id, "premier");
-                  });
-                }}
-              />
-              <Choix
-                icone={<ArrowDownToLine size={16} />}
-                titre="Mettre en dernier"
-                detail="Elle passe au bout des ressources de son dossier."
-                onClick={() => {
-                  fermer();
-                  demarrer(() => {
-                    void deplacerRessource(id, "dernier");
-                  });
-                }}
-              />
+              {rangement ? (
+                <>
+                  <Choix
+                    icone={<ArrowUpToLine size={16} />}
+                    titre="Mettre en premier"
+                    detail="Elle passe en tête des ressources de son dossier."
+                    onClick={() => {
+                      fermer();
+                      demarrer(() => {
+                        void deplacerRessource(id, "premier");
+                      });
+                    }}
+                  />
+                  <Choix
+                    icone={<ArrowDownToLine size={16} />}
+                    titre="Mettre en dernier"
+                    detail="Elle passe au bout des ressources de son dossier."
+                    onClick={() => {
+                      fermer();
+                      demarrer(() => {
+                        void deplacerRessource(id, "dernier");
+                      });
+                    }}
+                  />
+                </>
+              ) : null}
               <Link
                 href={`/admin/ressources/${id}/modifier`}
                 className="flex items-start gap-3 rounded-[var(--radius-m)] border border-line bg-surface px-4 py-3 text-left no-underline hover:border-faint hover:bg-surface-2"

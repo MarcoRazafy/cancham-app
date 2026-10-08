@@ -12,7 +12,8 @@ export function FiltreTarif({
   options,
 }: {
   actif: string;
-  options: { key: string; label: string; compte: number }[];
+  /** `compte` absent : l'option ne dit que son nom. */
+  options: { key: string; label: string; compte?: number }[];
 }) {
   return (
     <select
@@ -24,7 +25,7 @@ export function FiltreTarif({
     >
       {options.map((o) => (
         <option key={o.key} value={o.key}>
-          {o.label} ({o.compte})
+          {o.compte === undefined ? o.label : `${o.label} (${o.compte})`}
         </option>
       ))}
     </select>

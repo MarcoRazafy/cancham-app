@@ -592,6 +592,9 @@ export const ORDRE_RESSOURCES = [
   { id: "asc" },
 ] satisfies Prisma.ResourceOrderByWithRelationInput[];
 
+/** Comment la bibliothèque trie ce qu'elle liste : le plus récent, ou l'alphabet. */
+export type TriBibliotheque = "date" | "nom";
+
 export async function getResources(
   type?: "gratuit" | "payant",
   /**
@@ -602,6 +605,11 @@ export async function getResources(
   dossierId?: string | null | string[],
   /** Recherche sur le titre. Une recherche traverse tous les dossiers. */
   recherche?: string,
+  /**
+   * Le tri de la bibliothèque, à sa racine et dans ses résultats. Absent :
+   * l'ordre d'un dossier, celui que l'équipe a donné à ses étapes.
+   */
+  tri?: TriBibliotheque,
 ): Promise<Resource[]> {
   const q = recherche?.trim();
   const user = await utilisateurConnecte();
@@ -621,7 +629,12 @@ export async function getResources(
     include: { commentaires: commentairesInclude() },
     // Une recherche traverse les dossiers, où les rangs ne se comparent
     // pas : elle rend le plus récent d'abord.
-    orderBy: q ? { date: "desc" } : ORDRE_RESSOURCES,
+    orderBy:
+      tri === "nom"
+        ? [{ titre: "asc" }, { id: "asc" }]
+        : tri === "date" || q
+          ? [{ date: "desc" }, { id: "asc" }]
+          : ORDRE_RESSOURCES,
   });
 
   // Ce que la personne connectée peut ouvrir : l'équipe voit tout, un membre
@@ -708,25 +721,6 @@ export async function getRessourceLisible(id: string): Promise<{
   return { ...reste, terminee: Boolean(lectures?.length) };
 }
 
-/** Compte des ressources par tarif, dans le dossier ouvert. */
-export async function getResourceCounts(
-  dossierId?: string | null,
-  recherche?: string,
-) {
-  const q = recherche?.trim();
-  const ou = {
-    ...(await visibiliteRessources(await utilisateurConnecte())),
-    ...(dossierId !== undefined && !q ? { dossierId } : {}),
-    ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
-  };
-  const [tout, gratuit, payant] = await Promise.all([
-    prisma.resource.count({ where: ou }),
-    prisma.resource.count({ where: { ...ou, type: "gratuit" } }),
-    prisma.resource.count({ where: { ...ou, type: "payant" } }),
-  ]);
-  return { tout, gratuit, payant };
-}
-
 /* -------------------------- Dossiers -------------------------- */
 
 /** Ce qu'on lit d'un dossier pour le présenter, hors ce qu'il range. */
@@ -788,6 +782,28 @@ function versDossier(
  */
 export async function getSousDossiers(
   parentId: string | null,
+  tri: TriBibliotheque = "nom",
+): Promise<DossierRessource[]> {
+  return listerDossiers({ parentId }, tri);
+}
+
+/**
+ * Les dossiers dont le nom porte ces mots, où qu'ils soient rangés : la
+ * recherche de la bibliothèque trouve un dossier comme un document.
+ */
+export async function rechercherDossiers(
+  recherche: string,
+  tri: TriBibliotheque = "nom",
+): Promise<DossierRessource[]> {
+  const q = recherche.trim();
+  if (!q) return [];
+  return listerDossiers({ nom: { contains: q, mode: "insensitive" } }, tri);
+}
+
+/** Des dossiers, tels que la personne connectée a le droit de les voir. */
+async function listerDossiers(
+  ou: Prisma.DossierRessourceWhereInput,
+  tri: TriBibliotheque,
 ): Promise<DossierRessource[]> {
   const user = await utilisateurConnecte();
   const equipe = user?.role === "admin";
@@ -796,8 +812,11 @@ export async function getSousDossiers(
   const interdits = await dossiersInterdits(user);
   const visibles = interdits.length ? { id: { notIn: interdits } } : {};
   const rows = await prisma.dossierRessource.findMany({
-    where: { parentId, ...visibles },
-    orderBy: { nom: "asc" },
+    where: { AND: [ou, visibles] },
+    orderBy:
+      tri === "date"
+        ? [{ updatedAt: "desc" }, { nom: "asc" }]
+        : [{ nom: "asc" }],
     select: {
       ...CHAMPS_DOSSIER,
       _count: {

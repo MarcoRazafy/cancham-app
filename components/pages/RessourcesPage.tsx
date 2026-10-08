@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { AlertTriangle, Pencil, Plus } from "lucide-react";
 import { SupprimerRessourceButton } from "@/components/forms/AdminContenuForms";
@@ -15,8 +16,9 @@ import {
   FilDossier,
   RechercheBibliotheque,
   type Filtre,
+  type Vue,
 } from "@/components/pages/BibliothequeCommun";
-import { VueDossier } from "@/components/pages/VueDossier";
+import { FORMULAIRE, Lignes, VueDossier } from "@/components/pages/VueDossier";
 import { copierRessources } from "@/lib/actions/content";
 import { lirePressePapier } from "@/lib/presse-papier";
 import {
@@ -24,25 +26,27 @@ import {
   getMembresPourAcces,
 } from "@/lib/queries-admin";
 import { ResourceCard } from "@/components/domain";
-import { EmptyState, ViewHead } from "@/components/ui";
+import { Card, EmptyState } from "@/components/ui";
 import { DownloadResourceButton } from "@/components/forms/ContentForms";
 import {
   getArborescenceDossiers,
   getFilDossier,
-  getResourceCounts,
   getResources,
   getSousDossiers,
+  rechercherDossiers,
+  type TriBibliotheque,
 } from "@/lib/queries";
 import type { Space } from "@/lib/types";
 
 /**
  * La bibliothèque, rangée en dossiers.
  *
- * À la racine, les dossiers viennent d'abord, les documents dessous. Un
- * dossier ouvert se présente autrement, comme un parcours (`VueDossier`).
- * Une recherche traverse toute la bibliothèque et rend ses résultats en
- * cartes, d'où qu'on l'ait lancée. Un dossier introuvable — lien devenu
- * caduc — ramène à la racine plutôt que d'afficher une erreur.
+ * À la racine, les dossiers viennent d'abord, les documents dessous, en
+ * cartes ou en liste, triés par date ou par nom. Un dossier ouvert se
+ * présente autrement, comme un parcours (`VueDossier`). Une recherche
+ * traverse toute la bibliothèque — dossiers et documents —, d'où qu'on
+ * l'ait lancée. Un dossier introuvable — lien devenu caduc — ramène à la
+ * racine plutôt que d'afficher une erreur.
  *
  * Les membres parcourent le même rangement ; seule l'équipe le modifie.
  */
@@ -51,15 +55,23 @@ export async function RessourcesPage({
   type = "tout",
   dossier,
   q = "",
+  tri: triDemande,
+  vue: vueDemandee,
 }: {
   space: Space;
   type?: string;
   dossier?: string;
   q?: string;
+  /** « date » (par défaut) ou « nom ». */
+  tri?: string;
+  /** « grille » (par défaut) ou « liste ». */
+  vue?: string;
 }) {
   const admin = space === "admin";
   const actif: Filtre = type === "gratuit" || type === "payant" ? type : "tout";
   const recherche = q.trim();
+  const tri: TriBibliotheque = triDemande === "nom" ? "nom" : "date";
+  const vue: Vue = vueDemandee === "liste" ? "liste" : "grille";
 
   const fil = dossier ? await getFilDossier(dossier) : null;
   const dossierId = fil?.length ? fil[fil.length - 1].id : null;
@@ -69,17 +81,24 @@ export async function RessourcesPage({
     return <VueDossier space={space} fil={fil} actif={actif} />;
   }
 
-  const [sousDossiers, list, counts, arborescence, membres, presse] =
-    await Promise.all([
-      // Une recherche traverse la bibliothèque : les dossiers s'effacent le
-      // temps qu'elle dure.
-      recherche ? Promise.resolve([]) : getSousDossiers(dossierId),
-      getResources(actif === "tout" ? undefined : actif, dossierId, recherche),
-      getResourceCounts(dossierId, recherche),
+  const [sousDossiers, list, arborescence, membres, presse] = await Promise.all(
+    [
+      // Une recherche traverse la bibliothèque : elle rend les dossiers
+      // dont le nom répond, où qu'ils soient rangés.
+      recherche
+        ? rechercherDossiers(recherche, tri)
+        : getSousDossiers(dossierId, tri),
+      getResources(
+        actif === "tout" ? undefined : actif,
+        dossierId,
+        recherche,
+        tri,
+      ),
       admin ? getArborescenceDossiers() : Promise.resolve([]),
       admin ? getMembresPourAcces() : Promise.resolve([]),
       admin ? lirePressePapier() : Promise.resolve(null),
-    ]);
+    ],
+  );
 
   // Les accès de toutes les ressources payantes affichées, en une requête :
   // la fenêtre « qui y a accès » s'ouvre alors sans attendre.
@@ -91,25 +110,45 @@ export async function RessourcesPage({
 
   return (
     <>
-      <ViewHead
-        title="Ressources"
-        action={
-          admin ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <BoutonNouveauDossier parentId={dossierId} membres={membres} />
-              <Link
-                href={`/admin/ressources/nouvelle${dossierId ? `?dossier=${dossierId}` : ""}`}
-                className="btn-action btn-action-sm no-underline"
-              >
-                <Plus size={15} /> Nouvelle ressource
-              </Link>
-            </div>
-          ) : null
-        }
-      >
-        Documents, modèles et formations mis à disposition des membres. Certains
-        livrables de fond sont facturés en supplément de la cotisation.
-      </ViewHead>
+      {/* ---------- En-tête : le titre, l'illustration, les commandes ---------- */}
+      <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <div className="min-w-0 flex-1 basis-[300px]">
+          <h1 className="m-0 text-[28px] font-semibold">Ressources</h1>
+          <p className="m-0 mt-1.5 max-w-[54ch] text-[14.2px] leading-relaxed text-muted">
+            Documents, modèles et formations mis à disposition des membres.
+            Certains livrables de fond sont facturés en supplément de la
+            cotisation.
+          </p>
+        </div>
+        {/* L'illustration de la bibliothèque, sur sa tache rose. Purement
+            décorative : elle s'efface quand la place manque. */}
+        <div
+          aria-hidden
+          className="relative hidden h-[120px] w-[254px] shrink-0 lg:block"
+        >
+          <span className="absolute inset-x-5 bottom-1 top-2 rounded-[46%_54%_52%_48%/58%_52%_48%_42%] bg-accent-soft" />
+          <Image
+            src="/marque/illustration-ressources.png"
+            alt=""
+            width={1100}
+            height={550}
+            priority
+            sizes="254px"
+            className="relative h-full w-full object-contain"
+          />
+        </div>
+        {admin ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <BoutonNouveauDossier parentId={dossierId} membres={membres} />
+            <Link
+              href={`/admin/ressources/nouvelle${dossierId ? `?dossier=${dossierId}` : ""}`}
+              className="btn-action btn-action-sm no-underline"
+            >
+              <Plus size={15} /> Ajouter une ressource
+            </Link>
+          </div>
+        ) : null}
+      </div>
 
       {/* Une recherche lancée depuis un dossier garde le chemin du retour. */}
       {fil?.length ? (
@@ -123,30 +162,44 @@ export async function RessourcesPage({
         dossierId={dossierId}
         recherche={recherche}
         actif={actif}
-        comptes={counts}
+        tri={tri}
+        vue={vue}
       />
 
       {recherche ? (
         <p className="mb-4 text-[13px] text-muted">
-          {list.length} résultat{list.length > 1 ? "s" : ""} pour «&nbsp;
+          {sousDossiers.length + list.length} résultat
+          {sousDossiers.length + list.length > 1 ? "s" : ""} pour «&nbsp;
           {recherche}&nbsp;» — toute la bibliothèque est fouillée, dossiers
           compris.
         </p>
       ) : null}
 
       {sousDossiers.length ? (
-        <div className="mb-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {sousDossiers.map((d) => (
-            <CarteDossier
-              key={d.id}
-              dossier={d}
-              space={space}
-              admin={admin}
-              arborescence={arborescence}
-              membres={membres}
-            />
-          ))}
-        </div>
+        <section className="mb-7">
+          <TitreRubrique titre="Dossiers" nombre={sousDossiers.length} />
+          {/* Quatre cartes de front là où la page est large ; en liste, une
+              par ligne. Le seuil est en rem, comme ceux de Tailwind, pour
+              se ranger parmi eux. */}
+          <div
+            className={
+              vue === "liste"
+                ? "grid gap-2.5"
+                : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 min-[85rem]:grid-cols-4"
+            }
+          >
+            {sousDossiers.map((d) => (
+              <CarteDossier
+                key={d.id}
+                dossier={d}
+                space={space}
+                admin={admin}
+                arborescence={arborescence}
+                membres={membres}
+              />
+            ))}
+          </div>
+        </section>
       ) : null}
 
       {/*
@@ -162,11 +215,31 @@ export async function RessourcesPage({
         {admin && presse ? (
           <BarrePressePapier nombre={presse.ids.length} mode={presse.mode} />
         ) : null}
+        {list.length ? (
+          <TitreRubrique titre="Documents" nombre={list.length} />
+        ) : null}
         {admin && list.length ? (
           <BarreSelection membres={membres} dossierId={dossierId} />
         ) : null}
 
-        {list.length ? (
+        {list.length && vue === "liste" ? (
+          // En liste : les mêmes lignes que dans un dossier ouvert.
+          <Card className="overflow-hidden p-0 [&>ul>li:first-child]:border-t-0">
+            <Lignes
+              ressources={list}
+              ctx={{
+                space,
+                admin,
+                dossierId,
+                acces,
+                membres,
+                arborescence,
+                rangeable: false,
+                ordonne: false,
+              }}
+            />
+          </Card>
+        ) : list.length ? (
           <div className="cascade grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {list.map((r) => (
               <ResourceCard
@@ -225,6 +298,8 @@ export async function RessourcesPage({
                         id={r.id}
                         titre={r.titre}
                         dossierId={dossierId}
+                        // Ici, un tri range la liste : pas de rang à donner.
+                        rangement={false}
                       />
                       <SupprimerRessourceButton
                         resourceId={r.id}
@@ -248,7 +323,7 @@ export async function RessourcesPage({
         ) : sousDossiers.length ? null : (
           <EmptyState>
             {recherche
-              ? "Aucun document ne porte ce titre."
+              ? "Aucun document ni dossier ne porte ce nom."
               : dossierId
                 ? "Ce dossier est vide."
                 : "Aucune ressource dans cette catégorie."}
@@ -256,6 +331,18 @@ export async function RessourcesPage({
         )}
       </FormulaireListe>
     </>
+  );
+}
+
+/** Le titre d'une rubrique de la bibliothèque, et ce qu'elle compte. */
+function TitreRubrique({ titre, nombre }: { titre: string; nombre: number }) {
+  return (
+    <div className="mb-3.5 flex items-center gap-2.5">
+      <h2 className="m-0 text-[19px] font-semibold">{titre}</h2>
+      <span className="rounded-full bg-surface-3 px-2.5 py-0.5 text-[12.4px] font-semibold text-muted">
+        {nombre}
+      </span>
+    </div>
   );
 }
 
@@ -276,7 +363,9 @@ function FormulaireListe({
 }) {
   if (!admin) return <>{children}</>;
   return (
-    <form action={copierRessources}>
+    // Son identifiant : en liste, les cases à cocher des lignes s'y
+    // rattachent par lui, comme dans un dossier ouvert.
+    <form id={FORMULAIRE} action={copierRessources}>
       <input type="hidden" name="dossier" value={dossierId ?? ""} />
       {children}
     </form>

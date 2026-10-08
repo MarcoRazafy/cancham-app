@@ -1,12 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Check,
+  ChevronRight,
   Folder,
   FolderLock,
   FolderPlus,
+  MoreVertical,
   Pencil,
   Trash2,
   Users,
@@ -95,7 +98,7 @@ function ChampsPresentation({ dossier: d }: { dossier?: DossierRessource }) {
         retirer="retirerCover"
         apercu={d?.cover}
         libelle="Couverture"
-        aide="Facultatif. L’image du dossier, en tête de sa page. Paysage de préférence."
+        aide="Facultatif. L’image du dossier, sur sa carte et en tête de sa page. Paysage de préférence."
       />
       <fieldset className="m-0 flex flex-col gap-3.5 rounded-[var(--radius-m)] border border-line p-4">
         <legend className="px-1.5 text-[12.3px] font-semibold text-muted">
@@ -206,10 +209,12 @@ export function BoutonNouveauDossier({
 }
 
 /**
- * Un dossier de la bibliothèque.
+ * Un dossier de la bibliothèque, en carte.
  *
- * La carte entière ouvre le dossier ; les commandes de l'équipe sont posées
- * à côté du lien, et non dedans — un lien ne contient pas de bouton.
+ * À gauche, sa couverture sur toute la hauteur ; à défaut, une tuile rose
+ * à l'icône de dossier. Son nom, ce qu'il contient, et un chevron qui dit
+ * que la carte s'ouvre. La carte entière mène au dossier — c'est le lien de
+ * son nom, étendu à la carte ; le menu de l'équipe reste au-dessus de lui.
  */
 export function CarteDossier({
   dossier: d,
@@ -238,40 +243,203 @@ export function CarteDossier({
     : admin
       ? `Réservé à ${d.acces.length} entreprise${d.acces.length > 1 ? "s" : ""}`
       : "Réservé à votre entreprise";
+  const Icone = d.restreint ? FolderLock : Folder;
 
   return (
-    <Card className="flex items-center gap-3 p-3.5 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
-      <Link
-        href={`/${space}/ressources?dossier=${d.id}`}
-        className="flex min-w-0 flex-1 items-center gap-3 no-underline"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-surface-2 text-accent">
-          {d.restreint ? <FolderLock size={18} /> : <Folder size={18} />}
+    <Card className="relative flex min-h-[96px] items-stretch overflow-hidden p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
+      {d.cover ? (
+        <Image
+          src={d.cover}
+          alt=""
+          width={160}
+          height={200}
+          className="w-[78px] shrink-0 object-cover"
+        />
+      ) : (
+        <span className="m-3 flex w-[70px] shrink-0 items-center justify-center rounded-[var(--radius-m)] bg-accent-soft text-accent/65">
+          <Icone
+            size={32}
+            fill={d.restreint ? "none" : "currentColor"}
+            strokeWidth={d.restreint ? 1.8 : 0}
+          />
         </span>
-        <span className="min-w-0">
-          <span className="block truncate text-[14.5px] font-semibold text-ink">
+      )}
+
+      <div
+        className={`flex min-w-0 flex-1 flex-col justify-center py-3 pr-10 ${d.cover ? "pl-4" : "pl-1"}`}
+      >
+        <Link
+          href={`/${space}/ressources?dossier=${d.id}`}
+          className="flex min-w-0 items-center gap-2 no-underline after:absolute after:inset-0"
+        >
+          {/* Sur une couverture, l'icône passe devant le nom : c'est elle
+              qui dit encore « dossier ». */}
+          {d.cover ? (
+            <Icone size={17} className="shrink-0 text-accent" />
+          ) : null}
+          <span className="truncate text-[14.8px] font-semibold text-ink">
             {d.nom}
           </span>
-          <span className="block text-[12.3px] text-muted">
-            {contenu.length ? contenu.join(" · ") : "Vide"}
-          </span>
-          {reserve ? (
-            <span className="block text-[11.8px] font-semibold text-warn">
-              {reserve}
-            </span>
-          ) : null}
+        </Link>
+        <span className="mt-1 text-[12.6px] text-muted">
+          {contenu.length ? contenu.join(" · ") : "Vide"}
         </span>
-      </Link>
+        {reserve ? (
+          <span className="mt-0.5 text-[11.8px] font-semibold text-warn">
+            {reserve}
+          </span>
+        ) : null}
+      </div>
 
       {admin ? (
-        <div className="flex shrink-0 items-center gap-1">
-          <AccesDossier dossier={d} membres={membres} />
-          <ReglagesDossier dossier={d} arborescence={arborescence} />
-          <SupprimerDossier dossier={d} />
+        <div className="absolute right-1.5 top-1.5 z-10">
+          <MenuDossier
+            dossier={d}
+            arborescence={arborescence}
+            membres={membres}
+          />
         </div>
       ) : null}
+      <ChevronRight
+        size={17}
+        aria-hidden
+        className="pointer-events-none absolute bottom-3 right-3 text-ink"
+      />
     </Card>
   );
+}
+
+/**
+ * Le menu d'un dossier, derrière ses trois points : qui le voit, ses
+ * réglages, sa suppression. Chaque choix referme le menu et ouvre sa
+ * fenêtre.
+ */
+function MenuDossier({
+  dossier: d,
+  arborescence,
+  membres,
+}: {
+  dossier: DossierRessource;
+  arborescence: Arborescence;
+  membres: MembreChoisissable[];
+}) {
+  type Fenetre = "menu" | "acces" | "reglages" | "supprimer";
+  const [fenetre, setFenetre] = useState<Fenetre | null>(null);
+  // Une fenêtre qui se referme ne referme qu'elle-même. Quand un choix du
+  // menu en ouvre une autre, le menu se referme juste après — et sans cette
+  // précaution, il emporterait la fenêtre qu'il vient d'ouvrir.
+  const fermer = (laquelle: Fenetre) => () =>
+    setFenetre((f) => (f === laquelle ? null : f));
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setFenetre("menu")}
+        aria-label={`Actions sur le dossier « ${d.nom} »`}
+        title="Actions"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-[var(--radius-s)] border-0 bg-transparent text-ink hover:bg-surface-2"
+      >
+        <MoreVertical size={17} />
+      </button>
+
+      <Modal
+        title="Que faire de ce dossier ?"
+        ouvert={fenetre === "menu"}
+        onFermer={fermer("menu")}
+      >
+        {() => (
+          <>
+            <ModalBody>
+              <p className="m-0 text-[13.4px] text-muted">{d.nom}</p>
+              <div className="grid gap-2">
+                <ChoixDossier
+                  icone={<Users size={16} />}
+                  titre="Qui voit ce dossier"
+                  detail={
+                    d.restreint
+                      ? `Réservé à ${d.acces.length} entreprise${d.acces.length > 1 ? "s" : ""}.`
+                      : "Ouvert à tous les membres."
+                  }
+                  onClick={() => setFenetre("acces")}
+                />
+                <ChoixDossier
+                  icone={<Pencil size={16} />}
+                  titre="Réglages"
+                  detail="Nom, couverture, auteur, rangement."
+                  onClick={() => setFenetre("reglages")}
+                />
+                <ChoixDossier
+                  icone={<Trash2 size={16} />}
+                  titre="Supprimer"
+                  detail="Ce qu’il contient remonte d’un niveau ; aucun document n’est effacé."
+                  onClick={() => setFenetre("supprimer")}
+                />
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <CancelButton onClick={fermer("menu")} />
+            </ModalFooter>
+          </>
+        )}
+      </Modal>
+
+      <AccesDossier
+        dossier={d}
+        membres={membres}
+        ouvert={fenetre === "acces"}
+        onFermer={fermer("acces")}
+      />
+      <ReglagesDossier
+        dossier={d}
+        arborescence={arborescence}
+        ouvert={fenetre === "reglages"}
+        onFermer={fermer("reglages")}
+      />
+      <SupprimerDossier
+        dossier={d}
+        ouvert={fenetre === "supprimer"}
+        onFermer={fermer("supprimer")}
+      />
+    </>
+  );
+}
+
+function ChoixDossier({
+  icone,
+  titre,
+  detail,
+  onClick,
+}: {
+  icone: ReactNode;
+  titre: string;
+  detail: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex cursor-pointer items-start gap-3 rounded-[var(--radius-m)] border border-line bg-surface px-4 py-3 text-left hover:border-faint hover:bg-surface-2"
+    >
+      <span className="mt-px shrink-0 text-accent">{icone}</span>
+      <span>
+        <span className="block text-[14px] font-semibold text-ink">
+          {titre}
+        </span>
+        <span className="block text-[12.4px] text-muted">{detail}</span>
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Une fenêtre pilotée de l'extérieur — par le menu d'un dossier — plutôt
+ * que par son propre bouton.
+ */
+interface Pilotage {
+  ouvert?: boolean;
+  onFermer?: () => void;
 }
 
 const BTN_ICONE =
@@ -308,25 +476,33 @@ export function CommandesDossier({
 function AccesDossier({
   dossier: d,
   membres,
+  ouvert,
+  onFermer,
 }: {
   dossier: DossierRessource;
   membres: MembreChoisissable[];
-}) {
+} & Pilotage) {
   return (
     <Modal
       title="Qui voit ce dossier"
       largeur="max-w-[620px]"
-      trigger={(ouvrir) => (
-        <button
-          type="button"
-          onClick={ouvrir}
-          aria-label={`Qui voit « ${d.nom} »`}
-          title="Qui voit ce dossier"
-          className={`${BTN_ICONE} hover:border-faint hover:text-ink ${d.restreint ? "border-warn text-warn" : ""}`}
-        >
-          <Users size={14} />
-        </button>
-      )}
+      ouvert={ouvert}
+      onFermer={onFermer}
+      trigger={
+        ouvert !== undefined
+          ? undefined
+          : (ouvrir) => (
+              <button
+                type="button"
+                onClick={ouvrir}
+                aria-label={`Qui voit « ${d.nom} »`}
+                title="Qui voit ce dossier"
+                className={`${BTN_ICONE} hover:border-faint hover:text-ink ${d.restreint ? "border-warn text-warn" : ""}`}
+              >
+                <Users size={14} />
+              </button>
+            )
+      }
     >
       {(fermer) => (
         <form action={reglerAccesDossier}>
@@ -361,25 +537,33 @@ function AccesDossier({
 function ReglagesDossier({
   dossier: d,
   arborescence,
+  ouvert,
+  onFermer,
 }: {
   dossier: DossierRessource;
   arborescence: Arborescence;
-}) {
+} & Pilotage) {
   return (
     <Modal
       wide
       title="Réglages du dossier"
-      trigger={(ouvrir) => (
-        <button
-          type="button"
-          onClick={ouvrir}
-          aria-label={`Réglages de « ${d.nom} »`}
-          title="Nom, couverture, auteur, rangement"
-          className={`${BTN_ICONE} hover:border-faint hover:text-ink`}
-        >
-          <Pencil size={14} />
-        </button>
-      )}
+      ouvert={ouvert}
+      onFermer={onFermer}
+      trigger={
+        ouvert !== undefined
+          ? undefined
+          : (ouvrir) => (
+              <button
+                type="button"
+                onClick={ouvrir}
+                aria-label={`Réglages de « ${d.nom} »`}
+                title="Nom, couverture, auteur, rangement"
+                className={`${BTN_ICONE} hover:border-faint hover:text-ink`}
+              >
+                <Pencil size={14} />
+              </button>
+            )
+      }
     >
       {(fermer) => (
         <>
@@ -441,22 +625,32 @@ function ReglagesDossier({
   );
 }
 
-function SupprimerDossier({ dossier: d }: { dossier: DossierRessource }) {
+function SupprimerDossier({
+  dossier: d,
+  ouvert,
+  onFermer,
+}: { dossier: DossierRessource } & Pilotage) {
   const contenu = d.dossiers + d.ressources;
   return (
     <Modal
       title="Supprimer le dossier"
-      trigger={(ouvrir) => (
-        <button
-          type="button"
-          onClick={ouvrir}
-          aria-label={`Supprimer « ${d.nom} »`}
-          title="Supprimer"
-          className={`${BTN_ICONE} hover:border-accent hover:text-accent`}
-        >
-          <Trash2 size={14} />
-        </button>
-      )}
+      ouvert={ouvert}
+      onFermer={onFermer}
+      trigger={
+        ouvert !== undefined
+          ? undefined
+          : (ouvrir) => (
+              <button
+                type="button"
+                onClick={ouvrir}
+                aria-label={`Supprimer « ${d.nom} »`}
+                title="Supprimer"
+                className={`${BTN_ICONE} hover:border-accent hover:text-accent`}
+              >
+                <Trash2 size={14} />
+              </button>
+            )
+      }
     >
       {(fermer) => (
         <form action={supprimerDossier}>

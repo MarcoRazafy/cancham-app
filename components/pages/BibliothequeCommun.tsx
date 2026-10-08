@@ -1,12 +1,17 @@
 import Link from "next/link";
-import { ChevronRight, Library, Search } from "lucide-react";
+import { ChevronRight, LayoutGrid, Library, List, Search } from "lucide-react";
 import { FiltreTarif } from "@/components/forms/FiltreTarif";
+import { SelectAuto } from "@/components/forms/SelectAuto";
+import type { TriBibliotheque } from "@/lib/queries";
 import type { MaillonDossier, Space } from "@/lib/types";
 
 export type Filtre = "tout" | "gratuit" | "payant";
 
+/** La bibliothèque en cartes, ou en lignes. */
+export type Vue = "grille" | "liste";
+
 const TARIFS: { key: Filtre; label: string }[] = [
-  { key: "tout", label: "Tout" },
+  { key: "tout", label: "Tous les types" },
   { key: "gratuit", label: "Gratuit" },
   { key: "payant", label: "Payant" },
 ];
@@ -61,13 +66,45 @@ export function RechercheBibliotheque({
   recherche,
   actif,
   comptes,
+  tri,
+  vue,
 }: {
   space: Space;
   dossierId: string | null;
   recherche: string;
   actif: Filtre;
-  comptes: Record<Filtre, number>;
+  /**
+   * Ce que chaque tarif compte, dit dans la liste. Absent à la racine : on
+   * n'y compterait que les documents hors de tout dossier.
+   */
+  comptes?: Record<Filtre, number>;
+  /**
+   * Le tri et la vue, à la racine de la bibliothèque et dans ses résultats.
+   * Absents dans un dossier ouvert : il a son ordre à lui, et sa mise en
+   * page.
+   */
+  tri?: TriBibliotheque;
+  vue?: Vue;
 }) {
+  // L'adresse de la page telle qu'elle est, à une clé près : pour passer
+  // d'une vue à l'autre sans perdre la recherche ni les filtres.
+  const adresse = (v: Vue) => {
+    const p = new URLSearchParams();
+    if (dossierId) p.set("dossier", dossierId);
+    if (recherche) p.set("q", recherche);
+    if (actif !== "tout") p.set("type", actif);
+    if (tri && tri !== "date") p.set("tri", tri);
+    if (v !== "grille") p.set("vue", v);
+    const suite = p.toString();
+    return `/${space}/ressources${suite ? `?${suite}` : ""}`;
+  };
+  const bouton = (active: boolean) =>
+    `flex h-[38px] w-[42px] items-center justify-center no-underline ${
+      active
+        ? "bg-accent text-white"
+        : "bg-surface text-muted hover:bg-surface-2 hover:text-ink"
+    }`;
+
   return (
     <form
       method="get"
@@ -76,6 +113,10 @@ export function RechercheBibliotheque({
     >
       {dossierId ? (
         <input type="hidden" name="dossier" value={dossierId} />
+      ) : null}
+      {/* La vue choisie survit à une recherche. */}
+      {vue && vue !== "grille" ? (
+        <input type="hidden" name="vue" value={vue} />
       ) : null}
       <label className="relative min-w-[220px] flex-1">
         <Search
@@ -86,7 +127,7 @@ export function RechercheBibliotheque({
           type="search"
           name="q"
           defaultValue={recherche}
-          placeholder="Chercher un document dans toute la bibliothèque…"
+          placeholder="Rechercher un document, un dossier…"
           className="w-full rounded-[var(--radius-s)] border border-line bg-surface py-2 pl-9 pr-3 text-[13.4px] text-ink placeholder:text-faint"
         />
       </label>
@@ -101,9 +142,20 @@ export function RechercheBibliotheque({
         options={TARIFS.map((t) => ({
           key: t.key,
           label: t.label,
-          compte: comptes[t.key],
+          compte: comptes?.[t.key],
         }))}
       />
+      {tri ? (
+        <SelectAuto
+          name="tri"
+          valeur={tri}
+          libelle="Trier"
+          options={[
+            { key: "date", label: "Date de modification" },
+            { key: "nom", label: "Nom" },
+          ]}
+        />
+      ) : null}
       {recherche || actif !== "tout" ? (
         <Link
           href={`/${space}/ressources${dossierId ? `?dossier=${dossierId}` : ""}`}
@@ -111,6 +163,34 @@ export function RechercheBibliotheque({
         >
           Effacer
         </Link>
+      ) : null}
+      {/* En cartes ou en lignes : deux liens, celui de la vue en cours en
+          rouge. */}
+      {vue ? (
+        <div
+          role="group"
+          aria-label="Affichage"
+          className="flex overflow-hidden rounded-[var(--radius-s)] border border-line"
+        >
+          <Link
+            href={adresse("grille")}
+            aria-label="Afficher en cartes"
+            aria-current={vue === "grille" ? "true" : undefined}
+            title="En cartes"
+            className={bouton(vue === "grille")}
+          >
+            <LayoutGrid size={17} />
+          </Link>
+          <Link
+            href={adresse("liste")}
+            aria-label="Afficher en liste"
+            aria-current={vue === "liste" ? "true" : undefined}
+            title="En liste"
+            className={`${bouton(vue === "liste")} border-l border-line`}
+          >
+            <List size={17} />
+          </Link>
+        </div>
       ) : null}
     </form>
   );
