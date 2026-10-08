@@ -185,6 +185,21 @@ export async function VueDossier({
   const couverture = toutes.find((r) => r.cover);
   const videos = toutes.filter((r) => r.fmt === "Vidéo").length;
 
+  // La recherche et le filtre de tarif. Quand le dossier n'a que ses propres
+  // ressources, ils tiennent dans l'en-tête de leur carte, à côté du titre ;
+  // dès qu'il a des sections, ou qu'il est vide, ils passent au-dessus.
+  const outils = (
+    <RechercheBibliotheque
+      space={space}
+      dossierId={dossierId}
+      recherche=""
+      actif={actif}
+      comptes={comptes}
+      compacte
+    />
+  );
+  const outilsDansLaCarte = !sections.length && ressources.length > 0;
+
   // La première section qui a de quoi montrer s'ouvre d'elle-même.
   const ouverte = sections.findIndex((s) => aPlat(s).length > 0);
 
@@ -249,14 +264,6 @@ export async function VueDossier({
         </div>
       </section>
 
-      <RechercheBibliotheque
-        space={space}
-        dossierId={dossierId}
-        recherche=""
-        actif={actif}
-        comptes={comptes}
-      />
-
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* ---------- Ce que le dossier range ---------- */}
         <div className="min-w-0">
@@ -275,6 +282,10 @@ export async function VueDossier({
             </form>
           ) : null}
 
+          {outilsDansLaCarte ? null : (
+            <div className="@container mb-3 flex justify-end">{outils}</div>
+          )}
+
           {sections.length || ressources.length ? (
             <div className="flex flex-col gap-3">
               {sections.map((s, i) => (
@@ -290,6 +301,7 @@ export async function VueDossier({
                   titre={sections.length ? "Autres ressources" : "Ressources"}
                   nombre={ressources.length}
                   ouverte={ouverte === -1}
+                  outils={outilsDansLaCarte ? outils : undefined}
                 >
                   <Lignes ressources={ressources} ctx={ctx} />
                 </Cadre>
@@ -468,6 +480,11 @@ export async function VueDossier({
  * Les commandes se posent à côté du titre et non dedans : un clic sur un
  * bouton ne doit pas replier la section, et leurs fenêtres n'ont rien à
  * faire à l'intérieur d'un titre.
+ *
+ * Les outils — la recherche et le filtre — s'alignent de même sur le titre
+ * quand la carte est assez large pour les y loger ; plus étroite, ils
+ * passent dessous. C'est la largeur de la carte qui en décide, non celle de
+ * l'écran : la colonne de côté la rétrécit bien avant le téléphone.
  */
 function Cadre({
   titre,
@@ -476,11 +493,14 @@ function Cadre({
   reserve,
   commandes,
   largeurCommandes = "",
+  outils,
   children,
 }: {
   titre: string;
   nombre: number;
   ouverte: boolean;
+  /** La recherche et le filtre, à côté du titre. */
+  outils?: React.ReactNode;
   /** « Réservé à … », sous le titre d'un dossier réservé. */
   reserve?: string | null;
   commandes?: React.ReactNode;
@@ -489,10 +509,12 @@ function Cadre({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative rounded-[var(--radius-m)] border border-line bg-surface shadow-[var(--shadow)]">
+    <div className="@container relative rounded-[var(--radius-m)] border border-line bg-surface shadow-[var(--shadow)]">
       <details open={ouverte} className="group/section">
         <summary className="flex cursor-pointer list-none items-center gap-3 rounded-[var(--radius-m)] px-5 py-4 hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
-          <span className={`min-w-0 flex-1 ${largeurCommandes}`}>
+          <span
+            className={`min-w-0 flex-1 ${largeurCommandes} ${outils ? "@[680px]:pr-[470px]" : ""}`}
+          >
             <span className="block truncate text-[15px] font-semibold text-ink">
               {titre}
             </span>
@@ -508,6 +530,14 @@ function Cadre({
             className="shrink-0 text-muted transition-transform duration-200 group-open/section:rotate-180"
           />
         </summary>
+        {/* Dans la section, mais hors de son titre : un clic dans la
+            recherche ne la replie pas. Carte large, ils remontent à la
+            hauteur du titre ; sinon ils restent ici, sous lui. */}
+        {outils ? (
+          <div className="px-5 pb-3.5 @[680px]:absolute @[680px]:right-[50px] @[680px]:top-[13px] @[680px]:p-0">
+            {outils}
+          </div>
+        ) : null}
         {children}
       </details>
       {commandes ? (

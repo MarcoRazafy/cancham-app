@@ -68,6 +68,7 @@ export function RechercheBibliotheque({
   comptes,
   tri,
   vue,
+  compacte = false,
 }: {
   space: Space;
   dossierId: string | null;
@@ -85,6 +86,11 @@ export function RechercheBibliotheque({
    */
   tri?: TriBibliotheque;
   vue?: Vue;
+  /**
+   * Resserrée, pour tenir dans l'en-tête d'une carte : sans marge, et la
+   * recherche à largeur fixe plutôt que sur toute la ligne.
+   */
+  compacte?: boolean;
 }) {
   // L'adresse de la page telle qu'elle est, à une clé près : pour passer
   // d'une vue à l'autre sans perdre la recherche ni les filtres.
@@ -109,7 +115,7 @@ export function RechercheBibliotheque({
     <form
       method="get"
       action={`/${space}/ressources`}
-      className="mb-4 flex flex-wrap items-center gap-2"
+      className={`flex flex-wrap items-center gap-2 ${compacte ? "" : "mb-4"}`}
     >
       {dossierId ? (
         <input type="hidden" name="dossier" value={dossierId} />
@@ -118,7 +124,9 @@ export function RechercheBibliotheque({
       {vue && vue !== "grille" ? (
         <input type="hidden" name="vue" value={vue} />
       ) : null}
-      <label className="relative min-w-[220px] flex-1">
+      <label
+        className={`relative ${compacte ? "min-w-[180px] flex-1 @[680px]:w-[240px] @[680px]:flex-none" : "min-w-[220px] flex-1"}`}
+      >
         <Search
           size={14}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
