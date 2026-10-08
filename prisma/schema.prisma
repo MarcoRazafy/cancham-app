@@ -281,9 +281,10 @@ model User {
   notesMembres       NoteMembre[]
   abonnementsPush    AbonnementPush[]
 
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
   rendezvous Rendezvous[]
+  lectures   LectureRessource[]
 
   @@index([memberId])
   @@map("users")
@@ -574,6 +575,7 @@ model Resource {
   updatedAt DateTime @updatedAt
 
   commentaires Comment[]
+  lectures     LectureRessource[]
   acces        AccesRessource[]
 
   @@index([type])
@@ -615,6 +617,24 @@ model AccesRessource {
 /// La bibliothèque était une liste à plat : passé une trentaine de documents,
 /// on ne retrouve plus rien. Les dossiers s'imbriquent, et une ressource se
 /// dépose dans celui qu'on veut — ou à la racine, comme avant.
+/// Une ressource qu'une personne a ouverte : de quoi lui montrer où elle en
+/// est dans un dossier. Tenu par personne, et non par entreprise : deux
+/// collègues n'avancent pas du même pas.
+model LectureRessource {
+  id String @id @default(cuid())
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, resourceId])
+  @@index([resourceId])
+  @@map("lectures_ressources")
+}
+
 model DossierRessource {
   id        String  @id @default(cuid())
   nom       String

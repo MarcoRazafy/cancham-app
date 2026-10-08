@@ -624,6 +624,21 @@ export async function getResources(
           ).map((a) => a.resourceId),
         )
       : new Set<string>();
+  // Ce qu'un membre a déjà ouvert : la vue d'un dossier le coche.
+  const lues =
+    user && user.role !== "admin" && rows.length
+      ? new Set(
+          (
+            await prisma.lectureRessource.findMany({
+              where: {
+                userId: user.id,
+                resourceId: { in: rows.map((r) => r.id) },
+              },
+              select: { resourceId: true },
+            })
+          ).map((l) => l.resourceId),
+        )
+      : new Set<string>();
   return rows.map((r) => ({
     id: r.id,
     titre: r.titre,
@@ -633,6 +648,7 @@ export async function getResources(
     date: toISODate(r.date),
     type: r.type,
     prix: r.prix,
+    lue: lues.has(r.id),
     description: r.description,
     commentaires: versCommentaires(r.commentaires),
     cover: r.cover,

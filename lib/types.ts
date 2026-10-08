@@ -326,6 +326,8 @@ export interface Resource {
    * été ouvert à son entreprise. L'équipe ouvre tout.
    */
   accessible?: boolean;
+  /** Déjà ouverte par la personne connectée. Suivi pour les membres seulement. */
+  lue?: boolean;
 }
 
 /**

@@ -11,7 +11,8 @@ import { estCheminFerme, normaliserLien, normaliserSite } from "@/lib/liens";
 import { ADRESSE_PLATEFORME, urlPublique } from "@/lib/courriel";
 import { headers } from "next/headers";
 import { exigerEquipe } from "@/lib/autorisations";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, utilisateurConnecte } from "@/lib/session";
+import { verifierAcces } from "@/lib/acces-ressources";
 import {
   FichierRefuse,
   couvertureDepuisPage,
@@ -794,6 +795,31 @@ export async function enregistrerRessource(formData: FormData) {
     "/admin/ressources",
     id ? `« ${titre} » mise à jour` : `« ${titre} » ajoutée à la bibliothèque`,
   );
+}
+
+/**
+ * Note qu'un membre a ouvert une ressource : la vue de son dossier la coche
+ * et avance sa progression.
+ *
+ * Appelée par la page de lecture une fois affichée. L'identifiant reçu ne
+ * fait pas foi : on ne note que ce que la personne a vraiment le droit de
+ * lire. L'équipe n'a pas de progression à tenir.
+ */
+export async function marquerRessourceLue(resourceId: string) {
+  const user = await utilisateurConnecte();
+  if (!user || user.role === "admin") return;
+  if (!(await verifierAcces(resourceId)).ok) return;
+
+  try {
+    await prisma.lectureRessource.create({
+      data: { userId: user.id, resourceId },
+    });
+  } catch (e) {
+    // Déjà notée : rien à faire, et rien à rafraîchir.
+    if ((e as { code?: string }).code === "P2002") return;
+    throw e;
+  }
+  revalidatePath("/membre/ressources");
 }
 
 /**

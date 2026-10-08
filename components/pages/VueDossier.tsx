@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BookOpen,
   CalendarDays,
+  CheckCircle2,
   ChevronDown,
   FileText,
   Folder,
@@ -162,11 +163,16 @@ export async function VueDossier({
     arborescence,
   };
 
-  // « Commencer » mène à la première ressource qu'on peut ouvrir, dans
-  // l'ordre où la page les montre.
-  const premiere = affichees.find(
+  // Le bouton du bandeau mène à la première ressource qu'on peut ouvrir,
+  // dans l'ordre où la page les montre — pour un membre qui a commencé, la
+  // première qu'il n'a pas encore ouverte.
+  const ouvrables = affichees.filter(
     (r) => r.pret && (admin || (r.accessible ?? r.type === "gratuit")),
   );
+  const premiere = ouvrables.find((r) => !r.lue) ?? ouvrables[0];
+  // Où le membre en est : ce qu'il a ouvert, sur tout ce que le dossier range.
+  const lues = toutes.filter((r) => r.lue).length;
+  const termine = toutes.length > 0 && lues === toutes.length;
   const couverture = toutes.find((r) => r.cover);
   const videos = toutes.filter((r) => r.fmt === "Vidéo").length;
 
@@ -222,7 +228,8 @@ export async function VueDossier({
               href={`/${space}/ressources/${premiere.id}`}
               className="btn-action mt-6 no-underline shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)]"
             >
-              Commencer <ArrowRight size={15} />
+              {admin || !lues ? "Commencer" : termine ? "Revoir" : "Continuer"}{" "}
+              <ArrowRight size={15} />
             </Link>
           ) : null}
         </div>
@@ -301,10 +308,37 @@ export async function VueDossier({
               }
               icon={<FolderOpen size={28} />}
             />
-            <div className="mt-3.5 text-[14.5px] font-semibold text-ink">
-              {pluriel(toutes.length, "ressource")} dans ce dossier
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            {admin ? (
+              <div className="mt-3.5 text-[14.5px] font-semibold text-ink">
+                {pluriel(toutes.length, "ressource")} dans ce dossier
+              </div>
+            ) : (
+              /* Où le membre en est, comme sur la page d'un cours. */
+              <>
+                <div className="mt-3.5 text-[14.5px] font-semibold text-ink">
+                  {lues > 1
+                    ? `${lues} ressources consultées`
+                    : `${lues} ressource consultée`}{" "}
+                  sur {toutes.length}
+                </div>
+                <div
+                  role="progressbar"
+                  aria-label="Ressources consultées dans ce dossier"
+                  aria-valuemin={0}
+                  aria-valuemax={toutes.length}
+                  aria-valuenow={lues}
+                  className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-3"
+                >
+                  <div
+                    className="h-full rounded-full bg-success transition-[width] duration-500"
+                    style={{
+                      width: `${toutes.length ? (lues / toutes.length) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+              </>
+            )}
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {videos ? <Pill>{pluriel(videos, "vidéo")}</Pill> : null}
               {toutes.length - videos ? (
                 <Pill>{pluriel(toutes.length - videos, "document")}</Pill>
@@ -677,6 +711,13 @@ function Ligne({ r, ctx }: { r: Resource; ctx: Contexte }) {
             />
             <SupprimerRessourceButton resourceId={r.id} titre={r.titre} />
           </>
+        ) : r.lue ? (
+          <span
+            title="Déjà consultée"
+            className="flex h-9 w-9 items-center justify-center text-success"
+          >
+            <CheckCircle2 size={22} aria-label="Déjà consultée" />
+          </span>
         ) : accessible ? (
           // Un simple repère : sur téléphone, où il passerait seul à la
           // ligne, la ligne entière suffit à dire qu'elle s'ouvre.

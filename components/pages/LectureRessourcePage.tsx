@@ -5,6 +5,7 @@ import {
   PagesDocument,
   VideoProtegee,
 } from "@/components/LecteurProtege";
+import { MarqueLecture } from "@/components/MarqueLecture";
 import { BtnLink, Card, Kicker } from "@/components/ui";
 import { verifierAcces } from "@/lib/acces-ressources";
 import { getRessourceLisible } from "@/lib/queries";
@@ -52,6 +53,9 @@ export async function LectureRessourcePage({
           </p>
         ) : null}
       </div>
+
+      {/* Le membre qui lit avance dans son dossier : on le note. */}
+      {acces.ok && space === "membre" ? <MarqueLecture id={id} /> : null}
 
       {acces.ok ? (
         <LecteurProtege>
