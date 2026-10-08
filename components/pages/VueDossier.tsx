@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowRight,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -114,8 +113,7 @@ const filtrer = (
 /**
  * Un dossier de la bibliothèque, ouvert : il se présente comme un parcours.
  *
- * En tête, un bandeau à son nom, sur sa couverture, qui mène droit à sa
- * première ressource.
+ * En tête, un bandeau à son nom, sur sa couverture.
  * Dessous, ce qu'il range : chacun de ses sous-dossiers est une section
  * qu'on déplie, ses ressources des lignes — vignette, titre, description —
  * avec, à droite, ce qu'on peut en faire. La colonne de côté porte sa
@@ -181,17 +179,9 @@ export async function VueDossier({
     arborescence,
   };
 
-  // Le bouton du bandeau mène à la première ressource qu'on peut ouvrir,
-  // dans l'ordre où la page les montre — pour un membre qui a commencé, la
-  // première qu'il n'a pas encore ouverte.
-  const ouvrables = affichees.filter(
-    (r) => r.pret && (admin || (r.accessible ?? r.type === "gratuit")),
-  );
-  const premiere = ouvrables.find((r) => !r.terminee) ?? ouvrables[0];
   // Où le membre en est : chaque ressource est une étape, terminée quand il
   // l'a dit en fin de lecture.
   const terminees = toutes.filter((r) => r.terminee).length;
-  const termine = toutes.length > 0 && terminees === toutes.length;
   const couverture = toutes.find((r) => r.cover);
   const videos = toutes.filter((r) => r.fmt === "Vidéo").length;
 
@@ -218,9 +208,9 @@ export async function VueDossier({
       {/* ---------- Le bandeau ---------- */}
       <section className="relative mb-5 overflow-hidden rounded-[var(--radius-l)] bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_26%,#0f1d2c_56%,#1b7e3e_88%,#0f5028_100%)] px-6 py-12 text-center text-white md:py-[68px]">
         {/* La couverture du dossier, quand il en a une : elle remplit le
-            bandeau, sous un voile aux couleurs de la charte qui garde le
-            titre lisible quelle que soit l'image. Sans elle, le dégradé du
-            bandeau suffit. */}
+            bandeau, sous un voile léger aux couleurs de la charte — juste
+            de quoi garder le titre lisible, sans éteindre l'image. Sans
+            elle, le dégradé du bandeau suffit. */}
         {dossier.cover ? (
           <>
             <Image
@@ -233,23 +223,17 @@ export async function VueDossier({
             />
             <div
               aria-hidden
-              className="absolute inset-0 bg-[linear-gradient(135deg,rgb(139_10_31/0.78)_0%,rgb(15_29_44/0.74)_52%,rgb(15_80_40/0.78)_100%)]"
+              className="absolute inset-0 bg-[linear-gradient(135deg,rgb(139_10_31/0.42)_0%,rgb(15_29_44/0.4)_52%,rgb(15_80_40/0.42)_100%)]"
             />
           </>
         ) : null}
-        {/* La grille fine de la charte, à peine visible. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255/0.05)_1px,transparent_1px)] bg-[size:56px_56px]"
-        />
         <div className="relative mx-auto max-w-[720px]">
-          <span className="text-[11.3px] font-bold uppercase tracking-[0.16em] text-white/80">
-            Dossier{dossier.restreint ? " · accès réservé" : ""}
-          </span>
-          <h1 className="m-0 mt-2 text-[clamp(26px,3.4vw,40px)] leading-[1.15] text-white [overflow-wrap:anywhere]">
+          {/* Une ombre courte sous le texte : sur une photo claire, le voile
+              léger ne suffirait pas. */}
+          <h1 className="m-0 text-[clamp(26px,3.4vw,40px)] leading-[1.15] text-white [overflow-wrap:anywhere] [text-shadow:0_2px_14px_rgb(0_0_0/0.55)]">
             {dossier.nom}
           </h1>
-          <p className="m-0 mt-2.5 text-[14.5px] text-white/85">
+          <p className="m-0 mt-2.5 text-[14.5px] text-white/90 [text-shadow:0_1px_8px_rgb(0_0_0/0.6)]">
             {toutes.length
               ? [
                   pluriel(toutes.length, "ressource"),
@@ -262,19 +246,6 @@ export async function VueDossier({
                   .join(" · ")
               : "Ce dossier ne contient encore aucune ressource."}
           </p>
-          {premiere ? (
-            <Link
-              href={`/${space}/ressources/${premiere.id}`}
-              className="btn-action mt-6 no-underline shadow-[0_14px_30px_-16px_rgb(0_0_0/0.8)]"
-            >
-              {admin || !terminees
-                ? "Commencer"
-                : termine
-                  ? "Revoir"
-                  : "Continuer"}{" "}
-              <ArrowRight size={15} />
-            </Link>
-          ) : null}
         </div>
       </section>
 
