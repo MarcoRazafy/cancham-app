@@ -70,11 +70,13 @@ export async function LectureRessourcePage({
         ) : null}
       </div>
 
-      {acces.ok && page ? (
-        <PageRessource id={id} titre={r.titre} blocs={r.blocs} />
-      ) : acces.ok ? (
+      {acces.ok ? (
         <LecteurProtege>
-          {video ? (
+          {page ? (
+            // Une page composée se lit sous la même protection qu'un
+            // document : son texte ne se sélectionne pas, ne se copie pas.
+            <PageRessource id={id} titre={r.titre} blocs={r.blocs} />
+          ) : video ? (
             <VideoProtegee id={id} titre={r.titre} />
           ) : (
             <PagesDocument

@@ -13,7 +13,9 @@ import { ShieldCheck } from "lucide-react";
  *
  * Côté serveur, déjà : le fichier ne quitte jamais le stockage. Un document
  * arrive ici page par page, en images, sans couche de texte à sélectionner.
- * Une vidéo arrive par morceaux, sans lien de téléchargement.
+ * Une vidéo arrive par morceaux, sans lien de téléchargement. Une page
+ * composée dans la plateforme, elle, est faite de vrai texte : c'est ce
+ * composant seul qui en empêche la sélection et la copie.
  *
  * Côté navigateur, ce composant ajoute :
  *  - pas de menu contextuel, pas de glisser-déposer, pas de sélection ;
@@ -38,8 +40,33 @@ export function LecteurProtege({ children }: { children: ReactNode }) {
         setTimeout(() => setMasque(false), 1200);
       }
     };
-    const perdre = () => setMasque(true);
-    const retrouver = () => setMasque(false);
+    /*
+     * La fenêtre perd le focus quand on la quitte — et aussi quand on clique
+     * dans le cadre d'une vidéo de la page (YouTube, Vimeo, Google Drive).
+     * Dans ce second cas on n'a rien quitté, et flouter la page empêcherait
+     * de regarder la vidéo : `hasFocus` fait la différence, il reste vrai
+     * tant que le focus est dans un cadre de la page.
+     *
+     * Une fois dans le cadre, la fenêtre ne prévient plus de rien : on
+     * regarde donc à intervalles si le focus est toujours là, jusqu'à ce
+     * qu'il revienne à la page.
+     */
+    let veille: ReturnType<typeof setInterval> | null = null;
+    const arreter = () => {
+      if (veille) clearInterval(veille);
+      veille = null;
+    };
+    const juger = () => setMasque(!document.hasFocus());
+    const perdre = () => {
+      arreter();
+      // Un instant : le temps que le focus arrive dans le cadre.
+      setTimeout(juger, 80);
+      veille = setInterval(juger, 400);
+    };
+    const retrouver = () => {
+      arreter();
+      setMasque(false);
+    };
     const visibilite = () => setMasque(document.visibilityState !== "visible");
 
     window.addEventListener("keydown", bloquer);
@@ -50,6 +77,7 @@ export function LecteurProtege({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("keydown", bloquer);
       window.removeEventListener("keyup", bloquer);
+      arreter();
       window.removeEventListener("blur", perdre);
       window.removeEventListener("focus", retrouver);
       document.removeEventListener("visibilitychange", visibilite);
@@ -67,7 +95,7 @@ export function LecteurProtege({ children }: { children: ReactNode }) {
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
         onCopy={(e) => e.preventDefault()}
-        className={`relative select-none transition-[filter] duration-200 ${
+        className={`relative select-none transition-[filter] duration-200 [-webkit-touch-callout:none] ${
           masque ? "blur-xl" : ""
         }`}
       >
