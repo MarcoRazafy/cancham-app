@@ -6,6 +6,7 @@ import {
   type Ligne,
   type Passage,
 } from "@/lib/blocs";
+import { VideoPrivee } from "./VideoPrivee";
 
 /**
  * Une page de ressource composée dans la plateforme, telle qu'on la lit.
@@ -13,8 +14,8 @@ import {
  * Le texte mis en forme est redessiné à partir de sa description — tel
  * passage en gras, tel autre en lien : aucun HTML saisi n'est injecté. Les
  * photos et les vidéos déposées se chargent par une route qui revérifie
- * l'accès ; une vidéo donnée par un lien se lit dans le cadre de son
- * hébergeur, sans quitter la page.
+ * l'accès ; une vidéo donnée par un lien se lit dans la page, sans sortie
+ * vers son hébergeur (`VideoPrivee`).
  *
  * Sans état ni effet : le même composant dessine la page côté serveur, pour
  * la lecture, et dans l'éditeur, pour l'aperçu d'une vidéo.
@@ -95,7 +96,13 @@ export function TexteMisEnForme({ lignes }: { lignes: Ligne[] }) {
   );
 }
 
-/** Une vidéo donnée par son lien, lue dans le cadre de son hébergeur. */
+/**
+ * Une vidéo donnée par son lien, dans le cadre de son hébergeur, tel quel.
+ *
+ * Pour l'aperçu de l'éditeur seulement : l'équipe y vérifie qu'elle a collé
+ * la bonne vidéo, titre compris. Les membres, eux, la lisent par
+ * `VideoPrivee`, qui ne laisse aucune sortie vers l'hébergeur.
+ */
 export function VideoEnLien({ url, titre }: { url: string; titre: string }) {
   const video = lienVideo(url);
   if (!video) return null;
@@ -163,7 +170,8 @@ function BlocLu({
   }
 
   if (bloc.source === "lien") {
-    return <VideoEnLien url={bloc.url} titre={titre} />;
+    // À la lecture, l'adresse de la vidéo ne doit pas servir de sortie.
+    return <VideoPrivee url={bloc.url} titre={titre} />;
   }
   return (
     <div className="overflow-hidden rounded-[var(--radius-m)] bg-black">

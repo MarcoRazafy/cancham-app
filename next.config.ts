@@ -30,7 +30,9 @@ function politiqueContenu(dev: boolean): string {
     // le certificat.
     "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://drive.google.com",
     "form-action 'self'",
-    "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com",
+    // `i.ytimg.com` : l'image d'attente d'une vidéo YouTube, sous notre
+    // propre bouton de lecture.
+    "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://i.ytimg.com",
     "media-src 'self' blob:",
     "font-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
