@@ -12,7 +12,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowRight, Box, Building2, Globe, Star } from "lucide-react";
 import { CarrouselCartes } from "@/components/public/CarrouselCartes";
-import { SURVOL_CARTE } from "@/components/public/Rangee";
+import { Rangee, SURVOL_CARTE } from "@/components/public/Rangee";
 import { FormulaireInfolettre } from "@/components/public/FormulaireInfolettre";
 import { LienAncre } from "@/components/public/LienAncre";
 import { CarteActualite } from "@/components/public/CarteActualite";
@@ -229,6 +229,34 @@ function CarteElu({
 }
 
 /**
+ * L'équipe permanente, salariée — à ne pas confondre avec le Conseil, qui est
+ * élu. D'où le bloc à part et le vert : ce sont les personnes qu'un membre a
+ * au téléphone.
+ */
+const EQUIPE = [
+  {
+    nom: "Alice RATISBONNE",
+    role: "Directrice Exécutive",
+    photo: "/equipe/alice-ratisbonne.jpg",
+  },
+  {
+    nom: "Tahina RAZAFIMAMONJY",
+    role: "Représentant au Canada",
+    photo: "/equipe/tahina-razafimamonjy.jpg",
+  },
+  {
+    nom: "Narindrasoa RAVOAVINIRINA",
+    role: "Adjointe de direction",
+    photo: "/equipe/rindra-razafindrakoto.jpg",
+  },
+  {
+    nom: "Onja ANDRIATSITOHAINA",
+    role: "Chargée administrative",
+    photo: "/equipe/onja-randrianarisoa.jpg",
+  },
+];
+
+/**
  * Le filet rouge-vert de la charte, posé sur le bleu nuit.
  *
  * Les teintes pleines y perdent : le vert #007140 passe pour du gris foncé.
@@ -237,6 +265,10 @@ function CarteElu({
  */
 const FILET =
   "bg-[linear-gradient(90deg,var(--marque-rouge-clair),var(--marque-vert-clair))]";
+
+/** Le même filet, tout en vert : il signale l'équipe salariée, pas les élus. */
+const FILET_VERT =
+  "bg-[linear-gradient(90deg,var(--marque-vert-clair),#3fc98a)]";
 
 /** L'accueil porte le titre du site, sans suffixe : il l'est déjà. */
 export const metadata: Metadata = {
@@ -896,6 +928,68 @@ export default async function PublicHome() {
                 />
               ))}
             </div>
+          </div>
+
+          {/* ---------- L'équipe permanente ---------- */}
+          {/*
+            Dans son propre cadre, et en vert : le Conseil est élu, l'équipe
+            est salariée. Ce sont deux choses différentes, et ce sont ces
+            personnes-là qu'un membre a au téléphone.
+          */}
+          <div className="scene reveler relative mt-16 overflow-hidden rounded-3xl bg-[var(--marque-nuit-2)] p-7 md:p-12">
+            <span
+              aria-hidden
+              style={retard(250)}
+              className={`reveler reveler-trait absolute inset-x-0 top-0 h-1 ${FILET_VERT}`}
+            />
+
+            <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
+              <div>
+                <div className="surtitre text-marque-vert">
+                  L’équipe exécutive
+                </div>
+                <h3 className={`${TITRE_BLOC} mt-2.5`}>
+                  Au quotidien, à vos côtés.
+                </h3>
+              </div>
+              <p className="m-0 max-w-[52ch] text-[15.5px] leading-[1.6] text-white/72">
+                L’équipe permanente met en œuvre les orientations du Conseil et
+                accompagne chaque membre dans ses projets.
+              </p>
+            </div>
+
+            <Rangee
+              ecart={28}
+              className="mt-8"
+              largeur="w-[78cqw] sm:w-[calc((100cqw-var(--ecart))/2)] lg:w-[calc((100cqw-3*var(--ecart))/4)]"
+            >
+              {EQUIPE.map((m, i) => (
+                <article
+                  key={m.nom}
+                  style={retard(200 + i * 70)}
+                  className={`reveler reveler-zoom ${SURVOL_CARTE}`}
+                >
+                  <Image
+                    src={m.photo}
+                    alt={`Portrait de ${m.nom}`}
+                    width={900}
+                    height={900}
+                    sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 290px"
+                    className="block w-full h-[clamp(210px,20vw,260px)] object-cover object-[center_20%] rounded-2xl"
+                  />
+                  <span
+                    aria-hidden
+                    className={`block w-12 h-1 rounded-full mt-4 ${FILET_VERT}`}
+                  />
+                  <div className="surtitre mt-4 text-marque-vert">{m.role}</div>
+                  <h3
+                    className={`${TITRE_GRAS} m-0 mt-2 text-[19px] leading-[1.3]`}
+                  >
+                    {m.nom}
+                  </h3>
+                </article>
+              ))}
+            </Rangee>
           </div>
         </div>
       </section>
