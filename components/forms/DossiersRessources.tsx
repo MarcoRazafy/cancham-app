@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -96,7 +95,7 @@ function ChampsPresentation({ dossier: d }: { dossier?: DossierRessource }) {
         retirer="retirerCover"
         apercu={d?.cover}
         libelle="Couverture"
-        aide="Facultatif. L’image du dossier, sur sa page et sur sa carte. Paysage de préférence."
+        aide="Facultatif. L’image du dossier, en tête de sa page. Paysage de préférence."
       />
       <fieldset className="m-0 flex flex-col gap-3.5 rounded-[var(--radius-m)] border border-line p-4">
         <legend className="px-1.5 text-[12.3px] font-semibold text-muted">
@@ -246,19 +245,9 @@ export function CarteDossier({
         href={`/${space}/ressources?dossier=${d.id}`}
         className="flex min-w-0 flex-1 items-center gap-3 no-underline"
       >
-        {d.cover ? (
-          <Image
-            src={d.cover}
-            alt=""
-            width={96}
-            height={96}
-            className="h-10 w-10 shrink-0 rounded-[var(--radius-s)] object-cover"
-          />
-        ) : (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-surface-2 text-accent">
-            {d.restreint ? <FolderLock size={18} /> : <Folder size={18} />}
-          </span>
-        )}
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-s)] bg-surface-2 text-accent">
+          {d.restreint ? <FolderLock size={18} /> : <Folder size={18} />}
+        </span>
         <span className="min-w-0">
           <span className="block truncate text-[14.5px] font-semibold text-ink">
             {d.nom}

@@ -832,15 +832,27 @@ async function prochainRang(dossierId: string | null): Promise<number> {
 }
 
 /**
- * Déplace une ressource parmi celles de son dossier : d'un rang, tout en
- * tête, ou tout au bout.
+ * Enregistre les rangs d'une liste : 1, 2, 3… À partir de 1, parce que tant
+ * que les rangs sont à 0, c'est la date qui range.
+ */
+async function numeroter(ids: string[]) {
+  await prisma.$transaction(
+    ids.map((id, rang) =>
+      prisma.resource.update({ where: { id }, data: { ordre: rang + 1 } }),
+    ),
+  );
+}
+
+/**
+ * Met une ressource en tête ou au bout de celles de son dossier — depuis
+ * son menu.
  *
  * Appelée avec des arguments, sans formulaire ni redirection : la page se
- * rafraîchit sur place, et l'on peut enchaîner les déplacements.
+ * rafraîchit sur place.
  */
 export async function deplacerRessource(
   id: string,
-  vers: "haut" | "bas" | "premier" | "dernier",
+  vers: "premier" | "dernier",
 ) {
   await exigerEquipe();
   const r = await prisma.resource.findUnique({
@@ -849,33 +861,48 @@ export async function deplacerRessource(
   });
   if (!r) return;
 
-  // La liste telle que la page la montre.
-  const liste = await prisma.resource.findMany({
-    where: { dossierId: r.dossierId },
-    orderBy: ORDRE_RESSOURCES,
-    select: { id: true },
-  });
-  const i = liste.findIndex((x) => x.id === id);
-  const j =
-    vers === "premier"
-      ? 0
-      : vers === "dernier"
-        ? liste.length - 1
-        : i + (vers === "haut" ? -1 : 1);
-  if (i < 0 || j < 0 || j >= liste.length || j === i) return;
+  // La liste telle que la page la montre, sans elle.
+  const autres = (
+    await prisma.resource.findMany({
+      where: { dossierId: r.dossierId, NOT: { id } },
+      orderBy: ORDRE_RESSOURCES,
+      select: { id: true },
+    })
+  ).map((x) => x.id);
+  await numeroter(vers === "premier" ? [id, ...autres] : [...autres, id]);
+  revalideTout();
+}
 
-  const [deplacee] = liste.splice(i, 1);
-  liste.splice(j, 0, deplacee);
-  // Renuméroter toute la liste, à partir de 1 : tant que les rangs sont à 0,
-  // c'est la date qui range, et un seul rang changé ne déplacerait rien.
-  await prisma.$transaction(
-    liste.map((x, rang) =>
-      prisma.resource.update({
-        where: { id: x.id },
-        data: { ordre: rang + 1 },
-      }),
-    ),
-  );
+/**
+ * Range les ressources d'un dossier dans l'ordre reçu — celui que l'équipe
+ * vient de composer en glissant les lignes.
+ *
+ * La liste reçue ne fait pas foi : on n'y garde que les ressources du
+ * dossier de la première, et celles qu'elle aurait oubliées — ajoutées
+ * entre-temps par un collègue — prennent place à la suite, dans leur ordre.
+ */
+export async function ordonnerRessources(ids: string[]) {
+  await exigerEquipe();
+  if (!Array.isArray(ids) || !ids.length || ids.length > 500) return;
+
+  const premiere = await prisma.resource.findUnique({
+    where: { id: String(ids[0]) },
+    select: { dossierId: true },
+  });
+  if (!premiere) return;
+
+  const duDossier = (
+    await prisma.resource.findMany({
+      where: { dossierId: premiere.dossierId },
+      orderBy: ORDRE_RESSOURCES,
+      select: { id: true },
+    })
+  ).map((x) => x.id);
+  const connues = new Set(duDossier);
+  const voulues = [...new Set(ids.map(String))].filter((id) => connues.has(id));
+  const placees = new Set(voulues);
+
+  await numeroter([...voulues, ...duDossier.filter((id) => !placees.has(id))]);
   revalideTout();
 }
 

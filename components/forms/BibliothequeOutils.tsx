@@ -6,8 +6,6 @@ import {
   ArrowDownToLine,
   ArrowUpToLine,
   CheckSquare,
-  ChevronDown,
-  ChevronUp,
   ClipboardPaste,
   Copy,
   Eye,
@@ -165,62 +163,6 @@ export function MenuRessource({
         </>
       )}
     </Modal>
-  );
-}
-
-/**
- * Monter ou descendre une ressource d'un rang, d'un clic, sur sa ligne.
- *
- * Deux petites flèches plutôt qu'un menu : ranger un dossier, c'est une
- * suite de petits déplacements, et la page se rafraîchit sur place.
- *
- * Elles se posent dans une colonne, de part et d'autre de la case à cocher
- * de la ligne : « monter » en tête (`order-1`), « descendre » au pied
- * (`order-3`).
- */
-export function OrdreRessource({
-  id,
-  titre,
-  premier,
-  dernier,
-}: {
-  id: string;
-  titre: string;
-  /** Déjà en tête : rien au-dessus. */
-  premier: boolean;
-  /** Déjà au bout : rien en dessous. */
-  dernier: boolean;
-}) {
-  const [enCours, demarrer] = useTransition();
-  const fleche =
-    "flex h-[18px] w-6 cursor-pointer items-center justify-center rounded-[4px] border-0 bg-transparent p-0 text-muted hover:bg-surface-3 hover:text-ink disabled:cursor-default disabled:opacity-25 disabled:hover:bg-transparent";
-  const deplacer = (vers: "haut" | "bas") =>
-    demarrer(() => {
-      void deplacerRessource(id, vers);
-    });
-  return (
-    <>
-      <button
-        type="button"
-        disabled={premier || enCours}
-        onClick={() => deplacer("haut")}
-        aria-label={`Monter « ${titre} »`}
-        title="Monter"
-        className={`${fleche} order-1`}
-      >
-        <ChevronUp size={15} />
-      </button>
-      <button
-        type="button"
-        disabled={dernier || enCours}
-        onClick={() => deplacer("bas")}
-        aria-label={`Descendre « ${titre} »`}
-        title="Descendre"
-        className={`${fleche} order-3`}
-      >
-        <ChevronDown size={15} />
-      </button>
-    </>
   );
 }
 

@@ -643,8 +643,8 @@ model LectureRessource {
 model DossierRessource {
   id          String  @id @default(cuid())
   nom         String
-  /// Visuel du dossier, sur sa vue et sur sa carte. `null` = la couverture
-  /// de sa première ressource, faute de mieux.
+  /// Visuel du dossier, sur sa vue. `null` = le bandeau garde son dégradé,
+  /// et la colonne de côté prend la couverture d'une de ses ressources.
   cover       String?
   /// Qui a conçu le dossier, présenté à côté de son contenu. Tout est
   /// facultatif ; sans nom, l'encart n'apparaît pas.

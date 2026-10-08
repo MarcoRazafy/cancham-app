@@ -25,11 +25,11 @@ import {
   BarreSelection,
   BoutonAcces,
   MenuRessource,
-  OrdreRessource,
   type AccesOuvert,
   type MembreChoisissable,
 } from "@/components/forms/BibliothequeOutils";
 import { DownloadResourceButton } from "@/components/forms/ContentForms";
+import { ListeTriable } from "@/components/forms/ListeTriable";
 import {
   BoutonNouveauDossier,
   CommandesDossier,
@@ -80,8 +80,8 @@ interface Contexte {
   arborescence: Arborescence;
   /**
    * On peut ranger les ressources : côté équipe, et sans filtre de tarif —
-   * une liste filtrée ne montre pas tous les rangs, et monter « d'un cran »
-   * n'y voudrait plus rien dire.
+   * une liste filtrée ne montre pas tous les rangs, et y déposer une ligne
+   * « entre deux autres » ne voudrait plus rien dire.
    */
   rangeable: boolean;
 }
@@ -644,6 +644,14 @@ function SousSection({
   );
 }
 
+/** Une ligne : la même, qu'on puisse la déplacer ou non. */
+const CLASSE_LIGNE =
+  "relative flex flex-wrap items-start gap-x-4 gap-y-3 border-t border-line px-4 py-4 hover:bg-surface-2 sm:flex-nowrap sm:px-6";
+
+/**
+ * Les ressources d'un dossier, en lignes. L'équipe les range à la souris
+ * (`ListeTriable`) ; pour le membre, et sous un filtre, la liste est fixe.
+ */
 function Lignes({
   ressources,
   ctx,
@@ -651,16 +659,27 @@ function Lignes({
   ressources: Resource[];
   ctx: Contexte;
 }) {
+  if (ctx.rangeable && ressources.length > 1) {
+    return (
+      <ListeTriable
+        // L'ordre enregistré a changé : la liste repart de lui.
+        key={ressources.map((r) => r.id).join("|")}
+        ids={ressources.map((r) => r.id)}
+        titres={ressources.map((r) => r.titre)}
+        classeLigne={CLASSE_LIGNE}
+      >
+        {ressources.map((r) => (
+          <ContenuLigne key={r.id} r={r} ctx={ctx} />
+        ))}
+      </ListeTriable>
+    );
+  }
   return (
     <ul className="m-0 list-none p-0">
-      {ressources.map((r, i) => (
-        <Ligne
-          key={r.id}
-          r={r}
-          ctx={ctx}
-          premier={i === 0}
-          dernier={i === ressources.length - 1}
-        />
+      {ressources.map((r) => (
+        <li key={r.id} className={CLASSE_LIGNE}>
+          <ContenuLigne r={r} ctx={ctx} />
+        </li>
       ))}
     </ul>
   );
@@ -670,24 +689,14 @@ const BTN_LIGNE =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink";
 
 /**
- * Une ressource, en ligne : sa vignette, son titre, sa description, et à
- * droite ce qu'on peut en faire.
+ * Ce qu'une ligne montre d'une ressource : sa vignette, son titre, sa
+ * description, et à droite ce qu'on peut en faire. L'élément de liste qui
+ * l'entoure vient de l'appelant — fixe, ou déplaçable.
  *
  * Quand on peut l'ouvrir, toute la ligne y mène — c'est le lien du titre,
  * étendu à la ligne. Les boutons restent au-dessus de lui.
  */
-function Ligne({
-  r,
-  ctx,
-  premier,
-  dernier,
-}: {
-  r: Resource;
-  ctx: Contexte;
-  /** Sa place dans la liste : les flèches s'éteignent aux deux bouts. */
-  premier: boolean;
-  dernier: boolean;
-}) {
+function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
   const { space, admin } = ctx;
   const video = r.fmt === "Vidéo";
   const accessible = admin || (r.accessible ?? r.type === "gratuit");
@@ -695,35 +704,21 @@ function Ligne({
   const adresse = `/${space}/ressources/${r.id}`;
 
   return (
-    <li className="relative flex flex-wrap items-start gap-x-4 gap-y-3 border-t border-line px-4 py-4 hover:bg-surface-2 sm:flex-nowrap sm:px-6">
-      {/* La colonne de l'équipe : la case de la sélection, entre les deux
-          flèches qui montent et descendent la ressource d'un rang. */}
+    <>
       {admin ? (
-        <div className="relative z-10 flex shrink-0 flex-col items-center gap-0.5 self-center">
-          {ctx.rangeable ? (
-            <OrdreRessource
-              id={r.id}
-              titre={r.titre}
-              premier={premier}
-              dernier={dernier}
-            />
-          ) : null}
-          <label
-            title="Sélectionner"
-            // `order-2` : entre « monter » (1) et « descendre » (3), que
-            // `OrdreRessource` rend ensemble.
-            className="order-2 flex h-6 w-6 cursor-pointer items-center justify-center"
-          >
-            <input
-              type="checkbox"
-              name="ressource"
-              value={r.id}
-              form={FORMULAIRE}
-              aria-label={`Sélectionner « ${r.titre} »`}
-              className="h-4 w-4 accent-[var(--accent)]"
-            />
-          </label>
-        </div>
+        <label
+          title="Sélectionner"
+          className="relative z-10 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center self-center"
+        >
+          <input
+            type="checkbox"
+            name="ressource"
+            value={r.id}
+            form={FORMULAIRE}
+            aria-label={`Sélectionner « ${r.titre} »`}
+            className="h-4 w-4 accent-[var(--accent)]"
+          />
+        </label>
       ) : null}
 
       {/* La couverture est tirée du fichier : la première page d'un
@@ -847,6 +842,6 @@ function Ligne({
           </>
         )}
       </div>
-    </li>
+    </>
   );
 }
