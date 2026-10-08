@@ -100,7 +100,8 @@ const filtrer = (
 /**
  * Un dossier de la bibliothèque, ouvert : il se présente comme un parcours.
  *
- * En tête, un bandeau à son nom, qui mène droit à sa première ressource.
+ * En tête, un bandeau à son nom, sur sa couverture, qui mène droit à sa
+ * première ressource.
  * Dessous, ce qu'il range : chacun de ses sous-dossiers est une section
  * qu'on déplie, ses ressources des lignes — vignette, titre, description —
  * avec, à droite, ce qu'on peut en faire. La colonne de côté porte sa
@@ -200,6 +201,26 @@ export async function VueDossier({
 
       {/* ---------- Le bandeau ---------- */}
       <section className="relative mb-5 overflow-hidden rounded-[var(--radius-l)] bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_26%,#0f1d2c_56%,#1b7e3e_88%,#0f5028_100%)] px-6 py-12 text-center text-white md:py-[68px]">
+        {/* La couverture du dossier, quand il en a une : elle remplit le
+            bandeau, sous un voile aux couleurs de la charte qui garde le
+            titre lisible quelle que soit l'image. Sans elle, le dégradé du
+            bandeau suffit. */}
+        {dossier.cover ? (
+          <>
+            <Image
+              src={dossier.cover}
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1200px"
+              className="object-cover"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-[linear-gradient(135deg,rgb(139_10_31/0.78)_0%,rgb(15_29_44/0.74)_52%,rgb(15_80_40/0.78)_100%)]"
+            />
+          </>
+        ) : null}
         {/* La grille fine de la charte, à peine visible. */}
         <div
           aria-hidden
