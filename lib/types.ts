@@ -349,6 +349,16 @@ export interface DossierRessource {
   acces: string[];
 }
 
+/**
+ * Une section de la vue d'un dossier : un sous-dossier, ce qu'il range, et
+ * les dossiers qu'il range à son tour.
+ */
+export interface SectionDossier {
+  dossier: DossierRessource;
+  ressources: Resource[];
+  sections: SectionDossier[];
+}
+
 /** Un maillon du fil d'Ariane, de la racine au dossier ouvert. */
 export interface MaillonDossier {
   id: string;

@@ -54,6 +54,7 @@ import type {
   Offer,
   Registration,
   DossierRessource,
+  SectionDossier,
   MemberStatus,
   MaillonDossier,
   Resource,
@@ -583,9 +584,10 @@ export async function getResources(
   type?: "gratuit" | "payant",
   /**
    * Le dossier où regarder. `undefined` = toute la bibliothèque, à plat ;
-   * `null` = la racine seulement ; une chaîne = ce dossier seulement.
+   * `null` = la racine seulement ; une chaîne = ce dossier seulement ; une
+   * liste = ces dossiers-là, pour lire un dossier et ce qu'il range.
    */
-  dossierId?: string | null,
+  dossierId?: string | null | string[],
   /** Recherche sur le titre. Une recherche traverse tous les dossiers. */
   recherche?: string,
 ): Promise<Resource[]> {
@@ -597,7 +599,11 @@ export async function getResources(
       ...(type ? { type } : {}),
       // Chercher dans un seul dossier n'aurait pas de sens : on cherche
       // précisément ce qu'on ne sait plus où l'on a rangé.
-      ...(dossierId !== undefined && !q ? { dossierId } : {}),
+      ...(dossierId !== undefined && !q
+        ? {
+            dossierId: Array.isArray(dossierId) ? { in: dossierId } : dossierId,
+          }
+        : {}),
       ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
     },
     include: { commentaires: commentairesInclude() },
@@ -718,6 +724,104 @@ export async function getSousDossiers(
     // Qui d'autre y a accès ne regarde que l'équipe.
     acces: equipe ? d.acces.map((a) => a.memberId) : [],
   }));
+}
+
+/**
+ * Ce qu'un dossier range sous lui, section par section : chaque sous-dossier
+ * avec ses ressources et ses propres sous-dossiers. C'est ce que la vue d'un
+ * dossier déplie.
+ *
+ * Deux requêtes pour tout l'arbre, quel que soit le nombre de niveaux : les
+ * dossiers d'un côté, les ressources de l'autre, et l'on assemble ici.
+ */
+export async function getSectionsDossier(
+  parentId: string,
+): Promise<SectionDossier[]> {
+  const user = await utilisateurConnecte();
+  const equipe = user?.role === "admin";
+  const interdits = new Set(await dossiersInterdits(user));
+  const tous = (
+    await prisma.dossierRessource.findMany({
+      orderBy: { nom: "asc" },
+      select: {
+        id: true,
+        nom: true,
+        parentId: true,
+        restreint: true,
+        acces: { select: { memberId: true } },
+      },
+    })
+  ).filter((d) => !interdits.has(d.id));
+
+  const enfantsDe = new Map<string, typeof tous>();
+  for (const d of tous) {
+    if (d.parentId) {
+      enfantsDe.set(d.parentId, [...(enfantsDe.get(d.parentId) ?? []), d]);
+    }
+  }
+  const ids: string[] = [];
+  const collecter = (id: string) => {
+    for (const d of enfantsDe.get(id) ?? []) {
+      ids.push(d.id);
+      collecter(d.id);
+    }
+  };
+  collecter(parentId);
+  if (!ids.length) return [];
+
+  const parDossier = new Map<string, Resource[]>();
+  for (const r of await getResources(undefined, ids)) {
+    if (!r.dossierId) continue;
+    parDossier.set(r.dossierId, [...(parDossier.get(r.dossierId) ?? []), r]);
+  }
+
+  const construire = (id: string): SectionDossier[] =>
+    (enfantsDe.get(id) ?? []).map((d) => {
+      const sections = construire(d.id);
+      const ressources = parDossier.get(d.id) ?? [];
+      return {
+        dossier: {
+          id: d.id,
+          nom: d.nom,
+          parentId: d.parentId,
+          dossiers: sections.length,
+          ressources: ressources.length,
+          restreint: d.restreint,
+          acces: equipe ? d.acces.map((a) => a.memberId) : [],
+        },
+        ressources,
+        sections,
+      };
+    });
+  return construire(parentId);
+}
+
+/** Le dossier ouvert, tel que sa propre vue le présente. `null` s'il n'existe plus. */
+export async function getDossierOuvert(
+  id: string,
+): Promise<DossierRessource | null> {
+  const user = await utilisateurConnecte();
+  const d = await prisma.dossierRessource.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      nom: true,
+      parentId: true,
+      restreint: true,
+      acces: { select: { memberId: true } },
+      _count: { select: { enfants: true, ressources: true } },
+    },
+  });
+  if (!d) return null;
+  return {
+    id: d.id,
+    nom: d.nom,
+    parentId: d.parentId,
+    dossiers: d._count.enfants,
+    ressources: d._count.ressources,
+    restreint: d.restreint,
+    acces: user?.role === "admin" ? d.acces.map((a) => a.memberId) : [],
+  };
 }
 
 /**

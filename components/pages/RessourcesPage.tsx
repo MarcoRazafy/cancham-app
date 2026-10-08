@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  AlertTriangle,
-  ChevronRight,
-  Library,
-  Pencil,
-  Plus,
-  Search,
-} from "lucide-react";
+import { AlertTriangle, Pencil, Plus } from "lucide-react";
 import { SupprimerRessourceButton } from "@/components/forms/AdminContenuForms";
 import {
   BarrePressePapier,
@@ -18,7 +11,12 @@ import {
   BoutonNouveauDossier,
   CarteDossier,
 } from "@/components/forms/DossiersRessources";
-import { FiltreTarif } from "@/components/forms/FiltreTarif";
+import {
+  FilDossier,
+  RechercheBibliotheque,
+  type Filtre,
+} from "@/components/pages/BibliothequeCommun";
+import { VueDossier } from "@/components/pages/VueDossier";
 import { copierRessources } from "@/lib/actions/content";
 import { lirePressePapier } from "@/lib/presse-papier";
 import {
@@ -37,21 +35,14 @@ import {
 } from "@/lib/queries";
 import type { Space } from "@/lib/types";
 
-type Filtre = "tout" | "gratuit" | "payant";
-
-const TABS: { key: Filtre; label: string }[] = [
-  { key: "tout", label: "Tout" },
-  { key: "gratuit", label: "Gratuit" },
-  { key: "payant", label: "Payant" },
-];
-
 /**
  * La bibliothèque, rangée en dossiers.
  *
- * On ouvre un dossier comme on ouvre un classeur : le fil d'Ariane dit où
- * l'on se trouve, les sous-dossiers viennent d'abord, les documents dessous.
- * Un dossier introuvable — lien devenu caduc — ramène à la racine plutôt
- * que d'afficher une erreur.
+ * À la racine, les dossiers viennent d'abord, les documents dessous. Un
+ * dossier ouvert se présente autrement, comme un parcours (`VueDossier`).
+ * Une recherche traverse toute la bibliothèque et rend ses résultats en
+ * cartes, d'où qu'on l'ait lancée. Un dossier introuvable — lien devenu
+ * caduc — ramène à la racine plutôt que d'afficher une erreur.
  *
  * Les membres parcourent le même rangement ; seule l'équipe le modifie.
  */
@@ -72,6 +63,11 @@ export async function RessourcesPage({
 
   const fil = dossier ? await getFilDossier(dossier) : null;
   const dossierId = fil?.length ? fil[fil.length - 1].id : null;
+
+  // Un dossier ouvert, hors recherche : sa propre vue.
+  if (fil?.length && !recherche) {
+    return <VueDossier space={space} fil={fil} actif={actif} />;
+  }
 
   const [sousDossiers, list, counts, arborescence, membres, presse] =
     await Promise.all([
@@ -115,87 +111,20 @@ export async function RessourcesPage({
         livrables de fond sont facturés en supplément de la cotisation.
       </ViewHead>
 
-      {/*
-        Le fil d'Ariane ne s'affiche qu'une fois sorti de la racine : à la
-        racine, il ne dirait rien que le titre ne dise déjà.
-      */}
+      {/* Une recherche lancée depuis un dossier garde le chemin du retour. */}
       {fil?.length ? (
-        <nav
-          aria-label="Chemin du dossier"
-          className="mb-4 flex flex-wrap items-center gap-1 text-[13px]"
-        >
-          <Link
-            href={`/${space}/ressources`}
-            className="inline-flex items-center gap-1.5 font-semibold text-muted no-underline hover:text-accent"
-          >
-            <Library size={14} /> Bibliothèque
-          </Link>
-          {fil.map((m, i) => (
-            <span key={m.id} className="inline-flex items-center gap-1">
-              <ChevronRight size={13} className="text-faint" />
-              {i === fil.length - 1 ? (
-                <span className="font-semibold text-ink">{m.nom}</span>
-              ) : (
-                <Link
-                  href={`/${space}/ressources?dossier=${m.id}`}
-                  className="font-semibold text-muted no-underline hover:text-accent"
-                >
-                  {m.nom}
-                </Link>
-              )}
-            </span>
-          ))}
-        </nav>
+        <div className="mb-4">
+          <FilDossier space={space} fil={fil} />
+        </div>
       ) : null}
 
-      {/*
-        Un formulaire GET : la recherche vit dans l'adresse, donc elle se
-        partage, se met en favori et survit au rechargement.
-      */}
-      <form
-        method="get"
-        action={`/${space}/ressources`}
-        className="mb-4 flex flex-wrap items-center gap-2"
-      >
-        {dossierId ? (
-          <input type="hidden" name="dossier" value={dossierId} />
-        ) : null}
-        <label className="relative min-w-[220px] flex-1">
-          <Search
-            size={14}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint"
-          />
-          <input
-            type="search"
-            name="q"
-            defaultValue={recherche}
-            placeholder="Chercher un document dans toute la bibliothèque…"
-            className="w-full rounded-[var(--radius-s)] border border-line bg-surface py-2 pl-9 pr-3 text-[13.4px] text-ink placeholder:text-faint"
-          />
-        </label>
-        {/*
-          Le filtre est une liste déroulante et non des onglets : il tient à
-          côté de la recherche, où l'on cherche déjà, et il dit son compte.
-          Il se soumet tout seul — un bouton « Filtrer » de plus n'apprendrait
-          rien à personne.
-        */}
-        <FiltreTarif
-          actif={actif}
-          options={TABS.map((t) => ({
-            key: t.key,
-            label: t.label,
-            compte: counts[t.key],
-          }))}
-        />
-        {recherche || actif !== "tout" ? (
-          <Link
-            href={`/${space}/ressources${dossierId ? `?dossier=${dossierId}` : ""}`}
-            className="text-[12.8px] font-semibold text-muted no-underline hover:text-accent"
-          >
-            Effacer
-          </Link>
-        ) : null}
-      </form>
+      <RechercheBibliotheque
+        space={space}
+        dossierId={dossierId}
+        recherche={recherche}
+        actif={actif}
+        comptes={counts}
+      />
 
       {recherche ? (
         <p className="mb-4 text-[13px] text-muted">

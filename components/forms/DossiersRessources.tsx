@@ -214,6 +214,29 @@ const BTN_ICONE =
   "flex h-8 w-8 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted cursor-pointer";
 
 /**
+ * Les commandes de l'équipe sur un dossier — qui le voit, son nom et son
+ * rangement, sa suppression —, pour les poser ailleurs que sur sa carte :
+ * dans l'en-tête de sa section, ou sur la vue du dossier ouvert.
+ */
+export function CommandesDossier({
+  dossier,
+  arborescence,
+  membres,
+}: {
+  dossier: DossierRessource;
+  arborescence: Arborescence;
+  membres: MembreChoisissable[];
+}) {
+  return (
+    <>
+      <AccesDossier dossier={dossier} membres={membres} />
+      <ReglagesDossier dossier={dossier} arborescence={arborescence} />
+      <SupprimerDossier dossier={dossier} />
+    </>
+  );
+}
+
+/**
  * Qui voit le dossier : tous les membres, ou les entreprises cochées. Dans
  * sa propre fenêtre, à part du nom et du rangement : c'est une autre
  * décision, et la liste des entreprises prend de la place.
