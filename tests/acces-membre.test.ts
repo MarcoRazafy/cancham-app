@@ -8,11 +8,6 @@ import {
 } from "@/lib/membership";
 import type { Member, MemberStatus } from "@/lib/types";
 
-/**
- * Le cœur du produit : l'accès dépend de la cotisation. Un membre en retard
- * est prévenu pendant trente jours, puis restreint à son profil.
- */
-
 const membre = (statut: MemberStatus, retardDepuis: string | null = null) =>
   ({ id: "m", nom: "Essai", statut, retardDepuis }) as Member;
 
@@ -42,12 +37,10 @@ describe("accès selon la cotisation", () => {
   });
 
   it("coupe au-delà du délai, pas le jour même", () => {
-    // Pile au seuil : encore ouvert.
     const auSeuil = membre("en_retard", "2026-08-22");
     expect(joursDeRetard(auSeuil)).toBe(RETARD_BLOCAGE_JOURS);
     expect(isAccessLocked(auSeuil)).toBe(false);
 
-    // Un jour de plus : restreint.
     const auDela = membre("en_retard", "2026-08-21");
     expect(joursDeRetard(auDela)).toBe(RETARD_BLOCAGE_JOURS + 1);
     expect(isAccessLocked(auDela)).toBe(true);

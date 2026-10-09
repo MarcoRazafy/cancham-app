@@ -25,34 +25,11 @@ import {
 } from "@/lib/actions/events";
 import { initialesDe } from "@/lib/avatars";
 
-/**
- * Scanner de QR codes à l'accueil d'un événement.
- *
- * La caméra du téléphone ou de l'ordinateur lit le QR code du billet d'un
- * membre ; la personne passe « présente » aussitôt, et le scanner reste
- * ouvert pour la suivante. Chaque lecture s'annonce deux secondes sur
- * l'image — logo, entreprise, représentant, ou le motif d'un refus —, puis
- * rejoint l'historique des arrivées, où un clic montre l'inscription.
- *
- * Le décodage se fait dans le navigateur : le détecteur natif quand il existe
- * (Chrome sur Android, macOS), sinon jsQR sur une image réduite de la vidéo.
- * Sans caméra — ordinateur de bureau, permission refusée —, le code se saisit
- * à la main.
- */
-
-/**
- * Un code qui reste devant l'objectif n'est lu qu'une fois : il faut qu'il
- * sorte du champ pendant ce délai pour être relu.
- */
 const REPOS_MS = 2500;
-/** Intervalle entre deux analyses d'image. */
 const CADENCE_MS = 160;
-/** Largeur de l'image analysée : assez pour lire, assez petite pour aller vite. */
 const LARGEUR_ANALYSE = 640;
-/** Durée de l'annonce d'une lecture, pendant laquelle on ne lit rien d'autre. */
 const ANNONCE_MS = 2000;
 
-/** « 17 h 42 », à l'heure de la chambre. */
 function heure(iso: string): string {
   return new Date(iso)
     .toLocaleTimeString("fr-FR", {
@@ -72,7 +49,6 @@ export function ScannerQr({
   termine,
 }: {
   eventId: string;
-  /** Événement terminé : la caméra n'a plus lieu de s'ouvrir. */
   termine: boolean;
 }) {
   return (
@@ -105,24 +81,18 @@ function Lecteur({ eventId }: { eventId: string }) {
   const [saisie, setSaisie] = useState("");
   const [enCours, demarrer] = useTransition();
 
-  /** L'historique : les arrivées de l'événement, la dernière en tête. */
   const [arrivees, setArrivees] = useState<ArriveeAccueil[] | null>(null);
-  /** Les codes refusés depuis l'ouverture du scanner. */
   const [refus, setRefus] = useState<
     { id: number; code: string; message: string }[]
   >([]);
-  /** La lecture annoncée sur l'image, deux secondes. */
   const [annonce, setAnnonce] = useState<
     (ResultatScan & { id: number }) | null
   >(null);
-  /** La ligne de l'historique dépliée. */
   const [ouverte, setOuverte] = useState<string | null>(null);
 
   const occupe = useRef(false);
-  /** Vrai pendant l'annonce : la caméra ne lit rien d'autre. */
   const pause = useRef(false);
   const minuterieAnnonce = useRef<ReturnType<typeof setTimeout>>(undefined);
-  /** Dernier code vu par la caméra, et quand il l'a été pour la dernière fois. */
   const derniere = useRef<{ code: string; vu: number } | null>(null);
   const compteur = useRef(0);
 
@@ -141,7 +111,6 @@ function Lecteur({ eventId }: { eventId: string }) {
     };
   }, [eventId]);
 
-  /** Annonce une lecture sur l'image, puis rend la main à la caméra. */
   const annoncer = useCallback((r: ResultatScan) => {
     clearTimeout(minuterieAnnonce.current);
     pause.current = true;
@@ -152,7 +121,6 @@ function Lecteur({ eventId }: { eventId: string }) {
     }, ANNONCE_MS);
   }, []);
 
-  /** Envoie un code lu ou saisi, l'annonce, et tient l'historique à jour. */
   const pointer = useCallback(
     (lu: string) => {
       const code = lu.trim();
@@ -187,7 +155,6 @@ function Lecteur({ eventId }: { eventId: string }) {
         setArrivees((liste) => {
           const autres = (liste ?? [])
             .filter((a) => a.id !== arrivee.id)
-            // Ses collègues déjà dans l'historique le voient arriver.
             .map((a) => ({
               ...a,
               inscrits: a.inscrits.map((i) =>
@@ -195,7 +162,6 @@ function Lecteur({ eventId }: { eventId: string }) {
               ),
             }));
           const deja = liste?.find((a) => a.id === arrivee.id);
-          // Une personne déjà pointée garde sa place : l'heure est la sienne.
           return deja && r.etat === "deja"
             ? (liste ?? [])
             : [arrivee, ...autres];
@@ -204,8 +170,6 @@ function Lecteur({ eventId }: { eventId: string }) {
     },
     [eventId, annoncer],
   );
-
-  /* ---------- Caméra et lecture ---------- */
 
   useEffect(() => {
     let flux: MediaStream | null = null;
@@ -250,16 +214,13 @@ function Lecteur({ eventId }: { eventId: string }) {
             const code = lu.trim();
             const vu = derniere.current;
             if (vu && vu.code === code && Date.now() - vu.vu < REPOS_MS) {
-              // Toujours le même billet devant l'objectif : déjà traité.
               vu.vu = Date.now();
             } else {
               derniere.current = { code, vu: Date.now() };
               pointer(code);
             }
           }
-        } catch {
-          /* Image illisible : on passe à la suivante. */
-        }
+        } catch {}
       }
       minuterie = setTimeout(analyser, CADENCE_MS);
     };
@@ -298,7 +259,6 @@ function Lecteur({ eventId }: { eventId: string }) {
       }
     })();
 
-    // La caméra s'éteint dès que la fenêtre se ferme.
     return () => {
       arrete = true;
       clearTimeout(minuterie);
@@ -308,7 +268,6 @@ function Lecteur({ eventId }: { eventId: string }) {
 
   return (
     <div className="p-5 flex flex-col gap-4">
-      {/* ---------- Vidéo ---------- */}
       <div className="relative aspect-[4/3] rounded-[var(--radius-m)] overflow-hidden bg-[#0f1d2c]">
         <video
           ref={video}
@@ -317,7 +276,6 @@ function Lecteur({ eventId }: { eventId: string }) {
           className={`w-full h-full object-cover ${camera === "active" ? "" : "invisible"}`}
         />
         {camera === "active" ? (
-          // Le cadre de visée : il dit où placer le code.
           <div
             aria-hidden
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -362,7 +320,6 @@ function Lecteur({ eventId }: { eventId: string }) {
         présente dès la lecture.
       </p>
 
-      {/* ---------- Saisie manuelle ---------- */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -394,7 +351,6 @@ function Lecteur({ eventId }: { eventId: string }) {
         </button>
       </form>
 
-      {/* ---------- Historique des arrivées ---------- */}
       <section aria-live="polite">
         <div className="flex items-baseline justify-between gap-3 mb-2">
           <h3 className="m-0 text-[14px] font-semibold text-ink">
@@ -452,12 +408,6 @@ function Lecteur({ eventId }: { eventId: string }) {
   );
 }
 
-/* ============================ Annonce ============================ */
-
-/**
- * Deux secondes sur l'image : qui vient d'arriver — logo, entreprise,
- * représentant —, ou pourquoi le code est refusé. Un toucher la ferme plus tôt.
- */
 function Annonce({
   resultat: r,
   onFermer,
@@ -465,7 +415,6 @@ function Annonce({
   resultat: ResultatScan;
   onFermer: () => void;
 }) {
-  // Le décompte part plein et se vide : il dit quand la caméra reprend.
   const [vide, setVide] = useState(false);
   useEffect(() => {
     const t = requestAnimationFrame(() => setVide(true));
@@ -547,9 +496,6 @@ function Annonce({
   );
 }
 
-/* ============================ Historique ============================ */
-
-/** Deux tailles : l'annonce, plus petite sur téléphone, et la ligne d'historique. */
 const TAILLES_LOGO = {
   annonce: {
     cadre: "w-16 h-16 text-[22px] sm:w-[88px] sm:h-[88px] sm:text-[30px]",
@@ -558,7 +504,6 @@ const TAILLES_LOGO = {
   ligne: { cadre: "w-[38px] h-[38px] text-[13px]", sizes: "38px" },
 } as const;
 
-/** Le logo de l'entreprise, le portrait d'un indépendant, sinon les initiales. */
 function LogoArrivee({
   arrivee: a,
   taille,
@@ -614,7 +559,6 @@ const STATUT_INSCRIT = {
   absent: { libelle: "Absent", classe: "text-bad" },
 } as const;
 
-/** Une arrivée de l'historique ; un clic déplie son inscription. */
 function LigneArrivee({
   arrivee: a,
   ouverte,

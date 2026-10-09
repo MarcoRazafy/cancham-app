@@ -3,14 +3,6 @@ import { Agrandir } from "@/components/Agrandir";
 import type { PieceJointe, Space } from "@/lib/types";
 import { poids, urlPiece } from "./outils";
 
-/**
- * Pièces jointes d'un message, dans sa bulle.
- *
- * Images en vignettes qui s'agrandissent, vidéos lisibles sur place, PDF en
- * carte qui s'ouvre dans un nouvel onglet avec un bouton pour l'enregistrer.
- * Des <img> et <video> ordinaires : l'optimiseur d'images de Next mettrait
- * les fichiers en cache sous une URL publique, hors du contrôle d'accès.
- */
 export function PiecesJointes({
   pieces,
   moi,

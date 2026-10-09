@@ -26,10 +26,6 @@ import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
 import { positionObjet } from "@/lib/cadrage";
 
-/**
- * Fiche d'un membre dans l'annuaire, telle que la voient les adhérents. Dans
- * le back-office, la même, avec un accès à la gestion du membre.
- */
 export async function FicheAnnuairePage({
   espace,
   params,
@@ -77,7 +73,6 @@ export async function FicheAnnuairePage({
           />
         </Agrandir>
         <div className="flow-root p-[22px]">
-          {/* La vidéo de présentation, à droite — s'il y en a une. */}
           <PresentationAvecVideo memberId={m.id} nom={m.nom} fichier={m.video}>
             <div className="flex gap-4 flex-wrap justify-between">
               <div className="flex gap-4">
@@ -124,18 +119,12 @@ export async function FicheAnnuairePage({
 
           <NeedsAndInterests member={m} />
 
-          {/* `clear-both` : les produits prennent toute la largeur, ils
-              attendent que la vidéo flottante soit passée. */}
           <div className="clear-both flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
             <h2 className="text-[17px] font-semibold m-0">
               Produits &amp; services
             </h2>
           </div>
-          {/*
-            Une carte par offre, trois par page ; un clic ouvre sa fiche de
-            détail, avec toutes ses photos et sa description.
-          */}
           {m.produits.length ? (
             <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
               {m.produits.map((p, i) => (

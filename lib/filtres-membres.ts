@@ -2,13 +2,6 @@ import { ORDRE_FORMULES, type FormuleId } from "@/lib/membership";
 import type { Member, MemberStatus } from "@/lib/types";
 import { plat } from "@/lib/texte";
 
-/**
- * Filtres de la liste des membres, lus depuis l'adresse.
- *
- * Partagés par la page et par l'export : le fichier téléchargé reprend
- * exactement la liste affichée à l'écran.
- */
-
 export const STATUTS_FILTRE: { cle: MemberStatus | "tous"; libelle: string }[] =
   [
     { cle: "tous", libelle: "Tous" },
@@ -31,7 +24,6 @@ export function lireFiltres(params: {
   q?: string;
   formule?: string;
 }): FiltresMembres {
-  // `tab` : ancien nom du paramètre, gardé pour les liens déjà partagés.
   const demande = params.statut ?? params.tab ?? "tous";
   return {
     statut: (STATUTS_FILTRE.some((s) => s.cle === demande)
@@ -44,7 +36,6 @@ export function lireFiltres(params: {
   };
 }
 
-/** Membres retenus par la recherche et la formule, tous statuts confondus. */
 export function filtrerHorsStatut(membres: Member[], f: FiltresMembres) {
   return membres.filter(
     (m) =>
@@ -62,7 +53,6 @@ export function filtrerMembres(membres: Member[], f: FiltresMembres) {
   );
 }
 
-/** Paramètres d'adresse d'une vue filtrée, sans les valeurs par défaut. */
 export function parametresFiltres(
   f: FiltresMembres,
   changes: Partial<Record<"statut" | "q" | "formule", string | null>> = {},

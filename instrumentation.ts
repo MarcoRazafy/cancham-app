@@ -1,17 +1,5 @@
 import type { Instrumentation } from "next";
 
-/**
- * Observabilité du serveur.
- *
- * Au démarrage, en production, on vérifie la configuration : une variable
- * oubliée se voit dans les journaux du déploiement, pas au premier membre
- * qui ne reçoit jamais son e-mail.
- *
- * Chaque erreur serveur — page, action, route — est écrite sur une ligne
- * JSON : Railway l'affiche telle quelle et on peut la filtrer. Sa référence
- * (`digest`) est celle que la page d'incident montre au membre.
- */
-
 export function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   if (process.env.NODE_ENV !== "production") return;
@@ -67,7 +55,6 @@ export const onRequestError: Instrumentation.onRequestError = (
       niveau: "erreur",
       date: new Date().toISOString(),
       methode: request.method,
-      // Sans les paramètres : un lien de réinitialisation y porte son jeton.
       chemin: request.path.split("?")[0],
       route: context.routePath,
       type: context.routeType,

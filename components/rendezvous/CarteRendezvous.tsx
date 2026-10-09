@@ -4,11 +4,6 @@ import { Card } from "@/components/ui";
 import { fmtJour, jourRelatif, plageHoraire } from "@/lib/agenda";
 import type { RendezvousPris } from "@/lib/rendezvous-donnees";
 
-/**
- * Un rendez-vous tel qu'il s'affiche dans une liste : la date en pavé, le
- * type, l'horaire, et ce qui compte pour celui qui regarde — l'équipe veut
- * savoir qui vient et pourquoi, le membre le sait déjà.
- */
 export function CarteRendezvous({
   rdv,
   aujourdhui,
@@ -23,10 +18,7 @@ export function CarteRendezvous({
   const horaire = plageHoraire(rdv.debut, rdv.fin) ?? rdv.debut;
 
   return (
-    // Sur un téléphone, le bouton passe sous le contenu plutôt que de lui
-    // voler sa largeur : le motif se lit en entier.
     <Card className="p-3.5 flex flex-wrap items-start gap-3.5">
-      {/* La prune des rendez-vous dans l'agenda : même couleur, même lecture. */}
       <div className="w-[58px] shrink-0 text-center rounded-[var(--radius-s)] bg-[#5b4b8a] text-white py-1.5">
         <div className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-white/75">
           {fmtJour(rdv.jour, { month: "short" }).replace(".", "")}

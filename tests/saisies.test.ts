@@ -4,8 +4,6 @@ import { echapper, gabarit } from "@/lib/courriel";
 import { lienJournal } from "@/lib/journal";
 import { normaliserSite } from "@/lib/liens";
 
-/** Ce qu'un membre tape ne devient ni du code, ni un lien piégé. */
-
 describe("sites web des fiches", () => {
   it("complète une adresse sans protocole", () => {
     expect(normaliserSite("biosudessences.mg")).toBe(
@@ -34,11 +32,9 @@ describe("e-mails", () => {
       paragraphes: ["Motivation : <img src=x onerror=alert(1)>"],
       bouton: { libelle: "Ouvrir", url: 'https://x.mg/?a="><script>' },
     });
-    // Le logo de l'en-tête est une image ; celle glissée dans la saisie, non.
     expect(html).not.toContain("<img src=x");
     expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
     expect(html).not.toContain('"><script>');
-    // La version texte garde la saisie telle quelle : elle n'est pas du HTML.
     expect(texte).toContain("<img src=x onerror=alert(1)>");
   });
 });

@@ -3,14 +3,6 @@ import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui";
 
-/**
- * Briques de mise en page du back-office.
- *
- * Elles reprennent le vocabulaire de l'espace membre — surtitre, titre à mot
- * saillant, tuile d'icône, filet de couleur — pour que toutes les pages de
- * gestion se ressemblent sans que chacune ne recopie ses classes.
- */
-
 export const TEINTES = {
   rouge: { tuile: "tuile-rouge", filet: "filet-rouge" },
   vert: { tuile: "tuile-verte", filet: "filet-vert" },
@@ -20,7 +12,6 @@ export const TEINTES = {
 
 export type Teinte = keyof typeof TEINTES;
 
-/** En-tête d'une page de gestion : surtitre, titre, phrase, actions. */
 export function EnTeteAdmin({
   surtitre,
   titre,
@@ -52,12 +43,6 @@ export function EnTeteAdmin({
   );
 }
 
-/**
- * Compteur à tuile d'icône.
- *
- * Avec un lien, la carte entière mène à la liste qu'il résume, et le filet se
- * déroule au survol ; sans lien, le filet est posé d'emblée.
- */
 export function Compteur({
   icone,
   libelle,
@@ -73,7 +58,6 @@ export function Compteur({
   detail?: ReactNode;
   href?: string;
   teinte?: Teinte;
-  /** Carte qui commande la vue affichée dessous, et qui l'affiche. */
   actif?: boolean;
 }) {
   const corps = (
@@ -107,7 +91,6 @@ export function Compteur({
   );
 }
 
-/** Carte à titre, avec lien « voir tout » facultatif. */
 export function Panneau({
   titre,
   sousTitre,
@@ -121,7 +104,6 @@ export function Panneau({
   titre: ReactNode;
   sousTitre?: ReactNode;
   lien?: { href: string; libelle: string };
-  /** Commande d'en-tête, par exemple « Ajouter ». */
   action?: ReactNode;
   teinte?: Teinte;
   className?: string;
@@ -164,7 +146,6 @@ export function LienFleche({
   );
 }
 
-/** Onglets de filtre, portés par l'URL : partageables et sans JavaScript. */
 export function Onglets({
   onglets,
   actif,
@@ -206,7 +187,6 @@ export function Onglets({
   );
 }
 
-/** Barre de remplissage : inscrits sur capacité, part d'un total. */
 export function Jauge({
   valeur,
   max,
@@ -238,7 +218,6 @@ export function Jauge({
   );
 }
 
-/** Message d'une liste vide, dans une carte ou un panneau. */
 export function Vide({
   icone,
   children,

@@ -3,21 +3,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useTransition, type ReactNode } from "react";
 
-/** Délai après la dernière frappe avant de filtrer : on n'interroge pas le serveur à chaque lettre. */
 const DELAI_SAISIE = 350;
 
-/**
- * Formulaire de filtres qui s'applique tout seul.
- *
- * Un menu déroulant filtre dès qu'on le change ; un champ de recherche, un
- * court instant après la dernière frappe. Plus de bouton « Filtrer » : c'était
- * un geste de trop. Les filtres restent dans l'adresse — partageables, et
- * retrouvés au retour arrière.
- *
- * Sans JavaScript, le formulaire reste un formulaire GET ordinaire : Entrée
- * l'envoie, et un bouton masqué le rend accessible au clavier et aux lecteurs
- * d'écran.
- */
 export function FiltresAuto({
   action,
   className,
@@ -33,7 +20,6 @@ export function FiltresAuto({
   const [enCours, demarrer] = useTransition();
   const formulaire = useRef<HTMLFormElement>(null);
   const minuterie = useRef<ReturnType<typeof setTimeout>>(undefined);
-  /** Dernière adresse demandée par le formulaire lui-même. */
   const soumis = useRef<string | null>(null);
 
   const appliquer = () => {
@@ -54,8 +40,6 @@ export function FiltresAuto({
     );
   };
 
-  // Un lien « Effacer les filtres » change l'adresse sans passer par le
-  // formulaire : les champs, non contrôlés, doivent alors la suivre.
   const chaine = params.toString();
   useEffect(() => {
     if (soumis.current === chaine) return;

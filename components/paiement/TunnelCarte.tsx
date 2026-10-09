@@ -12,17 +12,6 @@ import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import { payerParCarte } from "@/lib/actions/paiements";
 import { fmtMontant, type Devise } from "@/lib/membership";
 
-/**
- * Le paiement par carte, d'après la maquette : une carte centrée, un en-tête
- * bleu nuit qui dit à qui l'on paie et combien, puis le formulaire.
- *
- * Une différence avec la maquette, et elle est voulue : le numéro de carte,
- * la date d'expiration et le code de sécurité ne se saisissent pas ici. Ils
- * se tapent sur la page sécurisée de Vanilla Pay, à l'étape suivante — la
- * CanCham ne doit jamais voir passer un numéro de carte, ni le stocker, ni
- * risquer de le laisser traîner dans un journal. L'écran l'annonce à la
- * place même où l'on attendrait ces champs.
- */
 const NUIT = "#1e2d6b";
 
 export function TunnelCarte({
@@ -40,12 +29,9 @@ export function TunnelCarte({
   montant: number;
   devise: Devise;
   objet: string;
-  /** Proposé d'office : le nom de qui règle, ou celui déjà saisi. */
   titulaire: string;
   statut: string;
-  /** Vanilla Pay est-il branché ? Sans lui, rien ne part. */
   raccorde: boolean;
-  /** Le nom que la page de paiement affichera, s'il n'est pas le nôtre. */
   marchand: string | null;
   retour: string;
 }) {
@@ -120,10 +106,6 @@ export function TunnelCarte({
               />
             </div>
 
-            {/*
-              À la place des champs de la carte : ce qui se passera, et
-              pourquoi on ne les tape pas ici.
-            */}
             <div className="mt-4 flex gap-3 rounded-[10px] border border-[#d8def0] bg-[#f3f5fb] px-4 py-3.5">
               <CreditCard
                 size={20}

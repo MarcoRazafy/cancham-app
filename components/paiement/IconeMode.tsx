@@ -10,15 +10,6 @@ import {
 } from "lucide-react";
 import type { ModeReglement } from "@/lib/modes-reglement";
 
-/**
- * Ce qu'on montre d'un moyen de règlement : son logo quand la chambre l'a,
- * une icône de la charte sinon.
- *
- * Les marques des opérateurs valent mieux qu'un pictogramme : un membre
- * reconnaît MVola ou Orange Money d'un coup d'œil, et se trompe moins de
- * tuile. Les fichiers sont ceux fournis par la chambre — seules les
- * plateformes de paiement n'en ont pas encore, et gardent leur icône.
- */
 const LOGOS: Partial<
   Record<ModeReglement, { src: string; largeur: number; hauteur: number }>
 > = {
@@ -50,7 +41,6 @@ const ICONES: Record<ModeReglement, LucideIcon> = {
   plateforme: Wallet,
 };
 
-/** L'icône seule, pour une ligne de texte. */
 export function IconeMode({
   mode,
   size = 16,
@@ -64,10 +54,6 @@ export function IconeMode({
   return <Icone size={size} className={`shrink-0 ${className}`} aria-hidden />;
 }
 
-/**
- * Le visuel d'une tuile : logo ou icône, dans une bande de hauteur fixe pour
- * que les tuiles s'alignent quelles que soient les proportions des fichiers.
- */
 export function VisuelMode({ mode }: { mode: ModeReglement }) {
   const logo = LOGOS[mode];
   return (

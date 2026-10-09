@@ -15,17 +15,8 @@ import { ChampsCoordonnees } from "@/components/forms/EventForms";
 import { inscriptionPublique } from "@/lib/actions/events";
 import { fmtMoney } from "@/lib/format";
 
-/** Représentants par inscription, au plus — comme pour un membre. */
 const REPRESENTANTS_MAX = 10;
 
-/**
- * Inscription à un événement depuis la vitrine, sans compte.
- *
- * Le même formulaire que celui des membres, mais tout se saisit : le nom de
- * l'entreprise, ceux des représentants — un champ chacun, « Ajouter un
- * représentant » en ouvre un autre —, puis les coordonnées. Le paiement,
- * s'il y en a un, vient en dernier.
- */
 export function InscriptionPublique({
   event,
 }: {
@@ -36,12 +27,10 @@ export function InscriptionPublique({
     payant: boolean;
     prix: number;
     restantes: number;
-    /** Le choix du moyen de paiement suit l'inscription, à l'écran d'après. */
     enLigne: boolean;
   };
 }) {
   const max = Math.min(REPRESENTANTS_MAX, event.restantes);
-  // Des clés stables : retirer un champ ne décale pas la saisie des autres.
   const [lignes, setLignes] = useState([0]);
   const [suivante, setSuivante] = useState(1);
 

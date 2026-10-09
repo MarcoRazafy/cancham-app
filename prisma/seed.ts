@@ -1,11 +1,3 @@
-/**
- * Seed de la base CanCham Connect.
- *
- * Il reprend telles quelles les données d'exemple de `lib/data/`, qui restent
- * la source de vérité tant que l'application n'a pas basculé sur la base.
- *
- *   npm run db:seed
- */
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../lib/generated/prisma/client";
@@ -24,16 +16,9 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
-/** Les dates du jeu de données sont des ISO courtes (YYYY-MM-DD). */
-/**
- * Mot de passe commun aux comptes de démonstration — l'empreinte est calculée
- * une seule fois : scrypt est volontairement lent.
- */
 const MOT_DE_PASSE = hacher(process.env.MOT_DE_PASSE_DEMO ?? "12345678");
 
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
-
-/* ---- Correspondances entre les libellés du jeu de données et les enums ---- */
 
 const EVENT_FORMAT = {
   Présentiel: "presentiel",
@@ -63,8 +48,6 @@ const RES_FMT = {
   Page: "page",
 } as const;
 
-/* ---- Participants aux événements ---- */
-
 const NOMS_PARTICIPANTS = [
   "Rado Andriamihaja",
   "Nantenaina Rasolofo",
@@ -87,13 +70,6 @@ const slug = (s: string) =>
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z]+/g, ".");
 
-/**
- * Reconstitue la liste des participants d'un événement.
- *
- * Les premiers sont des représentants de membres, le reste des participants
- * individuels. Le total correspond au nombre d'inscrits du jeu de données, de
- * sorte que les compteurs affichés restent identiques.
- */
 function participants(eventId: string, inscrits: number, passe: boolean) {
   const connus = MEMBERS.filter((m) => m.statut !== "candidature");
   const rows = [];
@@ -131,7 +107,6 @@ function participants(eventId: string, inscrits: number, passe: boolean) {
 
 async function main() {
   console.log("Nettoyage…");
-  // L'ordre respecte les clés étrangères ; les cascades font le reste.
   await prisma.auditLog.deleteMany();
   await prisma.message.deleteMany();
   await prisma.messageThread.deleteMany();
@@ -148,8 +123,6 @@ async function main() {
   await prisma.produit.deleteMany();
   await prisma.user.deleteMany();
   await prisma.member.deleteMany();
-  // Après les comptes : leurs rendez-vous partent en cascade, et les types
-  // n'ont alors plus rien qui les retienne.
   await prisma.disponibilite.deleteMany();
   await prisma.typeRendezvous.deleteMany();
 
@@ -274,8 +247,6 @@ async function main() {
   }
 
   console.log("Actualités…");
-  // Un commentaire d'exemple est rattaché au compte de son auteur, quand il
-  // existe : c'est ce qui lui permet de le modifier ou de le supprimer.
   const auteurs = new Map(
     [...Object.values(USERS), ...CONTACTS].map((u) => [u.nom, u.id]),
   );
@@ -306,10 +277,6 @@ async function main() {
     });
   }
 
-  // « J'aime » : chaque publication en reçoit d'un sous-ensemble différent des
-  // utilisateurs, tiré d'un pas fixe pour rester identique d'un chargement à
-  // l'autre. Le membre de démonstration en a aimé une sur deux — assez pour
-  // voir les deux états du bouton sans avoir à cliquer.
   const personnes = await prisma.user.findMany({
     where: { role: { not: "admin" } },
     orderBy: { id: "asc" },
@@ -388,7 +355,6 @@ async function main() {
         montant: f.montant,
         devise: f.devise,
         statut: f.statut,
-        // Les factures de démonstration sont émises déjà réglées.
         payeeLe: f.statut === "payee" ? d(f.date) : null,
         memberId: f.membreId,
       },
@@ -396,9 +362,6 @@ async function main() {
   }
 
   console.log("Messagerie…");
-  // Horodatages décroissants, plus récents en dernier. Les premiers messages
-  // d'un fil sont reculés d'un à deux jours, pour que les séparateurs de date
-  // de la messagerie aient quelque chose à séparer.
   const noms = new Map(
     [...Object.values(USERS), ...CONTACTS].map((u) => [u.id, u.nom]),
   );
@@ -413,8 +376,6 @@ async function main() {
         ),
     );
 
-    // Le membre de démonstration a lu le fil jusqu'au message qui précède ses
-    // `nonLus` derniers messages reçus.
     let restants = t.nonLus;
     let lu = t.messages.length - 1;
     while (restants > 0 && lu >= 0) {
@@ -452,9 +413,6 @@ async function main() {
   }
 
   console.log("Rendez-vous…");
-  // De quoi ouvrir la prise de rendez-vous dès le premier démarrage : deux
-  // formats, chacun avec ses heures d'accueil. Un entretien demande une
-  // matinée dégagée ; un point rapide se glisse en fin de journée.
   for (const [ordre, t] of [
     {
       titre: "Entretien d’accompagnement",

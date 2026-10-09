@@ -2,7 +2,6 @@
 
 import { SubmitButton } from "@/components/form-bits";
 
-/** Bouton d'envoi du formulaire public, avec état d'attente. */
 export function SubmitAdhesionButton() {
   return (
     <SubmitButton

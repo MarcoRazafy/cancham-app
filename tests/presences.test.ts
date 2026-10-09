@@ -1,13 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// Les présences importent la base ; ces tests n'en ont pas besoin.
 vi.mock("@/lib/db", () => ({ prisma: {} }));
 const { estTermine, finEvenement } = await import("@/lib/presences");
-
-/**
- * Un événement se termine à son heure de fin, à Antananarivo — c'est ce qui
- * fait passer « absents » les inscrits qui ne sont pas venus.
- */
 
 afterEach(() => {
   vi.useRealTimers();

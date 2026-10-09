@@ -63,7 +63,6 @@ const BTN_LINE =
 const BTN_DANGER =
   "w-full justify-center inline-flex items-center gap-[7px] rounded-[var(--radius-s)] font-semibold cursor-pointer border border-bad-soft bg-transparent text-bad hover:bg-surface-2 text-[12.4px] px-[11px] py-1.5";
 
-/** Ajout manuel d'un membre, côté back-office. */
 export function AddMemberButton() {
   return (
     <Modal
@@ -162,8 +161,6 @@ export function AddMemberButton() {
                 className={INPUT}
               />
             </Field>
-            {/* Sur sa propre ligne : le libellé d'une formule et son tarif
-                n'entrent pas dans une demi-largeur. */}
             <Field
               label="Formule d’adhésion"
               hint="Elle fixe le montant attendu et la devise de ses factures. Laissée à définir, aucune cotisation n’est réclamée."
@@ -191,7 +188,6 @@ export function AddMemberButton() {
   );
 }
 
-/** Règlement encaissé par l'équipe : met à jour le statut et crée la facture. */
 export function RegisterPaymentButton({
   memberId,
   premier,
@@ -201,13 +197,10 @@ export function RegisterPaymentButton({
   memberId: string;
   premier: boolean;
   nom: string;
-  /** La formule du membre fixe le montant attendu et sa devise. */
   formule: FormuleId | null;
 }) {
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
-  // Sans formule, il n'y a ni montant ni devise à proposer : le formulaire
-  // n'aurait rien à préremplir, et l'action refuserait de toute façon.
   if (!formule) {
     return (
       <Modal
@@ -317,12 +310,6 @@ export function RegisterPaymentButton({
   );
 }
 
-/**
- * « Envoyer l’accès » : envoie au contact principal le lien pour créer son
- * mot de passe. Sur une candidature, le clic valide aussi la demande : il
- * passe par une confirmation. Ailleurs, un clic suffit — et renvoie un lien
- * neuf quand le précédent attend encore.
- */
 export function AccederButton({
   memberId,
   nom,
@@ -333,13 +320,9 @@ export function AccederButton({
 }: {
   memberId: string;
   nom: string;
-  /** La demande est encore à l'examen : le clic la valide. */
   candidature?: boolean;
-  /** Un lien est déjà parti : le bouton le renvoie. */
   renvoi?: boolean;
-  /** Page où revenir : la liste ou la fiche. */
   retour: string;
-  /** Pleine largeur, dans le panneau de la fiche. */
   large?: boolean;
 }) {
   const champs = (
@@ -434,11 +417,6 @@ export function RejectButton({
               session. Vous pourrez revenir sur ce refus, ou supprimer la fiche
               pour de bon.
             </p>
-            {/*
-              Le pourquoi du refus, obligatoire : c'est ce que cherchera la
-              personne qui rouvrira le dossier, ou qui prendra l'appel du
-              demandeur. Il reste à l'équipe — rien n'en part vers lui.
-            */}
             <Field
               label="Commentaire"
               hint="Visible de l’équipe seulement : le demandeur ne le reçoit pas."
@@ -465,12 +443,6 @@ export function RejectButton({
   );
 }
 
-/**
- * Revenir sur un refus.
- *
- * Une décision prise trop vite, un dossier complété depuis : la demande
- * repart à l'examen sans qu'on ait à la ressaisir.
- */
 export function ReconsidererButton({
   memberId,
   nom,
@@ -525,10 +497,6 @@ export function ReminderButton({ memberId }: { memberId: string }) {
   );
 }
 
-/**
- * Contact qui ne s'est jamais connecté : son invitation se renvoie, avec un
- * lien neuf. Utile quand l'e-mail s'est perdu ou que le lien a expiré.
- */
 export function RenvoyerInvitationButton({
   contactId,
   retour,
@@ -590,7 +558,6 @@ export function DeleteMemberButton({
   );
 }
 
-/** Édition de sa propre fiche par le membre. */
 export function EditProfileButton({
   memberId,
   nom,
@@ -610,22 +577,18 @@ export function EditProfileButton({
 }: {
   memberId: string;
   nom: string;
-  /** Personne physique : la fiche porte son nom, pas celui d'une entreprise. */
   independant?: boolean;
   ville: string;
   pays?: string | null;
   motivation?: string | null;
-  /** Secteur actuel ; « Secteur à préciser » compte comme vide. */
   secteur: string;
   activite: string;
   desc: string;
   besoins?: string;
   interets?: string;
   siteweb?: string | null;
-  /** Visuels actuels, affichés en aperçu à côté du sélecteur de fichier. */
   cover?: string | null;
   logo?: string | null;
-  /** Page où revenir : « Mon entreprise », ou la fiche dans le back-office. */
   retour?: string;
 }) {
   const titre = retour.startsWith("/admin")
@@ -689,7 +652,6 @@ export function EditProfileButton({
                   {PAYS.map((p) => (
                     <option key={p}>{p}</option>
                   ))}
-                  {/* Un pays saisi avant la liste reste proposé. */}
                   {pays && !(PAYS as readonly string[]).includes(pays) ? (
                     <option value={pays}>{pays}</option>
                   ) : null}
@@ -726,9 +688,6 @@ export function EditProfileButton({
                 className={INPUT}
               />
             </Field>
-            {/* Un seul champ : besoins et intérêts se lisent en une liste
-                unique sur la fiche. Les intérêts déjà saisis y sont repris à la
-                suite, pour que rien ne se perde à l'enregistrement. */}
             <ChampBesoins
               initial={[besoins, interets].filter(Boolean).join("\n")}
             />
@@ -774,13 +733,6 @@ export function EditProfileButton({
   );
 }
 
-/**
- * Les besoins de la fiche : un par ligne, et un bouton pour en ajouter.
- *
- * Le formulaire n'envoie toujours qu'un champ, `besoins`, où chaque besoin
- * tient sur une ligne — comme la zone de texte que cette liste remplace.
- * Mais il n'y a plus à savoir qu'un retour à la ligne fait un tiret.
- */
 function ChampBesoins({ initial }: { initial: string }) {
   const titre = useId();
   const [lignes, setLignes] = useState(() => {
@@ -788,13 +740,11 @@ function ChampBesoins({ initial }: { initial: string }) {
       .split("\n")
       .map((t) => t.trim())
       .filter(Boolean);
-    // Une fiche sans besoin s'ouvre sur une ligne à remplir.
     return (saisies.length ? saisies : [""]).map((texte, id) => ({
       id,
       texte,
     }));
   });
-  /** La ligne tout juste ajoutée : c'est elle qui prend le curseur. */
   const [nouvelle, setNouvelle] = useState<number | null>(null);
 
   const champ = (id: number) => `${titre}-${id}`;
@@ -802,7 +752,6 @@ function ChampBesoins({ initial }: { initial: string }) {
   const plein = lignes.length >= BESOINS_PAR_FICHE;
 
   const ajouter = () => {
-    // Une ligne encore vide attend déjà : on y va, sans en empiler une autre.
     const vide = lignes.find((l) => !l.texte.trim());
     if (vide) {
       document.getElementById(champ(vide.id))?.focus();
@@ -820,7 +769,6 @@ function ChampBesoins({ initial }: { initial: string }) {
   };
 
   const ecrire = (id: number, valeur: string) => {
-    // Un texte collé sur plusieurs lignes fait autant de besoins.
     const [premiere, ...suite] = valeur.split(/\r?\n/);
     let suivant = prochain();
     setLignes(
@@ -837,8 +785,6 @@ function ChampBesoins({ initial }: { initial: string }) {
     );
   };
 
-  // Entrée passe au besoin suivant : elle n'enregistre pas la fiche, et ne
-  // coupe pas un besoin en deux.
   const touche = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
     e.preventDefault();
@@ -871,9 +817,6 @@ function ChampBesoins({ initial }: { initial: string }) {
       <div className="flex flex-col gap-2">
         {lignes.map((l, i) => (
           <div key={l.id} className="flex items-start gap-2">
-            {/* La zone de saisie grandit avec son texte : elle prend la
-                hauteur d'un calque invisible qui porte le même texte, dans
-                la même case de la grille. */}
             <div className="grid min-w-0 flex-1">
               <div
                 aria-hidden
@@ -914,7 +857,6 @@ function ChampBesoins({ initial }: { initial: string }) {
   );
 }
 
-/** Ajout d'une personne à joindre, depuis la fiche « Mon entreprise ». */
 export function AddContactButton({
   memberId,
   retour = "/membre/profil",
@@ -1003,7 +945,6 @@ export function AddContactButton({
   );
 }
 
-/** Retrait d'un contact, avec confirmation — c'est un accès que l'on supprime. */
 export function RemoveContactButton({
   contactId,
   nom,
@@ -1048,13 +989,6 @@ export function RemoveContactButton({
   );
 }
 
-/**
- * Sélecteur d'image avec l'aperçu de ce qui est déjà en place.
- *
- * Sans l'aperçu, on ne sait pas si le champ vide veut dire « il n'y a pas
- * d'image » ou « il y en a une, je n'y touche pas ». Le nom du fichier choisi
- * remplace l'aperçu dès la sélection, pour confirmer que le clic a pris.
- */
 function ChampImage({
   name,
   label,
@@ -1070,7 +1004,6 @@ function ChampImage({
   apercu: string | null;
   ratio: string;
   contain?: boolean;
-  /** Un portrait se juge dans le cadre où il sera vu : rond. */
   rond?: boolean;
 }) {
   const [choisi, setChoisi] = useState<string | null>(null);
@@ -1118,14 +1051,12 @@ function ChampImage({
   );
 }
 
-/** Modification d'un contact existant, portrait compris. */
 export function EditContactButton({
   contact,
   seul,
   retour = "/membre/profil",
 }: {
   contact: Contact;
-  /** Unique contact de l'entreprise : il ne peut pas cesser d'être référent. */
   seul: boolean;
   retour?: string;
 }) {
@@ -1224,14 +1155,6 @@ export function EditContactButton({
   );
 }
 
-/**
- * Galerie d'un produit dans le formulaire : garder, retirer, ajouter.
- *
- * Les photos en place s'affichent en vignettes. Un clic en marque une pour
- * retrait — elle pâlit et se barre, mais rien n'est supprimé avant
- * l'enregistrement : un clic de trop se rattrape d'un second clic. Les
- * nouvelles images s'ajoutent à la suite, dans la limite du plafond.
- */
 function ChampGalerie({ actuelles }: { actuelles: string[] }) {
   const [retirees, setRetirees] = useState<Set<string>>(new Set());
   const [ajoutees, setAjoutees] = useState(0);
@@ -1337,14 +1260,6 @@ function ChampGalerie({ actuelles }: { actuelles: string[] }) {
   );
 }
 
-/* ============================ Produits & services ============================ */
-
-/**
- * Champs d'une offre du catalogue, communs à l'ajout et à la modification.
- *
- * Pas de formulaire d'offre dans « Modifier ma fiche » : chaque offre se gère
- * ici, une par une, avec tout ce que sa fiche de détail affiche.
- */
 function ChampsService({ produit }: { produit?: Produit }) {
   return (
     <>
@@ -1397,7 +1312,6 @@ function ChampsService({ produit }: { produit?: Produit }) {
   );
 }
 
-/** Un besoin de plus dans « Besoins & intérêts », depuis sa fiche. */
 export function AjouterBesoinButton({
   memberId,
   retour = "/membre/profil",
@@ -1570,7 +1484,6 @@ export function SupprimerServiceButton({
   );
 }
 
-/** Correction de la date d'adhésion, réservée à l'équipe. */
 export function ModifierReglementButton({
   memberId,
   nom,
@@ -1578,7 +1491,6 @@ export function ModifierReglementButton({
 }: {
   memberId: string;
   nom: string;
-  /** Date actuelle du dernier règlement de cotisation, ISO court. */
   date: string;
 }) {
   return (
@@ -1632,7 +1544,6 @@ export function ModifierFormuleButton({
 }: {
   memberId: string;
   nom: string;
-  /** Formule actuelle, présélectionnée. `null` quand rien n'a été choisi. */
   formule: FormuleId | null;
 }) {
   return (
@@ -1687,7 +1598,6 @@ export function ModifierAdhesionButton({
 }: {
   memberId: string;
   nom: string;
-  /** Date actuelle, ISO court. */
   adhesion: string;
 }) {
   return (

@@ -26,7 +26,6 @@ import {
 import { fmtDate } from "@/lib/format";
 import type { Comment, Space } from "@/lib/types";
 
-/** Nouveau commentaire, émojis compris. */
 export function FormulaireCommentaire({
   space,
   retour,
@@ -67,13 +66,6 @@ export function FormulaireCommentaire({
   );
 }
 
-/**
- * Un commentaire : son auteur le modifie ou le supprime, tout le monde peut
- * l'aimer, et l'équipe peut le retirer.
- *
- * Le « j'aime » répond à l'instant, avant la confirmation du serveur, comme
- * celui des publications.
- */
 export function CarteCommentaire({
   commentaire: c,
   space,

@@ -5,20 +5,6 @@ import { Headset, Send, X } from "lucide-react";
 import { envoyerAuSupportPublic } from "@/lib/actions/support-public";
 import type { FilVisiteur } from "@/lib/support-visiteur";
 
-/**
- * Assistance de la vitrine : poser sa question sans avoir de compte.
- *
- * Une personne qui découvre la chambre n'a pas d'espace membre où écrire.
- * Cette bulle lui ouvre le même fil que celui des membres, côté équipe : la
- * chambre n'a qu'une boîte à surveiller.
- *
- * Le premier message demande nom, adresse et téléphone — sans quoi une
- * réponse n'aurait nulle part où aller. Ensuite, la conversation se poursuit
- * d'elle-même : la clé du fil est gardée dans le navigateur, et la réponse de
- * l'équipe arrive sans recharger la page.
- */
-
-/** Rythme de relecture pendant que la bulle est ouverte. */
 const RELECTURE_MS = 15_000;
 
 const CHAMP =
@@ -33,8 +19,6 @@ export function BulleAssistance() {
   const [envoi, demarrer] = useTransition();
   const finDuFil = useRef<HTMLDivElement>(null);
 
-  // Une conversation déjà ouverte se retrouve au retour sur le site : le
-  // cookie la désigne, le serveur la relit.
   useEffect(() => {
     let vivant = true;
     const relire = async () => {
@@ -43,9 +27,7 @@ export function BulleAssistance() {
         if (!r.ok) return;
         const { fil } = (await r.json()) as { fil: FilVisiteur | null };
         if (vivant && fil) setFil(fil);
-      } catch {
-        /* Hors ligne : la bulle reste utilisable, l'envoi le dira. */
-      }
+      } catch {}
     };
     relire();
     if (!ouvert)
@@ -159,7 +141,6 @@ export function BulleAssistance() {
             action={envoyer}
             className="border-t border-line px-4 py-3 flex flex-col gap-2 bg-surface-2"
           >
-            {/* Le fil ouvert porte déjà l'identité : on ne la redemande pas. */}
             {fil ? null : (
               <>
                 <input

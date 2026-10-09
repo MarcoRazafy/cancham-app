@@ -3,7 +3,6 @@ import type { Space } from "@/lib/types";
 export interface NavItem {
   href: string;
   label: string;
-  /** Clé d'icône, résolue côté client dans components/nav-icons.tsx */
   icon: string;
 }
 
@@ -115,7 +114,6 @@ export function navFor(space: Space): NavGroup[] {
   return space === "admin" ? NAV_ADMIN : NAV_MEMBRE;
 }
 
-/** Fil d'Ariane et titre de la barre supérieure, par route. */
 export const TITLES: Record<string, [string, string]> = {
   "/membre": ["Espace membre", "Vue d’ensemble"],
   "/membre/recherche": ["Espace membre", "Recherche"],
@@ -151,11 +149,6 @@ export const TITLES: Record<string, [string, string]> = {
   "/admin/ressources": ["Back-office", "Ressources"],
 };
 
-/**
- * Titre d'une route, y compris pour une page de détail : `/admin/membres/m1`
- * prend celui de `/admin/membres`. La clé la plus longue qui préfixe le chemin
- * l'emporte.
- */
 export function titrePour(
   chemin: string,
   defaut: [string, string],

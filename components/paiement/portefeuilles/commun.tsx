@@ -11,53 +11,23 @@ import {
   type Portefeuille,
 } from "@/lib/portefeuilles";
 
-/**
- * Ce que partagent les trois écrans de portefeuille.
- *
- * Chaque opérateur a son dessin — MVola en panneau latéral, Orange en
- * bandeau et chevrons, Airtel en cartes arrondies —, mais le parcours est le
- * même : le numéro, l'envoi, le reçu. Les champs, les coordonnées à recopier
- * et les règles d'étape vivent donc ici, une seule fois ; chaque dessin ne
- * décide que de la forme.
- */
-
 export interface PropsTunnel {
   mode: Portefeuille;
   reglementId: string;
   reference: string;
   montant: number;
   devise: Devise;
-  /** Ce qui est réglé : l'objet de la facture. */
   objet: string;
-  /** À quel nom le compte de la chambre est ouvert. */
   titulaire: string;
-  /** Le numéro de la chambre, vide tant que l'équipe ne l'a pas publié. */
   numeroChambre: string;
-  /** Le numéro du membre, une fois saisi. */
   telephone: string | null;
   statut: string;
-  /** Revenir sur le numéro déjà saisi. */
   modifier?: boolean;
-  /** Où revenir pour choisir un autre moyen. */
   retour: string;
-  /**
-   * Le prestataire est raccordé : le membre peut payer depuis la
-   * plateforme, et son téléphone confirme. Sinon, il fait l'envoi lui-même.
-   */
   raccorde: boolean;
-  /** Le nom que la page de paiement affichera, s'il n'est pas le nôtre. */
   marchand?: string | null;
 }
 
-/**
- * « Payer maintenant » : le débit demandé depuis la plateforme.
- *
- * Le membre valide ici, et c'est son téléphone qui lui demande son code
- * secret — jamais un écran de la chambre. Le reste suit tout seul : la
- * facture se règle à la confirmation, et les billets partent s'il s'agit
- * d'une participation. L'envoi à la main reste possible juste en dessous,
- * pour qui préfère composer le menu de l'opérateur.
- */
 export function PaiementDirect({
   p,
   className = "",
@@ -117,13 +87,11 @@ export type Etape = 1 | 2 | 3;
 
 export const ETAPES = ["Montant", "Envoi", "Reçu"] as const;
 
-/** Où en est le membre : le numéro à donner, l'envoi à faire, ou c'est dit. */
 export function etapeDu(p: PropsTunnel): Etape {
   if (p.statut === "annonce" || p.statut === "reussie") return 3;
   return p.telephone && !p.modifier ? 2 : 1;
 }
 
-/** Les couleurs de l'opérateur, posées une fois sur le tunnel. */
 export function couleurs(mode: Portefeuille): CSSProperties {
   const c = PORTEFEUILLES[mode].palette;
   return {
@@ -154,13 +122,6 @@ export const LOGOS: Record<
   },
 };
 
-/**
- * Le numéro du membre, avec l'indicatif devant.
- *
- * Les classes donnent la forme — chaque opérateur a la sienne —, le reste
- * est commun : clavier numérique sur téléphone, saisie automatique, et une
- * aide visible sous le champ qui dit quels préfixes sont attendus.
- */
 export function ChampNumero({
   mode,
   telephone,
@@ -210,7 +171,6 @@ export function ChampNumero({
   );
 }
 
-/** Où envoyer l'argent : le numéro de la chambre, son nom, la référence. */
 export function CoordonneesEnvoi({
   mode,
   reference,
@@ -254,7 +214,6 @@ export function CoordonneesEnvoi({
   );
 }
 
-/** La référence que l'opérateur envoie par SMS — facultative, mais utile. */
 export function ChampRefSms({ champ }: { champ: string }) {
   return (
     <div>

@@ -4,34 +4,14 @@ import { randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { COORDONNEES } from "@/lib/coordonnees";
 
-/**
- * Envoi des e-mails, par Resend.
- *
- * Un simple appel HTTP à leur API : pas de bibliothèque de plus. Sans clé
- * (`RESEND_API_KEY`), en local surtout, rien ne part : le message est écrit
- * dans les journaux du serveur, lien compris, pour qu'on puisse suivre le
- * parcours sans boîte de réception.
- *
- * Un envoi qui échoue ne fait jamais échouer l'action qui l'a demandé : on
- * n'empêche pas une inscription parce que le service d'e-mails hoquette.
- * L'échec est écrit dans les journaux, et l'appelant sait que rien n'est
- * parti.
- */
-
 export interface Courriel {
   a: string;
   sujet: string;
   html: string;
   texte: string;
-  /** Images et fichiers joints au message. */
   pieces?: PieceCourriel[];
 }
 
-/**
- * Une pièce jointe. Avec un `cid`, elle s'affiche dans le corps du message
- * (`<img src="cid:…">`) plutôt qu'en bas : c'est ainsi qu'un QR code arrive
- * sous les yeux, les messageries refusant les images glissées dans le HTML.
- */
 export interface PieceCourriel {
   nom: string;
   contenu: Buffer;
@@ -39,14 +19,11 @@ export interface PieceCourriel {
   cid?: string;
 }
 
-/** Adresse d'expédition, sur un domaine vérifié chez Resend. */
 const EXPEDITEUR =
   process.env.COURRIEL_EXPEDITEUR || "CanCham Connect <onboarding@resend.dev>";
 
-/** Où arrivent les alertes destinées à l'équipe. */
 export const COURRIEL_EQUIPE = process.env.COURRIEL_EQUIPE || COORDONNEES.email;
 
-/** Faux tant que la clé Resend n'est pas posée : rien ne part vraiment. */
 export function courrielsActifs(): boolean {
   return !!process.env.RESEND_API_KEY;
 }
@@ -62,9 +39,6 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
     );
     return false;
   }
-  // Une coupure réseau passagère ne doit pas coûter un e-mail : on
-  // réessaie une fois. La clé d'idempotence garantit qu'un premier envoi
-  // arrivé malgré tout chez Resend ne part pas en double.
   const idempotence = randomUUID();
   for (let essai = 1; essai <= ESSAIS_ENVOI; essai++) {
     try {
@@ -91,12 +65,10 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
                 })),
               }
             : {}),
-          // Une réponse à un e-mail automatique arrive à l'équipe.
           reply_to: COURRIEL_EQUIPE,
         }),
       });
       if (!reponse.ok) {
-        // Refus du service (adresse, domaine, clé) : réessayer n'y changerait rien.
         console.error(
           `[courriel] échec ${reponse.status} — à ${c.a} — « ${c.sujet} » : ${await reponse.text()}`,
         );
@@ -114,40 +86,22 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
   return false;
 }
 
-/** Tentatives par e-mail : la première, et une reprise après coupure réseau. */
 const ESSAIS_ENVOI = 2;
 
-/** L'adresse de la plateforme en ligne : celle des liens envoyés aux membres. */
 export const ADRESSE_PLATEFORME = "https://app.cancham.mg";
 
-/** Une adresse qui ne mène qu'à la machine où tourne le serveur. */
 export function estAdresseLocale(url: string): boolean {
   return /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?(\/|$)/i.test(
     url,
   );
 }
 
-/**
- * Base des liens des e-mails : `APP_URL`, sans barre finale.
- *
- * En production, une adresse locale n'est jamais crue — un `.env` recopié
- * tel quel enverrait aux membres des liens vers « localhost », qu'ils ne
- * peuvent pas ouvrir. On prend alors l'adresse de la plateforme, comme quand
- * la variable manque. En local, `APP_URL` peut viser localhost : les liens
- * de test mènent à la base locale, où vivent leurs jetons.
- */
 function baseLiens(): string | null {
   const base = process.env.APP_URL?.trim().replace(/\/+$/, "") || null;
   if (process.env.NODE_ENV !== "production") return base;
   return base && !estAdresseLocale(base) ? base : ADRESSE_PLATEFORME;
 }
 
-/**
- * Adresse complète d'une page, pour les liens des e-mails.
- *
- * La base des liens (voir `baseLiens`) ; en local sans `APP_URL`, l'hôte de
- * la requête en cours.
- */
 export async function urlPublique(chemin: string): Promise<string> {
   const base = baseLiens();
   if (base) return `${base}${chemin}`;
@@ -159,23 +113,12 @@ export async function urlPublique(chemin: string): Promise<string> {
   return `${protocole}://${hote}${chemin}`;
 }
 
-/* ============================ Gabarit ============================ */
-
-/**
- * Le logo de la chambre, en tête de chaque e-mail.
- *
- * Il est servi par la plateforme en ligne : les messageries refusent les
- * images glissées dans le message lui-même (Gmail ignore les `data:`), et
- * aucune ne joindrait une image sur localhost. Un e-mail parti d'un poste de
- * développement prend donc lui aussi le logo sur app.cancham.mg.
- */
 function enTete(): string {
   const base = baseLiens();
   const site = base && !estAdresseLocale(base) ? base : ADRESSE_PLATEFORME;
   return `<img src="${echapper(`${site}/marque/logo-courriel.png`)}" width="220" height="66" alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar" style="display:block;border:0;outline:none;text-decoration:none;width:220px;height:auto;color:#ffffff;font-size:16px;font-weight:bold">`;
 }
 
-/** Une valeur venue d'un formulaire ne doit pas devenir du HTML. */
 export function echapper(texte: string): string {
   return texte
     .replace(/&/g, "&amp;")
@@ -185,11 +128,6 @@ export function echapper(texte: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/**
- * Mise en page commune : bandeau aux couleurs de la chambre, paragraphes,
- * un bouton, et une version texte pour les messageries qui n'affichent pas
- * le HTML. Les paragraphes sont du texte : ils sont échappés ici.
- */
 export function gabarit({
   titre,
   paragraphes,
@@ -199,10 +137,8 @@ export function gabarit({
 }: {
   titre: string;
   paragraphes: string[];
-  /** Images jointes montrées dans le corps, chacune sous son intitulé. */
   images?: { cid: string; legende: string }[];
   bouton?: { libelle: string; url: string };
-  /** Paragraphes sous le bouton, en plus petit. */
   apres?: string[];
 }): { html: string; texte: string } {
   const p = (t: string, taille = 15, couleur = "#3d4b5c") =>

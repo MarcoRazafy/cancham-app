@@ -25,19 +25,6 @@ import {
 import { getCurrentUser } from "@/lib/session";
 import { notifier, notifierEquipe } from "@/lib/push";
 
-/**
- * Rendez-vous avec l'équipe : réservation par un membre, et réglages côté
- * back-office.
- *
- * Le créneau réservé est toujours recalculé au moment d'écrire : une page
- * restée ouverte propose des heures qui ne sont plus libres, et l'heure reçue
- * du formulaire ne prouve rien. Si deux membres cliquent en même temps, c'est
- * la base qui tranche — un index unique n'autorise qu'un rendez-vous vivant
- * par créneau.
- *
- * Toutes les heures sont celles de Madagascar, celles de la chambre.
- */
-
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const nombre = (fd: FormData, k: string) => Number(texte(fd, k));
 
@@ -47,11 +34,9 @@ const EQUIPE = "/admin/rendez-vous";
 const MOTIF_MAX = 500;
 const TITRE_MAX = 80;
 const DETAIL_MAX = 200;
-/** Bornes d'une durée de rendez-vous, en minutes. */
 const DUREE_MIN = 10;
 const DUREE_MAX = 240;
 
-/** Les deux pages se relisent : un créneau pris disparaît des deux côtés. */
 function revalider() {
   revalidatePath(MEMBRE);
   revalidatePath(EQUIPE);
@@ -59,7 +44,6 @@ function revalider() {
   revalidatePath("/admin/agenda");
 }
 
-/** « mercredi 30 septembre 2026 » : la date telle que l'e-mail l'annonce. */
 const jourLong = (iso: string) =>
   fmtDate(iso, {
     weekday: "long",
@@ -68,7 +52,6 @@ const jourLong = (iso: string) =>
     year: "numeric",
   });
 
-/** Ce qu'un e-mail de rendez-vous répète, quel qu'en soit le destinataire. */
 async function annonce(r: {
   jour: Date;
   debut: string;
@@ -90,15 +73,6 @@ async function annonce(r: {
   };
 }
 
-/* ============================ Côté membre ============================ */
-
-/**
- * Réservation d'un créneau par un membre.
- *
- * Le type donne la durée, et le créneau doit figurer parmi ceux encore
- * libres ce jour-là : hors plage d'accueil, trop proche ou déjà pris, la
- * réservation est refusée avec son motif.
- */
 export async function reserverRendezvous(formData: FormData) {
   const user = await getCurrentUser("membre");
   const jour = texte(formData, "jour");
@@ -120,8 +94,6 @@ export async function reserverRendezvous(formData: FormData) {
     redirectWithErreur(MEMBRE, "Ce type de rendez-vous n’est plus proposé.");
   }
 
-  // L'heure reçue est vérifiée contre les créneaux réellement libres, pas
-  // contre ceux qu'affichait la page : elle a pu vieillir.
   const [plages, pris] = await Promise.all([
     prisma.disponibilite.findMany({
       where: { typeId: type.id },
@@ -170,7 +142,6 @@ export async function reserverRendezvous(formData: FormData) {
       },
     });
   } catch (e) {
-    // Deux clics au même instant : l'index unique du créneau en refuse un.
     if ((e as { code?: string }).code !== "P2002") throw e;
     redirectWithErreur(
       MEMBRE,
@@ -215,15 +186,6 @@ export async function reserverRendezvous(formData: FormData) {
   );
 }
 
-/* ==================== Annulation, des deux côtés ==================== */
-
-/**
- * Annulation d'un rendez-vous, par le membre qui l'a pris ou par l'équipe.
- *
- * Le rendez-vous n'est pas effacé : il garde sa trace d'annulation, et son
- * créneau redevient libre — l'index unique ne compte que les rendez-vous qui
- * tiennent encore.
- */
 export async function annulerRendezvous(formData: FormData) {
   const page = texte(formData, "retour").startsWith("/admin") ? EQUIPE : MEMBRE;
   const user = await getCurrentUser(espaceDe(page));
@@ -256,7 +218,6 @@ export async function annulerRendezvous(formData: FormData) {
   });
 
   const details = await annonce(rendezvous);
-  // Celui qui annule le sait déjà : l'e-mail part à l'autre partie.
   const parLeMembre = rendezvous.userId === user.id;
   const annulation = {
     titre: "Rendez-vous annulé",
@@ -299,9 +260,6 @@ export async function annulerRendezvous(formData: FormData) {
   );
 }
 
-/* ============================ Côté équipe ============================ */
-
-/** Trace d'un changement de réglages, pour le journal de l'équipe. */
 async function tracerReglage(acteur: string, detail: string) {
   await prisma.auditLog.create({
     data: {
@@ -314,16 +272,8 @@ async function tracerReglage(acteur: string, detail: string) {
   });
 }
 
-/** Nombre de plages qu'un type peut porter : de quoi couvrir une semaine. */
 const PLAGES_MAX = 20;
 
-/**
- * Les heures d'accueil saisies dans le formulaire d'un type.
- *
- * Elles arrivent en JSON — le formulaire en ajoute et en retire des lignes,
- * ce qu'un champ répété rendrait illisible. Tout est revérifié ici : le
- * navigateur ne prouve rien.
- */
 function lirePlages(formData: FormData): Plage[] {
   const brut = texte(formData, "plages");
   if (!brut) return [];
@@ -363,7 +313,6 @@ function lirePlages(formData: FormData): Plage[] {
         `${libelle} : la fin doit venir après le début.`,
       );
     }
-    // Deux plages qui se recouvrent offriraient deux fois le même créneau.
     if (plages.some((p) => p.jour === jour && chevauche(p, { debut, fin }))) {
       redirectWithErreur(EQUIPE, `${libelle} : deux plages se chevauchent.`);
     }
@@ -372,11 +321,6 @@ function lirePlages(formData: FormData): Plage[] {
   return plages;
 }
 
-/**
- * Création ou modification d'un type de rendez-vous, avec ses heures
- * d'accueil : c'est le couple durée + plages qui donne des créneaux, et il se
- * règle donc d'un seul geste.
- */
 export async function enregistrerTypeRendezvous(formData: FormData) {
   const user = await exigerEquipe();
   const id = texte(formData, "typeId");
@@ -401,8 +345,6 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
       select: { id: true },
     });
     if (!existant) redirectWithErreur(EQUIPE, "Ce type n’existe plus.");
-    // Les plages sont réécrites en bloc : le formulaire porte la liste
-    // entière, et les rendez-vous déjà pris ne dépendent pas d'elles.
     await prisma.$transaction([
       prisma.disponibilite.deleteMany({ where: { typeId: id } }),
       prisma.typeRendezvous.update({
@@ -411,7 +353,6 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
       }),
     ]);
   } else {
-    // Le nouveau type passe en dernier : l'ordre reste celui de l'équipe.
     const dernier = await prisma.typeRendezvous.findFirst({
       orderBy: { ordre: "desc" },
       select: { ordre: true },
@@ -449,11 +390,6 @@ export async function enregistrerTypeRendezvous(formData: FormData) {
   );
 }
 
-/**
- * Retrait d'un type. Des rendez-vous y sont peut-être rattachés : dans ce
- * cas il est masqué au lieu d'être supprimé, pour ne pas effacer leur
- * historique.
- */
 export async function supprimerTypeRendezvous(formData: FormData) {
   const user = await exigerEquipe();
   const type = await prisma.typeRendezvous.findUnique({

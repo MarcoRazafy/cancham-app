@@ -47,14 +47,6 @@ import type { MemberStatus, MemberType } from "@/lib/types";
 import { after } from "next/server";
 import { notifierMembre } from "@/lib/push";
 
-/**
- * Actions sur les membres et les cotisations.
- *
- * Toute opération financière ou destructrice laisse une trace dans `audit_logs` :
- * une validation de paiement ou une suppression de membre ne doit jamais
- * disparaître silencieusement.
- */
-
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 async function journal(
@@ -73,27 +65,15 @@ function revalideTout() {
   revalidatePath("/", "layout");
 }
 
-/** La personne de l'équipe qui agit, nommée dans le journal. */
 async function acteurEquipe(): Promise<string> {
   return (await getCurrentUser("admin")).nom;
 }
 
-/**
- * Page de retour d'un formulaire partagé entre les espaces.
- *
- * Seul un chemin interne est accepté : une adresse complète glissée dans le
- * champ ferait de l'action un tremplin vers un site tiers.
- */
 function retourInterne(fd: FormData, defaut: string): string {
   const r = texte(fd, "retour");
   return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
 }
 
-/**
- * Une modification de la fiche par l'équipe se trace au journal : le membre
- * n'en est pas l'auteur, et doit pouvoir savoir qui a changé quoi. Les
- * siennes, non — c'est sa fiche.
- */
 async function tracerEquipe(
   estEquipe: boolean,
   memberId: string,
@@ -110,21 +90,12 @@ async function tracerEquipe(
   );
 }
 
-/** Qui agit sur un contact : l'équipe depuis le back-office, le membre sinon. */
 async function acteurDepuis(retour: string): Promise<string> {
   return (
     await getCurrentUser(retour.startsWith("/admin") ? "admin" : "membre")
   ).nom;
 }
 
-/**
- * Invitation d'un compte créé sans mot de passe — contact ajouté par
- * l'équipe ou par un collègue : un lien pour choisir le sien.
- *
- * L'envoi est attendu : le message qui suit l'action dit ce qui s'est
- * vraiment passé, au lieu d'annoncer une invitation qui n'est jamais partie.
- * Faux si rien n'est parti ; l'invitation se renvoie depuis la fiche.
- */
 async function inviter(
   userId: string,
   email: string,
@@ -138,7 +109,6 @@ async function inviter(
   );
 }
 
-/** Le message qui suit « Envoyer l’accès », selon le sort de l'e-mail. */
 function suiteAcces(envoye: boolean, email: string): string {
   if (envoye) return `lien de connexion envoyé à ${email}`;
   return courrielsActifs()
@@ -146,7 +116,6 @@ function suiteAcces(envoye: boolean, email: string): string {
     : "e-mails non configurés : le lien est écrit dans le journal du serveur";
 }
 
-/** La fin du message de confirmation, selon le sort de l'invitation. */
 function suiteInvitation(envoyee: boolean, email: string): string {
   if (envoyee) return `invitation envoyée à ${email}`;
   return courrielsActifs()
@@ -156,7 +125,6 @@ function suiteInvitation(envoyee: boolean, email: string): string {
 
 const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Contact à qui écrire pour une entreprise : le référent, sinon le premier. */
 async function contactDe(memberId: string) {
   return prisma.user.findFirst({
     where: { memberId, role: "membre" },
@@ -165,16 +133,6 @@ async function contactDe(memberId: string) {
   });
 }
 
-/* ============================ Candidatures ============================ */
-
-/**
- * « Envoyer l’accès » : l'équipe ouvre l'accès d'un membre à la plateforme.
- *
- * Personne ne choisit son mot de passe en s'inscrivant : c'est ce clic qui
- * envoie au contact principal le lien pour le créer. Sur une candidature, il
- * vaut aussi validation — la demande devient une adhésion en attente de
- * règlement. Cliquer de nouveau renvoie un lien neuf, qui remplace l'ancien.
- */
 export async function donnerAcces(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -220,7 +178,6 @@ export async function donnerAcces(formData: FormData) {
     );
   }
 
-  // Sans mot de passe, le lien mène à sa création ; avec, à la connexion.
   const lien = contact.motDePasse
     ? await urlPublique(
         `/auth?${new URLSearchParams({ email: contact.email })}`,
@@ -243,9 +200,6 @@ export async function donnerAcces(formData: FormData) {
           lien,
         ),
   );
-  // Un lien qui n'est jamais parti ne doit pas s'afficher « envoyé » : on
-  // le retire, et « Envoyer l’accès » revient. Sans service d'e-mails (en local),
-  // il reste : il est écrit dans le journal du serveur.
   if (!envoye && courrielsActifs() && !contact.motDePasse) {
     await prisma.jetonCompte.deleteMany({
       where: { userId: contact.id, usage: "invitation", utiliseLe: null },
@@ -266,16 +220,6 @@ export async function donnerAcces(formData: FormData) {
   redirectWithFlash(retour, message);
 }
 
-/**
- * Demande écartée.
- *
- * Le dossier reste, avec le statut `refusee` : l'équipe doit pouvoir revoir
- * ce qu'elle a écarté, et revenir sur sa décision. Il ne paraît nulle part
- * côté membre — ni annuaire, ni chiffres publics — et son auteur ne peut pas
- * ouvrir de session. Pour l'effacer vraiment, la suppression définitive
- * reste disponible depuis sa fiche.
- */
-/** Un commentaire de refus tient en quelques lignes : au-delà, c'est un dossier. */
 const COMMENTAIRE_MAX = 2000;
 
 export async function rejectCandidature(formData: FormData) {
@@ -286,9 +230,6 @@ export async function rejectCandidature(formData: FormData) {
     select: { nom: true, statut: true },
   });
   if (!m) redirectWithErreur("/admin/membres", "Demande introuvable.");
-  // Seule une demande à l'examen se refuse. Sans ce garde-fou, une fenêtre
-  // restée ouverte chez un collègue refusait une seconde fois une demande
-  // déjà tranchée — ou, pire, écartait un membre déjà admis.
   if (m.statut !== "candidature") {
     redirectWithErreur(
       `/admin/membres/${id}`,
@@ -298,9 +239,6 @@ export async function rejectCandidature(formData: FormData) {
     );
   }
 
-  // Pourquoi la demande n'est pas validée : obligatoire. C'est ce que la
-  // personne qui rouvrira le dossier — ou qui recevra l'appel du demandeur —
-  // cherchera en premier.
   const commentaire = texte(formData, "commentaire");
   if (!commentaire) {
     redirectWithErreur(
@@ -340,17 +278,6 @@ export async function rejectCandidature(formData: FormData) {
   );
 }
 
-/**
- * Commentaire de l'équipe sur un membre, dans sa fiche du back-office.
- *
- * Réservé à l'équipe, écriture comme lecture. Rien n'en part vers
- * l'adhérent : ni affichage, ni courriel, ni notification. C'est ce qui lui
- * permet d'être franc. Le motif d'un refus d'adhésion s'y range aussi.
- *
- * Pas d'entrée au journal : celui-ci retrace les opérations faites sur un
- * membre — une adhésion approuvée, une facture réglée. Un commentaire est
- * une remarque de travail, et en consigner chacun noierait le reste.
- */
 export async function ajouterNoteMembre(formData: FormData) {
   const user = await exigerEquipe();
   const memberId = texte(formData, "memberId");
@@ -378,13 +305,6 @@ export async function ajouterNoteMembre(formData: FormData) {
   redirectWithFlash(retour, "Commentaire ajouté");
 }
 
-/**
- * Retrait d'un commentaire.
- *
- * Toute l'équipe peut retirer ceux des autres : c'est un carnet commun, et
- * un commentaire devenu faux doit pouvoir disparaître même si celle ou
- * celui qui l'a écrit est parti.
- */
 export async function supprimerNoteMembre(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "noteId");
@@ -401,12 +321,6 @@ export async function supprimerNoteMembre(formData: FormData) {
   redirectWithFlash(retour, "Commentaire retiré");
 }
 
-/**
- * Revenir sur un refus : le dossier repart à l'examen.
- *
- * Une décision prise trop vite, un dossier complété depuis — il ne faut pas
- * avoir à ressaisir la demande pour la reconsidérer.
- */
 export async function reconsidererCandidature(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -440,11 +354,6 @@ export async function reconsidererCandidature(formData: FormData) {
   );
 }
 
-/**
- * Date d'adhésion, corrigée par l'équipe : une reprise de dossier, une
- * inscription enregistrée en retard. Elle sert au calcul du renouvellement
- * tant qu'aucune cotisation n'est réglée, et à l'ancienneté affichée partout.
- */
 export async function modifierDateAdhesion(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -476,14 +385,6 @@ export async function modifierDateAdhesion(formData: FormData) {
   redirectWithFlash(retour, "Date d’adhésion mise à jour");
 }
 
-/**
- * Changement de formule par l'équipe.
- *
- * La formule fixe le montant attendu et la devise : c'est elle qu'on corrige
- * quand un membre a été créé à la main, ou quand une entreprise change de
- * catégorie. Les factures déjà émises ne bougent pas — ce sont des pièces
- * comptables, et leur montant a été celui du jour.
- */
 export async function modifierFormule(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -518,9 +419,6 @@ export async function modifierFormule(formData: FormData) {
   );
 }
 
-/* ============================ Cotisations ============================ */
-
-/** Enregistrement d'un règlement encaissé par l'équipe. Génère la facture. */
 export async function registerPayment(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -535,8 +433,6 @@ export async function registerPayment(formData: FormData) {
   });
   if (!avant) redirectWithErreur("/admin/membres", "Membre introuvable.");
 
-  // Sans formule, il n'y a ni montant attendu ni devise : on ne facture pas
-  // au hasard. L'équipe la choisit depuis la fiche, puis revient encaisser.
   if (!avant.formule) {
     redirectWithErreur(
       `/admin/membres/${id}`,
@@ -544,8 +440,6 @@ export async function registerPayment(formData: FormData) {
     );
   }
 
-  // Montant saisi, sinon celui de la formule. La devise suit toujours la
-  // formule : un montant canadien enregistré en Ariary vaudrait mille fois moins.
   const tarif = FORMULES[avant.formule];
   const montant = Number(formData.get("montant")) || tarif.montant;
   const devise: Devise = tarif.devise;
@@ -573,7 +467,6 @@ export async function registerPayment(formData: FormData) {
         montant,
         devise,
         statut: "payee",
-        // Émise déjà réglée : la date saisie est celle du règlement.
         payeeLe: date,
         memberId: id,
       },
@@ -606,13 +499,6 @@ export async function registerPayment(formData: FormData) {
   );
 }
 
-/**
- * Relance de cotisation, par e-mail au contact de l'entreprise.
- *
- * L'envoi est attendu ici, contrairement aux autres : l'équipe doit savoir
- * si la relance est vraiment partie. Le journal ne la consigne que si
- * c'est le cas.
- */
 export async function sendReminder(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "memberId");
@@ -668,8 +554,6 @@ export async function sendReminder(formData: FormData) {
   redirectWithFlash(fiche, `Relance envoyée à ${contact.email}`);
 }
 
-/* ============================ Fiche membre ============================ */
-
 export async function createMember(formData: FormData) {
   await exigerEquipe();
   const type = (texte(formData, "type") || "morale") as MemberType;
@@ -681,9 +565,6 @@ export async function createMember(formData: FormData) {
     redirectWithErreur("/admin/membres", "Le nom de l’entreprise est requis.");
   }
 
-  // L'adresse sert d'identifiant de connexion, et c'est à elle que partira
-  // l'accès : obligatoire, et libre. On le vérifie avant de créer quoi que
-  // ce soit.
   const email = texte(formData, "email").toLowerCase();
   if (!email) {
     redirectWithErreur(
@@ -714,9 +595,6 @@ export async function createMember(formData: FormData) {
     );
   }
 
-  // Sans choix explicite, la grille s'applique par défaut : « Madagascar —
-  // Entreprise ». Une valeur inventée est ignorée plutôt que refusée — le
-  // champ est une liste fermée, seule une requête forgée peut en sortir.
   const formuleSaisie = texte(formData, "formule");
   const formule =
     formuleSaisie in FORMULES ? (formuleSaisie as FormuleId) : undefined;
@@ -738,8 +616,6 @@ export async function createMember(formData: FormData) {
     },
   });
 
-  // Le contact principal, sans mot de passe : son accès part quand l'équipe
-  // clique sur « Envoyer l’accès », depuis la liste ou la fiche.
   await prisma.user.create({
     data: {
       role: "membre",
@@ -766,24 +642,13 @@ export async function createMember(formData: FormData) {
   );
 }
 
-/** Mise à jour de la fiche par le membre lui-même. */
-/**
- * Fiche de présentation : textes, couverture et logo.
- *
- * Les produits et services n'y figurent plus. Ils se gèrent un par un depuis
- * leur section — l'ancien formulaire les supprimait et les recréait tous à
- * chaque enregistrement, ce qui aurait effacé descriptions et prix qu'il ne
- * connaissait pas.
- */
 export async function updateMemberProfile(formData: FormData) {
-  // L'identifiant reçu ne fait pas foi : un membre ne modifie que sa fiche.
   const retour = retourInterne(formData, "/membre/profil");
   const { memberId: id, estEquipe } = await exigerFiche(
     texte(formData, "memberId"),
     retour,
   );
 
-  // Un champ fichier laissé vide signifie « garde l'image actuelle ».
   const actuel = await prisma.member.findUnique({
     where: { id },
     select: { cover: true, logo: true, nom: true, pays: true },
@@ -794,7 +659,6 @@ export async function updateMemberProfile(formData: FormData) {
   if (!nom) {
     redirectWithErreur(retour, "Le nom de l’entreprise est requis.");
   }
-  // Un pays de la liste, ou celui déjà enregistré ; sinon, inchangé.
   const paysSaisi = texte(formData, "pays");
   const pays =
     (PAYS as readonly string[]).includes(paysSaisi) || paysSaisi === actuel.pays
@@ -834,28 +698,20 @@ export async function updateMemberProfile(formData: FormData) {
       ville: texte(formData, "ville").slice(0, 80) || undefined,
       pays,
       motivation: texte(formData, "motivation").slice(0, 1000) || null,
-      // Hors de la liste — ancien libellé renvoyé tel quel, ou valeur
-      // fabriquée —, le secteur ne change pas.
       secteur: estSecteur(texte(formData, "secteur"))
         ? texte(formData, "secteur")
         : undefined,
       activite: texte(formData, "activite") || undefined,
       desc: texte(formData, "desc") || undefined,
-      // Besoins et intérêts ne font plus qu'un champ : le formulaire reprend
-      // les intérêts à la suite des besoins, ils sont donc enregistrés là.
       besoins: texte(formData, "besoins") || null,
       interets: null,
       siteweb,
       cover: couverture ?? actuel.cover,
-      // Une nouvelle photo repart du centre : le cadrage choisi valait pour
-      // l'ancienne.
       ...(couverture ? { coverX: 50, coverY: 50 } : {}),
       logo: logo ?? actuel.logo,
     },
   });
 
-  // Un changement de nom se trace : les factures déjà émises portent
-  // l'ancien, et l'équipe doit pouvoir faire le lien.
   if (nom !== actuel.nom) {
     await journal(
       "membre_renomme",
@@ -871,22 +727,12 @@ export async function updateMemberProfile(formData: FormData) {
   redirectWithFlash(retour, "Fiche mise à jour");
 }
 
-/**
- * Repositionne la couverture d'une fiche : le point de la photo qui reste
- * visible une fois rognée.
- *
- * Appelée pendant qu'on règle la photo, sans quitter la page : elle rend son
- * résultat au lieu de rediriger. Seul un refus d'accès redirige, comme
- * partout. La photo n'est pas touchée — on n'enregistre que deux
- * pourcentages, bornés ici : ce que le navigateur envoie ne fait pas foi.
- */
 export async function repositionnerCouverture(demande: {
   memberId: string;
   x: number;
   y: number;
   retour: string;
 }): Promise<{ ok: true } | { erreur: string }> {
-  // Seul un chemin interne : il décide de l'espace où l'on vérifie l'accès.
   const r = String(demande?.retour ?? "");
   const retour =
     r.startsWith("/") && !r.startsWith("//") ? r : "/membre/profil";
@@ -895,7 +741,6 @@ export async function repositionnerCouverture(demande: {
     retour,
   );
 
-  // Une demande illisible n'est pas un cadrage au centre : on la refuse.
   if (
     demande == null ||
     typeof demande !== "object" ||
@@ -926,13 +771,6 @@ export async function repositionnerCouverture(demande: {
   return { ok: true };
 }
 
-/**
- * Retire la vidéo de présentation d'une fiche.
- *
- * L'ajout et le remplacement passent par `/api/fiche/video` : une vidéo
- * arrive par morceaux, ce qu'un formulaire ne sait pas faire. Le retrait,
- * lui, est un geste simple.
- */
 export async function retirerVideoPresentation(formData: FormData) {
   const retour = retourInterne(formData, "/membre/profil");
   const { memberId: id, estEquipe } = await exigerFiche(
@@ -955,14 +793,12 @@ export async function retirerVideoPresentation(formData: FormData) {
   redirectWithFlash(retour, "Vidéo de présentation retirée");
 }
 
-/** Ajoute un besoin à la liste « Besoins & intérêts » de sa fiche. */
 export async function ajouterBesoin(formData: FormData) {
   const retour = retourInterne(formData, "/membre/profil");
   const { memberId, estEquipe } = await exigerFiche(
     texte(formData, "memberId"),
     retour,
   );
-  // Une ligne : c'est un tiret sur la fiche.
   const besoin = texte(formData, "besoin").replace(/\s+/g, " ").slice(0, 200);
   if (!besoin) redirectWithErreur(retour, "Décrivez ce que vous recherchez.");
 
@@ -970,8 +806,6 @@ export async function ajouterBesoin(formData: FormData) {
     where: { id: memberId },
     select: { besoins: true, interets: true },
   });
-  // Besoins et intérêts ne forment qu'une liste : les intérêts d'avant y
-  // sont repris, comme le fait « Modifier ma fiche ».
   const lignes = [m?.besoins, m?.interets]
     .flatMap((t) => (t ?? "").split("\n"))
     .map((l) => l.trim())
@@ -996,8 +830,6 @@ export async function ajouterBesoin(formData: FormData) {
   revalideTout();
   redirectWithFlash(retour, "Besoin ajouté à la fiche");
 }
-
-/* ============================ Produits & services ============================ */
 
 export async function ajouterService(formData: FormData) {
   const retour = retourInterne(formData, "/membre/profil");
@@ -1037,9 +869,6 @@ export async function modifierService(formData: FormData) {
   const actuel = await prisma.produit.findUnique({ where: { id } });
   if (!actuel) redirectWithErreur(retour, "Offre introuvable.");
 
-  // On garde ce qui n'a pas été marqué pour retrait, puis on ajoute les
-  // nouvelles photos à la suite : la vignette ne change que si la première
-  // photo est retirée.
   const retirees = new Set(formData.getAll("retirer").map(String));
   const conservees = actuel.photos.filter((url) => !retirees.has(url));
 
@@ -1105,10 +934,6 @@ export async function deleteMember(formData: FormData) {
   });
   if (!m) redirectWithErreur("/admin/membres", "Membre introuvable.");
 
-  // Les factures sont des pièces comptables : elles restent, détachées du
-  // membre, avec une copie de son nom et de ses coordonnées pour se
-  // réimprimer à l'identique. Un compte de l'équipe rattaché à l'entreprise
-  // en est détaché aussi : il partirait sinon avec elle.
   const destinataire = destinataireDe(m);
   const n = m._count.factures;
   await prisma.$transaction([
@@ -1125,8 +950,6 @@ export async function deleteMember(formData: FormData) {
     }),
     prisma.member.delete({ where: { id } }),
   ]);
-  // Sa vidéo de présentation part avec lui : jusqu'à un gigaoctet, que plus
-  // rien ne désignerait.
   await supprimerVideo(m.video);
 
   const factures = n
@@ -1143,15 +966,6 @@ export async function deleteMember(formData: FormData) {
   redirectWithFlash("/admin/membres", `${m.nom} a été supprimé${factures}`);
 }
 
-/* ============================ Contacts ============================ */
-
-/**
- * Ajout d'une personne à joindre chez un membre.
- *
- * L'adresse est unique en base — c'est elle qui servira d'identifiant de
- * connexion le jour où l'authentification arrivera. On le vérifie avant
- * d'écrire pour renvoyer un message lisible plutôt qu'une erreur de contrainte.
- */
 export async function addContact(formData: FormData) {
   const retour = retourInterne(formData, "/membre/profil");
   const { memberId } = await exigerFiche(texte(formData, "memberId"), retour);
@@ -1184,7 +998,6 @@ export async function addContact(formData: FormData) {
   }
 
   const cree = await prisma.$transaction(async (tx) => {
-    // Un seul référent par entreprise : le nouveau détrône l'ancien.
     if (principal) {
       await tx.user.updateMany({
         where: { memberId },
@@ -1229,11 +1042,6 @@ export async function addContact(formData: FormData) {
   redirectWithFlash(retour, message);
 }
 
-/**
- * Nouvel envoi de l'invitation d'un contact qui n'a pas encore choisi son
- * mot de passe : e-mail égaré, lien expiré, adresse corrigée. Le nouveau
- * lien remplace les précédents.
- */
 export async function renvoyerInvitation(formData: FormData) {
   const id = texte(formData, "contactId");
   const retour = retourInterne(formData, "/membre/profil");
@@ -1274,7 +1082,6 @@ export async function renvoyerInvitation(formData: FormData) {
   redirectWithFlash(retour, message);
 }
 
-/** Retrait d'un contact. Le dernier de la liste ne peut pas être retiré. */
 export async function removeContact(formData: FormData) {
   const id = texte(formData, "contactId");
   const retour = retourInterne(formData, "/membre/profil");
@@ -1295,7 +1102,6 @@ export async function removeContact(formData: FormData) {
 
   await prisma.user.delete({ where: { id } });
 
-  // Le référent part sans remplaçant désigné : le plus ancien reprend le rôle.
   if (contact.contactPrincipal) {
     const suivant = await prisma.user.findFirst({
       where: { memberId: contact.memberId },
@@ -1320,12 +1126,6 @@ export async function removeContact(formData: FormData) {
   redirectWithFlash(retour, `${contact.nom} a été retiré des contacts.`);
 }
 
-/**
- * Modification d'un contact, portrait compris.
- *
- * L'unicité du courriel se vérifie en excluant la personne elle-même, sans quoi
- * réenregistrer une fiche sans toucher à l'adresse serait refusé.
- */
 export async function updateContact(formData: FormData) {
   const id = texte(formData, "contactId");
   const retour = retourInterne(formData, "/membre/profil");
@@ -1363,8 +1163,6 @@ export async function updateContact(formData: FormData) {
   const principal = formData.get("principal") === "on";
 
   await prisma.$transaction(async (tx) => {
-    // Un seul référent par entreprise : la règle est métier, aucun index ne la
-    // tient. On dégrade les autres dans la même transaction.
     if (principal && actuel.memberId) {
       await tx.user.updateMany({
         where: { memberId: actuel.memberId, id: { not: id } },
@@ -1378,10 +1176,7 @@ export async function updateContact(formData: FormData) {
         fonction: texte(formData, "fonction") || "Contact",
         email,
         tel: texte(formData, "tel") || null,
-        // Champ fichier vide : on garde le portrait en place.
         photo: photo ?? actuel.photo,
-        // Le dernier référent ne peut pas se destituer lui-même : l'entreprise
-        // se retrouverait sans personne à appeler en premier.
         contactPrincipal: principal || actuel.contactPrincipal,
       },
     });

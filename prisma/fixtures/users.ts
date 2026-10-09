@@ -1,22 +1,6 @@
 import type { Space, User } from "../../lib/types";
 
-/**
- * Un utilisateur de démonstration par espace.
- *
- * Il n'y a volontairement AUCUNE authentification à ce stade : l'espace est
- * déterminé par l’URL (`/`, `/membre`, `/admin`) et l'utilisateur courant
- * est simplement celui qui correspond à cet espace.
- *
- * Quand l'authentification arrivera, seule `getCurrentUser()` changera : elle
- * lira la session au lieu de piocher dans cette table. Rien d'autre dans
- * l'application ne dépend de la façon dont l'utilisateur est résolu.
- */
 export const USERS: Record<Space, User> = {
-  /**
-   * Espace public — la personne n'est pas connectée. On la modélise quand même
-   * comme un utilisateur pour donner un visage au parcours d'adhésion : c'est
-   * la gérante de Zafy Design (m10), dont la candidature attend d'être examinée.
-   */
   public: {
     id: "u-visiteur",
     role: "visiteur",
@@ -32,7 +16,6 @@ export const USERS: Record<Space, User> = {
       "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
   },
 
-  /** Espace membre — représentante d'une entreprise adhérente à jour (m1). */
   membre: {
     id: "u-membre",
     role: "membre",
@@ -48,7 +31,6 @@ export const USERS: Record<Space, User> = {
       "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=400&q=80&auto=format&fit=crop&crop=faces",
   },
 
-  /** Espace admin — équipe CanCham, rattachée à aucune entreprise. */
   admin: {
     id: "u-admin",
     role: "admin",
@@ -65,23 +47,10 @@ export const USERS: Record<Space, User> = {
   },
 };
 
-/**
- * Utilisateur courant, déduit de l'espace.
- *
- * Point d'entrée unique à remplacer le jour où l'on branche l'authentification.
- */
 export function getCurrentUser(space: Space): User {
   return USERS[space];
 }
 
-/**
- * Les autres personnes à joindre chez un membre.
- *
- * Elles peuplent le bloc « Contacts » de la fiche entreprise. Ce sont des
- * utilisateurs comme les autres : quelqu'un que la chambre peut appeler est
- * quelqu'un à qui l'on ouvrira un accès le jour venu. Aucune ne porte
- * `contactPrincipal` — ce rôle est déjà tenu par l'utilisateur de l'espace.
- */
 export const CONTACTS: {
   id: string;
   memberId: string;
@@ -90,7 +59,6 @@ export const CONTACTS: {
   email: string;
   tel: string | null;
   photo: string | null;
-  /** Référent de l'entreprise. Aucun pour m1 : son rôle est tenu par `USERS.membre`. */
   principal: boolean;
 }[] = [
   {
@@ -138,8 +106,6 @@ export const CONTACTS: {
     principal: false,
   },
   {
-    // L'interlocuteur du fil de démonstration t1 : il doit exister parmi les
-    // contacts de son entreprise pour que le panneau d'information le montre.
     id: "u-m2-export",
     memberId: "m2",
     nom: "Fanomezantsoa Randria",

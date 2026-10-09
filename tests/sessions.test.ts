@@ -1,11 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Sessions et mots de passe : un cookie qu'on ne peut ni forger ni modifier,
- * et qui ne survit pas à un changement de mot de passe.
- */
-
-// Le cookie déposé par `ouvrirSession`, capturé au lieu d'une vraie réponse.
 const depose = new Map<string, string>();
 vi.mock("next/headers", () => ({
   cookies: async () => ({
@@ -84,12 +78,9 @@ describe("cookie de session", () => {
   it("ne survit pas à un changement de mot de passe", async () => {
     vi.useFakeTimers();
     const session = lireSession(await jetonPour("u1"))!;
-    // Jamais changé : valable.
     expect(sessionPerimee(session, null)).toBe(false);
-    // Changé une heure plus tard : la session d'avant est fermée.
     const plusTard = new Date(Date.now() + 3_600_000);
     expect(sessionPerimee(session, plusTard)).toBe(true);
-    // La session ouverte juste après le changement, elle, reste valable.
     vi.setSystemTime(plusTard);
     const nouvelle = lireSession(await jetonPour("u1"))!;
     expect(sessionPerimee(nouvelle, plusTard)).toBe(false);

@@ -17,23 +17,12 @@ const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 const MODES = ["Espèces", "Virement bancaire", "Mobile Money", "Chèque"];
 
-/** Une date saisie (AAAA-MM-JJ), sinon aujourd'hui. */
 function dateSaisie(fd: FormData, k: string): Date {
   return jourBase(jourSaisi(texte(fd, k)) ?? undefined);
 }
 
-/**
- * Une cotisation réglée remet le membre à jour.
- *
- * C'est l'objet de la facture qui le dit : les participations à un
- * événement ou les stands n'ont pas d'effet sur l'adhésion.
- */
 const estCotisation = (objet: string) => /^cotisation/i.test(objet);
 
-/**
- * Émission d'une facture hors cotisation automatique : stand, participation,
- * prestation. Elle peut être créée déjà réglée, si l'argent est encaissé.
- */
 export async function creerFacture(formData: FormData) {
   const memberId = texte(formData, "memberId");
   const objet = texte(formData, "objet");
@@ -69,7 +58,6 @@ export async function creerFacture(formData: FormData) {
         montant,
         devise,
         statut: payee ? "payee" : "envoyee",
-        // Émise déjà réglée : sa date est celle du règlement.
         payeeLe: payee ? date : null,
         memberId,
       },
@@ -98,8 +86,6 @@ export async function creerFacture(formData: FormData) {
     return f;
   });
 
-  // Le membre l'apprend sur son appareil : une facture à régler, ou un
-  // paiement enregistré.
   after(() =>
     notifierMembre(
       memberId,
@@ -124,13 +110,6 @@ export async function creerFacture(formData: FormData) {
   );
 }
 
-/**
- * Règlement d'une facture émise.
- *
- * Pour une cotisation, le membre repasse à jour dans la même transaction :
- * une facture payée à côté d'un membre resté « en attente » serait une
- * contradiction que personne ne verrait.
- */
 export async function marquerFacturePayee(formData: FormData) {
   const id = texte(formData, "factureId");
   const mode = MODES.includes(texte(formData, "mode"))
@@ -147,8 +126,6 @@ export async function marquerFacturePayee(formData: FormData) {
   if (f.statut === "payee") redirect(retour);
 
   const acteur = (await getCurrentUser("admin")).nom;
-  // Membre supprimé depuis l'émission : la facture se règle quand même, sans
-  // adhésion à remettre à jour.
   const membre = f.member;
   const nom = nomFacture(f);
   const cotisation =
@@ -158,8 +135,6 @@ export async function marquerFacturePayee(formData: FormData) {
   await prisma.$transaction([
     prisma.invoice.update({
       where: { id },
-      // Le jour saisi par l'équipe : celui où l'argent est arrivé, qui
-      // n'est pas forcément celui où elle l'enregistre.
       data: { statut: "payee", payeeLe: date },
     }),
     ...(cotisation
@@ -185,7 +160,6 @@ export async function marquerFacturePayee(formData: FormData) {
     }),
   ]);
 
-  // Une participation : l'inscription se confirme et les billets partent.
   await delivrerBillets(id, acteur);
   if (membre) {
     const memberId = membre.id;
@@ -205,14 +179,6 @@ export async function marquerFacturePayee(formData: FormData) {
   );
 }
 
-/**
- * Suppression d'une facture émise par erreur.
- *
- * La pièce disparaît des totaux et de l'historique du membre ; son numéro,
- * son montant et son objet restent au journal, qui dit qui l'a supprimée —
- * une facture ne s'efface pas sans laisser de trace. Le numéro n'est pas
- * réattribué tant qu'une facture plus récente existe dans l'année.
- */
 export async function supprimerFacture(formData: FormData) {
   const acteur = (await getCurrentUser("admin")).nom;
   const id = texte(formData, "factureId");
@@ -239,18 +205,6 @@ export async function supprimerFacture(formData: FormData) {
   redirectWithFlash("/admin/paiements", `Facture ${f.numero} supprimée`);
 }
 
-/**
- * Correction de la date du dernier règlement de cotisation d'un membre.
- *
- * C'est cette date qui ouvre l'année d'adhésion : le renouvellement tombe un
- * an après, jour pour jour. Une date saisie de travers décalait donc toute
- * l'échéance, sans moyen de la reprendre.
- *
- * La date vit sur la facture, et nulle part ailleurs : une copie sur la fiche
- * du membre finirait par contredire la pièce comptable. La mention « Dernier
- * règlement » de la fiche n'est qu'un libellé — on y remplace le jour pour
- * qu'elle ne raconte pas autre chose.
- */
 export async function modifierDateReglement(formData: FormData) {
   const memberId = texte(formData, "memberId");
   const retour = `/admin/membres/${memberId}`;
@@ -265,9 +219,6 @@ export async function modifierDateReglement(formData: FormData) {
       statut: "payee",
       objet: { startsWith: "Cotisation", mode: "insensitive" },
     },
-    // À dates égales, la dernière émise : l'ordre doit être le même d'un
-    // appel à l'autre, sinon le crayon corrigerait une fois l'une, une fois
-    // l'autre.
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
@@ -292,8 +243,6 @@ export async function modifierDateReglement(formData: FormData) {
       timeZone: "UTC",
     });
 
-  // Le libellé de la fiche porte la date en toutes lettres : on y reprend la
-  // nouvelle, sans toucher au mode ni au montant qu'il annonce.
   const note = derniere.member?.paiementNote ?? null;
   const noteAJour = note
     ? /le \d{1,2}\/\d{1,2}\/\d{4}/.test(note)
@@ -304,8 +253,6 @@ export async function modifierDateReglement(formData: FormData) {
   await prisma.$transaction([
     prisma.invoice.update({
       where: { id: derniere.id },
-      // Le jour imprimé sur la facture — « Paiement reçu le… » — suit la
-      // correction : c'est bien la date du règlement qu'on reprend ici.
       data: { date: jourBase(jour), payeeLe: jourBase(jour) },
     }),
     ...(noteAJour
@@ -327,9 +274,6 @@ export async function modifierDateReglement(formData: FormData) {
     }),
   ]);
 
-  // Un membre peut porter plusieurs cotisations réglées : c'est la plus
-  // récente qui fixe le renouvellement. Si une autre reste devant, le
-  // renouvellement ne bouge pas — autant le dire que de laisser croire.
   const devant = await prisma.invoice.findFirst({
     where: {
       memberId,

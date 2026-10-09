@@ -3,17 +3,7 @@ import { connection } from "next/server";
 import { getActualitesPubliques, getProchainsEvenements } from "@/lib/queries";
 import { baseSite } from "@/lib/site";
 
-/**
- * Le plan du site : la vitrine et ce qu'elle publie.
- *
- * Seules les pages ouvertes à tous y figurent — un événement ou une actualité
- * réservés à la plateforme n'y paraissent pas, puisque les requêtes ne
- * rendent que ce qui est diffusé publiquement.
- */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
-  // pendant la construction de l'image, et le plan doit suivre les
-  // publications sans attendre un déploiement.
   await connection();
 
   const base = baseSite();
@@ -29,7 +19,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.8,
     },
-    // La page du Gala des 10 ans, écrite à la main : elle ne vient pas de la base.
     { url: `${base}/la-traversee`, changeFrequency: "weekly", priority: 0.9 },
     ...evenements.map((e) => ({
       url: `${base}/evenements/${e.id}`,

@@ -16,7 +16,6 @@ import {
   type Envoi,
 } from "@/components/EnvoisSuivis";
 
-/** Champs de formulaire, accordés aux tokens de l'application. */
 export const INPUT =
   "w-full border border-line bg-surface text-ink rounded-[var(--radius-s)] px-3 py-[9px] text-[13.6px] disabled:opacity-60";
 
@@ -42,11 +41,6 @@ export function Field({
   );
 }
 
-/**
- * Bouton d'envoi qui se désactive pendant le traitement.
- *
- * Sans cela, un double-clic sur « Enregistrer le paiement » crée deux factures.
- */
 export function SubmitButton({
   children,
   pendingLabel,
@@ -86,9 +80,6 @@ export function SubmitButton({
     <button
       type="submit"
       {...rest}
-      // Désactivé pendant l'envoi *et* quand l'appelant le demande : étalées
-      // après, les props de l'appelant écraseraient la protection contre le
-      // double envoi.
       disabled={pending || disabled}
       className={`${base} disabled:opacity-60 disabled:cursor-wait ${size} ${variants[variant]} ${className}`}
     >
@@ -120,10 +111,6 @@ export function ModalBody({ children }: { children: ReactNode }) {
   return <div className="px-5 py-5 flex flex-col gap-3.5">{children}</div>;
 }
 
-/**
- * Posé sur l'aperçu d'une photo pendant son envoi : le pourcentage au
- * centre, une barre en bas, puis une coche quand elle est arrivée.
- */
 export function VoileEnvoi({ envoi }: { envoi: Envoi }) {
   const pct = pourcentage(envoi);
   return (
@@ -171,14 +158,6 @@ export function CancelButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-/**
- * Referme ce qui contient le formulaire — boîte de dialogue, édition en place
- * — une fois l'envoi terminé.
- *
- * Refermer au clic démonterait le formulaire en plein envoi et ferait perdre
- * l'état « en cours » du bouton. On attend donc la fin : l'action serveur a
- * redirigé et la page affiche déjà le résultat.
- */
 export function FermerApresEnvoi({ fermer }: { fermer: () => void }) {
   const { pending } = useFormStatus();
   const enCours = useRef(false);
@@ -192,13 +171,6 @@ export function FermerApresEnvoi({ fermer }: { fermer: () => void }) {
   return null;
 }
 
-/**
- * Champ photo : l'aperçu de ce qui est en place, le choix d'une nouvelle
- * image, et son retrait.
- *
- * Laisser le champ vide garde la photo actuelle ; la retirer se coche
- * explicitement — on ne perd pas une image parce qu'on a modifié un titre.
- */
 export function ChampPhoto({
   name,
   retirer,
@@ -208,23 +180,18 @@ export function ChampPhoto({
   ratio = "aspect-[16/9]",
   rond = false,
 }: {
-  /** Nom du champ fichier. */
   name: string;
-  /** Nom du champ qui demande le retrait de la photo actuelle. */
   retirer?: string;
   apercu?: string | null;
   libelle?: string;
   aide?: string;
   ratio?: string;
-  /** Un portrait se juge dans le cadre où il sera vu : rond. */
   rond?: boolean;
 }) {
   const [choisie, setChoisie] = useState<string | null>(null);
   const [fichiers, setFichiers] = useState<File[]>([]);
   const [retiree, setRetiree] = useState(false);
   const vue = choisie ?? (retiree ? null : (apercu ?? null));
-  // La photo part dès qu'on la choisit ; son pourcentage s'affiche sur
-  // l'aperçu, et le formulaire n'aura plus qu'à envoyer son jeton.
   const { etats, jetons } = useEnvois(fichiers);
   const envoi = etats[0];
 

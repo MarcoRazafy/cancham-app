@@ -25,8 +25,6 @@ export default async function MembreLayout({
 
   const verrouille = isAccessLocked(membre);
 
-  // Le profil et les cotisations restent accessibles : c'est là que le membre
-  // régularise sa situation.
   const toujoursOuvert = PAGES_TOUJOURS_OUVERTES;
 
   return (
@@ -48,8 +46,6 @@ export default async function MembreLayout({
       }
     >
       {children}
-      {/* Le support flotte au-dessus de chaque page, accès restreint compris :
-          c'est justement là qu'on a besoin de joindre l'équipe. */}
       <BulleSupport espace="membre" prenom={user.nom.split(" ")[0]} />
     </Coquille>
   );

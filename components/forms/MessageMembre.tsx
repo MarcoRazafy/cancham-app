@@ -5,13 +5,6 @@ import { SubmitButton } from "@/components/form-bits";
 import { ouvrirConversation } from "@/lib/actions/messages";
 import type { Space } from "@/lib/types";
 
-/**
- * Ouvre la conversation avec une entreprise depuis sa fiche.
- *
- * Un formulaire, pas un lien : l'action doit pouvoir créer le fil avant de
- * rediriger, et le bouton se désactive pendant ce temps — deux clics rapides
- * créeraient deux fils avant que le garde-fou serveur n'ait vu le premier.
- */
 export function BoutonMessage({
   memberId,
   space = "membre",

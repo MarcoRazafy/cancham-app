@@ -5,19 +5,6 @@ import type { Prisma } from "@/lib/generated/prisma/client";
 import { toISODate } from "@/lib/enums";
 import type { Invoice } from "@/lib/types";
 
-/**
- * Le numéro qui suit, parmi ceux déjà attribués pour l'année.
- *
- * On part du plus grand numéro plutôt que du nombre de factures : compter
- * redonnerait un numéro déjà pris dès qu'une facture manque à la suite —
- * importée, émise ailleurs, ou supprimée.
- *
- * Le plus grand *en nombre*, pas en ordre alphabétique : passé 9999,
- * « CC-2026-10000 » se classe avant « CC-2026-9999 », et l'on redonnait
- * sans fin un numéro déjà pris — l'inscription échouait sur le doublon. Un
- * numéro dont la fin n'est pas un nombre est ignoré, plutôt que de faire
- * repartir la suite de zéro.
- */
 export function numeroSuivant(numeros: string[], prefixe: string): string {
   let plusGrand = 0;
   for (const numero of numeros) {
@@ -29,9 +16,7 @@ export function numeroSuivant(numeros: string[], prefixe: string): string {
   return `${prefixe}${String(plusGrand + 1).padStart(4, "0")}`;
 }
 
-/** Numéro de facture séquentiel par année, ex. CC-2026-0008. */
 export async function numeroFacture(date: Date): Promise<string> {
-  // Année UTC : une date de facture est un minuit UTC (voir `jourBase`).
   const prefixe = `CC-${date.getUTCFullYear()}-`;
   const deLAnnee = await prisma.invoice.findMany({
     where: { numero: { startsWith: prefixe } },
@@ -43,13 +28,6 @@ export async function numeroFacture(date: Date): Promise<string> {
   );
 }
 
-/**
- * Le destinataire d'une facture, tel qu'elle l'imprime.
- *
- * Tant que le membre existe, on le lit sur sa fiche. À sa suppression, la
- * facture en garde une copie (`destinataire`) : une pièce comptable se
- * réimprime à l'identique, même quand l'entreprise a quitté la chambre.
- */
 export interface DestinataireFige {
   nom: string;
   ville: string;
@@ -59,7 +37,6 @@ export interface DestinataireFige {
   contact: { nom: string; email: string; tel: string | null } | null;
 }
 
-/** Ce qu'il faut lire d'un membre pour composer son `DestinataireFige`. */
 export const SELECTION_DESTINATAIRE = {
   nom: true,
   ville: true,
@@ -87,7 +64,6 @@ export function destinataireDe(
   };
 }
 
-/** Nom du membre facturé, qu'il existe encore ou non. */
 export function nomFacture(f: {
   member: { nom: string } | null;
   destinataireNom: string | null;
@@ -103,13 +79,10 @@ export interface FactureDetaillee extends Invoice {
     type: "morale" | "physique";
   };
   contact: { nom: string; email: string; tel: string | null } | null;
-  /** Enregistrement du règlement, lu dans le journal. */
   reglement: string | null;
-  /** Le jour où le règlement a été reçu. `null` tant qu'elle n'est pas payée. */
   payeeLe: string | null;
 }
 
-/** Une facture, avec ce qu'il faut pour l'imprimer. */
 export async function getFacture(id: string): Promise<FactureDetaillee | null> {
   const f = await prisma.invoice.findUnique({
     where: { id },

@@ -18,22 +18,12 @@ interface CoquilleProps {
   user: User;
   membre: Member;
   nav: NavGroup[];
-  /** Compteurs affichés à droite des entrées de menu. Clé = href. */
   badges?: Record<string, number>;
-  /** Entrées inertes tant que l'adhésion n'est pas effective. */
   lockedHrefs?: string[];
   notifications?: Notification[];
   children: ReactNode;
 }
 
-/**
- * Coquille de l'espace membre.
- *
- * Barre latérale en dégradé bordeaux vers nuit, barre supérieure avec fil
- * d'Ariane, recherche et raccourcis. La palette vient du bloc `.espace-membre`
- * de globals.css, qui redéfinit les tokens applicatifs : les pages internes
- * s'y conforment sans modification.
- */
 export function Coquille({
   user,
   membre,
@@ -58,23 +48,16 @@ export function Coquille({
         />
       ) : null}
 
-      {/* ==================== Barre latérale ==================== */}
       <aside
         className={`print:hidden w-[274px] shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-200 ${
           menuOuvert ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
         style={{
           background: "var(--laterale)",
-          // Point fixe pendant les transitions de page : seul le contenu bouge.
           viewTransitionName: "barre-laterale",
         }}
       >
         <div className="px-5 pt-7 pb-6">
-          {/*
-            Logo officiel en version renversée, comme la charte le prescrit sur
-            fond foncé. Il porte déjà le nom complet de la chambre : aucun texte
-            ne l'accompagne.
-          */}
           <Link
             href="/membre"
             className="no-underline block"
@@ -108,10 +91,6 @@ export function Coquille({
                 const Icone = NAV_ICONS[item.icon] ?? NAV_ICONS.home;
                 const Cadenas = NAV_ICONS.lock;
                 const cible = item.href.split("?")[0];
-                // Un lien porteur d'une requête est un raccourci vers la page
-                // d'une autre entrée — « Besoin d'aide ? » mène aux ressources
-                // gratuites. Il ne se marque jamais actif : sans cela, les deux
-                // entrées s'allumaient ensemble sur toute page de ressources.
                 const raccourci = item.href.includes("?");
                 const actif =
                   !raccourci &&
@@ -178,9 +157,7 @@ export function Coquille({
         <BoutonDeconnexion />
       </aside>
 
-      {/* ==================== Contenu ==================== */}
       <div className="flex-1 min-w-0 flex flex-col lg:ml-[274px] print:ml-0">
-        {/* Barre supérieure en bleu de la charte : son contenu passe donc en clair. */}
         <header
           className="print:hidden sticky top-0 z-30 border-b border-white/10 flex items-center gap-4 px-4 md:px-7 py-3 text-white"
           style={{
@@ -228,7 +205,6 @@ export function Coquille({
   );
 }
 
-/** « Voninkazo Andriamampianina » devient « Voninkazo A. ». */
 function abreger(nom: string): string {
   const mots = nom.trim().split(/\s+/);
   if (mots.length < 2) return nom;
@@ -242,7 +218,6 @@ function Avatar({
 }: {
   user: User;
   taille: number;
-  /** Sur le pied de la barre latérale, le fond est vert : le rouge y jure. */
   neutre?: boolean;
 }) {
   if (user.photo) {
@@ -279,7 +254,6 @@ function Avatar({
   );
 }
 
-/** Recherche transversale, en formulaire GET : partageable et sans JavaScript. */
 function Recherche() {
   const pathname = usePathname();
   const params = useSearchParams();

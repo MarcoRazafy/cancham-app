@@ -2,11 +2,6 @@ import Image from "next/image";
 import { BookOpen, Building2, MessageSquare, Send } from "lucide-react";
 import { retard } from "@/lib/traversee";
 
-/**
- * Six raisons de venir, en grille bento : deux grandes cartes photo et
- * quatre tuiles texte. Les cartes grandissent légèrement en entrant
- * (`reveler-zoom`), en cascade.
- */
 const TUILES = [
   {
     icone: BookOpen,

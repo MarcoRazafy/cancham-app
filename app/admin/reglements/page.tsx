@@ -10,16 +10,6 @@ import { fmtJour } from "@/lib/agenda";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/reglements";
 
-/**
- * Les règlements annoncés hors ligne, en attente d'un constat.
- *
- * Le membre dit avoir payé ; l'argent, lui, arrive à la banque avec un jour
- * ou deux de décalage. Cet écran est l'endroit où l'équipe rapproche les deux
- * — la référence du règlement se retrouve dans le motif du virement.
- *
- * Confirmer solde la facture et remet le membre à jour. Écarter ne détruit
- * rien : le règlement reste, marqué comme non constaté.
- */
 export default async function Reglements() {
   await exigerEquipe();
 
@@ -158,11 +148,6 @@ export default async function Reglements() {
   );
 }
 
-/**
- * Le rendez-vous d'une remise en espèces : où l'argent arrive, et quand.
- * Quand l'équipe doit passer, l'adresse est là — c'est elle qu'on cherche.
- */
-/** Le visiteur d'une inscription publique, nommé dans le détail du règlement. */
 function payeurPublic(detail: unknown): string | null {
   const d = (detail ?? {}) as { titulaire?: unknown; inscription?: unknown };
   return typeof d.inscription === "string" && typeof d.titulaire === "string"

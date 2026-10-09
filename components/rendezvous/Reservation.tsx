@@ -7,15 +7,6 @@ import { fmtHeure, fmtJour } from "@/lib/agenda";
 import { finCreneau, HORIZON_JOURS, MENTION_FUSEAU } from "@/lib/rendezvous";
 import type { JourProposable, TypeRendezvous } from "@/lib/rendezvous-donnees";
 
-/**
- * Prise de rendez-vous, en trois choix puis une confirmation.
- *
- * Chaque choix est un lien : l'état vit dans l'adresse, donc le retour
- * arrière marche, la page se partage, et rien ne se perd si elle est
- * rechargée. Le formulaire final n'envoie que ce qui a été choisi — l'action
- * serveur revérifie que le créneau est encore libre.
- */
-
 const BASE = "/membre/rendez-vous";
 
 const lien = (c: { type?: string; jour?: string; h?: string }) => {
@@ -27,11 +18,6 @@ const lien = (c: { type?: string; jour?: string; h?: string }) => {
   return s ? `${BASE}?${s}` : BASE;
 };
 
-/**
- * Cadre commun d'un choix. Sélectionné, il prend le rouge plein de la
- * chambre : à côté d'une dizaine de cases claires, un aplat se voit d'un coup
- * d'œil là où un pastel se devine.
- */
 const choix = (actif: boolean) =>
   `no-underline rounded-[var(--radius-s)] border transition-colors ${
     actif
@@ -39,7 +25,6 @@ const choix = (actif: boolean) =>
       : "border-line bg-surface text-ink hover:border-faint hover:bg-surface-2"
   }`;
 
-/** Les lignes secondaires d'un choix, lisibles sur l'aplat comme sur le blanc. */
 const secondaire = (actif: boolean) => (actif ? "text-white/85" : "text-muted");
 const tertiaire = (actif: boolean) => (actif ? "text-white/70" : "text-faint");
 
@@ -81,9 +66,7 @@ export function Reservation({
   heure,
 }: {
   types: TypeRendezvous[];
-  /** Le type choisi, s'il est encore proposé. */
   type: TypeRendezvous | null;
-  /** Les jours qui ont encore un créneau pour ce type. */
   jours: JourProposable[];
   jour: string | null;
   heure: string | null;

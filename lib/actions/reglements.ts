@@ -33,7 +33,6 @@ import { notifierEquipe, notifierMembre } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-/** Une ligne au journal, sous le nom de qui agit. */
 async function journal(
   action: string,
   entiteId: string,
@@ -45,16 +44,6 @@ async function journal(
   });
 }
 
-/* ==================== Coordonnées de la chambre ==================== */
-
-/**
- * Où la chambre reçoit l'argent.
- *
- * Tenues depuis le back-office et non dans le code : un changement de banque
- * ne doit pas demander un déploiement. Un champ laissé vide retire le moyen
- * correspondant du choix offert au membre — mieux vaut un choix plus court
- * qu'un virement envoyé dans le vide.
- */
 export async function enregistrerCoordonneesPaiement(formData: FormData) {
   await exigerEquipe();
   const retour = "/admin/reglements/coordonnees";
@@ -83,15 +72,6 @@ export async function enregistrerCoordonneesPaiement(formData: FormData) {
   redirectWithFlash(retour, "Coordonnées enregistrées");
 }
 
-/* ==================== Le règlement d'une facture ==================== */
-
-/**
- * Ouvre un règlement pour une facture, dans le moyen choisi.
- *
- * La référence est tirée ici, avant tout : c'est elle que le membre recopiera
- * dans le motif de son virement, et elle seule qui permettra de rattacher
- * l'argent arrivé à qui l'a envoyé.
- */
 export async function ouvrirReglement(formData: FormData) {
   const user = await getCurrentUser("membre");
   const factureId = texte(formData, "factureId");
@@ -101,8 +81,6 @@ export async function ouvrirReglement(formData: FormData) {
   if (!estModeReglement(mode)) {
     redirectWithErreur(retour, "Choisissez un moyen de paiement.");
   }
-  // Une tuile grisée n'envoie rien, mais une action serveur est une adresse
-  // publique : un moyen qui n'est pas proposé ne s'ouvre pas non plus ici.
   if (!(await modesProposes()).includes(mode)) {
     redirectWithErreur(retour, `${MODES[mode].titre} : pas encore disponible.`);
   }
@@ -118,8 +96,6 @@ export async function ouvrirReglement(formData: FormData) {
       memberId: true,
     },
   });
-  // Même message pour « introuvable » et « pas à vous » : répondre
-  // différemment dirait à un curieux quelles factures existent.
   if (!f || !user.memberId || f.memberId !== user.memberId) {
     redirectWithErreur("/membre/cotisations", "Facture introuvable.");
   }
@@ -130,9 +106,6 @@ export async function ouvrirReglement(formData: FormData) {
     );
   }
 
-  // Un règlement déjà ouvert dans le même moyen se reprend au lieu d'en
-  // créer un second : deux références pour un même virement se traduiraient
-  // par deux lignes à rapprocher, dont une fantôme.
   const ouvert = await prisma.paiement.findFirst({
     where: { invoiceId: f.id, mode: mode as ModeReglement, statut: "en_cours" },
     select: { id: true, montant: true },
@@ -152,12 +125,6 @@ export async function ouvrirReglement(formData: FormData) {
     }));
   const page = `/membre/cotisations/payer/${p.id}`;
 
-  // La carte n'a rien à préparer chez nous : on ouvre le paiement chez le
-  // prestataire tout de suite, et le membre arrive sur sa page de saisie. Le
-  // titulaire noté est celui qui paie — c'est ce que l'équipe regarde si le
-  // paiement est contesté. Si l'ouverture est refusée — un montant sous leur
-  // plancher, une panne —, il arrive sur l'écran de la carte, qui lui dit
-  // pourquoi et le laisse réessayer ou changer de moyen.
   if (mode === "carte" && vanillaPayActif() && f.devise === "MGA") {
     const ouverture = await ouvrirChezLePrestataire(
       { id: p.id, montant: p.montant, numeroFacture: f.numero },
@@ -171,14 +138,6 @@ export async function ouvrirReglement(formData: FormData) {
   redirect(page);
 }
 
-/**
- * Le numéro depuis lequel le membre va payer, dans un portefeuille mobile.
- *
- * Il est vérifié contre les préfixes de l'opérateur : une ligne Orange ne
- * peut pas envoyer de MVola, et découvrir l'erreur sur le téléphone, le
- * montant déjà saisi, est une perte de temps pour tout le monde. Le numéro
- * sert ensuite à l'équipe pour reconnaître l'envoi qui arrive.
- */
 export async function enregistrerNumeroPortefeuille(formData: FormData) {
   const user = await getCurrentUser("membre");
   const id = texte(formData, "reglementId");
@@ -221,14 +180,6 @@ export async function enregistrerNumeroPortefeuille(formData: FormData) {
   redirect(retour);
 }
 
-/**
- * La remise en espèces : où et quand le membre apporte l'argent.
- *
- * Le bon de remise qui en sort vaut annonce — l'équipe voit le rendez-vous
- * dans ses règlements annoncés, et confirme le jour où l'argent change de
- * main. Revenir sur le rendez-vous reste possible tant que rien n'est
- * encaissé.
- */
 export async function preparerRemiseEspeces(formData: FormData) {
   const user = await getCurrentUser("membre");
   const id = texte(formData, "reglementId");
@@ -307,13 +258,6 @@ export async function preparerRemiseEspeces(formData: FormData) {
   redirect(page);
 }
 
-/**
- * Le membre annonce avoir payé hors ligne.
- *
- * Rien n'est encaissé pour autant : la facture attend que l'équipe constate
- * l'arrivée de l'argent. Annoncer n'est pas payer, et la plateforme ne doit
- * jamais laisser croire le contraire.
- */
 export async function annoncerReglement(formData: FormData) {
   const user = await getCurrentUser("membre");
   const id = texte(formData, "reglementId");
@@ -346,7 +290,6 @@ export async function annoncerReglement(formData: FormData) {
       refBancaire: texte(formData, "refBancaire") || null,
     },
   });
-  // L'équipe le sait sur son téléphone : un règlement attend sa confirmation.
   after(() =>
     notifierEquipe({
       titre: "Règlement annoncé",
@@ -362,15 +305,11 @@ export async function annoncerReglement(formData: FormData) {
   );
 }
 
-/* ==================== Ce que l'équipe en fait ==================== */
-
-/** Le nom donné à l'inscription publique qu'un règlement vient payer. */
 function payeurPublic(detail: unknown): string | null {
   const d = (detail ?? {}) as { titulaire?: unknown };
   return typeof d.titulaire === "string" && d.titulaire ? d.titulaire : null;
 }
 
-/** L'équipe constate que l'argent est arrivé. */
 export async function confirmerReglement(formData: FormData) {
   const user = await exigerEquipe();
   const id = texte(formData, "reglementId");
@@ -429,10 +368,7 @@ export async function confirmerReglement(formData: FormData) {
     `${montant} par ${moyen.toLowerCase()} · ${p.member?.nom ?? payeurPublic(p.detail) ?? "—"} · réf. ${p.reference}`,
     user.nom,
   );
-  // Une participation : l'inscription se confirme et les billets partent.
   if (p.invoice) await delivrerBillets(p.invoice.id, user.nom);
-  // Celle d'un visiteur n'a pas de facture : c'est le code de son
-  // inscription, gardé avec le règlement, qui désigne ses billets.
   const publique = p.invoice ? null : inscriptionPublique(p.detail);
   if (publique) {
     await delivrerBilletsPublics(
@@ -458,7 +394,6 @@ export async function confirmerReglement(formData: FormData) {
   redirectWithFlash(retour, `Règlement ${p.reference} confirmé`);
 }
 
-/** L'argent n'est jamais arrivé, ou pas du bon montant. */
 export async function refuserReglement(formData: FormData) {
   const user = await exigerEquipe();
   const id = texte(formData, "reglementId");
@@ -494,8 +429,6 @@ export async function refuserReglement(formData: FormData) {
       }),
     );
   }
-  // Un visiteur n'a ni compte ni cloche : c'est un e-mail qui le prévient,
-  // avec le lien de son inscription, où il peut choisir à nouveau.
   const publique = p.invoiceId ? null : inscriptionPublique(p.detail);
   const email = (p.detail as { email?: unknown } | null)?.email;
   if (publique && typeof email === "string" && email.includes("@")) {

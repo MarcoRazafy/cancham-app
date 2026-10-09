@@ -4,22 +4,12 @@ import { fmtDate } from "@/lib/format";
 import { fmtMontant } from "@/lib/membership";
 import type { FactureDetaillee } from "@/lib/factures";
 
-/**
- * Facture mise en page pour l'impression.
- *
- * Pas de moteur PDF côté serveur : la page s'imprime, et le navigateur
- * l'enregistre en PDF. La même mise en page sert à l'équipe et au membre.
- */
 export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
   const payee = f.statut === "payee";
   const devise = f.devise === "CAD" ? "dollars canadiens" : "ariary";
 
   return (
-    // À l'impression, la facture occupe une feuille A4 entière : le filet de
-    // la charte en haut de page, le pied de page en bas, à la place de ce
-    // qu'y écrirait le navigateur.
     <article className="bg-white text-[#16202b] border border-line rounded-[var(--radius-m)] shadow-[var(--shadow)] max-w-[820px] mx-auto print:border-0 print:shadow-none print:max-w-none print:rounded-none print:min-h-[296mm] print:flex print:flex-col">
-      {/* Filet de la charte en tête de document. */}
       <div
         className="h-1.5 rounded-t-[var(--radius-m)] print:rounded-none"
         style={{ background: "var(--marque-degrade)" }}
@@ -108,11 +98,6 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
               </td>
             </tr>
           </tbody>
-          {/*
-            Le décompte, comme sur toute facture : ce qui est dû, ce qui a
-            été reçu et quand, ce qui reste. Une facture réglée finit sur un
-            reste à payer de zéro — c'est ce chiffre-là qu'on cherche.
-          */}
           <tfoot>
             <tr>
               <td className="px-4 pt-4 text-right font-semibold">Total</td>

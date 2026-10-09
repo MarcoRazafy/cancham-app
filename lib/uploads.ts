@@ -6,51 +6,21 @@ import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
 import { fichierRecu } from "@/lib/televersements";
 
-/**
- * Réception des images envoyées par les membres.
- *
- * Elles sont redimensionnées et recompressées avant d'être écrites : à
- * Madagascar la bande passante est la contrainte n°1, et une photo de
- * téléphone de 4 Mo rendrait la fiche inconsultable. Rien n'est stocké en base
- * — seul le chemin public l'est.
- *
- * Les fichiers sont écrits dans le stockage persistant (`lib/stockage.ts`),
- * puis servis par la route `/televersements/[fichier]` : l'adresse enregistrée
- * en base reste `/televersements/<nom>`.
- */
-
-/** Dossier d'écriture des images, dans le stockage persistant. */
 export const DOSSIER_TELEVERSEMENTS = dossierStockage("televersements");
 const DOSSIER = DOSSIER_TELEVERSEMENTS;
 
-/** Le plafond de sécurité commun : l'image est de toute façon recompressée. */
 const POIDS_MAX = PLAFOND_FICHIER;
 
 export class ImageRefusee extends Error {}
 
-/**
- * Enregistre une image et renvoie son chemin public.
- *
- * Renvoie `null` quand le champ est vide — un formulaire d'édition renvoie
- * toujours ses champs fichier, remplis ou non, et une absence signifie
- * « ne change pas l'image existante », pas « efface-la ».
- */
 export async function enregistrerImage(
   entree: FormDataEntryValue | null,
   options: {
-    /** Préfixe lisible du nom de fichier, par exemple `couverture-m1`. */
     prefixe: string;
-    /** Largeur maximale. L'image n'est jamais agrandie. */
     largeur: number;
-    /**
-     * Un logo garde sa transparence et part en PNG ; une photo est aplatie en
-     * JPEG, bien plus léger à qualité égale.
-     */
     transparence?: boolean;
   },
 ): Promise<string | null> {
-  // Le fichier lui-même, ou le jeton de l'envoi fait d'avance pour en
-  // suivre le pourcentage (lib/televersements.ts).
   const fichier = await fichierRecu(entree);
   if (!fichier) return null;
 
@@ -67,15 +37,10 @@ export async function enregistrerImage(
   const extension = options.transparence ? "png" : "jpg";
   const nom = `${options.prefixe}-${randomUUID().slice(0, 8)}.${extension}`;
 
-  // `rotate()` sans argument applique l'orientation EXIF : sans lui, les photos
-  // prises en portrait arrivent couchées. Les métadonnées sautent au passage,
-  // ce qui retire aussi les coordonnées GPS de l'appareil.
   const traitee = sharp(source)
     .rotate()
     .resize(options.largeur, null, { withoutEnlargement: true });
 
-  // Un fichier abîmé, ou d'un format que l'on ne sait pas lire, se présente
-  // comme une image jusqu'ici : c'est un refus à dire, pas une panne.
   let sortie: Buffer;
   try {
     sortie = options.transparence

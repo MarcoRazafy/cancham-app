@@ -1,15 +1,6 @@
 import Image from "next/image";
 import { EVENEMENT, retard } from "@/lib/traversee";
 
-/**
- * Le parcours de la journée : quatre temps reliés par la ligne de traversée,
- * du rouge au vert. Horizontal sur ordinateur, vertical sur téléphone.
- * Quatre cartes de même structure, photo en haut puis horaire, titre et
- * texte ; celle du Gala, événement phare, est en bleu nuit.
- *
- * La ligne se trace quand la section entre à l'écran (`.scene[data-visible]
- * .parcours::before`, globals.css).
- */
 const ETAPES = [
   {
     heure: "Toute la journée",

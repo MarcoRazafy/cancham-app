@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { PROVISOIRE } from "@/lib/accueil";
 import { SECTEURS, estSecteur, secteurOuProvisoire } from "@/lib/secteurs";
 
-/** La liste fermée des secteurs : ce qui passe, ce qui ne passe pas. */
-
 describe("secteurs d'activité", () => {
   it("compte les dix-huit secteurs de la chambre, sans doublon", () => {
     expect(SECTEURS).toHaveLength(18);

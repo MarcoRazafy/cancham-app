@@ -28,39 +28,18 @@ import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import { notifierEquipe } from "@/lib/push";
 
-/**
- * Adhésion en deux temps : la candidature d'abord, avec la fiche de la
- * chambre ; puis, une fois validée par l'équipe, la suite de la présentation,
- * étape par étape (`/bienvenue`).
- *
- * Chaque étape enregistre ce qu'elle a reçu et passe à la suivante ; une
- * étape passée ne touche à rien. La fiche porte des valeurs provisoires
- * (`PROVISOIRE`) tant que le membre ne les a pas remplacées.
- */
-
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 const INSCRIPTION = "/auth/inscription";
 
-/** Pages d'où l'on dépose une candidature — et où l'on revient en cas d'erreur. */
 const FORMULAIRES = [INSCRIPTION];
 
-/** Candidatures déposées depuis une même origine en une heure. */
 const CANDIDATURES_PAR_HEURE = 5;
 
-/**
- * Dépôt d'une candidature, depuis la page d'inscription ou la vitrine.
- *
- * Les champs reprennent la fiche d'inscription de la chambre, sans mot de
- * passe : le compte est créé sans, et c'est l'équipe qui ouvre l'accès en
- * validant la demande (« Envoyer l’accès »). Le contact reçoit alors un lien pour
- * créer son mot de passe. On revient à la page de connexion, qui l'explique.
- */
 export async function deposerCandidature(formData: FormData) {
   const retourSaisi = texte(formData, "retour");
   const retour = FORMULAIRES.includes(retourSaisi) ? retourSaisi : INSCRIPTION;
 
-  // Une même origine ne dépose pas des candidatures à la chaîne.
   const attente = tentative(
     `candidature:${await origineAppelante()}`,
     CANDIDATURES_PAR_HEURE,
@@ -86,8 +65,6 @@ export async function deposerCandidature(formData: FormData) {
   const pays = (PAYS as readonly string[]).includes(paysSaisi)
     ? paysSaisi
     : "Madagascar";
-  // « Mettre N/A si pas d'entreprise » : la fiche de la chambre distingue
-  // ainsi l'indépendant de l'entreprise. La fiche porte alors son nom.
   const nomSaisi = texte(formData, "nom").slice(0, 120);
   const independant = !nomSaisi || /^n\s*\/?\s*a$/i.test(nomSaisi);
   const motivation = texte(formData, "motivation").slice(0, 1000);
@@ -136,10 +113,6 @@ export async function deposerCandidature(formData: FormData) {
     },
   });
 
-  // La personne qui dépose la demande devient le contact principal : c'est
-  // elle que la chambre appellera, et le compte avec lequel elle se
-  // connectera. Sans mot de passe : il se crée par le lien que l'équipe
-  // envoie en cliquant sur « Envoyer l’accès ».
   await prisma.user.create({
     data: {
       role: "membre",
@@ -162,8 +135,6 @@ export async function deposerCandidature(formData: FormData) {
     },
   });
 
-  // Les e-mails partent après la réponse : la demande n'attend pas le
-  // service d'envoi, et ne dépend pas de lui.
   const fiche = await urlPublique(`/admin/membres/${membre.id}`);
   after(() =>
     Promise.all([
@@ -190,11 +161,9 @@ export async function deposerCandidature(formData: FormData) {
   );
 
   revalidatePath("/", "layout");
-  // Retour à la connexion, qui explique que la demande est à l'examen.
   redirect(`/auth?${new URLSearchParams({ demande: "1", email })}`);
 }
 
-/** Enregistre une étape de la présentation, puis passe à la suivante. */
 export async function enregistrerEtape(formData: FormData) {
   const user = await getCurrentUser("membre");
   if (!user.memberId) redirect("/membre/profil");
@@ -236,7 +205,6 @@ export async function enregistrerEtape(formData: FormData) {
     case "entreprise": {
       const type =
         texte(formData, "type") === "physique" ? "physique" : "morale";
-      // Un indépendant n'a pas d'entreprise : sa fiche porte son nom.
       const nom =
         texte(formData, "nom") || (type === "physique" ? user.nom : "");
       if (!nom) {
@@ -258,8 +226,6 @@ export async function enregistrerEtape(formData: FormData) {
         data: {
           type,
           nom,
-          // Rien de choisi : la valeur provisoire. Hors de la liste (ancien
-          // libellé renvoyé tel quel, ou valeur fabriquée) : inchangé.
           secteur: !texte(formData, "secteur")
             ? PROVISOIRE.secteur
             : estSecteur(texte(formData, "secteur"))
@@ -317,13 +283,11 @@ export async function enregistrerEtape(formData: FormData) {
         if (e instanceof ImageRefusee) redirectWithErreur(ici, e.message);
         throw e;
       }
-      // Sans nouveau fichier, l'image en place reste.
       if (logo || cover) {
         await prisma.member.update({
           where: { id: memberId },
           data: {
             ...(logo ? { logo } : {}),
-            // Une nouvelle couverture repart du centre.
             ...(cover ? { cover, coverX: 50, coverY: 50 } : {}),
           },
         });
@@ -332,8 +296,6 @@ export async function enregistrerEtape(formData: FormData) {
     }
 
     case "produits": {
-      // Une offre à la fois ; « Ajouter et continuer » revient ici pour la
-      // suivante, « Terminer » enregistre la dernière et clôt l'accueil.
       let ajoute: string | null = null;
       try {
         ajoute = await creerProduit(formData, memberId);
@@ -360,7 +322,6 @@ export async function enregistrerEtape(formData: FormData) {
   await terminer(memberId, user.id);
 }
 
-/** « Terminer » sans rien enregistrer : la dernière étape passée. */
 export async function terminerAccueil() {
   const user = await getCurrentUser("membre");
   if (!user.memberId) redirect("/membre/profil");

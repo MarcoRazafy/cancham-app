@@ -8,16 +8,6 @@ import {
 
 const SANS_CACHE = { "Cache-Control": "no-store" };
 
-/**
- * Conversation de support, pour la bulle flottante.
- *
- * La bulle interroge cette route à intervalles réguliers : c'est ce qui fait
- * arriver une réponse sans recharger la page.
- *
- * Côté membre, aucun verrou de cotisation ici, contrairement au reste de
- * `/api` : un membre dont l'accès est restreint doit justement pouvoir écrire
- * à l'équipe pour régulariser.
- */
 export async function GET(requete: NextRequest) {
   const p = requete.nextUrl.searchParams;
   const espace = p.get("espace") === "admin" ? "admin" : "membre";

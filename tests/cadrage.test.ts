@@ -9,11 +9,6 @@ import {
   pourcentageDeCadrage,
 } from "@/lib/cadrage";
 
-/**
- * Le cadrage d'une couverture : ce qu'on enregistre vient du navigateur, et
- * ce qu'on calcule pendant le glissement décide de ce que voit le membre.
- */
-
 describe("pourcentage de cadrage", () => {
   it("garde un entier entre 0 et 100", () => {
     expect(pourcentageDeCadrage(0)).toBe(0);
@@ -57,7 +52,6 @@ describe("débordement de la photo", () => {
   const bandeau = { largeur: 900, hauteur: 260 };
 
   it("ne dépasse qu'en hauteur pour une photo moins allongée que le cadre", () => {
-    // 1600 × 900 agrandie à 900 de large : 506,25 de haut.
     const d = debordement(bandeau, { largeur: 1600, hauteur: 900 });
     expect(d.largeur).toBe(0);
     expect(d.hauteur).toBeCloseTo(246.25);
@@ -89,8 +83,6 @@ describe("débordement de la photo", () => {
 });
 
 describe("résidu d'arrondi", () => {
-  // 1600 × (872 / 1600) ne redonne pas 872 : sans précaution, le sens qui
-  // tombe juste passait pour un débordement infime.
   const cadre = { largeur: 872, hauteur: 260 };
   const photo = { largeur: 1600, hauteur: 1067 };
 
@@ -113,7 +105,7 @@ describe("résidu d'arrondi", () => {
 
 describe("glissement de la photo", () => {
   const cadre = { largeur: 900, hauteur: 260 };
-  const haute = { largeur: 1600, hauteur: 900 }; // dépasse de 246,25 px en hauteur
+  const haute = { largeur: 1600, hauteur: 900 };
 
   it("tirer vers le bas découvre le haut de la photo", () => {
     const c = cadrageApresGlissement(CADRAGE_CENTRE, 0, 61.5625, cadre, haute);
@@ -141,7 +133,7 @@ describe("glissement de la photo", () => {
   });
 
   it("glisse en largeur pour une photo panoramique", () => {
-    const large = { largeur: 2600, hauteur: 260 }; // dépasse de 1700 px en largeur
+    const large = { largeur: 2600, hauteur: 260 };
     const c = cadrageApresGlissement(CADRAGE_CENTRE, -425, 90, cadre, large);
     expect(c.x).toBeCloseTo(75);
     expect(c.y).toBe(50);

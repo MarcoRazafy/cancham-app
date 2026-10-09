@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * Une liste déroulante qui soumet son formulaire dès qu'on choisit : un
- * bouton « Appliquer » de plus n'apprendrait rien à personne, et le choix
- * part dans l'adresse, donc il se partage et survit au rechargement.
- */
 export function SelectAuto({
   name,
   valeur,
@@ -13,7 +8,6 @@ export function SelectAuto({
 }: {
   name: string;
   valeur: string;
-  /** Ce que la liste règle, pour les lecteurs d'écran. */
   libelle: string;
   options: { key: string; label: string }[];
 }) {

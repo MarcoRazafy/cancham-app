@@ -1,14 +1,6 @@
 import { fmtMontant } from "../../lib/membership";
 import { INVOICES } from "./invoices";
 
-/**
- * Historique de démonstration du journal des opérations.
- *
- * Tiré des données elles-mêmes — chaque facture payée a son encaissement, la
- * candidature en cours son dépôt, le membre en retard sa relance — pour que
- * le journal raconte la même histoire que les fiches.
- */
-
 export interface EntreeJournalDemo {
   action: string;
   entite: string;
@@ -20,7 +12,6 @@ export interface EntreeJournalDemo {
 
 const EQUIPE = "Ando Ratovomanana";
 
-/** Une date à une heure de bureau plausible, pour que les heures varient. */
 const le = (iso: string, heure: string) => new Date(`${iso}T${heure}:00`);
 
 export function journalDemo(aujourdhui: Date): EntreeJournalDemo[] {

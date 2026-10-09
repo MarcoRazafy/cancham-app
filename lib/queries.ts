@@ -62,16 +62,6 @@ import type {
   Space,
 } from "@/lib/types";
 
-/**
- * Accès aux données.
- *
- * Chaque fonction lit la base et rend le modèle de vue défini dans `lib/types.ts`
- * — les composants ne connaissent donc pas Prisma, et n'ont pas eu à changer
- * lors de la bascule depuis les données en dur.
- */
-
-/* ============================ Membres ============================ */
-
 const membreInclude = { produits: { orderBy: { ordre: "asc" } } } as const;
 
 type MembreRow = {
@@ -147,7 +137,6 @@ function versMembre(m: MembreRow): Member {
   };
 }
 
-/** Tous les membres, candidatures comprises. Classés par nom. */
 export async function getMembers(): Promise<Member[]> {
   const rows = await prisma.member.findMany({
     include: membreInclude,
@@ -156,7 +145,6 @@ export async function getMembers(): Promise<Member[]> {
   return rows.map(versMembre);
 }
 
-/** Les membres visibles dans l'annuaire : une candidature n'en est pas encore un. */
 export async function getMembresAnnuaire(): Promise<Member[]> {
   const rows = await prisma.member.findMany({
     where: { statut: { notIn: HORS_ANNUAIRE } },
@@ -174,12 +162,6 @@ export async function getMember(id: string): Promise<Member | null> {
   return row ? versMembre(row) : null;
 }
 
-/* ============================ Événements ============================ */
-
-/**
- * Le nombre d'inscrits n'est pas stocké : il se compte depuis les participants.
- * C'est ce qui évite qu'un compteur figé s'écarte de la liste réelle.
- */
 export async function getEvents(): Promise<CanchamEvent[]> {
   const rows = await prisma.event.findMany({
     include: { _count: { select: { participants: true } } },
@@ -204,11 +186,6 @@ export async function getEvents(): Promise<CanchamEvent[]> {
   }));
 }
 
-/**
- * Les billets d'une inscription publique, retrouvés par son code : celui du
- * lien de l'e-mail de confirmation, qui fait office de clé. Le code d'une
- * inscription de membre n'ouvre rien ici — ses billets sont dans son espace.
- */
 export async function getBilletsPublics(eventId: string, code: string) {
   const base = codeInscription(extraireCode(code));
   if (!estCodeInscription(base)) return [];
@@ -222,8 +199,6 @@ export async function getBilletsPublics(eventId: string, code: string) {
         eventId,
         OR: [{ code: base }, { code: { startsWith: `${base}-` } }],
       },
-      // Les lignes d'une inscription naissent au même instant : le code
-      // départage, pour que le premier billet soit toujours le même.
       orderBy: [{ createdAt: "asc" }, { code: "asc" }],
       select: {
         nom: true,
@@ -296,7 +271,6 @@ export async function getRegistration(
     where: { eventId_memberId: { eventId, memberId } },
   });
   if (!r) return null;
-  // Les lignes d'accueil de l'inscription : son code, puis « -2 », « -3 »…
   const lignes = await prisma.attendee.findMany({
     where: {
       eventId,
@@ -304,7 +278,6 @@ export async function getRegistration(
     },
     select: { nom: true, code: true, statut: true },
   });
-  // Dans l'ordre des rangs : « -10 » vient après « -2 », pas avant.
   const rang = (c: string | null) =>
     c === r.code ? 1 : Number(c?.slice(r.code.length + 1)) || 0;
   lignes.sort((a, b) => rang(a.code) - rang(b.code));
@@ -313,7 +286,6 @@ export async function getRegistration(
     memberId: r.memberId,
     code: r.code,
     date: toISODate(r.createdAt),
-    // Une inscription d'avant les représentants n'a que son propre code.
     representants: lignes.length
       ? lignes.map((l) => ({ nom: l.nom, code: l.code ?? r.code }))
       : [{ nom: "", code: r.code }],
@@ -321,12 +293,6 @@ export async function getRegistration(
   };
 }
 
-/* ============================ Contenus ============================ */
-
-/**
- * Ce qu'on charge avec un commentaire : ses « j'aime » comptés, et celui de
- * l'utilisateur courant s'il en a posé un.
- */
 function commentairesInclude(userId?: string) {
   return {
     orderBy: { createdAt: "asc" as const },
@@ -362,20 +328,11 @@ const versCommentaires = (cs: CommentRow[], userId?: string): Comment[] =>
     jaimeParMoi: c.jaimes.length > 0,
   }));
 
-/**
- * Ce qu'on charge avec une publication.
- *
- * Les « j'aime » ne remontent pas en entier : seul le compte est utile, plus
- * la ligne de l'utilisateur courant s'il en a posé une — une liste filtrée
- * sur lui, vide ou d'un élément, qui dit « déjà aimé » sans rien trier en
- * mémoire.
- */
 function newsInclude(userId?: string) {
   return {
     commentaires: commentairesInclude(userId),
     _count: { select: { jaimes: true } },
     jaimes: { where: { userId: userId ?? "" }, select: { id: true } },
-    // Pour une publication de membre : de quoi la signer.
     member: { select: { id: true, nom: true, logo: true } },
   };
 }
@@ -416,13 +373,9 @@ function versNews(n: NewsRow, userId?: string): NewsItem {
   };
 }
 
-/** Fil d'actualité, du plus récent au plus ancien. */
 export async function getNews(userId?: string): Promise<NewsItem[]> {
   const rows = await prisma.news.findMany({
     include: newsInclude(userId),
-    // La date n'a pas d'heure : entre deux publications du même jour, la
-    // dernière écrite passe devant — celle qu'on vient de publier arrive
-    // en tête du fil.
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
   });
   return rows.map((n) => versNews(n, userId));
@@ -439,7 +392,6 @@ export async function getNewsItem(
   return n ? versNews(n, userId) : null;
 }
 
-/** Une actualité telle que la page publique la montre : sans commentaires ni « j'aime ». */
 export interface ActualitePublique {
   id: string;
   titre: string;
@@ -448,9 +400,7 @@ export interface ActualitePublique {
   extrait: string;
   corps: string;
   images: string[];
-  /** L'entreprise membre qui publie ; `null` pour une actualité de la chambre. */
   auteur: string | null;
-  /** Publication libre : un texte seul, dont le titre n'est que le début. */
   libre: boolean;
 }
 
@@ -490,7 +440,6 @@ const CHAMPS_ACTUALITE_PUBLIQUE = {
   member: { select: { nom: true } },
 } as const;
 
-/** Les dernières actualités diffusées sur la page publique. */
 export async function getActualitesPubliques(
   n = 3,
 ): Promise<ActualitePublique[]> {
@@ -503,7 +452,6 @@ export async function getActualitesPubliques(
   return rows.map(versActualitePublique);
 }
 
-/** Une actualité de la page publique ; `null` si elle est réservée aux membres. */
 export async function getActualitePublique(
   id: string,
 ): Promise<ActualitePublique | null> {
@@ -514,19 +462,10 @@ export async function getActualitePublique(
   return n ? versActualitePublique(n) : null;
 }
 
-/** Y a-t-il au moins une actualité sur la page publique ? */
 export async function aDesActualitesPubliques(): Promise<boolean> {
   return (await prisma.news.count({ where: { public: true } })) > 0;
 }
 
-/**
- * Les dossiers qu'une personne n'a pas à voir : ceux que l'équipe a réservés
- * à d'autres entreprises que la sienne, et tout ce qu'ils contiennent — un
- * sous-dossier suit le sort de celui qui le range. Vide pour l'équipe.
- *
- * L'arborescence est petite : on la lit en entier, et l'on descend depuis
- * chaque dossier fermé.
- */
 export async function dossiersInterdits(
   user: { role: string; memberId: string | null } | null,
 ): Promise<string[]> {
@@ -564,52 +503,28 @@ export async function dossiersInterdits(
   return [...interdits];
 }
 
-/**
- * Ce qu'une personne a le droit de voir de la bibliothèque : tout, sauf ce
- * qui est rangé dans un dossier qui lui est fermé. Ces ressources-là
- * n'existent pour elle ni dans la liste, ni dans les comptes, ni dans la
- * recherche.
- */
 async function visibiliteRessources(
   user: { role: string; memberId: string | null } | null,
 ): Promise<Prisma.ResourceWhereInput> {
   const interdits = await dossiersInterdits(user);
   if (!interdits.length) return {};
-  // `notIn` écarte aussi les valeurs nulles : la racine se redit à part.
   return {
     AND: [{ OR: [{ dossierId: null }, { dossierId: { notIn: interdits } }] }],
   };
 }
 
-/**
- * L'ordre des ressources d'un dossier : le rang que l'équipe leur a donné ;
- * tant qu'elle n'a rien rangé — rang 0 partout —, les plus récentes d'abord.
- * L'identifiant départage les ex æquo, pour que l'ordre affiché soit celui
- * que le déplacement d'une ressource renumérote.
- */
 export const ORDRE_RESSOURCES = [
   { ordre: "asc" },
   { date: "desc" },
   { id: "asc" },
 ] satisfies Prisma.ResourceOrderByWithRelationInput[];
 
-/** Comment la bibliothèque trie ce qu'elle liste : le plus récent, ou l'alphabet. */
 export type TriBibliotheque = "date" | "nom";
 
 export async function getResources(
   type?: "gratuit" | "payant",
-  /**
-   * Le dossier où regarder. `undefined` = toute la bibliothèque, à plat ;
-   * `null` = la racine seulement ; une chaîne = ce dossier seulement ; une
-   * liste = ces dossiers-là, pour lire un dossier et ce qu'il range.
-   */
   dossierId?: string | null | string[],
-  /** Recherche sur le titre. Une recherche traverse tous les dossiers. */
   recherche?: string,
-  /**
-   * Le tri de la bibliothèque, à sa racine et dans ses résultats. Absent :
-   * l'ordre d'un dossier, celui que l'équipe a donné à ses étapes.
-   */
   tri?: TriBibliotheque,
 ): Promise<Resource[]> {
   const q = recherche?.trim();
@@ -618,8 +533,6 @@ export async function getResources(
     where: {
       ...(await visibiliteRessources(user)),
       ...(type ? { type } : {}),
-      // Chercher dans un seul dossier n'aurait pas de sens : on cherche
-      // précisément ce qu'on ne sait plus où l'on a rangé.
       ...(dossierId !== undefined && !q
         ? {
             dossierId: Array.isArray(dossierId) ? { in: dossierId } : dossierId,
@@ -628,8 +541,6 @@ export async function getResources(
       ...(q ? { titre: { contains: q, mode: "insensitive" as const } } : {}),
     },
     include: { commentaires: commentairesInclude() },
-    // Une recherche traverse les dossiers, où les rangs ne se comparent
-    // pas : elle rend le plus récent d'abord.
     orderBy:
       tri === "nom"
         ? [{ titre: "asc" }, { id: "asc" }]
@@ -638,8 +549,6 @@ export async function getResources(
           : ORDRE_RESSOURCES,
   });
 
-  // Ce que la personne connectée peut ouvrir : l'équipe voit tout, un membre
-  // ne lit une ressource facturée que si son accès a été ouvert.
   const payantes = rows.filter((r) => r.type === "payant").map((r) => r.id);
   const ouverts =
     user && user.role !== "admin" && user.memberId && payantes.length
@@ -652,7 +561,6 @@ export async function getResources(
           ).map((a) => a.resourceId),
         )
       : new Set<string>();
-  // Les étapes qu'un membre a terminées : la vue d'un dossier les coche.
   const terminees =
     user && user.role !== "admin" && rows.length
       ? new Set(
@@ -689,22 +597,13 @@ export async function getResources(
   }));
 }
 
-/**
- * Une ressource, pour sa page de lecture — `null` si elle n'existe pas, ou
- * si la personne connectée n'a pas à la voir : une ressource rangée dans
- * un dossier réservé ne livre ni son titre ni sa description à qui n'en est
- * pas.
- */
 export async function getRessourceLisible(id: string): Promise<{
   titre: string;
   fmt: "pdf" | "docx" | "video" | "image" | "page";
   taille: string;
   description: string | null;
-  /** Les blocs d'une page composée. Vide pour une ressource faite d'un fichier. */
   blocs: Bloc[];
-  /** Le dossier qui la range : c'est là qu'on revient. */
   dossierId: string | null;
-  /** Étape déjà terminée par la personne connectée. */
   terminee: boolean;
 } | null> {
   const user = await utilisateurConnecte();
@@ -731,9 +630,6 @@ export async function getRessourceLisible(id: string): Promise<{
   };
 }
 
-/* -------------------------- Dossiers -------------------------- */
-
-/** Ce qu'on lit d'un dossier pour le présenter, hors ce qu'il range. */
 const CHAMPS_DOSSIER = {
   id: true,
   nom: true,
@@ -747,7 +643,6 @@ const CHAMPS_DOSSIER = {
   acces: { select: { memberId: true } },
 } as const;
 
-/** Un dossier tel qu'on l'affiche. `equipe` : qui y a accès ne regarde qu'elle. */
 function versDossier(
   d: {
     id: string;
@@ -784,12 +679,6 @@ function versDossier(
   };
 }
 
-/**
- * Les dossiers rangés directement dans `parentId` — la racine si `null`.
- *
- * Chacun dit ce qu'il contient : sans ce compte, un dossier vide et un
- * dossier plein se ressemblent, et l'on clique pour rien.
- */
 export async function getSousDossiers(
   parentId: string | null,
   tri: TriBibliotheque = "nom",
@@ -797,10 +686,6 @@ export async function getSousDossiers(
   return listerDossiers({ parentId }, tri);
 }
 
-/**
- * Les dossiers dont le nom porte ces mots, où qu'ils soient rangés : la
- * recherche de la bibliothèque trouve un dossier comme un document.
- */
 export async function rechercherDossiers(
   recherche: string,
   tri: TriBibliotheque = "nom",
@@ -810,15 +695,12 @@ export async function rechercherDossiers(
   return listerDossiers({ nom: { contains: q, mode: "insensitive" } }, tri);
 }
 
-/** Des dossiers, tels que la personne connectée a le droit de les voir. */
 async function listerDossiers(
   ou: Prisma.DossierRessourceWhereInput,
   tri: TriBibliotheque,
 ): Promise<DossierRessource[]> {
   const user = await utilisateurConnecte();
   const equipe = user?.role === "admin";
-  // Un dossier fermé à la personne n'existe pas pour elle, ni dans la
-  // liste, ni dans le compte de ce que contient son parent.
   const interdits = await dossiersInterdits(user);
   const visibles = interdits.length ? { id: { notIn: interdits } } : {};
   const rows = await prisma.dossierRessource.findMany({
@@ -843,14 +725,6 @@ async function listerDossiers(
   );
 }
 
-/**
- * Ce qu'un dossier range sous lui, section par section : chaque sous-dossier
- * avec ses ressources et ses propres sous-dossiers. C'est ce que la vue d'un
- * dossier déplie.
- *
- * Deux requêtes pour tout l'arbre, quel que soit le nombre de niveaux : les
- * dossiers d'un côté, les ressources de l'autre, et l'on assemble ici.
- */
 export async function getSectionsDossier(
   parentId: string,
 ): Promise<SectionDossier[]> {
@@ -903,7 +777,6 @@ export async function getSectionsDossier(
   return construire(parentId);
 }
 
-/** Le dossier ouvert, tel que sa propre vue le présente. `null` s'il n'existe plus. */
 export async function getDossierOuvert(
   id: string,
 ): Promise<DossierRessource | null> {
@@ -923,21 +796,12 @@ export async function getDossierOuvert(
   );
 }
 
-/**
- * Le chemin d'un dossier, de la racine jusqu'à lui — le fil d'Ariane.
- *
- * `null` quand le dossier n'existe pas, ou qu'il est fermé à la personne
- * connectée — lui ou l'un de ceux qui le rangent : la page ouvre alors la
- * racine plutôt que d'afficher une erreur pour un lien devenu caduc.
- */
 export async function getFilDossier(
   id: string,
 ): Promise<MaillonDossier[] | null> {
   const fil: MaillonDossier[] = [];
   let courant: string | null = id;
 
-  // Bornée : une arborescence ne dépasse pas quelques niveaux, et une boucle
-  // en base — impossible en principe — ne doit pas figer la page.
   for (let i = 0; courant && i < 20; i++) {
     const d: { id: string; nom: string; parentId: string | null } | null =
       await prisma.dossierRessource.findUnique({
@@ -955,7 +819,6 @@ export async function getFilDossier(
   return fil.reverse();
 }
 
-/** Tous les dossiers à plat, avec leur profondeur : pour une liste déroulante. */
 export async function getArborescenceDossiers(): Promise<
   { id: string; nom: string; profondeur: number; restreint: boolean }[]
 > {
@@ -986,13 +849,6 @@ export async function getArborescenceDossiers(): Promise<
   return sortie;
 }
 
-/* ============================ Offres & services ============================ */
-
-/**
- * Ce qu'une offre emporte de son entreprise : de quoi la présenter et la
- * joindre depuis la fenêtre de l'offre, sans ouvrir sa fiche d'annuaire. Seul
- * le référent vient — c'est à lui qu'on écrit.
- */
 const CHAMPS_MEMBRE_OFFRE = {
   nom: true,
   cover: true,
@@ -1009,22 +865,14 @@ const CHAMPS_MEMBRE_OFFRE = {
   },
 } as const;
 
-/** Toutes les offres, de la plus récente à la plus ancienne : pour l'équipe, qui les gère. */
 export async function getOffers(): Promise<Offer[]> {
   const rows = await prisma.offer.findMany({
-    // La vignette de l'offre reprend la couverture de l'entreprise : c'est elle
-    // qui donne le contexte, avant même d'avoir lu le nom.
     include: { member: { select: CHAMPS_MEMBRE_OFFRE } },
     orderBy: { createdAt: "desc" },
   });
   return rows.map(versOffre);
 }
 
-/**
- * Les offres les plus récentes d'un endroit — le tableau de bord des
- * membres, ou le rail des Actualités : celles que l'équipe y a placées, et
- * celles qui s'affichent partout.
- */
 export async function getDernieresOffres(
   n = 3,
   lieu: Exclude<EmplacementOffre, "partout"> = "tableau_de_bord",
@@ -1071,8 +919,6 @@ function versOffre(o: {
     desc: o.desc,
     image: o.image,
     cover: o.image ?? o.member.cover,
-    // Le cadrage est celui de la couverture de l'entreprise : il ne vaut
-    // pas pour un visuel propre à l'offre.
     cadrage:
       !o.image && o.member.cover
         ? { x: o.member.coverX, y: o.member.coverY }
@@ -1103,8 +949,6 @@ export async function getServices(): Promise<CanchamService[]> {
   }));
 }
 
-/* ============================ Facturation ============================ */
-
 export async function getInvoices(memberId?: string): Promise<Invoice[]> {
   const rows = await prisma.invoice.findMany({
     where: memberId ? { memberId } : undefined,
@@ -1124,14 +968,6 @@ export async function getInvoices(memberId?: string): Promise<Invoice[]> {
   }));
 }
 
-/** Total encaissé, calculé par la base plutôt qu'en mémoire. */
-/**
- * Montants encaissés, un total par devise.
- *
- * Une somme unique additionnerait des Ariary et des dollars canadiens : le
- * chiffre n'aurait ni unité ni sens, et une cotisation à 1 000 $ y pèserait
- * autant qu'une à 1 000 Ar.
- */
 export async function getEncaisse(): Promise<Record<"MGA" | "CAD", number>> {
   const rows = await prisma.invoice.groupBy({
     by: ["devise"],
@@ -1143,15 +979,11 @@ export async function getEncaisse(): Promise<Record<"MGA" | "CAD", number>> {
   return { MGA: total("MGA"), CAD: total("CAD") };
 }
 
-/* ============================ Agenda ============================ */
-
-/** Une facture de cotisation, reconnue à son objet — comme au règlement. */
 const OBJET_COTISATION = {
   startsWith: "Cotisation",
   mode: "insensitive",
 } as const;
 
-/** Date du dernier règlement de cotisation, ISO court ; `null` sans facture payée. */
 export async function getDernierReglementCotisation(
   memberId: string,
 ): Promise<string | null> {
@@ -1163,14 +995,6 @@ export async function getDernierReglementCotisation(
   return derniere ? toISODate(derniere.date) : null;
 }
 
-/**
- * Tout ce qui tombe entre deux jours dans l'agenda d'un membre.
- *
- * Seuls les rappels sont stockés pour l'agenda : les événements se lisent dans
- * leur table, et les échéances se calculent — factures à régler, renouvellement
- * annuel, fin du délai de grâce d'un retard. Rien à tenir à jour, donc rien qui
- * puisse diverger de la réalité.
- */
 export async function getAgenda(
   { userId, memberId }: { userId: string; memberId: string | null },
   du: string,
@@ -1201,8 +1025,6 @@ export async function getAgenda(
             where: {
               memberId,
               statut: "envoyee",
-              // L'échéance tombe dans la période : la facture a été émise
-              // `DELAI_REGLEMENT_JOURS` jours plus tôt.
               date: {
                 gte: jourBase(ajouterJours(du, -DELAI_REGLEMENT_JOURS)),
                 lte: jourBase(ajouterJours(au, -DELAI_REGLEMENT_JOURS)),
@@ -1285,8 +1107,6 @@ export async function getAgenda(
   }
 
   if (membre && !ADHESION_PENDING.includes(membre.statut)) {
-    // Un an après le dernier règlement : c'est lui qui ouvre l'année
-    // d'adhésion, pas la date d'inscription.
     const jour = renouvellementCotisation({
       factures: [],
       adhesion: dernierReglement ?? toISODate(membre.adhesion),
@@ -1330,7 +1150,6 @@ export async function getAgenda(
   return trierElements([...elements, ...rappels]);
 }
 
-/** Les rappels personnels d'une personne sur une période. */
 async function rappelsAgenda(
   userId: string,
   du: string,
@@ -1361,11 +1180,6 @@ async function rappelsAgenda(
   }));
 }
 
-/**
- * L'agenda de l'équipe : tous les événements, les factures à encaisser de
- * tous les membres, les accès qui vont se restreindre, l'échéance annuelle
- * des cotisations, et les rappels de la personne connectée.
- */
 export async function getAgendaEquipe(
   userId: string,
   du: string,
@@ -1373,7 +1187,6 @@ export async function getAgendaEquipe(
 ): Promise<ElementAgenda[]> {
   const aujourdhui = aujourdhuiISO();
   const periode = { gte: jourBase(du), lte: jourBase(au) };
-  // Une échéance dans la période vient d'une date plus tôt d'autant.
   const avant = (jours: number) => ({
     gte: jourBase(ajouterJours(du, -jours)),
     lte: jourBase(ajouterJours(au, -jours)),
@@ -1492,9 +1305,6 @@ export async function getAgendaEquipe(
   return trierElements([...elements, ...rappels]);
 }
 
-/* ============================ Messagerie ============================ */
-
-/** Ce qu'on lit d'un utilisateur pour l'afficher dans la messagerie. */
 const PERSONNE_FIL = {
   id: true,
   nom: true,
@@ -1508,14 +1318,6 @@ const PERSONNE_FIL = {
 
 const EQUIPE = "Équipe CanCham";
 
-/**
- * Fils de l'utilisateur, le plus récemment actif en tête.
- *
- * Seuls les fils auxquels il participe remontent. Ce qui s'affiche en tête
- * dépend de qui regarde : dans un échange individuel chacun voit l'autre, et
- * l'assistance apparaît au membre sous le nom de la chambre, à l'équipe sous
- * le nom du membre.
- */
 export async function getThreads(user: {
   id: string;
   role: string;
@@ -1566,8 +1368,6 @@ export async function getThreads(user: {
         contact: null,
       };
     } else if (visiteurDuFil(t.visiteur)) {
-      // Fil ouvert depuis la vitrine : la personne en face n'a pas de compte.
-      // Sans cela, l'équipe verrait le nom d'un collègue, faute de membre.
       const v = visiteurDuFil(t.visiteur)!;
       entete = {
         nom: v.nom,
@@ -1579,7 +1379,6 @@ export async function getThreads(user: {
         contact: null,
       };
     } else {
-      // Échange individuel, ou assistance vue depuis l'équipe : la personne en face.
       const enFace = t.equipe
         ? (autres.find((u) => u.role !== "admin") ?? autres[0])
         : autres[0];
@@ -1605,7 +1404,6 @@ export async function getThreads(user: {
             },
           }
         : {
-            // L'autre personne a quitté la plateforme.
             nom: "Conversation",
             sousTitre: "",
             avatar: null,
@@ -1637,8 +1435,6 @@ export async function getThreads(user: {
         id: m.id,
         de: m.auteur,
         moi: m.userId === user.id,
-        // Qui écrit au nom de la chambre : dans l'assistance, l'équipe se
-        // range d'un seul côté, quel que soit celui qui répond.
         equipe:
           t.participants.find((p) => p.userId === m.userId)?.user.role ===
           "admin",
@@ -1658,17 +1454,12 @@ export async function getThreads(user: {
     };
   });
 
-  // Un groupe tout juste créé, encore sans message, se classe à sa création.
   const activite = (t: MessageThread) =>
     t.messages.at(-1)?.envoyeLe ??
     rows.find((r) => r.id === t.id)!.createdAt.toISOString();
   return fils.sort((a, b) => activite(b).localeCompare(activite(a)));
 }
 
-/**
- * Messages non lus de l'utilisateur, tous fils confondus : ceux des autres,
- * arrivés depuis sa dernière ouverture de chaque fil.
- */
 export async function getUnreadTotal(userId: string): Promise<number> {
   const [{ n }] = await prisma.$queryRaw<{ n: number }[]>`
     SELECT count(*)::int AS n
@@ -1681,9 +1472,6 @@ export async function getUnreadTotal(userId: string): Promise<number> {
   return n;
 }
 
-/* ============================ Tableau de bord ============================ */
-
-/** Répartition des adhésions, comptée par la base. */
 export async function getMemberStats() {
   const rows = await prisma.member.groupBy({
     by: ["statut"],
@@ -1699,8 +1487,6 @@ export async function getMemberStats() {
   };
 }
 
-/* ============================ Recherche ============================ */
-
 export interface ResultatRecherche {
   type:
     "membre" | "contact" | "evenement" | "actualite" | "ressource" | "facture";
@@ -1710,12 +1496,6 @@ export interface ResultatRecherche {
   href: string;
 }
 
-/**
- * Recherche transversale : annuaire, événements, actualités, ressources.
- *
- * Insensible à la casse et aux fragments — « tana » trouve Antananarivo. Les
- * candidatures restent exclues de l'annuaire côté membre.
- */
 export async function rechercher(
   q: string,
   space: Space,
@@ -1763,8 +1543,6 @@ export async function rechercher(
         take: 8,
         orderBy: { date: "desc" },
       }),
-      // L'équipe cherche aussi une personne — « qui est tojo@… ? » — et une
-      // facture par son numéro. Rien de cela n'est ouvert aux membres.
       admin
         ? prisma.user.findMany({
             where: {
@@ -1814,7 +1592,6 @@ export async function rechercher(
       id: m.id,
       titre: m.nom,
       detail: `${m.secteur} · ${m.ville}`,
-      // Le back-office ouvre la fiche de gestion, le membre la fiche d'annuaire.
       href:
         space === "admin"
           ? `/admin/membres/${m.id}`
@@ -1858,8 +1635,6 @@ export async function rechercher(
   ];
 }
 
-/* ============================ Espace public ============================ */
-
 export interface StatsPubliques {
   membres: number;
   secteurs: number;
@@ -1867,13 +1642,6 @@ export interface StatsPubliques {
   evenementsAVenir: number;
 }
 
-/**
- * Chiffres du bandeau de la page d'accueil publique.
- *
- * Ils sont comptés en base plutôt qu'écrits en dur : la vitrine dit ce que
- * l'annuaire contient réellement, et se met à jour toute seule à mesure que
- * la chambre recrute.
- */
 export async function getStatsPubliques(): Promise<StatsPubliques> {
   const [membres, groupes, evenements] = await Promise.all([
     prisma.member.count({ where: { statut: { notIn: HORS_ANNUAIRE } } }),
@@ -1886,8 +1654,6 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
 
   return {
     membres,
-    // « Secteur à préciser » n'est pas un secteur : c'est l'étape sautée
-    // d'une inscription.
     secteurs: new Set(
       groupes.map((g) => g.secteur).filter((s) => s !== PROVISOIRE.secteur),
     ).size,
@@ -1896,10 +1662,6 @@ export async function getStatsPubliques(): Promise<StatsPubliques> {
   };
 }
 
-/**
- * Les prochains rendez-vous mis en avant sur la page publique — ceux qui y
- * sont diffusés : un événement réservé à la plateforme n'y paraît pas.
- */
 export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
   const rows = await prisma.event.findMany({
     where: { date: { gte: jourBase() }, public: true },
@@ -1926,13 +1688,6 @@ export async function getProchainsEvenements(n = 3): Promise<CanchamEvent[]> {
   }));
 }
 
-/**
- * Le prochain événement public dont le titre porte ce nom.
- *
- * La page de la Traversée mène à la fiche de son événement sans en
- * connaître l'identifiant : la chambre crée l'événement dans le back-office,
- * et la page le retrouve à son titre. `null` tant qu'il n'existe pas.
- */
 export async function getProchainEvenementIntitule(
   nom: string,
 ): Promise<CanchamEvent | null> {
@@ -1965,14 +1720,6 @@ export async function getProchainEvenementIntitule(
   };
 }
 
-/**
- * Entreprises déjà inscrites à un événement.
- *
- * On renvoie les noms d'entreprise dédupliqués, pas les personnes : un membre
- * qui consulte la fiche veut savoir qui sera dans la salle, pas qui exactement
- * son homologue a envoyé. `total` compte les entreprises distinctes, pas les
- * participants — deux nombres différents, et c'est voulu.
- */
 export async function getEntreprisesInscrites(
   eventId: string,
   n = 12,
@@ -1987,13 +1734,6 @@ export async function getEntreprisesInscrites(
   return { noms: noms.slice(0, n), total: noms.length };
 }
 
-/**
- * Contacts d'une entreprise.
- *
- * Le contact principal remonte en tête : c'est lui que la chambre appelle en
- * premier, et l'ordre de la liste doit le dire sans qu'on ait à lire les
- * pastilles. Les autres suivent par ancienneté.
- */
 export async function getContacts(memberId: string): Promise<Contact[]> {
   const rows = await prisma.user.findMany({
     where: { memberId },
@@ -2011,17 +1751,8 @@ export async function getContacts(memberId: string): Promise<Contact[]> {
   }));
 }
 
-/**
- * Membres que l'on peut joindre par une nouvelle conversation.
- *
- * Ceux de l'annuaire, sans l'entreprise de l'utilisateur ni celles avec qui
- * un échange individuel existe déjà — la recherche de la messagerie les
- * propose sous « Nouvelle conversation ». Le référent est lu d'une requête
- * pour tous, et non membre par membre.
- */
 export async function getMembresJoignables(
   user: { id: string; memberId: string | null },
-  /** L'équipe écrit à tous les membres, candidats et adhésions en attente compris. */
   tous = false,
 ) {
   const [membres, fils] = await Promise.all([
@@ -2033,7 +1764,6 @@ export async function getMembresJoignables(
       select: { id: true, nom: true, secteur: true, logo: true, photo: true },
       orderBy: { nom: "asc" },
     }),
-    // Entreprises avec lesquelles l'utilisateur a déjà un échange individuel.
     prisma.messageThread.findMany({
       where: {
         type: "individuel",
@@ -2075,11 +1805,6 @@ export async function getMembresJoignables(
   }));
 }
 
-/**
- * Personnes à qui l'on peut écrire : l'équipe CanCham, et les contacts des
- * entreprises membres dont l'adhésion est active. Sert à composer un groupe et
- * à transférer un message.
- */
 export async function getPersonnesJoignables(
   userId: string,
 ): Promise<Personne[]> {

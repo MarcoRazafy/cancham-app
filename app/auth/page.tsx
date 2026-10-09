@@ -14,11 +14,6 @@ import { Saillant } from "@/components/ui";
 import { connexion } from "@/lib/actions/auth";
 import { utilisateurConnecte } from "@/lib/session";
 
-/**
- * Connexion — première page de l'espace public.
- *
- * Qui est déjà connecté n'a rien à y faire : on le renvoie chez lui.
- */
 export default async function ConnexionPage({
   searchParams,
 }: {
@@ -31,13 +26,9 @@ export default async function ConnexionPage({
   }>;
 }) {
   const { erreur, email, suite, demande, attente } = await searchParams;
-  // Juste après le dépôt d'une demande, ou connexion d'une demande encore à
-  // l'examen : on explique où en est la candidature.
   const demandeDeposee = demande === "1" && !erreur;
   const enAttente = attente === "1" && !erreur;
 
-  // Qui est connecté rentre chez lui — sauf une candidature à l'examen, que
-  // son espace renverrait ici : ce serait une boucle.
   const connecte = await utilisateurConnecte();
   if (connecte && !enAttente) {
     redirect(connecte.role === "admin" ? "/admin" : "/membre");

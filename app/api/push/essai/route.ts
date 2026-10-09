@@ -3,11 +3,6 @@ import { minutes, tentative } from "@/lib/limite";
 import { notifier, pushActif } from "@/lib/push";
 import { utilisateurConnecte } from "@/lib/session";
 
-/**
- * Une notification d'essai, à soi-même : la personne vérifie que son
- * appareil la reçoit bien, sans attendre qu'un message arrive. Quelques
- * essais par minute suffisent.
- */
 export async function POST() {
   const personne = await utilisateurConnecte();
   if (!personne) {

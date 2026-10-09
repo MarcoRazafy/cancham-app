@@ -26,19 +26,9 @@ export interface MembreJoignable {
   nom: string;
   secteur: string;
   vignette: string | null;
-  /** Personne qui répondra : le contact principal. */
   referent: string | null;
 }
 
-/**
- * Teintes d'une ligne de la liste.
- *
- * Sans conversation choisie dans l'adresse, la première s'ouvre d'office à
- * côté de la liste sur grand écran. Sur téléphone, la liste est seule : rien
- * n'y est ouvert, rien ne doit y paraître sélectionné — d'où la teinte
- * « implicite », sombre à partir de `md` seulement. Les classes sont écrites
- * en entier : Tailwind ne repère pas celles qu'on assemble.
- */
 const TEINTES = {
   normal: {
     ligne: "hover:bg-surface-2",
@@ -65,15 +55,6 @@ const TEINTES = {
   },
 };
 
-/**
- * Liste des conversations, avec recherche de personnes.
- *
- * La recherche porte sur le nom du fil, son sous-titre — l'entreprise, la
- * fonction — et le dernier message. Elle cherche aussi dans l'annuaire : un
- * membre avec qui l'on n'a jamais échangé apparaît sous « Nouvelle
- * conversation », et un clic ouvre le fil sans repasser par sa fiche. Le
- * bouton voisin crée un groupe.
- */
 export function ListeFils({
   fils,
   actifId,
@@ -86,13 +67,10 @@ export function ListeFils({
 }: {
   fils: ResumeFil[];
   actifId: string;
-  /** La conversation ouverte a été choisie (`?t=`), pas prise par défaut. */
   choixExplicite: boolean;
   base: string;
   space: Space;
-  /** Membres sans conversation individuelle en cours. */
   membres: MembreJoignable[];
-  /** Personnes qu'on peut réunir dans un groupe. */
   personnes: ElementACocher[];
   className?: string;
 }) {
@@ -150,7 +128,6 @@ export function ListeFils({
             </button>
           ) : null}
         </div>
-        {/* Les groupes se créent côté équipe seulement. */}
         {space === "admin" ? (
           <NouveauGroupe space={space} personnes={personnes} />
         ) : null}

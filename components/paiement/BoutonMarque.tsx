@@ -4,14 +4,6 @@ import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { LoaderCircle } from "lucide-react";
 
-/**
- * Le bouton principal d'un tunnel de portefeuille, aux couleurs de
- * l'opérateur.
- *
- * Les couleurs arrivent par les variables `--pf-bouton*` posées sur le
- * tunnel : une seule classe pour les trois marques. Désactivé pendant
- * l'envoi — un double clic ne doit pas enregistrer deux fois.
- */
 export function BoutonMarque({
   children,
   enCours = "Un instant…",
@@ -19,7 +11,6 @@ export function BoutonMarque({
 }: {
   children: ReactNode;
   enCours?: string;
-  /** La forme : angles droits pour Orange, pilule pour Airtel… */
   className?: string;
 }) {
   const { pending } = useFormStatus();

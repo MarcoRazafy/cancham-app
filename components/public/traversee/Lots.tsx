@@ -6,16 +6,6 @@ import { LienAncre } from "@/components/public/LienAncre";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT } from "@/lib/traversee";
 
-/**
- * Les lots à gagner, dans le hero : une barre où les lots défilent.
- *
- * Toutes les `INTERVALLE_MS` millisecondes, le lot suivant monte dans la
- * fenêtre pendant que le précédent sort par le haut ; trois points indiquent
- * où l'on en est. Un reflet balaie la barre de temps en temps et le point
- * rouge pulse : le bloc vit sans réclamer l'attention.
- *
- * Qui a demandé moins d'animations voit le premier lot, fixe.
- */
 const LOTS = [
   {
     icone: Trophy,
@@ -45,7 +35,6 @@ export function Lots() {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      // Pas de setState synchrone ici : on coupe seulement le défilement.
       return;
     }
     const horloge = window.setInterval(

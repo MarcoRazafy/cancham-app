@@ -5,12 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { PhotoNaturelle } from "@/components/PhotoNaturelle";
 
-/**
- * Photos d'une publication, chacune dans ses propres proportions : la
- * première en grand, les suivantes en vignettes, et une visionneuse plein
- * écran qui passe de l'une à l'autre — flèches à l'écran, flèches du
- * clavier, vignettes en bas.
- */
 export function GaleriePhotos({
   images,
   alt,
@@ -56,7 +50,6 @@ export function GaleriePhotos({
         aria-label={`Agrandir la photo 1 sur ${total}`}
         className="group relative mx-auto block max-w-full rounded-[var(--radius-m)] overflow-hidden p-0 border-0 cursor-zoom-in bg-transparent"
       >
-        {/* Dans ses propres proportions : le cadre est la photo. */}
         <PhotoNaturelle
           src={premiere}
           alt={alt}

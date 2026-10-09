@@ -4,7 +4,6 @@ import {
   SqueletteEnTete,
 } from "@/components/Squelette";
 
-/** Espace membre : la silhouette d'une page, pendant qu'elle se prépare. */
 export default function ChargementMembre() {
   return (
     <Chargement>

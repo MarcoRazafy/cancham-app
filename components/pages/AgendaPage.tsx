@@ -28,10 +28,6 @@ interface Etat {
   voir: TypeElement[];
 }
 
-/**
- * Adresse d'un état de l'agenda, dans un espace. Tout vit dans l'URL : un lien partagé ou un
- * retour arrière retrouve la même vue, sans état côté client.
- */
 function lienDans(espace: EspaceAgenda) {
   const types = typesElement(espace);
   return ({ vue, date, jour, voir }: Etat): string => {
@@ -60,11 +56,6 @@ export interface ParametresAgenda {
   voir?: string;
 }
 
-/**
- * Agenda complet, partagé par l'espace membre et le back-office : mêmes vues,
- * mêmes rappels. Seul le contenu change — l'équipe voit les échéances de tous
- * les membres, un membre les siennes.
- */
 export async function AgendaPage({
   espace,
   searchParams,
@@ -83,8 +74,6 @@ export async function AgendaPage({
 
   const { du, au } = periodeVue(vue, date);
 
-  // Le jour détaillé sous la grille du mois : celui choisi, sinon aujourd'hui
-  // s'il est dans le mois, sinon le premier du mois.
   const jourChoisi =
     estJourISO(p.jour) && p.jour >= du && p.jour <= au
       ? p.jour
@@ -106,7 +95,6 @@ export async function AgendaPage({
     voir,
   };
   const retour = lien(etat);
-  // En changeant de vue, on garde le jour regardé plutôt que le début de période.
   const repere = vue === "mois" ? jourChoisi : date;
 
   return (
@@ -115,7 +103,6 @@ export async function AgendaPage({
         title="Agenda"
         action={
           <div className="flex items-center gap-2 flex-wrap">
-            {/* L'agenda montre les rendez-vous ; d'ici, on en prend un. */}
             <BtnLink href={`/${espace}/rendez-vous`} sm>
               <CalendarClock size={15} />
               {espace === "admin" ? "Rendez-vous" : "Prendre rendez-vous"}
@@ -128,7 +115,6 @@ export async function AgendaPage({
         }
       />
 
-      {/* ==================== Barre d'outils ==================== */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 mb-3">
         <div className="flex items-center gap-1.5">
           <Link
@@ -195,7 +181,6 @@ export async function AgendaPage({
         </nav>
       </div>
 
-      {/* ==================== Filtres, qui servent de légende ==================== */}
       <div className="flex flex-wrap gap-2 mb-5" aria-label="Afficher">
         {types.map((t) => {
           const actif = voir.includes(t.cle);

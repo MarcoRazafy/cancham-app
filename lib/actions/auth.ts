@@ -5,17 +5,8 @@ import { prisma } from "@/lib/db";
 import { fermerSession, ouvrirSession, verifier } from "@/lib/auth";
 import { minutes, oublier, origineAppelante, tentative } from "@/lib/limite";
 
-/**
- * Connexion et déconnexion.
- *
- * Le message d'erreur reste volontairement le même, que l'adresse soit
- * inconnue ou le mot de passe faux : dire laquelle des deux ne va pas
- * revient à confirmer l'existence d'un compte à qui tente sa chance.
- */
-
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-/** Tentatives tolérées par quart d'heure : sur un compte, puis sur une origine. */
 const ESSAIS_PAR_COMPTE = 8;
 const ESSAIS_PAR_ORIGINE = 30;
 const FENETRE = 15 * 60 * 1000;
@@ -26,11 +17,6 @@ const ACCUEIL: Record<string, string> = {
   visiteur: "/membre/profil",
 };
 
-/**
- * Retour à la connexion, motif et adresse saisie conservés — et la page
- * demandée avant la connexion : une faute de frappe dans le mot de passe ne
- * doit pas faire oublier où l'on allait.
- */
 function echec(message: string, email: string, suite = ""): never {
   const q = new URLSearchParams({ erreur: message });
   if (email) q.set("email", email);
@@ -47,8 +33,6 @@ export async function connexion(formData: FormData) {
     echec("Indiquez votre adresse et votre mot de passe.", email, suite);
   }
 
-  // Essayer les mots de passe en série n'avance à rien : le compte visé se
-  // ferme au bout de quelques essais, et l'origine aussi.
   const origine = await origineAppelante();
   const attente = Math.max(
     tentative(`connexion:${origine}:${email}`, ESSAIS_PAR_COMPTE, FENETRE),
@@ -74,10 +58,6 @@ export async function connexion(formData: FormData) {
     },
   });
 
-  // Un compte sans mot de passe attend son accès : l'inscription n'en
-  // demande pas, c'est le lien envoyé par l'équipe qui le crée. Le dire vaut
-  // mieux qu'un « mot de passe incorrect » qui laisserait chercher en vain —
-  // et l'inscription révèle déjà qu'une adresse a un compte.
   if (u && u.role === "membre" && !u.motDePasse) {
     echec(
       u.member?.statut === "candidature"
@@ -92,9 +72,6 @@ export async function connexion(formData: FormData) {
     echec("Adresse ou mot de passe incorrect.", email, suite);
   }
 
-  // Une candidature à l'examen n'ouvre pas encore de session. On ne le dit
-  // qu'une fois le mot de passe vérifié : l'état d'une demande ne regarde
-  // que son auteur.
   if (u.role === "membre" && u.member?.statut === "refusee") {
     oublier(`connexion:${origine}:${email}`);
     echec(
@@ -109,16 +86,11 @@ export async function connexion(formData: FormData) {
     redirect(`/auth?${new URLSearchParams({ attente: "1", email })}`);
   }
 
-  // Connexion réussie : le compteur de cette adresse repart à zéro.
   oublier(`connexion:${origine}:${email}`);
   await ouvrirSession(u.id, texte(formData, "souvenir") === "1");
 
-  // Une inscription pas encore terminée reprend là où elle s'est arrêtée :
-  // la présentation d'abord, l'espace ensuite.
   if (u.role === "membre" && u.member?.accueilEnCours) redirect("/bienvenue");
 
-  // Retour à la page demandée avant la connexion, si elle appartient bien à
-  // l'espace de la personne : sinon, son accueil.
   const accueil = ACCUEIL[u.role] ?? "/membre";
   const sienne = suite === `/${u.role}` || suite.startsWith(`/${u.role}/`);
   redirect(sienne ? suite : accueil);

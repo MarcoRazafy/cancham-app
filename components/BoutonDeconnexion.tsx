@@ -3,7 +3,6 @@
 import { LogOut } from "lucide-react";
 import { deconnexion } from "@/lib/actions/auth";
 
-/** Sortie de session, au pied des deux barres latérales. */
 export function BoutonDeconnexion() {
   return (
     <form action={deconnexion} className="mx-3.5 mb-5">

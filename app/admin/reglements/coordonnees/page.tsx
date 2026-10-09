@@ -6,14 +6,6 @@ import { Card, Saillant } from "@/components/ui";
 import { enregistrerCoordonneesPaiement } from "@/lib/actions/reglements";
 import { getCoordonneesPaiement } from "@/lib/reglements";
 
-/**
- * Où la chambre reçoit l'argent.
- *
- * Tenues ici et non dans le code : un changement de banque ne doit pas
- * demander un déploiement. Un champ laissé vide retire le moyen correspondant
- * du choix offert au membre — mieux vaut un choix plus court qu'un virement
- * envoyé dans le vide.
- */
 export default async function CoordonneesPaiement() {
   const c = await getCoordonneesPaiement();
 

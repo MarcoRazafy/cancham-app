@@ -11,12 +11,6 @@ import {
 } from "@/components/form-bits";
 import { annulerRendezvous } from "@/lib/actions/rendezvous";
 
-/**
- * Annulation d'un rendez-vous, avec une confirmation.
- *
- * Un clic de trop ne doit pas défaire une rencontre prévue : la boîte
- * rappelle quand elle a lieu, et dit à l'autre partie ce qui va se passer.
- */
 export function AnnulerRendezvous({
   id,
   quand,
@@ -24,10 +18,8 @@ export function AnnulerRendezvous({
   prevenu,
 }: {
   id: string;
-  /** « mercredi 30 septembre, 09 h 00 – 09 h 30 ». */
   quand: string;
   retour: string;
-  /** Qui reçoit l'avis d'annulation. */
   prevenu: "le membre" | "l’équipe";
 }) {
   return (

@@ -14,8 +14,6 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe("dates en base", () => {
   it("écrit le jour voulu, pas la veille", () => {
-    // Minuit local à Antananarivo tombait la veille à 21 h UTC : Prisma
-    // enregistrait le jour précédent. Minuit UTC garde le bon jour.
     expect(jourBase("2026-09-22").toISOString()).toBe(
       "2026-09-22T00:00:00.000Z",
     );
@@ -37,8 +35,8 @@ describe("dates en base", () => {
 
 describe("calendrier de l'agenda", () => {
   it("commence les semaines le lundi", () => {
-    expect(debutSemaine("2026-09-21")).toBe("2026-09-21"); // un lundi
-    expect(debutSemaine("2026-09-27")).toBe("2026-09-21"); // le dimanche
+    expect(debutSemaine("2026-09-21")).toBe("2026-09-21");
+    expect(debutSemaine("2026-09-27")).toBe("2026-09-21");
   });
 
   it("couvre un mois de semaines complètes", () => {
@@ -68,13 +66,11 @@ describe("renouvellement de la cotisation", () => {
         factures: [
           { date: "2025-09-19", objet: "Cotisation annuelle", statut: "payee" },
           { date: "2026-09-19", objet: "Cotisation annuelle", statut: "payee" },
-          // Un événement payé entre-temps ne décale rien.
           {
             date: "2026-10-02",
             objet: "Participation — 5 à 7",
             statut: "payee",
           },
-          // Une facture émise, pas encore réglée, non plus.
           {
             date: "2026-11-01",
             objet: "Cotisation annuelle",

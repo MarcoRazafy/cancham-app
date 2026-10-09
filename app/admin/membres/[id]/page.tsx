@@ -85,13 +85,10 @@ export default async function AdminMembreDetail({
       getInvoices(m.id),
       getHistoriqueMembre(m.id),
       getAccesMembre(m.id),
-      // Les commentaires de l'équipe, motif d'un éventuel refus compris.
       getNotesMembre(m.id),
     ]);
   const candidature = m.statut === "candidature";
-  // La date qui ouvre l'année d'adhésion : celle du dernier règlement.
   const dernierReglement = dernierReglementCotisation(factures);
-  // Un an après le dernier règlement de cotisation, pas après l'inscription.
   const renouvellement = renouvellementCotisation({
     factures,
     adhesion: m.adhesion,
@@ -115,7 +112,6 @@ export default async function AdminMembreDetail({
         </Link>
       </div>
 
-      {/* ==================== Identité ==================== */}
       <Card className="overflow-hidden p-0 mb-4">
         <CouvertureReglable
           memberId={m.id}
@@ -209,7 +205,6 @@ export default async function AdminMembreDetail({
       </Card>
 
       <div className="grid gap-4 items-start lg:grid-cols-[1fr_360px]">
-        {/* ==================== Colonne principale ==================== */}
         <div className="flex flex-col gap-4 min-w-0">
           <Panneau titre="Présentation" teinte="degrade">
             <p className="m-0 font-semibold text-[14.5px]">
@@ -218,8 +213,6 @@ export default async function AdminMembreDetail({
             <p className="m-0 mt-1.5 text-muted text-[14px] leading-relaxed max-w-[75ch] whitespace-pre-line">
               <TexteLie texte={m.desc} />
             </p>
-            {/* La vidéo de présentation : l'équipe peut la poser, la
-                remplacer ou la retirer pour le membre. */}
             <div className="mt-4">
               <VideoPresentation
                 memberId={m.id}
@@ -254,10 +247,6 @@ export default async function AdminMembreDetail({
               <div className="grid gap-4 mb-4 sm:grid-cols-3">
                 <Donnee libelle="Statut juridique" valeur={m.statutJuridique} />
                 <Donnee libelle="Pays d’implantation" valeur={m.pays} />
-                {/*
-                  Une demande déposée sur la vitrine n'indique pas de
-                  formule : le candidat la choisit en complétant son dossier.
-                */}
                 <Donnee
                   libelle="Formule demandée"
                   valeur={
@@ -280,9 +269,6 @@ export default async function AdminMembreDetail({
             </Panneau>
           ) : null}
 
-          {/* L'équipe tient la fiche comme le membre dans « Mon entreprise » :
-              présentation, visuels, contacts, offres. Ses changements sont
-              tracés au journal. */}
           <Card className="carte-filet filet-fixe filet-bleu px-6 pb-6">
             {contacts.length ? (
               <ListeContacts
@@ -297,8 +283,6 @@ export default async function AdminMembreDetail({
                       seul={contacts.length === 1}
                       retour={fiche}
                     />
-                    {/* Le dernier contact ne se retire pas : l'action le
-                        refuse aussi côté serveur. */}
                     {contacts.length > 1 ? (
                       <RemoveContactButton
                         contactId={c.id}
@@ -309,8 +293,6 @@ export default async function AdminMembreDetail({
                   </div>
                 )}
                 piedContact={(c) =>
-                  // Le contact principal a « Envoyer l’accès », dans le panneau ; une
-                  // candidature se valide d'abord.
                   c.invitationEnAttente &&
                   !candidature &&
                   c.id !== acces.contact?.id ? (
@@ -371,7 +353,6 @@ export default async function AdminMembreDetail({
           </Panneau>
         </div>
 
-        {/* ==================== Colonne latérale ==================== */}
         <div className="flex flex-col gap-4">
           <Panneau
             titre="Adhésion & cotisation"
@@ -432,10 +413,6 @@ export default async function AdminMembreDetail({
                         ? m.paiementNote.replace(/^Payé par /, "")
                         : fmtDate(dernierReglement!)}
                     </span>
-                    {/*
-                      La date se corrige ici : c'est elle qui ouvre l'année
-                      d'adhésion, et donc le renouvellement affiché dessous.
-                    */}
                     {dernierReglement ? (
                       <ModifierReglementButton
                         memberId={m.id}
@@ -472,18 +449,11 @@ export default async function AdminMembreDetail({
                   <RejectButton memberId={m.id} nom={m.nom} />
                 </>
               ) : m.statut === "refusee" ? (
-                // Demande écartée : le dossier reste, et la décision peut se
-                // revoir. La suppression définitive est plus bas, avec les
-                // autres opérations irréversibles.
                 <>
                   <p className="m-0 flex items-center gap-2 rounded-[var(--radius-s)] bg-bad-soft px-3 py-2.5 text-[13px] text-bad">
                     <X size={16} className="shrink-0" />
                     Demande refusée : rien n’en paraît côté membre.
                   </p>
-                  {/*
-                    Le pourquoi, le plus récent en tête : une demande
-                    reconsidérée puis refusée à nouveau garde les deux.
-                  */}
                   {commentaires.map((c) => (
                     <figure
                       key={c.id}
@@ -500,8 +470,6 @@ export default async function AdminMembreDetail({
                   <ReconsidererButton memberId={m.id} nom={m.nom} />
                 </>
               ) : m.statut === "a_jour" ? (
-                // Cotisation réglée : rien à encaisser. Le bouton revient de
-                // lui-même quand l'adhésion repasse en attente ou en retard.
                 <p className="m-0 flex items-center gap-2 text-[13px] text-success-strong bg-success-soft rounded-[var(--radius-s)] px-3 py-2.5">
                   <CheckCircle2 size={16} className="shrink-0" />
                   Cotisation réglée : aucun règlement à enregistrer.

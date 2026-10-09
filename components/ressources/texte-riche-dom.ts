@@ -6,18 +6,6 @@ import {
   type Taille,
 } from "@/lib/blocs";
 
-/**
- * Le passage entre le texte mis en forme tel qu'on l'enregistre (des lignes,
- * des passages et leurs marques — voir `lib/blocs.ts`) et la zone de saisie
- * du navigateur.
- *
- * Dans les deux sens, on ne manipule que des nœuds : jamais de HTML écrit en
- * chaîne. Ce que le navigateur a fabriqué pendant la saisie — `<b>`,
- * `<font color>`, `<span style>`, selon son humeur — est relu marque par
- * marque, et tout ce qu'on ne connaît pas redevient du texte simple.
- */
-
-/** Les tailles, telles que la commande `fontSize` du navigateur les numérote. */
 export const TAILLE_NAVIGATEUR: Record<Taille | "", string> = {
   petit: "2",
   "": "3",
@@ -41,7 +29,6 @@ const BLOCS = new Set([
   "LI",
 ]);
 
-/** `rgb(173, 7, 7)` ou `#ad0707` → `#ad0707`. `null` pour le reste. */
 export function enHex(couleur: string): string | null {
   const c = couleur.trim().toLowerCase();
   if (/^#[0-9a-f]{6}$/.test(c)) return c;
@@ -73,7 +60,6 @@ function tailleDe(el: HTMLElement): Taille | "" | undefined {
   return undefined;
 }
 
-/** Relit un nœud et ce qu'il contient, avec les marques héritées. */
 function relire(
   noeud: Node,
   marques: Omit<Passage, "t">,
@@ -81,7 +67,6 @@ function relire(
   sortie: Passage[],
 ) {
   if (noeud.nodeType === Node.TEXT_NODE) {
-    // L'espace sans chasse que certains navigateurs posent pour tenir le curseur.
     const t = (noeud.nodeValue ?? "").replace(/\u200b/g, "");
     if (t) sortie.push({ t, ...marques });
     return;
@@ -120,7 +105,6 @@ function relire(
       (balise === "FONT" ? (noeud.getAttribute("color") ?? "") : ""),
   );
   if (couleur) {
-    // La couleur du texte courant n'est pas une couleur choisie.
     if (couleur === base) delete m.couleur;
     else m.couleur = couleur;
   }
@@ -135,8 +119,6 @@ function relire(
 function passagesDe(el: Node, base: string | null): Passage[] {
   const sortie: Passage[] = [];
   el.childNodes.forEach((enfant) => relire(enfant, {}, base, sortie));
-  // Le `<br>` que le navigateur pose au bout d'un paragraphe pour le tenir
-  // ouvert n'est pas un retour à la ligne.
   const dernier = sortie[sortie.length - 1];
   if (dernier?.t === "\n") sortie.pop();
   else if (dernier?.t.endsWith("\n")) dernier.t = dernier.t.slice(0, -1);
@@ -151,14 +133,12 @@ function alignementDe(el: HTMLElement): Alignement | undefined {
 const estBloc = (n: Node): n is HTMLElement =>
   n instanceof HTMLElement && BLOCS.has(n.tagName);
 
-/** Les lignes d'un conteneur : ses paragraphes et ses listes, dans l'ordre. */
 function lignesDe(
   conteneur: HTMLElement,
   base: string | null,
   herite?: Alignement,
 ): Ligne[] {
   const lignes: Ligne[] = [];
-  // Du texte posé à même le conteneur, hors de tout paragraphe.
   let libre: Node[] = [];
   const vider = () => {
     if (!libre.length) return;
@@ -189,7 +169,6 @@ function lignesDe(
       return;
     }
     const alignement = alignementDe(n) ?? herite;
-    // Un bloc qui en contient d'autres n'est qu'une enveloppe.
     if (Array.from(n.childNodes).some(estBloc)) {
       lignes.push(...lignesDe(n, base, alignement));
       return;
@@ -204,7 +183,6 @@ function lignesDe(
   return lignes;
 }
 
-/** Relit la zone de saisie : ce qu'elle contient, en lignes à enregistrer. */
 export function lignesDepuis(racine: HTMLElement): Ligne[] {
   return lignesDe(racine, enHex(getComputedStyle(racine).color));
 }
@@ -237,14 +215,6 @@ function poserPassages(parent: HTMLElement, passages: Passage[]) {
   }
 }
 
-/**
- * Dessine des lignes enregistrées dans la zone de saisie.
- *
- * Un paragraphe y est un `<div>`, pas un `<p>` : c'est ce que le navigateur
- * fabrique de lui-même à chaque retour à la ligne, et le seul qu'il sache
- * changer proprement en liste — d'un `<p>`, il fait une liste *dans* le
- * paragraphe.
- */
 export function poserLignes(racine: HTMLElement, lignes: Ligne[]) {
   racine.replaceChildren();
   for (const l of lignes) {
@@ -254,7 +224,6 @@ export function poserLignes(racine: HTMLElement, lignes: Ligne[]) {
         p.style.textAlign = l.alignement === "centre" ? "center" : "right";
       }
       poserPassages(p, l.passages);
-      // Un paragraphe vide doit garder sa hauteur, et pouvoir recevoir le curseur.
       if (!p.childNodes.length) p.appendChild(document.createElement("br"));
       racine.appendChild(p);
     } else {
@@ -274,15 +243,6 @@ export function poserLignes(racine: HTMLElement, lignes: Ligne[]) {
   }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Le curseur, compté en caractères                                           */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Une position dans le texte : le nombre de caractères qui la précèdent
- * depuis le début de la zone. `debut` lève le doute aux frontières : la fin
- * d'un paragraphe et le début du suivant ont le même compte.
- */
 interface Position {
   n: number;
   debut: boolean;
@@ -320,11 +280,6 @@ function retrouver(racine: HTMLElement, p: Position): [Node, number] | null {
   return null;
 }
 
-/**
- * La sélection en cours dans la zone, sous une forme qui survit à un
- * remaniement de ses balises. `null` si elle n'est pas dans du texte — un
- * paragraphe encore vide, par exemple.
- */
 export function garderSelection(racine: HTMLElement): SelectionGardee | null {
   const selection = document.getSelection();
   if (!selection?.rangeCount) return null;
@@ -334,7 +289,6 @@ export function garderSelection(racine: HTMLElement): SelectionGardee | null {
   return de && a ? { de, a } : null;
 }
 
-/** Remet la sélection gardée, une fois les balises remaniées. */
 export function rendreSelection(racine: HTMLElement, gardee: SelectionGardee) {
   const de = retrouver(racine, gardee.de);
   const a = retrouver(racine, gardee.a);

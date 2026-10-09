@@ -1,13 +1,6 @@
 import Image from "next/image";
 import { LIENS } from "@/lib/traversee";
 
-/**
- * L'action solidaire du gala : Hope for a Better Life. Un encadré vert, deux
- * photos à gauche, le propos et les deux chiffres à droite.
- *
- * « Soutenir le projet » écrit à la chambre (voir `LIENS.dons`) : la
- * plateforme n'a pas encore de page de dons.
- */
 export function Solidarite() {
   return (
     <section

@@ -4,17 +4,6 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
-/**
- * Rend une image cliquable : elle s'ouvre en grand dans une boîte modale.
- *
- * On s'en sert là où l'image ne mène nulle part — une photo de produit, une
- * couverture de fiche, le bandeau d'un événement dont on consulte déjà la
- * page. Partout ailleurs, l'image est un lien vers la ressource qu'elle
- * représente, ce qui vaut toujours mieux qu'un agrandissement.
- *
- * La boîte est un `<dialog>` natif : la touche Échap, le piège à focus et le
- * fond inerte sont fournis par le navigateur, sans une ligne de JavaScript.
- */
 export function Agrandir({
   src,
   alt,
@@ -22,12 +11,9 @@ export function Agrandir({
   className = "",
   children,
 }: {
-  /** Image à afficher en grand. Sans elle, l'enfant n'est pas cliquable. */
   src?: string | null;
   alt: string;
-  /** Texte affiché sous l'image agrandie. */
   legende?: string;
-  /** Habillage du bouton, pour qu'il épouse la vignette. */
   className?: string;
   children: ReactNode;
 }) {
@@ -52,7 +38,6 @@ export function Agrandir({
         className={`group relative block w-full text-left cursor-zoom-in p-0 border-0 bg-transparent ${className}`}
       >
         {children}
-        {/* Un voile discret au survol : il dit que l'image répond au clic. */}
         <span className="absolute inset-0 bg-[#0f1d2c]/0 group-hover:bg-[#0f1d2c]/15 transition-colors pointer-events-none" />
       </button>
 
@@ -60,7 +45,6 @@ export function Agrandir({
         ref={boite}
         onClose={() => setOuvert(false)}
         onClick={(e) => {
-          // Un clic hors de l'image referme : la cible est alors le dialogue.
           if (e.target === boite.current) setOuvert(false);
         }}
         className="m-auto max-w-[min(1100px,92vw)] w-auto bg-transparent p-0 border-0 backdrop:bg-[#0f1d2c]/80 backdrop:backdrop-blur-sm"

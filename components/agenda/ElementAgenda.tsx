@@ -7,13 +7,6 @@ import {
   type TypeElement,
 } from "@/lib/agenda";
 
-/**
- * Teintes par type d'élément : des aplats francs, lisibles d'un coup d'œil
- * dans une case de calendrier — un pastel se confond avec le fond.
- *
- * Classes écrites en entier : Tailwind ne voit pas les noms composés à
- * l'exécution.
- */
 export const TEINTES: Record<
   TypeElement,
   { point: string; puce: string; bord: string }
@@ -33,8 +26,6 @@ export const TEINTES: Record<
     puce: "bg-accent text-white",
     bord: "border-l-accent",
   },
-  // Prune écrite en clair : le jeton `bad` vire au rouge dans le back-office,
-  // où le rendez-vous se confondrait alors avec une échéance.
   rendezvous: {
     point: "bg-[#5b4b8a]",
     puce: "bg-[#5b4b8a] text-white",
@@ -47,10 +38,8 @@ export const TEINTES: Record<
   },
 };
 
-/** Une échéance dépassée : le rouge de la charte, poussé plus sombre. */
 const URGENT = "bg-accent-strong text-white";
 
-/** Étiquette d'un élément sur sa carte. */
 const ETIQUETTES: Record<TypeElement, string> = {
   evenement: "Événement",
   inscription: "Inscrit",
@@ -59,10 +48,8 @@ const ETIQUETTES: Record<TypeElement, string> = {
   rappel: "Rappel",
 };
 
-/** Ce qui est réglé ou fait s'efface : il reste visible, sans réclamer. */
 const effacement = (e: ElementAgenda) => (e.fait ? "opacity-60" : "");
 
-/** Élément en une ligne, pour une case du mois ou la journée d'une semaine. */
 export function PuceAgenda({ element: e }: { element: ElementAgenda }) {
   return (
     <span
@@ -81,7 +68,6 @@ export function PuceAgenda({ element: e }: { element: ElementAgenda }) {
   );
 }
 
-/** Carte détaillée d'un élément, dans une liste de jours. */
 export function CarteElement({
   element: e,
   retour,
@@ -163,7 +149,6 @@ export function CarteElement({
   );
 }
 
-/** Légende d'un type : pastille de couleur et libellé. */
 export function PointType({ type }: { type: TypeElement }) {
   return (
     <span

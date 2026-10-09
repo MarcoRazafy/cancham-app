@@ -1,21 +1,3 @@
-/**
- * Crée un compte administrateur — le premier, sur une base neuve.
- *
- *   npm run admin:creer -- --email prenom@cancham.mg --nom "Prénom Nom"
- *
- * En production, la base part vide : pas de données de démonstration, donc
- * personne pour se connecter au back-office et promouvoir les autres. Ce
- * script ouvre la porte ; la suite se fait depuis « Équipe & accès ».
- *
- * Le mot de passe n'est jamais passé en argument — il resterait dans
- * l'historique du terminal. Il est demandé au clavier, sans écho, ou lu dans
- * ADMIN_MOT_DE_PASSE quand aucun terminal n'est là pour le saisir.
- *
- * Sur un compte administrateur qui existe déjà, le script remplace le mot de
- * passe et ferme ses sessions : c'est le recours quand l'accès est perdu et
- * que l'e-mail de réinitialisation ne peut pas arriver. Un compte membre,
- * lui, se promeut depuis le back-office, pas d'ici.
- */
 import "dotenv/config";
 import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
@@ -35,7 +17,6 @@ function arreter(message: string): never {
   process.exit(1);
 }
 
-/** Saisie au clavier sans écho : le mot de passe ne s'affiche pas. */
 function demanderCache(question: string): Promise<string> {
   return new Promise((resolve) => {
     const rl = createInterface({
@@ -100,7 +81,6 @@ async function main() {
   if (existant) {
     await prisma.user.update({
       where: { id: existant.id },
-      // La date de changement ferme les sessions ouvertes avec l'ancien.
       data: { motDePasse: hacher(secret), motDePasseModifieLe: new Date() },
     });
     await prisma.auditLog.create({

@@ -1,11 +1,3 @@
-/*
- * Vitrine publique, en sombre.
- *
- * Le bleu nuit de la charte, comme l'en-tête du site cancham.mg. Limité à la
- * vitrine : les pages de connexion et d'inscription gardent leur fond clair.
- * Les tokens applicatifs sont redéfinis pour que les primitives de
- * components/ui.tsx suivent.
- */
 .vitrine-sombre {
   --bg: var(--marque-nuit);
   --surface: #16283c;
@@ -22,7 +14,6 @@
   --success-strong: #56d18c;
   --success-soft: #0f2a1f;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -24px rgb(0 0 0 / 0.7);
-  /* Barres de défilement : le pouce passe au blanc. */
   --pouce: rgb(255 255 255 / 0.26);
   --pouce-survol: rgb(255 255 255 / 0.46);
 
@@ -35,11 +26,6 @@
   outline-color: #ffffff;
 }
 
-/*
- * Les teintes de la charte, calculées pour du texte sur blanc, s'éteignent sur
- * le bleu nuit — le vert #007140 y passe pour du gris foncé. On prend leurs
- * déclinaisons claires, qui gardent l'identité en restant lisibles.
- */
 .vitrine-sombre .saillant {
   color: var(--ton-saillant-sombre, var(--marque-rouge-clair));
 }
@@ -53,12 +39,9 @@
   color: #3fc98a;
 }
 
-/* Les listes déroulantes s'ouvrent en sombre, elles aussi. */
 .vitrine-sombre select {
   color-scheme: dark !important;
 }
-
-/* ---------- Bandeau des annonces ---------- */
 
 @keyframes vitrine-defilement {
   from {
@@ -69,15 +52,12 @@
   }
 }
 
-/* La piste porte deux fois les annonces : à mi-course, elle est revenue au
-   point de départ, et la boucle ne se voit pas. */
 .bandeau-piste {
   animation-name: vitrine-defilement;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
 
-/* Le temps de lire, ou de cliquer. */
 .bandeau-annonces:hover .bandeau-piste,
 .bandeau-annonces:focus-within .bandeau-piste {
   animation-play-state: paused;
@@ -92,16 +72,8 @@
   }
 }
 
-/* ---------- Rangées de cartes ---------- */
-
-/*
- * Les visages du Conseil et de l'équipe (`Rangee`) : immobiles. Sur
- * ordinateur, toutes les cartes tiennent de front ; plus étroit, la rangée
- * se fait glisser à la main, sans barre, et s'arrête au bord d'une carte.
- */
 .rangee {
   overflow-x: auto;
-  /* Tirer au bout de la rangée ne fait pas reculer la page. */
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   scroll-padding-inline: 8px;
@@ -111,14 +83,6 @@
 .rangee::-webkit-scrollbar {
   display: none;
 }
-
-/* ============================================================
-   PAGES CLAIRES DANS LA VITRINE SOMBRE
-
-   Un article se lit sur du papier. La vitrine est sombre ; cette classe
-   rend à une page les teintes de la charte sur fond pâle, celles de
-   `.marque`, que `.vitrine-sombre` a remplacées plus haut.
-   ============================================================ */
 
 .vitrine-sombre .vitrine-claire {
   --bg: #ffffff;
@@ -145,7 +109,6 @@
   color-scheme: light;
 }
 
-/* Les mots saillants y reprennent les teintes pleines de la charte. */
 .vitrine-sombre .vitrine-claire .saillant {
   color: var(--ton-saillant, var(--marque-rouge));
 }
@@ -161,36 +124,6 @@
 .vitrine-sombre .vitrine-claire .text-marque-vert {
   color: var(--marque-vert);
 }
-
-/* ============================================================
-   APPARITIONS AU DÉFILEMENT
-
-   Chaque section entre quand on y arrive : un fondu et un court
-   déplacement — 24 px, pas une traversée d'écran —, joués une seule fois.
-   `Scenes` (components/public/Scenes.tsx) pose `data-visible` sur une
-   « scène » (classe `scene`) dès qu'elle entre dans la fenêtre. Jusque-là,
-   ses éléments `reveler` attendent, animation en pause sur sa première image.
-
-   Quatre entrées, à choisir selon ce qui entre :
-   - `reveler`          monte de 24 px — le cas général ;
-   - `reveler-gauche`   vient de la gauche — une liste, ligne à ligne ;
-   - `reveler-droite`   vient de la droite — un encadré posé en regard ;
-   - `reveler-zoom`     grandit sur place — les cartes, et tout ce qui vit
-                        dans un carrousel, où un déplacement vertical
-                        ferait déborder la piste ;
-   - `reveler-trait`    se déroule de gauche à droite — les filets ;
-   - `reveler-pop`      surgit avec un léger rebond — une icône.
-
-   `--retard` décale une entrée dans une cascade (voir `retard()` dans
-   CadreVitrine.tsx). `backwards` ne garde rien une fois joué : l'élément
-   reprend ses styles, et ses transitions au survol restent les siennes.
-
-   Rien ici ne conditionne la lecture :
-   - sans JavaScript (`scripting`), personne ne poserait `data-visible` ;
-     la règle ne s'applique pas, et tout s'affiche d'emblée ;
-   - un `reveler` hors de toute `scene` n'est jamais retenu ;
-   - qui a demandé moins d'animations voit la page telle quelle.
-   ============================================================ */
 
 @keyframes vitrine-reveler {
   from {
@@ -285,7 +218,6 @@
     transform-origin: left center;
   }
 
-  /* Un dépassement d'un tiers, puis le retour : c'est lui qui fait le rebond. */
   .vitrine-sombre .scene .reveler-pop {
     --duree-reveler: 0.45s;
     animation-name: vitrine-reveler-pop;

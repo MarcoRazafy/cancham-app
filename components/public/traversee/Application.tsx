@@ -3,12 +3,6 @@ import { Telephone } from "@/components/public/traversee/Telephone";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT, retard } from "@/lib/traversee";
 
-/**
- * Ce que le pass ouvre : l'application de la Traversée. Un téléphone dessiné
- * en CSS, en lévitation et qui s'incline sous la souris (Telephone.tsx),
- * montre l'écran d'accueil ; à côté, six fonctions numérotées
- * qui entrent par la gauche en cascade.
- */
 const FONCTIONS = [
   {
     titre: "Rendez-vous B2B",

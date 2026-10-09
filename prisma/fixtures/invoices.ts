@@ -1,6 +1,5 @@
 import type { Invoice } from "../../lib/types";
 
-/** Factures d'exemple. Montants en Ariary. */
 export const INVOICES: Invoice[] = [
   {
     id: "f1",

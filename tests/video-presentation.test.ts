@@ -11,12 +11,6 @@ import {
   urlVideo,
 } from "@/lib/video-presentation";
 
-/**
- * Une vidéo de présentation vient d'un membre : son nom, son format et son
- * contenu se vérifient avant qu'elle n'atteigne le disque, et le nom sous
- * lequel on la sert ne doit jamais pouvoir désigner autre chose.
- */
-
 const octets = (...v: number[]) => new Uint8Array(v);
 const boite = (nom: string) =>
   octets(0, 0, 0, 0x20, ...[...nom].map((c) => c.charCodeAt(0)), 0, 0, 0, 0);
@@ -74,12 +68,10 @@ describe("signature du fichier", () => {
     expect(signatureVideo(html, "mp4")).toBe(false);
     expect(signatureVideo(html, "webm")).toBe(false);
     expect(signatureVideo(html, "mov")).toBe(false);
-    // Un MP4 présenté comme WebM, et l'inverse.
     expect(signatureVideo(boite("ftyp"), "webm")).toBe(false);
     expect(
       signatureVideo(octets(0x1a, 0x45, 0xdf, 0xa3, 0, 0, 0, 0), "mp4"),
     ).toBe(false);
-    // `moov` en tête ne vaut que pour un QuickTime.
     expect(signatureVideo(boite("moov"), "mp4")).toBe(false);
   });
 

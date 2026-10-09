@@ -5,17 +5,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Check, LoaderCircle, RotateCw } from "lucide-react";
 
-/**
- * Petits retours de mouvement, partagés par les coquilles.
- */
-
-/* ============================ Lien en cours ============================ */
-
-/**
- * Une roue discrète à côté de l'entrée de menu cliquée, le temps que la
- * page arrive. Toujours présente, simplement invisible au repos : son
- * apparition ne décale rien.
- */
 export function EnCoursLien() {
   const { pending } = useLinkStatus();
   return (
@@ -29,12 +18,8 @@ export function EnCoursLien() {
   );
 }
 
-/* ============================ Tirer pour rafraîchir ============================ */
-
-/** Distance de tirage, en pixels, au-delà de laquelle on rafraîchit. */
 const SEUIL = 70;
 
-/** Un élément défilant, déjà descendu : le geste lui appartient. */
 function dansUnDefilement(cible: EventTarget | null): boolean {
   let el = cible instanceof Element ? cible : null;
   while (el && el !== document.body) {
@@ -45,17 +30,6 @@ function dansUnDefilement(cible: EventTarget | null): boolean {
   return false;
 }
 
-/**
- * Tirer pour rafraîchir, sur écran tactile.
- *
- * En haut de la page, on tire vers le bas : une pastille descend en tournant
- * à mesure, et, lâchée au-delà du seuil, relit les données de la page sans
- * la recharger — le menu, la bulle et les brouillons restent en place. Une
- * coche confirme que c'est à jour.
- *
- * Le rafraîchissement natif du navigateur, qui rechargerait tout, est coupé
- * dans les espaces membre et back-office (voir `overscroll-behavior`).
- */
 export function TirerPourRafraichir() {
   const router = useRouter();
   const [tirage, setTirage] = useState(0);
@@ -85,7 +59,6 @@ export function TirerPourRafraichir() {
         setTirage(0);
         return;
       }
-      // La résistance grandit avec la distance : on sent qu'on tire.
       courant.current = Math.min(ecart * 0.5, SEUIL * 1.5);
       setTirage(courant.current);
     };
@@ -163,19 +136,11 @@ export function TirerPourRafraichir() {
   );
 }
 
-/* ============================ Champ refusé ============================ */
-
-/**
- * Un champ refusé à l'envoi — obligatoire resté vide, adresse mal formée —
- * secoue la tête, en plus de sa bordure rouge et de la bulle du navigateur.
- * Un seul écouteur pour tous les formulaires du site.
- */
 export function RetoursFormulaire() {
   useEffect(() => {
     const refuse = (e: Event) => {
       const champ = e.target as HTMLElement;
       champ.classList.remove("champ-refuse");
-      // Relire une dimension force le navigateur à rejouer l'animation.
       void champ.offsetWidth;
       champ.classList.add("champ-refuse");
       champ.addEventListener(

@@ -10,12 +10,6 @@ import { BoutonEnvoi } from "@/components/public/BoutonMarque";
 import { Saillant } from "@/components/ui";
 import { demanderReinitialisation } from "@/lib/actions/motdepasse";
 
-/**
- * Mot de passe oublié : on reçoit un lien par e-mail.
- *
- * Après l'envoi, la page dit la même chose que l'adresse ait un compte ou
- * non — c'est voulu, voir `demanderReinitialisation`.
- */
 export default async function MotDePasseOubliePage({
   searchParams,
 }: {

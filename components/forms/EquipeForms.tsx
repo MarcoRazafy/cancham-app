@@ -25,10 +25,6 @@ const DROITS: Record<NiveauEquipe, string> = {
   manager: "Tout le back-office, sauf la gestion de l’équipe.",
 };
 
-/**
- * Le niveau d'accès, en deux cartes à cocher. Manager par défaut : on
- * n'accorde le contrôle total qu'en le choisissant.
- */
 function ChoixNiveau({ defaut = "manager" }: { defaut?: NiveauEquipe }) {
   return (
     <fieldset className="m-0 p-0 border-0 min-w-0">
@@ -63,10 +59,6 @@ function ChoixNiveau({ defaut = "manager" }: { defaut?: NiveauEquipe }) {
   );
 }
 
-/**
- * Ouvrir un compte à un membre de l'équipe : son adresse, sa fonction et son
- * rôle. Il reçoit par e-mail son identifiant et un mot de passe provisoire.
- */
 export function FormulaireNouvelEquipier() {
   return (
     <form action={creerCompteEquipe} className="flex flex-col gap-4">
@@ -105,14 +97,6 @@ export function FormulaireNouvelEquipier() {
   );
 }
 
-/**
- * Accorder et retirer l'accès au back-office.
- *
- * Les deux passent par une confirmation : donner l'accès ouvre tout — les
- * membres, les paiements, la messagerie —, le retirer ferme la porte à
- * quelqu'un qui travaille peut-être encore.
- */
-
 export function PromouvoirButton({
   userId,
   nom,
@@ -123,9 +107,7 @@ export function PromouvoirButton({
   userId: string;
   nom: string;
   email: string;
-  /** Entreprise rattachée au compte, s'il y en a une. */
   entreprise?: string | null;
-  /** Candidature vide : on peut proposer de supprimer la fiche au passage. */
   ficheEffacable?: boolean;
 }) {
   return (
@@ -193,7 +175,6 @@ export function PromouvoirButton({
 export function RetirerAdminButton({
   userId,
   nom,
-  /** Le compte redeviendra membre s'il est rattaché à une entreprise. */
   entreprise,
 }: {
   userId: string;
@@ -237,7 +218,6 @@ export function RetirerAdminButton({
   );
 }
 
-/** Passer un compte d'équipe d'administrateur à manager, ou l'inverse. */
 export function ChangerNiveauButton({
   userId,
   nom,

@@ -1,17 +1,5 @@
 import type { Member, Produit } from "../../lib/types";
 
-/**
- * Un produit du catalogue d'un membre, avec sa galerie.
- *
- * Les photos sont facultatives : sans elles, la vignette retombe sur le
- * dégradé décoratif de `PhotoPlaceholder`. La première sert de vignette.
- */
-/**
- * Fiche de détail de chaque offre : nature, prix indicatif et description.
- *
- * Les prix sont des ordres de grandeur plausibles pour des données de
- * démonstration, pas des tarifs réels.
- */
 const DETAILS: Record<
   string,
   Pick<Produit, "type" | "prix" | "description">
@@ -216,16 +204,6 @@ const p = (label: string, ...photos: string[]): Produit => ({
   ...DETAILS[label],
 });
 
-/**
- * Données d'exemple. Entreprises et personnes fictives, destinées à illustrer
- * le fonctionnement de l'application.
- *
- * La répartition des statuts est choisie pour que chaque cas de figure du
- * cycle d'adhésion soit visible à l'écran :
- *   - m4  : en attente de paiement (accès verrouillé)
- *   - m8  : en retard de plus de 30 jours (accès verrouillé automatiquement)
- *   - m10 : candidature fraîche, à examiner par l'équipe CanCham
- */
 export const MEMBERS: Member[] = [
   {
     id: "m1",

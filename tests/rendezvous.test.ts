@@ -8,7 +8,6 @@ import {
   versHeure,
 } from "../lib/rendezvous";
 
-/** Le 23 septembre 2026 est un mercredi ; le 26, un samedi. */
 const MERCREDI = "2026-09-23";
 const SAMEDI = "2026-09-26";
 
@@ -56,8 +55,6 @@ describe("creneauxLibres", () => {
   });
 
   it("n'offre pas un créneau qui déborderait de la plage", () => {
-    // De 9 h à 12 h, en 45 minutes : le dernier commence à 11 h 15 et finirait
-    // à midi ; un cinquième déborderait.
     expect(
       creneauxLibres({ jour: MERCREDI, plages: [MATIN], duree: 45 }),
     ).toEqual(["09:00", "09:45", "10:30", "11:15"]);
@@ -95,8 +92,6 @@ describe("creneauxLibres", () => {
   });
 
   it("écarte les créneaux trop proches, et garde les suivants", () => {
-    // Mercredi 8 h 00 à Madagascar : avec quatre heures de prévenance, rien
-    // avant midi.
     const maintenant = Date.parse(`${MERCREDI}T08:00:00+03:00`);
     expect(
       creneauxLibres({

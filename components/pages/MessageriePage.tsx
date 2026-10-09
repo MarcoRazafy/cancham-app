@@ -28,7 +28,6 @@ import type {
   User,
 } from "@/lib/types";
 
-/** Ce que montre la liste des fils sous le nom d'une conversation. */
 function apercu(fil: MessageThread): string {
   const m = fil.messages.at(-1);
   if (!m)
@@ -45,7 +44,6 @@ function apercu(fil: MessageThread): string {
     corps = `📎 ${libelle}${m.pieces.length > 1 ? ` +${m.pieces.length - 1}` : ""}`;
   }
 
-  // Dans un groupe, on précise qui a écrit : « Lova : … ».
   if (fil.type === "groupe") {
     const auteur = m.moi ? "Vous" : m.de.split(" ")[0];
     return `${auteur} : ${corps}`;
@@ -71,15 +69,9 @@ export async function MessageriePage({
   const user = await getCurrentUser(space);
   const [threads, membres, personnes] = await Promise.all([
     getThreads(user),
-    // La recherche ouvre aussi une conversation avec un membre jamais
-    // contacté ; l'équipe peut écrire à tous, candidats compris.
     getMembresJoignables(user, space === "admin"),
     getPersonnesJoignables(user.id),
   ]);
-  // Une conversation choisie dans l'adresse, ou à défaut la plus récente.
-  // Sur grand écran, liste et conversation sont côte à côte. Sur téléphone, un
-  // seul volet à la fois : la liste tant qu'aucune conversation n'est choisie,
-  // puis la conversation seule, avec un retour vers la liste.
   const choisie = threads.find((t) => t.id === threadId);
   const active = choisie ?? threads[0];
   const base = `/${space}/messagerie`;
@@ -108,8 +100,6 @@ export async function MessageriePage({
         />
       </div>
 
-      {/* Sur téléphone, le cadre suit la hauteur de la liste : la conversation,
-          elle, s'ouvre en plein écran. */}
       <div className="flex border border-line rounded-[var(--radius-m)] bg-surface overflow-hidden flex-col md:flex-row md:h-[min(680px,calc(100vh-220px))] md:min-h-[480px]">
         <ListeFils
           fils={resumes}
@@ -167,7 +157,6 @@ function Conversation({
         : `/membre/annuaire/${fil.membre.id}`
     : null;
 
-  // L'assistance vue par le membre : il parle à la chambre, pas à quelqu'un.
   const equipe = fil.equipe && !fil.contact;
 
   const info: InfoConversation = {
@@ -182,8 +171,6 @@ function Conversation({
       : null,
   };
 
-  // Transfert : toutes ses conversations, puis les personnes avec qui aucun
-  // échange individuel n'est encore ouvert — les autres y sont déjà.
   const dejaEnContact = new Set(
     fils
       .filter((t) => t.type === "individuel" && !t.equipe)
@@ -212,11 +199,6 @@ function Conversation({
   const visibles = fil.messages.filter((m) => !m.supprime);
 
   return (
-    // `relative` : le panneau d'information se pose sur la droite de la
-    // conversation. Sur téléphone, la conversation couvre tout l'écran, barre
-    // supérieure comprise, comme dans une application de messagerie : son
-    // en-tête porte le retour vers la liste. Prise par défaut, elle n'y est
-    // pas affichée du tout.
     <div
       className={`${
         choixExplicite ? "flex fixed inset-0 z-[35]" : "hidden"
@@ -230,7 +212,6 @@ function Conversation({
       />
 
       <EnTeteConversation
-        // Changer de fil referme le panneau et vide sa recherche.
         key={fil.id}
         retour={base}
         threadId={fil.id}
@@ -261,8 +242,6 @@ function Conversation({
           ) : null}
 
           {fil.messages.map((m: Message, i) => {
-            // Un séparateur dès que l'on change de jour, et devant le premier
-            // message : sans lui, trois heures et trois jours se ressemblent.
             const jour = jourLisible(m.envoyeLe);
             const nouveauJour =
               i === 0 || jourLisible(fil.messages[i - 1].envoyeLe) !== jour;
@@ -277,8 +256,6 @@ function Conversation({
                 <Bulle
                   message={m}
                   heure={heureExacte(m.envoyeLe)}
-                  // Dans l'assistance, l'équipe voit qui a répondu ; le
-                  // membre, lui, s'adresse à la chambre, pas à une personne.
                   groupe={fil.type === "groupe" || fil.equipe}
                   nomAuteur={
                     fil.equipe && space === "membre"
@@ -296,7 +273,6 @@ function Conversation({
         </div>
       </ActionsMessages>
 
-      {/* Remonté à chaque nouveau message : texte et pièces choisies repartent à vide. */}
       <Composeur key={`${fil.id}:${dernier}`} threadId={fil.id} space={space} />
     </div>
   );

@@ -1,16 +1,5 @@
 import Image from "next/image";
 
-/**
- * Éléments de marque, conformes à la charte CanCham.
- *
- * Règle de la charte : la version couleur sur fond pâle, la version renversée
- * sur fond foncé — la vitrine, bleu nuit, prend la renversée ; les pages de
- * connexion, claires, la version couleur. Le sigle seul ne
- * remplace jamais le logo — il est réservé aux usages listés par la charte
- * (avatar social, objet promotionnel, élément graphique), d'où son emploi ici
- * en simple ornement de fond.
- */
-
 const LOGOS = {
   couleur: { src: "/marque/logo-couleur.png", width: 2536 },
   blanc: { src: "/marque/logo-blanc.png", width: 2383 },

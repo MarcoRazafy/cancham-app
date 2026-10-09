@@ -7,22 +7,12 @@ import { fmtDate } from "@/lib/format";
 import { dureeLecture } from "@/lib/texte";
 import type { ActualitePublique } from "@/lib/queries";
 
-/**
- * Une actualité sur la page publique, sur le modèle du site de la chambre :
- * la photo coiffe la carte, sa catégorie s'y pose en pastille, puis la date
- * et le temps de lecture, le titre et le résumé. Toute la carte mène à
- * l'article.
- *
- * La carte est claire : elle vit dans une bande blanche, non sur le bleu nuit
- * du reste de la vitrine. Ses teintes sont donc écrites en clair.
- */
 export function CarteActualite({
   actualite: a,
   className = "",
   style,
 }: {
   actualite: ActualitePublique;
-  /** Pour l'entrée au défilement : la classe `reveler` et son retard. */
   className?: string;
   style?: CSSProperties;
 }) {
@@ -52,7 +42,6 @@ export function CarteActualite({
           </div>
         )}
         <span className="absolute left-4 bottom-4 rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--marque-nuit)] shadow-[0_2px_10px_rgba(15,29,44,0.18)]">
-          {/* Une publication de membre porte le nom de son entreprise. */}
           {a.auteur ?? a.cat}
         </span>
       </div>
@@ -66,7 +55,6 @@ export function CarteActualite({
         >
           {a.titre}
         </h3>
-        {/* Le titre d'une publication libre est déjà le début du texte. */}
         {a.libre ? null : (
           <p className="m-0 text-[14px] leading-[1.6] text-[#6b6b6b] line-clamp-3">
             {a.extrait}

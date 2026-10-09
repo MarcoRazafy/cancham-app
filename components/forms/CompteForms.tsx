@@ -12,13 +12,6 @@ import {
 } from "@/components/form-bits";
 import { supprimerMonCompte } from "@/lib/actions/compte";
 
-/**
- * Supprimer son propre compte, depuis son profil.
- *
- * Le clic n'efface rien : il ouvre une alerte rouge qui dit ce qui disparaît,
- * ce qui reste, et demande le mot de passe. C'est la dernière chose que voit
- * la personne avant un départ sans retour.
- */
 export function SupprimerMonCompteButton({
   espace,
   nom,
@@ -28,7 +21,6 @@ export function SupprimerMonCompteButton({
   espace: "membre" | "admin";
   nom: string;
   email: string;
-  /** Entreprise du membre, nommée dans l'alerte. */
   entreprise?: string | null;
 }) {
   return (

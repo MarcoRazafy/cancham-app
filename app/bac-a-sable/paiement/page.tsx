@@ -6,21 +6,12 @@ import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
 import { simulateurActif } from "@/lib/vanillapay";
 
-/**
- * Simulateur Vanilla Pay — l'écran de paiement.
- *
- * Tient lieu, en local, de la page du prestataire et de l'écran du
- * téléphone : on y voit la demande de confirmation telle que l'opérateur la
- * présente, et l'on confirme ou l'on refuse. Aucun argent ne change de main,
- * et la page le dit en toutes lettres. En production, elle n'existe pas.
- */
 export default async function PageSimulateur({
   searchParams,
 }: {
   searchParams: Promise<{ id?: string; retour?: string }>;
 }) {
   if (!simulateurActif()) notFound();
-  // Comme chez le prestataire, le lien de paiement porte un `id`.
   const { id = "", retour = "" } = await searchParams;
   const p = await prisma.paiement.findUnique({
     where: { reference: id },
@@ -74,12 +65,17 @@ export default async function PageSimulateur({
           <div className="px-6 py-6">
             {p.statut !== "en_cours" ? (
               <p className="m-0 text-[14.5px]">
-                Ce paiement est déjà {p.statut === "reussie" ? "confirmé" : "clos"}.
+                Ce paiement est déjà{" "}
+                {p.statut === "reussie" ? "confirmé" : "clos"}.
               </p>
             ) : (
               <>
                 <div className="flex items-start gap-3 rounded-xl bg-[#f4f6f9] p-4">
-                  <Smartphone size={22} className="mt-0.5 shrink-0" aria-hidden />
+                  <Smartphone
+                    size={22}
+                    className="mt-0.5 shrink-0"
+                    aria-hidden
+                  />
                   <div className="text-[14px] leading-relaxed">
                     {carte ? (
                       <>

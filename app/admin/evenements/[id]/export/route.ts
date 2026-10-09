@@ -10,15 +10,12 @@ const STATUTS = {
   absent: "Absent",
 };
 
-/** Liste d'accueil d'un événement au format tableur. */
 export async function GET(
   _requete: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  // Le proxy garde déjà /admin ; l'export le redit pour lui-même.
   await exigerEquipe();
   const { id } = await params;
-  // Un export après l'événement doit déjà compter les absents.
   await marquerAbsentsPasses(id);
   const participants = await getParticipants(id);
   const csv = versCsv(

@@ -3,11 +3,6 @@ import { Mail, Phone } from "lucide-react";
 import { COORDONNEES } from "@/lib/coordonnees";
 import { LIENS, retard } from "@/lib/traversee";
 
-/**
- * Questions fréquentes en accordéon natif (`details`), et une carte de
- * contact collante sur ordinateur : la photo de l'équipe à l'accueil, puis
- * les deux moyens de joindre la chambre et le bouton de rendez-vous.
- */
 const QUESTIONS = [
   {
     q: "À quoi donne accès le pass ?",

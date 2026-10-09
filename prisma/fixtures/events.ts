@@ -1,10 +1,5 @@
 import type { CanchamEvent, Registration } from "../../lib/types";
 
-/**
- * Événements d'exemple. Le jeu couvre à la fois des dates passées et à venir
- * par rapport à septembre 2026, pour que les onglets « À venir » / « Passés »
- * soient tous les deux peuplés.
- */
 export const EVENTS: CanchamEvent[] = [
   {
     id: "e1",
@@ -382,13 +377,6 @@ export function findEvent(id: string): CanchamEvent | undefined {
   return EVENTS.find((e) => e.id === id);
 }
 
-/**
- * Inscriptions du membre de démonstration (m1).
- *
- * Dans le prototype, `REGISTRATIONS` était une variable globale non rattachée
- * au membre : changer d'entreprise conservait ses inscriptions. Ici chaque
- * inscription porte son `memberId`.
- */
 export const REGISTRATIONS: Registration[] = [
   { eventId: "e2", memberId: "m1", code: "CC-E2-4718", date: "2026-09-04" },
   { eventId: "e4", memberId: "m1", code: "CC-E4-2093", date: "2026-09-07" },

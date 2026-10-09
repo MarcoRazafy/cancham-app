@@ -17,18 +17,11 @@ const OPTIONS = [
   },
 ] as const;
 
-/**
- * Où paraît une publication — actualité ou événement : sur la plateforme
- * seulement, ou aussi sur la page publique. Deux cartes à cocher ; le champ
- * envoyé s'appelle `diffusion` et vaut « plateforme » ou « public ».
- */
 export function ChoixDiffusion({
   publique,
   onChange,
 }: {
-  /** Choix de départ : `true` pour la page publique. */
   publique: boolean;
-  /** Pour qu'un formulaire adapte ses champs, le tarif public par exemple. */
   onChange?: (publique: boolean) => void;
 }) {
   return (

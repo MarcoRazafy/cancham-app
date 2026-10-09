@@ -3,35 +3,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FileText, LoaderCircle } from "lucide-react";
 
-/**
- * La couverture d'une ressource, vue avant l'envoi.
- *
- * Il n'y a plus d'image à choisir : la carte montre le contenu lui-même.
- * - une photo est sa propre couverture ;
- * - un document prendra sa première page, rendue par le serveur ;
- * - une vidéo, une image prise dans le film. Le serveur ne sait pas décoder
- *   une vidéo : c'est le navigateur qui la lit ici, s'arrête un instant après
- *   le début — la toute première image est souvent noire —, la dessine, et
- *   l'envoie avec le formulaire sous le nom `couvertureVideo`.
- */
 export function CouvertureRessource({
   fichier,
   actuelle,
 }: {
   fichier: File | null;
-  /** La couverture déjà en place, quand on modifie une ressource. */
   actuelle?: string | null;
 }) {
   const champ = useRef<HTMLInputElement>(null);
   const video = fichier?.type.startsWith("video/") ?? false;
   const photo = fichier?.type.startsWith("image/") ?? false;
 
-  // L'image tirée d'une vidéo, rattachée au fichier dont elle vient : un
-  // résultat arrivé pour un fichier déjà remplacé est simplement ignoré.
   const [tiree, setTiree] = useState<{ de: File; url: string } | null>(null);
   const [echec, setEchec] = useState<File | null>(null);
 
-  // Une photo est sa propre couverture : son adresse locale suffit.
   const urlPhoto = useMemo(
     () => (fichier && photo ? URL.createObjectURL(fichier) : null),
     [fichier, photo],
@@ -44,7 +29,6 @@ export function CouvertureRessource({
   );
 
   useEffect(() => {
-    // Sans vidéo, rien ne doit partir sous `couvertureVideo`.
     if (champ.current) champ.current.value = "";
     if (!fichier || !video) return;
 
@@ -56,9 +40,6 @@ export function CouvertureRessource({
     lecteur.preload = "auto";
     lecteur.src = url;
 
-    // Trois essais, de plus en plus loin : un film qui s'ouvre sur un écran
-    // blanc ou noir donnerait une couverture vide. On garde la première
-    // image qui a quelque chose à montrer.
     const moments = [0.1, 0.25, 0.5];
     let essai = 0;
     const toile = document.createElement("canvas");
@@ -93,7 +74,6 @@ export function CouvertureRessource({
         0.82,
       );
     };
-    // Un format que le navigateur ne lit pas : la carte gardera son motif.
     lecteur.onerror = () => {
       if (!annule) setEchec(fichier);
     };
@@ -130,7 +110,6 @@ export function CouvertureRessource({
             Image tirée de la vidéo…
           </span>
         ) : image ? (
-          // Un aperçu local (blob:) : next/image ne sait pas l'optimiser.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={image}
@@ -152,11 +131,6 @@ export function CouvertureRessource({
   );
 }
 
-/**
- * L'image est-elle d'une seule couleur, ou presque ? On compare la
- * luminosité de quelques centaines de points : un écran blanc, noir ou un
- * fondu n'en montre presque aucune variation.
- */
 function imageUnie(
   contexte: CanvasRenderingContext2D,
   toile: HTMLCanvasElement,

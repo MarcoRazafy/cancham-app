@@ -7,7 +7,6 @@ import type { MaillonDossier, Space } from "@/lib/types";
 
 export type Filtre = "tout" | "gratuit" | "payant";
 
-/** La bibliothèque en cartes, ou en lignes. */
 export type Vue = "grille" | "liste";
 
 const TARIFS: { key: Filtre; label: string }[] = [
@@ -16,7 +15,6 @@ const TARIFS: { key: Filtre; label: string }[] = [
   { key: "payant", label: "Payant" },
 ];
 
-/** Le fil d'Ariane : de la bibliothèque au dossier ouvert. */
 export function FilDossier({
   space,
   fil,
@@ -54,12 +52,6 @@ export function FilDossier({
   );
 }
 
-/**
- * La recherche et le filtre de tarif.
- *
- * Un formulaire GET : la recherche vit dans l'adresse, donc elle se partage,
- * se met en favori et survit au rechargement.
- */
 export function RechercheBibliotheque({
   space,
   dossierId,
@@ -74,26 +66,11 @@ export function RechercheBibliotheque({
   dossierId: string | null;
   recherche: string;
   actif: Filtre;
-  /**
-   * Ce que chaque tarif compte, dit dans la liste. Absent à la racine : on
-   * n'y compterait que les documents hors de tout dossier.
-   */
   comptes?: Record<Filtre, number>;
-  /**
-   * Le tri et la vue, à la racine de la bibliothèque et dans ses résultats.
-   * Absents dans un dossier ouvert : il a son ordre à lui, et sa mise en
-   * page.
-   */
   tri?: TriBibliotheque;
   vue?: Vue;
-  /**
-   * Resserrée, pour tenir dans l'en-tête d'une carte : sans marge, et la
-   * recherche à largeur fixe plutôt que sur toute la ligne.
-   */
   compacte?: boolean;
 }) {
-  // L'adresse de la page telle qu'elle est, à une clé près : pour passer
-  // d'une vue à l'autre sans perdre la recherche ni les filtres.
   const adresse = (v: Vue) => {
     const p = new URLSearchParams();
     if (dossierId) p.set("dossier", dossierId);
@@ -120,7 +97,6 @@ export function RechercheBibliotheque({
       {dossierId ? (
         <input type="hidden" name="dossier" value={dossierId} />
       ) : null}
-      {/* La vue choisie survit à une recherche. */}
       {vue && vue !== "grille" ? (
         <input type="hidden" name="vue" value={vue} />
       ) : null}
@@ -139,12 +115,6 @@ export function RechercheBibliotheque({
           className="w-full rounded-[var(--radius-s)] border border-line bg-surface py-2 pl-9 pr-3 text-[13.4px] text-ink placeholder:text-faint"
         />
       </label>
-      {/*
-        Le filtre est une liste déroulante et non des onglets : il tient à
-        côté de la recherche, où l'on cherche déjà, et il dit son compte.
-        Il se soumet tout seul — un bouton « Filtrer » de plus n'apprendrait
-        rien à personne.
-      */}
       <FiltreTarif
         actif={actif}
         options={TARIFS.map((t) => ({
@@ -172,8 +142,6 @@ export function RechercheBibliotheque({
           Effacer
         </Link>
       ) : null}
-      {/* En cartes ou en lignes : deux liens, celui de la vue en cours en
-          rouge. */}
       {vue ? (
         <div
           role="group"

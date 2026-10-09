@@ -1,31 +1,4 @@
-/* ============================================================
-   LA TRAVERSÉE · Gala des 10 ans de la CanCham
-   Page de la vitrine : app/(vitrine)/la-traversee
-
-   Charte CanCham : bleu nuit, rouge, vert, blanc. Montserrat en gras
-   pour les titres, Open Sans pour le texte, comme la page « Polices »
-   de la charte le prescrit ; la page les charge elle-même (page.tsx),
-   le reste de la vitrine garde Hammersmith One et Inter.
-
-   Concept : une ligne qui traverse la page du rouge (Canada) au
-   vert (Madagascar), comme le pont que la chambre construit depuis
-   dix ans.
-
-   Portée. Chaque règle est préfixée par `.marque .vitrine-claire.la-traversee` : rien
-   ici ne touche l'en-tête, le pied ni les autres pages, et la page passe
-   devant les règles que la vitrine pose sur les mêmes noms de classes —
-   `surtitre`, `saillant`, `apparition`, `scene` et ses `reveler`. Les
-   boutons `btn-action` et `btn-contour` sont ceux de la vitrine ; la page
-   n'en redit que les couleurs sur fond sombre et sur fond clair.
-
-   Apparitions. `Scenes`, dans la mise en page de la vitrine, pose
-   `data-visible` sur chaque `scene` qui entre à l'écran : la page n'a pas
-   d'observateur à elle. Les noms d'animations portent le préfixe
-   `traversee-`, les animations étant globales.
-   ============================================================ */
 .marque .vitrine-claire.la-traversee {
-  /* Les jetons de la page, raccordés à ceux de la vitrine (globals.css,
-     vitrine.css) : la charte n'est écrite qu'une fois. */
   --nuit: var(--marque-nuit);
   --nuit-2: var(--marque-nuit-2);
   --nuit-3: var(--marque-nuit-3);
@@ -36,8 +9,6 @@
   --vert: var(--marque-vert);
   --vert-fort: var(--success-strong);
   --vert-pale: var(--success-soft);
-  /* Sur fond bleu nuit, le rouge et le vert pleins s'éteignent : leurs
-     déclinaisons claires, celles de `.vitrine-sombre`. */
   --rouge-clair: #d81f3a;
   --rouge-vif: #d81f3a;
   --vert-clair: #2fae6a;
@@ -59,7 +30,6 @@
     #0f5028 82%,
     #007140 100%
   );
-  /* `--bouton-rouge` et `--bouton-rouge-survol` viennent de globals.css. */
   --ombre: var(--shadow);
   --ombre-sombre:
     0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -24px rgb(0 0 0 / 0.7);
@@ -91,7 +61,6 @@
 .marque .vitrine-claire.la-traversee .tnum {
   font-variant-numeric: tabular-nums;
 }
-/* Une section visée par une ancre s'arrête sous l'en-tête collant de la vitrine. */
 .marque .vitrine-claire.la-traversee [id] {
   scroll-margin-top: 124px;
 }
@@ -106,7 +75,6 @@
   }
 }
 
-/* ---------- Typographie ---------- */
 .marque .vitrine-claire.la-traversee .surtitre {
   font-family: var(--texte-police);
   font-size: 11.5px;
@@ -171,8 +139,6 @@
   color: var(--rouge-vif);
 }
 
-/* ---------- Boutons (repris de CanCham Connect) ---------- */
-/* Les boutons sont ceux de la vitrine ; ils prennent seulement la police de la page. */
 .marque .vitrine-claire.la-traversee .btn-action,
 .marque .vitrine-claire.la-traversee .btn-contour {
   font-family: var(--texte-police);
@@ -235,9 +201,6 @@
   transform: translateX(4px);
 }
 
-/* ============================================================
-   LA LIGNE DE TRAVERSÉE : filet vertical qui suit tout le site
-   ============================================================ */
 .marque .vitrine-claire.la-traversee .traversee {
   position: fixed;
   left: 0;
@@ -276,9 +239,6 @@
   }
 }
 
-/* ============================================================
-   HERO
-   ============================================================ */
 .marque .vitrine-claire.la-traversee .hero {
   position: relative;
   overflow: hidden;
@@ -296,9 +256,6 @@
   object-fit: cover;
   object-position: 50% 40%;
 }
-/* Diaporama : la photo active apparaît en fondu et zoome lentement ; les
-   autres attendent, invisibles, déjà chargées. Sans animation demandée, la
-   première reste seule à l'écran. */
 .marque .vitrine-claire.la-traversee .diapo .diapo-img {
   opacity: 0;
   transition: opacity 2.2s ease-in-out;
@@ -307,9 +264,6 @@
 .marque .vitrine-claire.la-traversee .diapo .diapo-img.active {
   opacity: 1;
 }
-/* Le zoom ne s'arrête jamais : chaque photo va et vient entre 1 et 1,08 en
-   continu, visible ou non, décalée des autres. Quand elle revient à l'écran,
-   elle est déjà en mouvement : pas de retour brusque au cadrage initial. */
 .marque .vitrine-claire.la-traversee .diapo.anime .diapo-img {
   animation: traversee-diapo-zoom 14s ease-in-out infinite alternate;
 }
@@ -353,8 +307,6 @@
       rgb(15 29 44 / 0.95) 100%
     );
 }
-/* Grille fine du hero : mailles larges, traits très pâles et légèrement
-   flous, pour une texture qui se devine sans se lire. */
 .marque .vitrine-claire.la-traversee .hero-grille {
   position: absolute;
   inset: 0;
@@ -436,7 +388,6 @@
   flex-wrap: wrap;
   gap: 12px;
 }
-/* Colonne droite : badge 10 ans + compte à rebours */
 .marque .vitrine-claire.la-traversee .hero-droite {
   display: flex;
   flex-direction: column;
@@ -513,14 +464,11 @@
   font-size: 13px;
   color: rgb(255 255 255 / 0.6);
 }
-/* Pont du hero : le dégradé qui traverse */
 .marque .vitrine-claire.la-traversee .pont {
   height: 3px;
   background: var(--degrade);
   transform-origin: left;
 }
-/* Les lots à gagner : une barre en verre fumé où les lots défilent
-   (Lots.tsx). Le lot actif monte en place, le précédent sort par le haut. */
 .marque .vitrine-claire.la-traversee .lots-barre {
   position: relative;
   display: flex;
@@ -676,7 +624,6 @@
 .marque .vitrine-claire.la-traversee .lots-lien:hover svg {
   transform: translateX(3px);
 }
-/* Reflet qui balaie la barre toutes les sept secondes. */
 .marque .vitrine-claire.la-traversee .lots-reflet {
   position: absolute;
   top: 0;
@@ -728,7 +675,6 @@
   }
 }
 
-/* ---------- Preuves : bande sur le dégradé ---------- */
 .marque .vitrine-claire.la-traversee .preuves {
   background: var(--degrade-fond);
   color: #fff;
@@ -767,9 +713,6 @@
   line-height: 1.4;
 }
 
-/* ============================================================
-   SECTIONS
-   ============================================================ */
 .marque .vitrine-claire.la-traversee .section {
   padding-block: 72px;
 }
@@ -817,9 +760,6 @@
   }
 }
 
-/* ---------- Le parcours de la journée ----------
-   Quatre cartes égales sous la ligne de traversée. La ligne se trace quand la
-   section entre à l'écran ; chaque point grossit au survol de sa carte. */
 .marque .vitrine-claire.la-traversee .parcours {
   position: relative;
   display: grid;
@@ -950,7 +890,6 @@
   font-size: 15px;
   line-height: 1.55;
 }
-/* La carte du Gala : bleu nuit, halo vert, horaire en vert. */
 .marque .vitrine-claire.la-traversee .etape.phare {
   background: var(--nuit);
   color: #fff;
@@ -1053,10 +992,6 @@
   }
 }
 
-/* ---------- Pourquoi venir : bento ----------
-   Deux rangées en zigzag : grande photo à gauche puis deux tuiles, deux
-   tuiles puis grande photo à droite. Le numéro de chaque raison est posé en
-   grand filigrane dans le coin. */
 .marque .vitrine-claire.la-traversee .bento {
   display: grid;
   gap: 14px;
@@ -1188,7 +1123,6 @@
   font-size: clamp(24px, 2.2vw, 32px);
 }
 
-/* ---------- Défis ---------- */
 .marque .vitrine-claire.la-traversee .defis {
   background: var(--degrade-fond);
   color: #fff;
@@ -1348,9 +1282,6 @@
   font-weight: 700;
 }
 
-/* ---------- Ambiance : mosaïque ----------
-   Sur ordinateur, chaque photo occupe la zone que le composant lui donne
-   (`--zone`, grille 6 × 3). Plus étroit, deux colonnes et l'ordre naturel. */
 .marque .vitrine-claire.la-traversee .mosaique {
   display: grid;
   gap: 10px;
@@ -1420,7 +1351,6 @@
   color: var(--texte-3);
 }
 
-/* ---------- Application ---------- */
 .marque .vitrine-claire.la-traversee .appli {
   position: relative;
   overflow: hidden;
@@ -1450,8 +1380,6 @@
     gap: 80px;
   }
 }
-/* Le cadre lévite ; le téléphone, dedans, s'incline vers la souris
-   (Telephone.tsx pose --rx, --ry pour l'angle et --gx, --gy pour le reflet). */
 .marque .vitrine-claire.la-traversee .telephone-cadre {
   width: 300px;
   max-width: 100%;
@@ -1690,7 +1618,6 @@
   line-height: 1.5;
 }
 
-/* ---------- Billet ---------- */
 .marque .vitrine-claire.la-traversee .billet-grille {
   display: grid;
   gap: 22px;
@@ -1812,8 +1739,6 @@
 .marque .vitrine-claire.la-traversee .inclus b {
   color: var(--nuit);
 }
-/* Carrousel des moyens de paiement : défilement continu vers la gauche,
-   arrêt au survol. Les bords de la fenêtre sont fondus. */
 .marque .vitrine-claire.la-traversee .paiements {
   display: flex;
   align-items: center;
@@ -1967,7 +1892,6 @@
   align-self: flex-start;
 }
 
-/* ---------- Solidarité ---------- */
 .marque .vitrine-claire.la-traversee .hope {
   border-radius: var(--r-l);
   overflow: hidden;
@@ -2038,7 +1962,6 @@
   align-self: flex-start;
 }
 
-/* ---------- Partenaires ---------- */
 .marque .vitrine-claire.la-traversee .partenaires {
   position: relative;
   overflow: hidden;
@@ -2211,7 +2134,6 @@
   margin-top: auto;
 }
 
-/* ---------- FAQ ---------- */
 .marque .vitrine-claire.la-traversee .faq-grille {
   display: grid;
   gap: 24px;
@@ -2275,8 +2197,6 @@
   color: var(--texte-2);
   line-height: 1.6;
 }
-/* Carte de contact : photo de l'équipe en haut, corps blanc, deux lignes de
-   contact copiables et le bouton rouge. Collante sur ordinateur. */
 .marque .vitrine-claire.la-traversee .contact-carte {
   border-radius: var(--r-l);
   overflow: hidden;
@@ -2391,7 +2311,6 @@
   }
 }
 
-/* ---------- Final ---------- */
 .marque .vitrine-claire.la-traversee .final {
   position: relative;
   overflow: hidden;
@@ -2440,9 +2359,6 @@
   background: rgb(255 255 255 / 0.08);
 }
 
-/* ---------- Barre de réservation flottante ----------
-   Elle s'arrête avant le coin inférieur droit : la bulle d'assistance de la
-   vitrine y vit, sur toutes les pages. */
 .marque .vitrine-claire.la-traversee .flottante {
   position: fixed;
   left: 12px;
@@ -2483,7 +2399,6 @@
   min-height: 44px;
   font-size: 12px;
 }
-/* Sur téléphone, la place manque pour deux lignes à côté du bouton : le titre suffit. */
 @media (max-width: 640px) {
   .marque .vitrine-claire.la-traversee .flottante span {
     display: none;
@@ -2498,9 +2413,6 @@
   }
 }
 
-/* ============================================================
-   MOTION : apparitions au défilement (contenu visible au repos)
-   ============================================================ */
 @keyframes traversee-reveler {
   from {
     opacity: 0;

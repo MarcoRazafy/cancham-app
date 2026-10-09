@@ -6,18 +6,6 @@ import { ArrowRight, ChevronDown, Search, X } from "lucide-react";
 import type { Question, Theme } from "@/lib/aide";
 import { TexteLie } from "@/components/TexteLie";
 
-/**
- * Centre d'aide : recherche, thèmes et questions dépliables.
- *
- * Les questions sont des `<details>` natifs : elles s'ouvrent au clic ou au
- * clavier sans JavaScript. La recherche filtre à la frappe et ignore accents et
- * majuscules — « acces » trouve « accès », sans quoi un membre qui tape vite ne
- * trouverait rien.
- *
- * Une réponse s'atteint par une ancre : `/membre/aide#acces-restreint` ouvre
- * directement la bonne question, pour qu'un lien envoyé par l'équipe mène au
- * bon endroit.
- */
 export function CentreAide({ themes }: { themes: Theme[] }) {
   const [saisie, setSaisie] = useState("");
   const [ancre, setAncre] = useState<string | null>(null);
@@ -48,7 +36,6 @@ export function CentreAide({ themes }: { themes: Theme[] }) {
 
   return (
     <div>
-      {/* ---------- Recherche ---------- */}
       <div className="relative mb-4">
         <Search
           size={18}
@@ -74,7 +61,6 @@ export function CentreAide({ themes }: { themes: Theme[] }) {
         ) : null}
       </div>
 
-      {/* ---------- Thèmes ---------- */}
       {!terme ? (
         <nav aria-label="Thèmes" className="flex gap-2 flex-wrap mb-6">
           {themes.map((t) => (
@@ -95,7 +81,6 @@ export function CentreAide({ themes }: { themes: Theme[] }) {
         </p>
       )}
 
-      {/* ---------- Questions ---------- */}
       <div className="flex flex-col gap-7">
         {resultats.map((t) => (
           <section key={t.id} id={`theme-${t.id}`} className="scroll-mt-24">
@@ -105,8 +90,6 @@ export function CentreAide({ themes }: { themes: Theme[] }) {
                 <Reponse
                   key={q.id}
                   question={q}
-                  // Ouverte si elle est visée par l'ancre, ou si l'on cherche :
-                  // un résultat de recherche replié obligerait à cliquer partout.
                   ouverte={ancre === q.id || !!terme}
                 />
               ))}
@@ -139,12 +122,9 @@ function Reponse({
         />
       </summary>
 
-      {/* La question prend toute la largeur ; la réponse garde une longueur
-          de ligne qui se lit. */}
       <div className="px-4 pb-4 -mt-1 text-[13.8px] leading-relaxed text-muted max-w-[92ch]">
         {question.reponse.split("\n\n").map((bloc, i) => {
           const lignes = bloc.split("\n");
-          // Un bloc dont toutes les lignes commencent par « · » est une liste.
           if (lignes.every((l) => l.startsWith("· "))) {
             return (
               <ul key={i} className="m-0 mb-3 pl-5 flex flex-col gap-1">
@@ -181,7 +161,6 @@ function Reponse({
   );
 }
 
-/** Minuscules, sans accents : « Accès » et « acces » se valent. */
 function normaliser(s: string): string {
   return s
     .normalize("NFD")

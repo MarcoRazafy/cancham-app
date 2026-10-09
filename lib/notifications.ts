@@ -19,11 +19,8 @@ export interface Notification {
   id: string;
   titre: string;
   temps: string;
-  /** La page exacte qui traite la notification, pas une liste générale. */
   href: string;
-  /** Sévérité, pour la couleur de l'icône. */
   ton: "info" | "warn" | "bad";
-  /** Nature de la notification, pour l'icône. */
   categorie:
     | "adhesion"
     | "paiement"
@@ -36,18 +33,9 @@ export interface Notification {
     | "rendezvous";
 }
 
-/**
- * Notifications de la barre supérieure.
- *
- * Elles sont recalculées à chaque affichage à partir de l'état réel de la base :
- * aucune table de notifications à tenir à jour, donc rien qui puisse se
- * désynchroniser. En contrepartie, elles disparaissent quand la situation qui
- * les motive est réglée, et non quand on les lit.
- */
 export async function getNotifications(
   space: Space,
   memberId: string | null,
-  /** Les messages non lus sont ceux de l'utilisateur, pas de l'espace. */
   userId: string,
 ): Promise<Notification[]> {
   return space === "admin"
@@ -58,10 +46,6 @@ export async function getNotifications(
 const pluriel = (n: number, mot: string, pluriel = `${mot}s`) =>
   `${n} ${n > 1 ? pluriel : mot}`;
 
-/**
- * La conversation où attend le message non lu le plus récent : une
- * notification de messages y mène directement, plutôt qu'à la liste.
- */
 async function filNonLu(userId: string): Promise<string | null> {
   const [fil] = await prisma.$queryRaw<{ threadId: string }[]>`
     SELECT m."threadId"
@@ -76,7 +60,6 @@ async function filNonLu(userId: string): Promise<string | null> {
   return fil?.threadId ?? null;
 }
 
-/** Rappels d'aujourd'hui et de demain pas encore cochés, dans les deux espaces. */
 async function rappelsProches(
   userId: string,
   espace: "membre" | "admin",
@@ -110,10 +93,6 @@ async function rappelsProches(
   });
 }
 
-/**
- * Rendez-vous d'aujourd'hui et de demain : le membre voit les siens, l'équipe
- * ceux qu'elle reçoit.
- */
 async function rendezvousProches(
   userId: string,
   espace: "membre" | "admin",
@@ -188,7 +167,6 @@ async function notificationsAdmin(userId: string): Promise<Notification[]> {
 
   const liste: Notification[] = [...rappels, ...rendezvous];
 
-  /** Un seul membre concerné : sa fiche. Plusieurs : la liste filtrée. */
   const versMembres = (statut: "candidature" | "en_retard" | "en_attente") => {
     const concernes = membres.filter((m) => m.statut === statut);
     return {
@@ -334,15 +312,12 @@ async function notificationsMembre(
       },
     }),
     prisma.news.findFirst({
-      // La dernière publication des autres : on n'est pas prévenu de la
-      // sienne.
       where: { OR: [{ memberId: null }, { memberId: { not: memberId } }] },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       select: { id: true, titre: true, date: true },
     }),
     rappelsProches(userId, "membre"),
     rendezvousProches(userId, "membre"),
-    // Factures dont l'échéance tombe dans la semaine, ou est dépassée.
     prisma.invoice.findMany({
       where: {
         memberId,

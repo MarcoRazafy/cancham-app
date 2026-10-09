@@ -1,16 +1,3 @@
-/**
- * Fabrique les fichiers des ressources de démonstration.
- *
- *   npm run ressources:demo
- *
- * Les documents sont rédigés en HTML puis convertis par LibreOffice au format
- * annoncé par la ressource (PDF ou DOCX), et passent ensuite par la même
- * chaîne qu'un vrai dépôt : `preparerDocument`, qui rend chaque page en image.
- * La vidéo est une séquence libre de droits de Pexels.
- *
- * Tout est écrit dans `stockage/`, hors dépôt : le script se relance sans
- * risque, il écrase ce qu'il a produit la fois précédente.
- */
 import { execFile } from "node:child_process";
 import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -28,10 +15,6 @@ const executer = promisify(execFile);
 
 const VIDEO =
   "https://videos.pexels.com/video-files/8716788/8716788-sd_640_360_25fps.mp4";
-
-/* -------------------------------------------------------------------------- */
-/*  Mise en page commune                                                      */
-/* -------------------------------------------------------------------------- */
 
 const saut = '<p style="page-break-before: always"></p>';
 
@@ -61,10 +44,6 @@ const liste = (items: string[]) =>
   `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
 const cases = (items: string[]) =>
   `<table>${items.map((i) => `<tr><td class="case" style="width:18pt">☐</td><td>${i}</td></tr>`).join("")}</table>`;
-
-/* -------------------------------------------------------------------------- */
-/*  Contenus                                                                  */
-/* -------------------------------------------------------------------------- */
 
 const CONTENUS: Record<string, { surtitre: string; corps: string }> = {
   r1: {
@@ -178,8 +157,6 @@ ${cases(["Mode de paiement confirmé.", "Coordonnées bancaires de l'acheteur v�
   },
 };
 
-/* -------------------------------------------------------------------------- */
-
 async function convertir(
   html: string,
   dossier: string,
@@ -209,7 +186,6 @@ async function convertir(
 async function main() {
   const ressources = await prisma.resource.findMany({ orderBy: { id: "asc" } });
 
-  // La vidéo est téléchargée une fois, puis copiée dans chaque ressource vidéo.
   const tmp = path.join(process.cwd(), "stockage", ".video-demo.mp4");
   await mkdir(path.dirname(tmp), { recursive: true });
   await executer("curl", ["-sS", "-L", "--max-time", "120", "-o", tmp, VIDEO]);

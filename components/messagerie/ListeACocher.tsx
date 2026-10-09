@@ -5,7 +5,6 @@ import { Check, Search, Users, X } from "lucide-react";
 import { Pastille, normaliser } from "./outils";
 
 export interface ElementACocher {
-  /** Valeur envoyée par le formulaire. */
   valeur: string;
   nom: string;
   detail: string;
@@ -14,15 +13,6 @@ export interface ElementACocher {
   groupe?: boolean;
 }
 
-/**
- * Liste à cocher avec recherche : les personnes d'un nouveau groupe, les
- * conversations vers lesquelles transférer un message.
- *
- * Les éléments choisis restent affichés en étiquettes au-dessus de la liste :
- * une recherche qui les masque ne doit pas faire oublier qu'ils sont cochés.
- * Ce sont des champs cachés qui partent avec le formulaire, pas les cases —
- * une case filtrée par la recherche sortirait du DOM et de l'envoi.
- */
 export function ListeACocher({
   name,
   sections,
@@ -113,7 +103,6 @@ export function ListeACocher({
           onChange={(e) => setSaisie(e.target.value)}
           placeholder={placeholder}
           aria-label={placeholder}
-          // Entrée dans la recherche ne doit pas envoyer le formulaire.
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault();
           }}

@@ -9,12 +9,6 @@ import type { Devise, FormuleId } from "@/lib/membership";
 import type { MemberStatus, NiveauEquipe, NoteMembre } from "@/lib/types";
 import { exigerEquipe } from "@/lib/autorisations";
 
-/**
- * Lectures propres au back-office : journal des opérations, tableaux de bord
- * financiers, répartitions. Séparées de `queries.ts`, qui sert aussi l'espace
- * membre, pour qu'aucune page membre n'y touche par mégarde.
- */
-
 export interface EntreeJournal {
   id: string;
   action: string;
@@ -22,7 +16,6 @@ export interface EntreeJournal {
   entiteId: string;
   acteur: string;
   detail: string | null;
-  /** Horodatage ISO. */
   date: string;
 }
 
@@ -62,7 +55,6 @@ export async function getJournal({
   recherche?: string;
 } = {}): Promise<{ entrees: EntreeJournal[]; total: number }> {
   const where = {
-    // Le chargement initial des données n'est pas une opération de l'équipe.
     action: famille ? { in: codesDeFamille(famille) } : { not: "seed" },
     ...(entite ? { entite } : {}),
     ...(entiteId ? { entiteId } : {}),
@@ -93,14 +85,6 @@ export async function getJournal({
   };
 }
 
-/**
- * Les notes de l'équipe sur un membre.
- *
- * Le garde-fou est ici, et pas seulement dans la page qui les affiche : ces
- * notes ne doivent jamais sortir du back-office, et une fonction qui les
- * rendrait sans rien vérifier finirait un jour appelée depuis l'espace
- * membre. `exigerEquipe` renvoie un adhérent à la connexion.
- */
 export async function getNotesMembre(memberId: string): Promise<NoteMembre[]> {
   const user = await exigerEquipe();
   const rows = await prisma.noteMembre.findMany({
@@ -116,7 +100,6 @@ export async function getNotesMembre(memberId: string): Promise<NoteMembre[]> {
   }));
 }
 
-/** Historique d'un membre : ses entrées, et celles de ses factures. */
 export async function getHistoriqueMembre(
   memberId: string,
 ): Promise<EntreeJournal[]> {
@@ -142,12 +125,6 @@ export async function getHistoriqueMembre(
 
 export type Montants = Record<Devise, number>;
 
-/**
- * Encaissé et restant dû sur une année — ou depuis toujours —, par devise.
- *
- * Deux devises, deux totaux : additionner Ariary et dollars n'aurait pas de
- * sens.
- */
 export async function getFinancesAnnee(annee: number | null): Promise<{
   encaisse: Montants;
   aEncaisser: Montants;
@@ -185,7 +162,6 @@ export async function getFinancesAnnee(annee: number | null): Promise<{
   };
 }
 
-/** Années pour lesquelles au moins une facture existe, la plus récente d'abord. */
 export async function getAnneesFactures(): Promise<number[]> {
   const rows = await prisma.$queryRaw<{ annee: number }[]>`
     SELECT DISTINCT EXTRACT(YEAR FROM date)::int AS annee
@@ -193,12 +169,9 @@ export async function getAnneesFactures(): Promise<number[]> {
   return rows.map((r) => r.annee);
 }
 
-/** Adhérents par formule, candidatures exclues. */
 export async function getRepartitionFormules(): Promise<
   { formule: FormuleId; n: number }[]
 > {
-  // Les fiches sans formule n'entrent pas dans la répartition : elles n'ont
-  // pas encore de camp.
   const rows = await prisma.member.groupBy({
     by: ["formule"],
     where: { statut: { not: "candidature" }, formule: { not: null } },
@@ -209,7 +182,6 @@ export async function getRepartitionFormules(): Promise<
     .sort((a, b) => b.n - a.n);
 }
 
-/** Demandes d'achat de ressources payantes non encore traitées par écrit. */
 export async function getDemandesAchat(limite = 5): Promise<EntreeJournal[]> {
   const rows = await prisma.auditLog.findMany({
     where: { action: "ressource_achetee" },
@@ -228,7 +200,6 @@ export interface Participant {
   statut: "a_valider" | "confirme" | "present" | "absent";
 }
 
-/** Liste d'accueil d'un événement, par ordre alphabétique. */
 export async function getParticipants(eventId: string): Promise<Participant[]> {
   return prisma.attendee.findMany({
     where: { eventId },
@@ -254,7 +225,6 @@ export interface RessourceAdmin {
   type: "gratuit" | "payant";
   prix: number;
   description: string | null;
-  /** Fichier prêt pour la lecture. */
   pret: boolean;
   pages: number | null;
   cover: string | null;
@@ -263,7 +233,6 @@ export interface RessourceAdmin {
   demandes: number;
 }
 
-/** Bibliothèque vue par l'équipe : état des fichiers et demandes d'achat. */
 export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
   const [rows, demandes] = await Promise.all([
     prisma.resource.findMany({
@@ -300,7 +269,6 @@ export async function getRessourcesAdmin(): Promise<RessourceAdmin[]> {
   }));
 }
 
-/** Les blocs d'une page composée, pour la rouvrir dans l'éditeur. */
 export async function getBlocsRessource(id: string): Promise<Bloc[]> {
   const r = await prisma.resource.findUnique({
     where: { id },
@@ -309,8 +277,6 @@ export async function getBlocsRessource(id: string): Promise<Bloc[]> {
   return blocsEnregistres(r?.contenu);
 }
 
-/* ============================ Comptes et accès ============================ */
-
 export interface CompteEquipe {
   id: string;
   nom: string;
@@ -318,15 +284,11 @@ export interface CompteEquipe {
   email: string;
   tel: string | null;
   photo: string | null;
-  /** Date de création du compte, ISO court. */
   depuis: string;
-  /** Compte jamais utilisé : le mot de passe n'a pas encore été défini. */
   sansMotDePasse: boolean;
-  /** Sans niveau enregistré, un compte d'équipe n'a que les droits du manager. */
   niveau: NiveauEquipe;
 }
 
-/** L'équipe CanCham : les comptes qui ouvrent le back-office. */
 export async function getAdministrateurs(): Promise<CompteEquipe[]> {
   const rows = await prisma.user.findMany({
     where: { role: "admin" },
@@ -357,13 +319,11 @@ export async function getAdministrateurs(): Promise<CompteEquipe[]> {
 }
 
 export interface CompteMembre extends Omit<CompteEquipe, "niveau"> {
-  /** L'entreprise à laquelle le compte est rattaché. */
   membre: {
     id: string;
     nom: string;
     statut: MemberStatus;
     motivation: string | null;
-    /** Fiche encore vide de tout historique : sa suppression n'emporte rien. */
     sansHistorique: boolean;
   } | null;
 }
@@ -433,7 +393,6 @@ function versCompteMembre(u: LigneCompte): CompteMembre {
   };
 }
 
-/** Recherche d'un compte membre par nom, adresse ou entreprise. */
 export async function chercherComptes(
   recherche: string,
   limite = 20,
@@ -456,8 +415,6 @@ export async function chercherComptes(
   return rows.map(versCompteMembre);
 }
 
-/* ---------------------- Accès aux ressources payantes ---------------------- */
-
 export interface AccesOuvert {
   memberId: string;
   nom: string;
@@ -465,7 +422,6 @@ export interface AccesOuvert {
   date: string;
 }
 
-/** Les entreprises à qui une ressource payante a été ouverte. */
 export async function getAccesRessource(
   resourceId: string,
 ): Promise<AccesOuvert[]> {
@@ -483,12 +439,6 @@ export async function getAccesRessource(
   }));
 }
 
-/**
- * Les entreprises à qui l'on peut ouvrir un accès.
- *
- * Les candidatures en sont écartées : on n'ouvre pas une ressource payante à
- * une entreprise dont l'adhésion n'est pas encore acceptée.
- */
 export async function getMembresPourAcces(): Promise<
   { id: string; nom: string; statut: string }[]
 > {
@@ -501,13 +451,6 @@ export async function getMembresPourAcces(): Promise<
   return rows;
 }
 
-/**
- * Les accès de plusieurs ressources d'un coup.
- *
- * Une requête pour toute la page plutôt qu'une par carte : la fenêtre « qui
- * y a accès » s'ouvre alors sans attendre, et la bibliothèque ne coûte pas
- * une requête par ressource payante affichée.
- */
 export async function getAccesDesRessources(
   ids: string[],
 ): Promise<Record<string, AccesOuvert[]>> {

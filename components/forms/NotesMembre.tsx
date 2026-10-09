@@ -15,20 +15,6 @@ import { Card } from "@/components/ui";
 import { ajouterNoteMembre, supprimerNoteMembre } from "@/lib/actions/members";
 import type { NoteMembre } from "@/lib/types";
 
-/**
- * Les commentaires de l'équipe sur un membre, dans sa fiche du back-office,
- * juste au-dessus de la zone sensible.
- *
- * « Rappeler en janvier », « a changé de gérant », « paie en retard mais
- * paie » : ce qu'on se dit entre collègues et qui n'a pas sa place dans le
- * journal, lequel retrace les opérations, pas les impressions. Le motif
- * d'un refus d'adhésion y figure aussi.
- *
- * Réservé au back-office, lecture comme écriture : l'intéressé ne le voit
- * jamais, et c'est ce qui permet d'y être franc. Le bandeau le rappelle à
- * qui écrit — une note qu'on croit privée alors qu'elle ne l'est pas ferait
- * beaucoup de dégâts, et l'inverse aussi.
- */
 export function NotesMembre({
   memberId,
   notes,
@@ -99,10 +85,6 @@ export function NotesMembre({
   );
 }
 
-/**
- * Retrait d'un commentaire, avec confirmation. Toute l'équipe peut retirer
- * ceux des autres : c'est un carnet commun.
- */
 function SupprimerNote({ note }: { note: NoteMembre }) {
   return (
     <Modal

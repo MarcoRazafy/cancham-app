@@ -3,29 +3,12 @@
 import { useEffect } from "react";
 import { EVENEMENT } from "@/lib/traversee";
 
-/**
- * Tout ce qui bouge sur la page, en un seul composant client.
- *
- * Le reste de la page est rendu côté serveur et reste lisible sans
- * JavaScript : ce composant ne fait qu'ajouter du mouvement par-dessus.
- *
- * - `[data-cd]`        : chiffres du compte à rebours, mis à jour chaque seconde ;
- * - `.scene`           : c'est `Scenes`, dans la mise en page de la vitrine, qui
- *                        pose `data-visible` sur chaque scène entrant dans la
- *                        fenêtre — rien à faire ici ;
- * - `[data-compteur]`  : nombre qui monte de zéro à sa valeur quand on l'atteint ;
- * - `.traversee`       : la ligne qui se dessine au fil du défilement ;
- * - `#flottante`       : la barre de réservation, visible une fois le hero passé.
- *
- * Qui a demandé moins d'animations voit les valeurs finales directement.
- */
 export function Mouvement() {
   useEffect(() => {
     const reduit = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    /* ---------- Compte à rebours ---------- */
     const cible = new Date(EVENEMENT.dateGala).getTime();
     const tic = () => {
       const d = Math.max(0, cible - Date.now());
@@ -50,7 +33,6 @@ export function Mouvement() {
     tic();
     const horloge = window.setInterval(tic, 1000);
 
-    /* ---------- Compteurs ---------- */
     const compter = (el: HTMLElement) => {
       const fin = Number(el.dataset.compteur);
       if (reduit) {
@@ -84,7 +66,6 @@ export function Mouvement() {
       compteurs.forEach((c) => (c.textContent = c.dataset.compteur ?? ""));
     }
 
-    /* ---------- Ligne de traversée et barre flottante ---------- */
     const ligne = document.querySelector<HTMLElement>(".traversee");
     const flottante = document.getElementById("flottante");
     const hero = document.querySelector<HTMLElement>(".hero");
@@ -127,7 +108,6 @@ export function Mouvement() {
   return null;
 }
 
-/** Les quatre cases du compte à rebours. Les valeurs arrivent par `Mouvement`. */
 export function CompteARebours({ className = "" }: { className?: string }) {
   return (
     <div

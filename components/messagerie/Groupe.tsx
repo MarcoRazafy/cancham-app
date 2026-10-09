@@ -22,7 +22,6 @@ import type { Space } from "@/lib/types";
 import { EntreeFichier } from "@/components/EnvoisSuivis";
 import { ListeACocher, type ElementACocher } from "./ListeACocher";
 
-/** Création d'un groupe : un nom, une photo facultative, des participants. */
 export function NouveauGroupe({
   space,
   personnes,
@@ -107,7 +106,6 @@ export function NouveauGroupe({
   );
 }
 
-/** Ajout de personnes à un groupe existant. */
 export function AjouterParticipants({
   threadId,
   space,
@@ -115,7 +113,6 @@ export function AjouterParticipants({
 }: {
   threadId: string;
   space: Space;
-  /** Personnes qui ne font pas encore partie du groupe. */
   personnes: ElementACocher[];
 }) {
   const [nombre, setNombre] = useState(0);
@@ -160,7 +157,6 @@ export function AjouterParticipants({
   );
 }
 
-/** Quitter un groupe, après confirmation. */
 export function QuitterGroupe({
   threadId,
   nom,

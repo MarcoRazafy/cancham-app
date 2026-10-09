@@ -9,16 +9,6 @@ import { affichageSite } from "@/lib/liens";
 import { positionObjet } from "@/lib/cadrage";
 import type { Offer } from "@/lib/types";
 
-/**
- * Une offre entre membres, ouverte en fenêtre plutôt qu'en page.
- *
- * Une carte ne dit qu'un titre et une entreprise ; la fenêtre donne le
- * détail, les coordonnées de qui la propose, et le bouton pour en profiter —
- * sans quitter la page qu'on était en train de lire.
- *
- * La carte reçue en enfant sert de déclencheur : la vitrine et la plateforme
- * gardent chacune la leur, seule la fenêtre est commune.
- */
 export function ModaleOffre({
   offre,
   children,
@@ -76,16 +66,10 @@ function Detail({ offre: o }: { offre: Offer }) {
           </p>
         </div>
 
-        {/*
-          Le texte entier, sans rien couper — mais un mot sans espace,
-          collé d'ailleurs, poussait la fenêtre en largeur et la faisait
-          défiler de travers. `anywhere` le replie.
-        */}
         <p className="m-0 text-[14.2px] leading-relaxed text-muted whitespace-pre-line [overflow-wrap:anywhere]">
           {o.desc}
         </p>
 
-        {/* ---------- L'entreprise, et comment la joindre ---------- */}
         <div className="rounded-[var(--radius-m)] border border-line bg-surface-2 p-4">
           <div className="flex items-center gap-3">
             {o.membreLogo ? (
@@ -149,11 +133,6 @@ function Detail({ offre: o }: { offre: Offer }) {
         </div>
       </ModalBody>
 
-      {/*
-        Pied collant : la fenêtre défile d'un bloc, et sur un téléphone la
-        photo et les coordonnées suffisent à pousser le bouton hors de vue.
-        Collé en bas, « En profiter » reste sous le pouce sans défiler.
-      */}
       {o.membreSite || o.lien ? (
         <div className="sticky bottom-0 flex items-center justify-end gap-2.5 border-t border-line bg-surface px-5 py-4">
           {o.membreSite ? (
@@ -166,11 +145,6 @@ function Detail({ offre: o }: { offre: Offer }) {
               {affichageSite(o.membreSite)}
             </a>
           ) : null}
-          {/*
-          Le lien d'où l'on en profite, posé par l'équipe à la publication.
-          Sans lui, la fenêtre s'arrête aux coordonnées : il n'y a nulle part
-          où envoyer le membre.
-        */}
           {o.lien ? (
             <a
               href={o.lien}

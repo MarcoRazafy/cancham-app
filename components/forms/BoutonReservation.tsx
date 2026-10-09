@@ -6,12 +6,6 @@ import { SubmitButton } from "@/components/form-bits";
 import { reserverService } from "@/lib/actions/messages";
 import { estLienInterne } from "@/lib/liens";
 
-/**
- * « Réserver » pour un service gratuit, « Payer » pour un service payant :
- * un clic, et la demande part à l'équipe, toute rédigée, dans la messagerie.
- * Le bouton se désactive pendant l'envoi — un double clic n'enverra pas deux
- * demandes. Quand l'équipe a donné un lien au service, le bouton y mène.
- */
 export function BoutonReservation({
   serviceId,
   payant,
@@ -19,7 +13,6 @@ export function BoutonReservation({
 }: {
   serviceId: string;
   payant: boolean;
-  /** Où l'équipe a choisi de mener : il remplace la demande par message. */
   lien?: string | null;
 }) {
   if (lien) return <BoutonLien lien={lien} />;
@@ -41,10 +34,6 @@ export function BoutonReservation({
   );
 }
 
-/**
- * Le service mène quelque part : la prise d'un rendez-vous, une page de la
- * plateforme, ou un autre site — qui s'ouvre alors dans un nouvel onglet.
- */
 function BoutonLien({ lien }: { lien: string }) {
   const classe = "btn-action btn-action-sm w-full no-underline";
   if (!estLienInterne(lien)) {

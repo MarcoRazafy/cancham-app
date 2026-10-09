@@ -1,18 +1,8 @@
-/**
- * Lecture humaine du journal des opérations.
- *
- * Le journal stocke des codes (`paiement_enregistre`) : c'est ce qui se
- * filtre et se compte. Ce module les traduit pour l'équipe et dit où mène
- * chaque entrée. Sans dépendance serveur : les pages et les composants
- * client s'en servent pareillement.
- */
-
 export type FamilleJournal = "adhesion" | "finance" | "programme" | "contenu";
 
 export interface ActionJournal {
   libelle: string;
   famille: FamilleJournal;
-  /** Ton de la pastille : ce qui rapporte, ce qui retire, ce qui informe. */
   ton: "ok" | "bad" | "info";
 }
 
@@ -113,7 +103,6 @@ export const ACTIONS_JOURNAL: Record<string, ActionJournal> = {
     famille: "finance",
     ton: "info",
   },
-  // Code historique : c'était « Réserver et payer », devenu « Payer ».
   service_reserve: {
     libelle: "Demande de paiement d’un service",
     famille: "finance",
@@ -323,17 +312,12 @@ export function actionJournal(code: string): ActionJournal {
   );
 }
 
-/** Codes d'une famille, pour filtrer le journal. */
 export function codesDeFamille(famille: FamilleJournal): string[] {
   return Object.entries(ACTIONS_JOURNAL)
     .filter(([, a]) => a.famille === famille)
     .map(([code]) => code);
 }
 
-/**
- * Où mène une entrée. Une entité supprimée n'a plus de page : on renvoie
- * alors `null`, plutôt qu'un lien vers une erreur.
- */
 export function lienJournal(
   action: string,
   entite: string,

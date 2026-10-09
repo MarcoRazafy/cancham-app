@@ -63,7 +63,6 @@ import { getMember, ORDRE_RESSOURCES } from "@/lib/queries";
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
 
-/** Page de retour d'un formulaire : un chemin interne, jamais une adresse tierce. */
 function cheminRetour(fd: FormData, defaut: string): string {
   const r = texte(fd, "retour");
   return r.startsWith("/") && !r.startsWith("//") ? r : defaut;
@@ -79,9 +78,6 @@ const NEWS_CAT_DB: Record<
   Formation: "formation",
 };
 
-/* ============================ Actualités ============================ */
-
-/** La personne de l'équipe qui agit, nommée dans le journal. */
 async function acteurEquipe(): Promise<string> {
   return (await getCurrentUser("admin")).nom;
 }
@@ -97,21 +93,12 @@ async function journal(
   });
 }
 
-/** Une photo refusée, ou un champ de photos illisible : le message se montre. */
 class PhotosRefusees extends Error {}
 
-/**
- * Les photos d'une publication, dans l'ordre choisi : celles qu'on garde et
- * celles qui arrivent. Partagé par l'équipe et par les membres — mêmes
- * limites, même champ de formulaire. Lève `PhotosRefusees` : à chaque
- * formulaire de dire comment il montre l'erreur.
- */
 async function lirePhotos(
   formData: FormData,
   actuelles: string[],
 ): Promise<string[]> {
-  // Des fichiers, ou les jetons de leurs envois faits d'avance — dans
-  // l'ordre du champ, que `ordre` désigne par rang.
   const fichiers = await fichiersRecus(formData.getAll("images"));
   let ordre: unknown;
   try {
@@ -143,9 +130,6 @@ async function lirePhotos(
     throw e;
   }
 
-  // Le formulaire annonce des photos qui ne sont pas arrivées — envois
-  // d'avance déjà consommés par une tentative précédente, par exemple :
-  // publier sans elles passerait pour un succès.
   const annoncees = (ordre as string[]).filter((j) => j.startsWith("n:"));
   if (annoncees.length > fichiers.length) {
     throw new PhotosRefusees("Vos photos ne sont plus disponibles.");
@@ -164,7 +148,6 @@ async function lirePhotos(
     .filter((u): u is string => Boolean(u));
 }
 
-/** Les photos d'un formulaire en pleine page : une erreur y ramène. */
 async function photosDeLActualite(
   formData: FormData,
   actuelles: string[],
@@ -178,12 +161,6 @@ async function photosDeLActualite(
   }
 }
 
-/**
- * Publication ou modification d'une actualité.
- *
- * Plusieurs photos, dans l'ordre choisi : la première sert de couverture
- * dans le fil. Sans photo, la publication garde son bandeau de couleur.
- */
 export async function enregistrerActualite(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "newsId");
@@ -206,8 +183,6 @@ export async function enregistrerActualite(formData: FormData) {
         },
       })
     : null;
-  // Une publication libre peut n'être faite que de photos : l'équipe doit
-  // pouvoir la reprendre sans lui inventer un résumé et un texte.
   if (!titre || (!avant?.libre && (!extrait || !corps))) {
     redirectWithErreur(retour, "Titre, résumé et texte sont obligatoires.");
   }
@@ -218,8 +193,6 @@ export async function enregistrerActualite(formData: FormData) {
   const jour = texte(formData, "date");
   const date = jourBase(jourSaisi(jour) ?? undefined);
 
-  // Les photos, dans l'ordre choisi : `ordre` liste les photos gardées
-  // (`e:<url>`) et les nouvelles (`n:<rang dans le champ fichier>`).
   const images = await photosDeLActualite(
     formData,
     avant?.images ?? [],
@@ -229,17 +202,11 @@ export async function enregistrerActualite(formData: FormData) {
     redirectWithErreur(retour, "Il faut un texte, ou au moins une photo.");
   }
 
-  // Une publication libre n'a pas de vrai titre : le sien est tiré du
-  // texte. Tant que l'équipe ne touche ni au titre ni au résumé, elle le
-  // reste, et tous deux suivent le texte corrigé. Dès qu'elle lui en écrit
-  // un, c'est un article : le fil affichera ce titre.
   const resteLibre =
     Boolean(avant?.libre) &&
     titre === avant?.titre &&
     extrait === avant?.extrait;
 
-  // Sans choix explicite, réservée aux membres, comme avant que la
-  // diffusion se choisisse.
   const estPublique = texte(formData, "diffusion") === "public";
   const data = {
     titre: resteLibre
@@ -269,7 +236,6 @@ export async function enregistrerActualite(formData: FormData) {
     n.id,
     `« ${n.titre} » · ${n.public ? "plateforme et page publique" : "plateforme uniquement"}`,
   );
-  // Une nouvelle publication : tous les membres l'apprennent sur leur appareil.
   if (!id) {
     after(() =>
       notifierTousLesMembres({
@@ -290,24 +256,8 @@ export async function enregistrerActualite(formData: FormData) {
   );
 }
 
-/** Publications d'une même entreprise, en une heure. */
 const PUBLICATIONS_PAR_HEURE = 5;
 
-/**
- * Un membre publie dans le fil, au nom de son entreprise : un texte, des
- * photos, ou les deux.
- *
- * Elle paraît aussitôt dans le fil des membres, signée de l'entreprise.
- * L'équipe en est
- * prévenue : elle peut la modifier ou la supprimer, comme toute actualité.
- * Elle est réservée aux membres : la page publique reste à la chambre, et
- * seule l'équipe peut l'y diffuser. Le membre peut ensuite la reprendre ou
- * la retirer.
- *
- * Appelée depuis la fenêtre de publication, sans quitter le fil : elle rend
- * son résultat au lieu de rediriger, pour qu'une erreur n'efface pas ce que
- * le membre vient d'écrire.
- */
 export async function publierPublication(
   _avant: EtatPublication,
   formData: FormData,
@@ -325,8 +275,6 @@ export async function publierPublication(
   const memberId = user.memberId;
   const membre = await getMember(memberId);
   if (!membre) return refus("Entreprise introuvable.");
-  // La page est déjà fermée à un membre restreint ; l'action, elle, est une
-  // porte à part entière.
   if (isAccessLocked(membre)) {
     return refus("Publier est réservé aux membres à jour de cotisation.");
   }
@@ -339,7 +287,6 @@ export async function publierPublication(
     return refus("Écrivez quelques mots, ou ajoutez une photo.");
   }
 
-  // Une même entreprise ne remplit pas le fil à elle seule.
   const attente = tentative(
     `actualite:${memberId}`,
     PUBLICATIONS_PAR_HEURE,
@@ -351,8 +298,6 @@ export async function publierPublication(
     );
   }
 
-  // À partir d'ici, les photos envoyées d'avance sont consommées : si la
-  // publication échoue, il faudra les choisir à nouveau.
   let images: string[];
   try {
     images = await lirePhotos(formData, []);
@@ -369,13 +314,9 @@ export async function publierPublication(
       titre: titreDePublication(corps, membre.nom),
       extrait: extraitDePublication(corps),
       corps,
-      // La catégorie reste à l'équipe ; le fil signe la publication du nom
-      // de l'entreprise, ce qui la distingue déjà.
       cat: "vie_de_la_chambre",
       date: jourBase(),
       images,
-      // Réservée aux membres : la page publique reste à la chambre. Seule
-      // l'équipe peut l'y diffuser, en la reprenant.
       public: false,
       libre: true,
       mediaType: "image",
@@ -406,10 +347,6 @@ export async function publierPublication(
   return { etape: "publiee", id: n.id };
 }
 
-/**
- * La publication que le membre connecté a le droit de reprendre : celle de
- * son entreprise. L'identifiant reçu ne fait pas foi.
- */
 async function maPublication(id: string) {
   const user = await getCurrentUser("membre");
   if (!user.memberId || !id) return null;
@@ -429,10 +366,6 @@ async function maPublication(id: string) {
   return n ? { user, membre, n } : null;
 }
 
-/**
- * Le membre reprend sa publication : le texte et les photos. Comme à la
- * publication, l'action rend son résultat à la fenêtre.
- */
 export async function modifierPublication(
   _avant: EtatPublication,
   formData: FormData,
@@ -446,8 +379,6 @@ export async function modifierPublication(
   if (!acces) return refus("Cette publication n’est pas la vôtre.");
   const { user, membre, n } = acces;
 
-  // Un texte déjà plus long que la limite n'est pas raccourci parce qu'on
-  // en change la diffusion ou une photo.
   const corps = textePublication(
     formData.get("texte"),
     Math.max(LONGUEUR_PUBLICATION, Array.from(n.corps).length),
@@ -468,12 +399,7 @@ export async function modifierPublication(
     data: {
       corps,
       images,
-      // Reprise par son auteur, elle revient aux membres seuls : si l'équipe
-      // l'avait diffusée sur la page publique, c'est le texte qu'elle avait
-      // lu — le nouveau n'y paraît pas sans qu'elle le rediffuse.
       public: false,
-      // Une publication libre garde un titre tiré de son texte ; devenue un
-      // article entre les mains de l'équipe, elle garde le titre de l'équipe.
       ...(n.libre
         ? {
             titre: titreDePublication(corps, membre.nom),
@@ -491,8 +417,6 @@ export async function modifierPublication(
       detail: `« ${maj.titre} » · modifiée par ${membre.nom} · ${n.public ? "retirée de la page publique" : "plateforme uniquement"}`,
     },
   });
-  // L'équipe l'avait diffusée au public : elle doit savoir qu'elle n'y est
-  // plus, et pourquoi.
   if (n.public) {
     after(() =>
       notifierEquipe({
@@ -506,7 +430,6 @@ export async function modifierPublication(
   return { etape: "publiee", id: maj.id };
 }
 
-/** Le membre retire sa propre publication. */
 export async function supprimerMaPublication(formData: FormData) {
   const acces = await maPublication(texte(formData, "newsId"));
   if (!acces) {
@@ -550,10 +473,6 @@ export async function deleteNews(formData: FormData) {
   redirectWithFlash("/admin/actualites", "Actualité supprimée");
 }
 
-/**
- * Retrait d'un commentaire par l'équipe : propos hors charte, doublon,
- * message privé posté en public. Le texte retiré reste lisible au journal.
- */
 export async function supprimerCommentaire(formData: FormData) {
   const id = texte(formData, "commentId");
   const space = (texte(formData, "space") || "admin") as Space;
@@ -571,8 +490,6 @@ export async function supprimerCommentaire(formData: FormData) {
     );
   }
 
-  // Seul le retrait par l'équipe du commentaire de quelqu'un d'autre est une
-  // modération, et passe au journal avec le texte retiré.
   if (!auteur) {
     const extrait =
       c.texte.length > 120 ? `${c.texte.slice(0, 117)}…` : c.texte;
@@ -587,20 +504,6 @@ export async function supprimerCommentaire(formData: FormData) {
   revalideTout();
 }
 
-/* ============================ Commentaires ============================ */
-
-/** Commentaire sur une actualité ou une ressource. */
-/**
- * Aime ou n'aime plus une publication.
- *
- * Pas de redirection : l'action rafraîchit la page en place. Rediriger
- * renverrait le lecteur en haut du fil à chaque clic, précisément quand il est
- * en train de le parcourir.
- *
- * La contrainte d'unicité fait foi. Deux clics trop rapides peuvent tenter
- * deux insertions ; la seconde échoue sur l'index, et on l'ignore plutôt que de
- * laisser remonter une erreur pour un état déjà atteint.
- */
 export async function basculerJaime(formData: FormData) {
   const newsId = texte(formData, "newsId");
   const space = (texte(formData, "space") || "membre") as Space;
@@ -654,12 +557,9 @@ export async function postComment(formData: FormData) {
     },
   });
 
-  // Pas de redirection : la page se met à jour sur place, et le lecteur
-  // reste au niveau des commentaires au lieu de repartir en haut de l'article.
   revalideTout();
 }
 
-/** Corrige son propre commentaire. Il porte ensuite la mention « modifié ». */
 export async function modifierCommentaire(formData: FormData) {
   const id = texte(formData, "commentId");
   const space = (texte(formData, "space") || "membre") as Space;
@@ -684,7 +584,6 @@ export async function modifierCommentaire(formData: FormData) {
   revalideTout();
 }
 
-/** « J'aime » sur un commentaire, posé ou retiré. Même principe que pour une publication. */
 export async function basculerJaimeCommentaire(formData: FormData) {
   const commentId = texte(formData, "commentId");
   const space = (texte(formData, "space") || "membre") as Space;
@@ -707,16 +606,6 @@ export async function basculerJaimeCommentaire(formData: FormData) {
   revalideTout();
 }
 
-/* ============================ Ressources ============================ */
-
-/**
- * Ajout ou modification d'une ressource de la bibliothèque.
- *
- * Le fichier est obligatoire à la création, facultatif ensuite : sans
- * nouveau fichier, la ressource garde le sien. Il est converti sur place
- * pour la lecture protégée — les pages d'un document en images — avant que
- * la ressource ne soit annoncée prête.
- */
 export async function enregistrerRessource(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "resourceId");
@@ -730,7 +619,6 @@ export async function enregistrerRessource(formData: FormData) {
   const type = texte(formData, "type") === "payant" ? "payant" : "gratuit";
   const prix = type === "payant" ? Math.round(Number(formData.get("prix"))) : 0;
   const fichier = await fichierRecu(formData.get("fichier"));
-  // Le dossier où la ranger. Vide = à la racine de la bibliothèque.
   const dossierId = texte(formData, "dossier") || null;
 
   if (!titre) redirectWithErreur(retour, "Le titre est obligatoire.");
@@ -748,9 +636,6 @@ export async function enregistrerRessource(formData: FormData) {
     if (!existe) redirectWithErreur(retour, "Ce dossier n’existe plus.");
   }
 
-  // La ligne d'abord : son identifiant nomme le dossier du fichier.
-  // Dans un dossier que l'équipe a rangé, une ressource qui arrive — neuve,
-  // ou venue d'un autre dossier — prend place au bout.
   const avant = id
     ? await prisma.resource.findUnique({
         where: { id },
@@ -801,7 +686,6 @@ export async function enregistrerRessource(formData: FormData) {
       });
     } catch (e) {
       if (!(e instanceof FichierRefuse)) throw e;
-      // Une ressource neuve sans fichier lisible n'a pas lieu d'exister.
       if (!id) {
         await prisma.resource.delete({ where: { id: r.id } });
         redirectWithErreur("/admin/ressources/nouvelle", e.message);
@@ -831,13 +715,6 @@ export async function enregistrerRessource(formData: FormData) {
   );
 }
 
-/**
- * Le rang d'une ressource qui arrive dans un dossier.
- *
- * Si l'équipe y a rangé les ressources, elle prend place au bout. Sinon —
- * rang 0 partout —, elle garde 0 : la date continue de départager, et la
- * dernière arrivée reste en tête, comme avant tout rangement.
- */
 async function prochainRang(dossierId: string | null): Promise<number> {
   const { _max } = await prisma.resource.aggregate({
     where: { dossierId },
@@ -847,10 +724,6 @@ async function prochainRang(dossierId: string | null): Promise<number> {
   return dernier > 0 ? dernier + 1 : 0;
 }
 
-/**
- * Enregistre les rangs d'une liste : 1, 2, 3… À partir de 1, parce que tant
- * que les rangs sont à 0, c'est la date qui range.
- */
 async function numeroter(ids: string[]) {
   await prisma.$transaction(
     ids.map((id, rang) =>
@@ -859,13 +732,6 @@ async function numeroter(ids: string[]) {
   );
 }
 
-/**
- * Met une ressource en tête ou au bout de celles de son dossier — depuis
- * son menu.
- *
- * Appelée avec des arguments, sans formulaire ni redirection : la page se
- * rafraîchit sur place.
- */
 export async function deplacerRessource(
   id: string,
   vers: "premier" | "dernier",
@@ -877,7 +743,6 @@ export async function deplacerRessource(
   });
   if (!r) return;
 
-  // La liste telle que la page la montre, sans elle.
   const autres = (
     await prisma.resource.findMany({
       where: { dossierId: r.dossierId, NOT: { id } },
@@ -889,14 +754,6 @@ export async function deplacerRessource(
   revalideTout();
 }
 
-/**
- * Range les ressources d'un dossier dans l'ordre reçu — celui que l'équipe
- * vient de composer en glissant les lignes.
- *
- * La liste reçue ne fait pas foi : on n'y garde que les ressources du
- * dossier de la première, et celles qu'elle aurait oubliées — ajoutées
- * entre-temps par un collègue — prennent place à la suite, dans leur ordre.
- */
 export async function ordonnerRessources(ids: string[]) {
   await exigerEquipe();
   if (!Array.isArray(ids) || !ids.length || ids.length > 500) return;
@@ -922,14 +779,6 @@ export async function ordonnerRessources(ids: string[]) {
   revalideTout();
 }
 
-/**
- * « Terminer », en fin de lecture : le membre dit qu'il a fini cette étape.
- * La vue de son dossier la coche et avance sa progression, et c'est là
- * qu'il revient.
- *
- * L'identifiant reçu ne fait pas foi : on ne note que ce que la personne a
- * vraiment le droit de lire. L'équipe n'a pas de progression à tenir.
- */
 export async function terminerRessource(formData: FormData) {
   const resourceId = texte(formData, "resourceId");
   const user = await getCurrentUser("membre");
@@ -942,7 +791,6 @@ export async function terminerRessource(formData: FormData) {
       data: { userId: user.id, resourceId },
     });
   } catch (e) {
-    // Déjà terminée : un second clic ne change rien.
     if ((e as { code?: string }).code !== "P2002") throw e;
   }
 
@@ -959,15 +807,6 @@ export async function terminerRessource(formData: FormData) {
   );
 }
 
-/**
- * La couverture d'une ressource, tirée de son contenu.
- *
- * Plus d'image choisie à part : la carte montre ce qu'on va lire. Pour un
- * document ou une photo, la première page, rendue côté serveur. Pour une
- * vidéo, une image prise dans le film par le navigateur de l'équipe au
- * moment du choix du fichier — le serveur n'a pas de quoi décoder une
- * vidéo. Si le navigateur n'a pas pu la prendre, la carte garde son motif.
- */
 async function couvertureDuContenu(
   id: string,
   fmt: FichierRecu["fmt"],
@@ -989,28 +828,13 @@ async function couvertureDuContenu(
       largeur: 800,
     });
   } catch (e) {
-    // Une couverture ratée ne doit pas faire échouer le dépôt : le fichier,
-    // lui, est bien là.
     if (e instanceof ImageRefusee) return null;
     throw e;
   }
 }
 
-/**
- * Enregistre une page composée dans la plateforme : une ressource faite de
- * blocs — titres, textes, photos, vidéos —, pas d'un fichier.
- *
- * Appelée par l'éditeur, sans rechargement : un refus revient sous forme de
- * message, et la page en cours de composition reste à l'écran. Une
- * redirection ferait perdre tout ce qui n'était pas encore enregistré.
- *
- * Les photos et les vidéos sont parties d'avance, sous un jeton : c'est ici
- * qu'elles rejoignent le dossier privé de la ressource. Un bloc qui cite un
- * fichier déjà rangé ne peut citer que l'un de ceux de cette page.
- */
 export async function enregistrerPageRessource(formData: FormData): Promise<{
   erreur: string;
-  /** Les fichiers envoyés d'avance ont été consommés : il faut les renvoyer. */
   renvoyer?: boolean;
 }> {
   await exigerEquipe();
@@ -1063,8 +887,6 @@ export async function enregistrerPageRessource(formData: FormData): Promise<{
     };
   }
 
-  // Tout est vérifié avant de déplacer le moindre fichier : un envoi qui
-  // manque ne doit pas laisser la page à moitié rangée.
   const dejaLa = avant ? fichiersDesBlocs(blocsEnregistres(avant.contenu)) : [];
   for (const fichier of fichiersDesBlocs(lecture.blocs)) {
     const connu = estJeton(fichier)
@@ -1078,8 +900,6 @@ export async function enregistrerPageRessource(formData: FormData): Promise<{
     }
   }
 
-  // Dans un dossier que l'équipe a rangé, une page qui arrive — neuve, ou
-  // venue d'un autre dossier — prend place au bout.
   const arrive = !avant || avant.dossierId !== dossierId;
   const champs = {
     titre,
@@ -1090,8 +910,6 @@ export async function enregistrerPageRessource(formData: FormData): Promise<{
     dossierId,
     ...(arrive ? { ordre: await prochainRang(dossierId) } : {}),
   };
-  // La ligne d'abord, pour une page neuve : son identifiant nomme le dossier
-  // de ses fichiers.
   const rid = avant
     ? id
     : (
@@ -1127,20 +945,14 @@ export async function enregistrerPageRessource(formData: FormData): Promise<{
   } catch (e) {
     if (!(e instanceof FichierRefuse)) throw e;
     if (avant) {
-      // La page garde ce qu'elle avait : seuls les fichiers de cet essai
-      // s'en vont.
       await menageBlocs(rid, dejaLa);
     } else {
-      // Une page neuve qui n'a pas pu se ranger n'a pas lieu d'exister.
       await prisma.resource.delete({ where: { id: rid } });
       await effacerRessource(rid);
     }
     return { erreur: e.message, renvoyer: true };
   }
 
-  // La couverture : celle qu'on envoie ; sinon celle en place ; sinon la
-  // première photo de la page. Une couverture ratée ne fait pas échouer
-  // l'enregistrement.
   let cover = avant?.cover ?? null;
   try {
     const envoyee = await enregistrerImage(formData.get("couverture"), {
@@ -1175,7 +987,6 @@ export async function enregistrerPageRessource(formData: FormData): Promise<{
       cover,
     },
   });
-  // Les fichiers des blocs retirés ne servent plus à rien.
   await menageBlocs(rid, fichiersDesBlocs(blocs));
 
   await prisma.auditLog.create({
@@ -1221,12 +1032,6 @@ export async function deleteResource(formData: FormData) {
   redirectWithFlash("/admin/ressources", `« ${r.titre} » retirée`);
 }
 
-/**
- * Téléchargement d'une ressource.
- *
- * Aucun fichier n'est encore stocké : l'action consigne la demande et le dira
- * franchement, plutôt que de faire semblant de servir un document.
- */
 export async function downloadResource(formData: FormData) {
   const id = texte(formData, "resourceId");
   const space = (texte(formData, "space") || "membre") as Space;
@@ -1251,9 +1056,6 @@ export async function downloadResource(formData: FormData) {
   );
 }
 
-/* ============================ Offres & services ============================ */
-
-/** Offre ou promotion publiée au nom d'un membre, créée ou modifiée. */
 export async function enregistrerOffre(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "offerId");
@@ -1265,8 +1067,6 @@ export async function enregistrerOffre(formData: FormData) {
   if (!titre || !desc) {
     redirectWithErreur(retour, "Le titre et la description sont requis.");
   }
-  // Le lien du bouton « En profiter ». Il reste facultatif : sans lui, la
-  // fenêtre de l'offre s'arrête aux coordonnées de l'entreprise.
   const saisieLien = texte(formData, "lien");
   const lien = saisieLien ? normaliserSite(saisieLien) : null;
   if (saisieLien && !lien) {
@@ -1282,8 +1082,6 @@ export async function enregistrerOffre(formData: FormData) {
   if (!membre)
     redirectWithErreur(retour, "Choisissez le membre qui propose l’offre.");
 
-  // Où l'offre s'affiche. Sans choix lisible, aux deux endroits : c'était
-  // la règle avant que cela se choisisse.
   const saisieEmplacement = texte(formData, "emplacement");
   const emplacement = estEmplacementOffre(saisieEmplacement)
     ? saisieEmplacement
@@ -1332,11 +1130,6 @@ export async function deleteOffer(formData: FormData) {
   redirectWithFlash("/admin/actualites", "Offre retirée");
 }
 
-/**
- * Les adresses sous lesquelles la plateforme se présente : celle des liens
- * qu'elle envoie, celle de la production, et l'hôte de la requête en cours.
- * Un lien collé qui y mène est une page d'ici, pas un site tiers.
- */
 async function originesPlateforme(): Promise<string[]> {
   const hote = (await headers()).get("host");
   return [
@@ -1362,8 +1155,6 @@ export async function saveService(formData: FormData) {
     redirectWithErreur(retour, "Indiquez le tarif d’un service payant.");
   }
 
-  // Le lien est facultatif. Celui d'une page de la plateforme — un
-  // rendez-vous, par exemple — est rangé en chemin : il s'ouvre sur place.
   const lienSaisi = texte(formData, "lien");
   const lien = lienSaisi
     ? normaliserLien(lienSaisi, await originesPlateforme())
@@ -1381,8 +1172,6 @@ export async function saveService(formData: FormData) {
     );
   }
 
-  // Un champ laissé vide garde la photo actuelle ; la case « retirer »
-  // revient au dégradé.
   let image: string | null = null;
   try {
     image = await enregistrerImage(formData.get("image"), {
@@ -1409,7 +1198,6 @@ export async function saveService(formData: FormData) {
         data: {
           ...data,
           icon: "award",
-          // En fin de liste : il ne passe pas devant ceux déjà présentés.
           ordre:
             ((await prisma.canchamService.aggregate({ _max: { ordre: true } }))
               ._max.ordre ?? -1) + 1,
@@ -1444,10 +1232,6 @@ export async function deleteService(formData: FormData) {
   redirectWithFlash("/admin/offres-cancham", `« ${s.titre} » retiré`);
 }
 
-/**
- * Déplace un service d'un rang dans sa liste — gratuits ou payants —, pour
- * choisir ce que les membres voient en premier.
- */
 export async function deplacerService(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "serviceId");
@@ -1467,8 +1251,6 @@ export async function deplacerService(formData: FormData) {
   if (j < 0 || j >= liste.length) redirect(retour);
 
   [liste[i], liste[j]] = [liste[j], liste[i]];
-  // Renuméroter toute la liste : deux services au même rang rendraient
-  // l'échange sans effet.
   await prisma.$transaction(
     liste.map((x, ordre) =>
       prisma.canchamService.update({ where: { id: x.id }, data: { ordre } }),
@@ -1478,24 +1260,13 @@ export async function deplacerService(formData: FormData) {
   redirect(retour);
 }
 
-/* ==================== Dossiers de la bibliothèque ==================== */
-
-/** Un nom de dossier tient sur une carte. */
 const NOM_DOSSIER_MAX = 80;
 
-/**
- * Profondeur maximale de l'arborescence.
- *
- * Cinq niveaux suffisent à classer une bibliothèque de chambre de commerce,
- * et au-delà le fil d'Ariane ne tient plus sur un écran de téléphone.
- */
 const PROFONDEUR_MAX = 5;
 
-/** Où revenir après une opération sur un dossier. */
 const retourDossier = (id: string | null) =>
   id ? `/admin/ressources?dossier=${id}` : "/admin/ressources";
 
-/** La profondeur d'un dossier : 0 à la racine. */
 async function profondeurDossier(id: string | null): Promise<number> {
   let n = 0;
   let courant = id;
@@ -1511,7 +1282,6 @@ async function profondeurDossier(id: string | null): Promise<number> {
   return n;
 }
 
-/** Vrai si `candidat` est `dossier` lui-même ou l'un de ses descendants. */
 async function estDansSaDescendance(
   dossier: string,
   candidat: string | null,
@@ -1529,10 +1299,6 @@ async function estDansSaDescendance(
   return false;
 }
 
-/**
- * Ce que le formulaire dit de l'accès à un dossier : ouvert à tous les
- * membres, ou réservé aux entreprises cochées.
- */
 function accesSaisi(formData: FormData) {
   const restreint = texte(formData, "acces") === "personnalise";
   const membres = restreint
@@ -1541,15 +1307,6 @@ function accesSaisi(formData: FormData) {
   return { restreint, membres };
 }
 
-/**
- * La liste des entreprises d'un dossier réservé, telle que le formulaire l'a
- * cochée : celles qui n'y sont plus perdent l'accès, les nouvelles le
- * reçoivent, celles qui l'avaient le gardent tel quel. Un identifiant qui ne
- * désigne aucune entreprise est ignoré. Rend le nombre d'entreprises listées.
- *
- * Une liste vide retire tout : c'est ce qui arrive quand le dossier
- * redevient ouvert à tous.
- */
 async function synchroniserAccesDossier(
   dossierId: string,
   membreIds: string[],
@@ -1576,13 +1333,6 @@ async function synchroniserAccesDossier(
 const ACCES_SANS_ENTREPRISE =
   "Choisissez au moins une entreprise pour un accès personnalisé.";
 
-/**
- * Ce que le formulaire dit de la présentation d'un dossier : sa couverture,
- * et qui l'a conçu. Les images reçues sont enregistrées ici ; un champ image
- * laissé vide garde celle qui est en place, et la retirer se coche.
- *
- * Lève `ImageRefusee` quand un fichier n'est pas une image lisible.
- */
 async function presentationSaisie(formData: FormData) {
   const cover = await enregistrerImage(formData.get("cover"), {
     prefixe: "dossier",
@@ -1599,7 +1349,6 @@ async function presentationSaisie(formData: FormData) {
     photo,
     retirerPhoto: texte(formData, "retirerAuteurPhoto") === "1",
     auteurNom,
-    // Sans nom, il n'y a pas d'auteur à présenter : le reste ne se garde pas.
     auteurRole: auteurNom
       ? texte(formData, "auteurRole").slice(0, 160) || null
       : null,
@@ -1670,12 +1419,6 @@ export async function creerDossier(formData: FormData) {
   redirectWithFlash(retour, `Dossier « ${nom} » créé`);
 }
 
-/**
- * Qui voit un dossier : tous les membres, ou les entreprises cochées.
- *
- * Un dossier réservé n'existe que pour ces entreprises, avec tout ce qu'il
- * contient — ressources et sous-dossiers.
- */
 export async function reglerAccesDossier(formData: FormData) {
   const equipe = await exigerEquipe();
   const id = texte(formData, "dossierId");
@@ -1711,7 +1454,6 @@ export async function reglerAccesDossier(formData: FormData) {
   );
 }
 
-/** Le nom d'un dossier, sa couverture et son auteur. */
 export async function modifierDossier(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "dossierId");
@@ -1745,7 +1487,6 @@ export async function modifierDossier(formData: FormData) {
       auteurNom: p.auteurNom,
       auteurRole: p.auteurRole,
       auteurBio: p.auteurBio,
-      // Plus d'auteur : son portrait part avec lui.
       ...(!p.auteurNom
         ? { auteurPhoto: null }
         : p.photo
@@ -1759,13 +1500,6 @@ export async function modifierDossier(formData: FormData) {
   redirectWithFlash(retour, `Dossier « ${nom} » mis à jour`);
 }
 
-/**
- * Suppression d'un dossier : ce qu'il contenait remonte d'un cran.
- *
- * Rien n'est détruit. Un classeur se jette, pas les documents qu'il range —
- * et une suppression en cascade effacerait des fichiers, des commentaires et
- * des achats sur un simple clic de rangement.
- */
 export async function supprimerDossier(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "dossierId");
@@ -1801,7 +1535,6 @@ export async function supprimerDossier(formData: FormData) {
   );
 }
 
-/** Déplacement d'un dossier sous un autre — ou à la racine. */
 export async function deplacerDossier(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "dossierId");
@@ -1814,8 +1547,6 @@ export async function deplacerDossier(formData: FormData) {
   if (!d) redirectWithErreur("/admin/ressources", "Dossier introuvable.");
   const retour = retourDossier(d.parentId);
 
-  // Un dossier ne se range pas dans lui-même ni dans l'un des siens : la
-  // branche déplacée se détacherait de l'arbre et deviendrait introuvable.
   if (vers && (await estDansSaDescendance(id, vers))) {
     redirectWithErreur(
       retour,
@@ -1837,20 +1568,9 @@ export async function deplacerDossier(formData: FormData) {
   redirectWithFlash(retourDossier(vers), `Dossier « ${d.nom} » déplacé`);
 }
 
-/* ==================== Presse-papier de la bibliothèque ==================== */
-
-/** Les identifiants cochés dans la liste. */
 const coches = (fd: FormData) =>
   fd.getAll("ressource").map(String).filter(Boolean);
 
-/**
- * Où l'on était quand on a cliqué.
- *
- * `retour` l'emporte quand il est donné — depuis la fiche d'accès d'une
- * ressource, on veut revenir à la fiche, pas à la bibliothèque. Seul un
- * chemin interne est accepté : une action serveur est une adresse publique,
- * et un `retour` choisi par l'appelant ferait une redirection ouverte.
- */
 const retourBibliotheque = (fd: FormData) => {
   const r = texte(fd, "retour");
   if (r.startsWith("/admin/") && !r.startsWith("//")) return r;
@@ -1890,14 +1610,6 @@ export async function annulerPressePapier(formData: FormData) {
   redirectWithFlash(retourBibliotheque(formData), "Presse-papier vidé");
 }
 
-/**
- * Colle le presse-papier dans le dossier ouvert.
- *
- * « Couper » range ailleurs — une ligne qui change de dossier. « Copier »
- * duplique : une nouvelle ressource, et une vraie copie des fichiers, parce
- * que deux lignes qui partageraient le même dossier de stockage se
- * détruiraient l'une l'autre à la première suppression.
- */
 export async function collerRessources(formData: FormData) {
   await exigerEquipe();
   const retour = retourBibliotheque(formData);
@@ -1921,11 +1633,9 @@ export async function collerRessources(formData: FormData) {
     redirectWithErreur(retour, "Ces ressources n’existent plus.");
   }
 
-  // Ce qui arrive dans un dossier rangé prend place au bout.
   const ordre = await prochainRang(dossierId);
   if (presse.mode === "couper") {
     await prisma.resource.updateMany({
-      // Collée dans son propre dossier, une ressource ne bouge pas.
       where: {
         id: { in: sources.map((r) => r.id) },
         NOT: { dossierId },
@@ -1945,8 +1655,6 @@ export async function collerRessources(formData: FormData) {
           fichier: r.fichier,
           pages: r.pages,
           cover: r.cover,
-          // Les blocs d'une page composée suivent ; leurs photos et leurs
-          // vidéos sont recopiées avec le dossier, juste après.
           ...(r.contenu === null
             ? {}
             : { contenu: r.contenu as Prisma.InputJsonValue }),
@@ -1969,18 +1677,6 @@ export async function collerRessources(formData: FormData) {
   );
 }
 
-/* ==================== Accès aux ressources payantes ==================== */
-
-/**
- * Ouvre l'accès d'une ou plusieurs entreprises à une ou plusieurs ressources
- * payantes.
- *
- * En lot, parce que l'équipe accorde rarement un seul accès : une formation
- * s'ouvre à la douzaine d'entreprises qui l'ont suivie, d'un coup.
- *
- * Les ressources incluses dans l'adhésion sont écartées : elles n'ont pas de
- * liste, tout membre à jour les lit.
- */
 export async function ouvrirAccesRessources(formData: FormData) {
   const user = await exigerEquipe();
   const retour = retourBibliotheque(formData);
@@ -2011,7 +1707,6 @@ export async function ouvrirAccesRessources(formData: FormData) {
         ouvertPar: user.nom,
       })),
     ),
-    // Un accès déjà ouvert n'est pas une erreur : on le laisse tel quel.
     skipDuplicates: true,
   });
 
@@ -2033,7 +1728,6 @@ export async function ouvrirAccesRessources(formData: FormData) {
   );
 }
 
-/** Retire l'accès d'une entreprise à une ressource. */
 export async function retirerAccesRessource(formData: FormData) {
   await exigerEquipe();
   const resourceId = texte(formData, "resourceId");
@@ -2060,13 +1754,6 @@ export async function retirerAccesRessource(formData: FormData) {
   redirectWithFlash(retour, `Accès retiré à ${acces.member.nom}`);
 }
 
-/**
- * Couper ou copier une seule ressource, depuis son menu.
- *
- * Appelée directement par le menu — sans formulaire : le menu vit à
- * l'intérieur du formulaire de sélection, et un formulaire ne s'imbrique pas
- * dans un autre.
- */
 export async function mettreUneAuPressePapier(
   id: string,
   mode: ModePressePapier,
@@ -2080,16 +1767,6 @@ export async function mettreUneAuPressePapier(
   );
 }
 
-/**
- * Ouvre ou retire un accès depuis la fenêtre d'une ressource.
- *
- * Appelées avec des arguments, sans formulaire : la fenêtre vit à
- * l'intérieur du formulaire de sélection de la liste, et un formulaire ne
- * s'imbrique pas dans un autre.
- *
- * Pas de redirection ni de bandeau : la page se rafraîchit sur place et la
- * fenêtre reste ouverte, ce qui permet d'ouvrir plusieurs accès à la suite.
- */
 export async function ouvrirAccesPour(resourceId: string, membreIds: string[]) {
   const user = await exigerEquipe();
   if (!membreIds.length) return;

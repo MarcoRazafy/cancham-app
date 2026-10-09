@@ -7,7 +7,6 @@ import { modifierProfilEquipe } from "@/lib/actions/equipe";
 import { changerMonMotDePasse } from "@/lib/actions/motdepasse";
 import type { User } from "@/lib/types";
 
-/** Profil de la personne de l'équipe : photo, identité, coordonnées. */
 export function FormulaireProfilEquipe({ user }: { user: User }) {
   return (
     <Card className="p-6">
@@ -71,10 +70,6 @@ export function FormulaireProfilEquipe({ user }: { user: User }) {
   );
 }
 
-/**
- * Changer son mot de passe : l'actuel, puis le nouveau deux fois. Les autres
- * sessions se ferment ; celle-ci reste ouverte.
- */
 export function FormulaireMotDePasse({
   email,
   minimum,
@@ -90,7 +85,6 @@ export function FormulaireMotDePasse({
         vôtre. Vos autres sessions ouvertes seront fermées.
       </p>
       <form action={changerMonMotDePasse} className="flex flex-col gap-4">
-        {/* Pour que le gestionnaire de mots de passe sache quel compte il met à jour. */}
         <input
           type="text"
           name="identifiant"

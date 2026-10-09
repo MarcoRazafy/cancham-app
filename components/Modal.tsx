@@ -3,15 +3,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
-/**
- * Boîte de dialogue déclenchée par un bouton.
- *
- * Elle s'appuie sur l'élément `<dialog>` natif : la touche Échap, le piège à
- * focus et le fond modal sont gérés par le navigateur, sans bibliothèque.
- *
- * L'ouverture passe par un état plutôt que par un appel direct sur la ref :
- * l'effet est le seul endroit où l'on touche au DOM.
- */
 export function Modal({
   trigger,
   title,
@@ -21,19 +12,11 @@ export function Modal({
   ouvert: ouvertImpose,
   onFermer,
 }: {
-  /** Absent quand l'ouverture est pilotée par le parent (`ouvert`). */
   trigger?: (ouvrir: () => void) => ReactNode;
   title: string;
-  /** Reçoit la fonction de fermeture, à passer au formulaire. */
   children: (fermer: () => void) => ReactNode;
   wide?: boolean;
-  /** Largeur maximale sur mesure — une classe Tailwind écrite en entier. */
   largeur?: string;
-  /**
-   * Ouverture pilotée par le parent. Utile quand le bouton déclencheur
-   * disparaît au clic — l'entrée d'un menu, par exemple — et emporterait la
-   * boîte avec lui.
-   */
   ouvert?: boolean;
   onFermer?: () => void;
 }) {
@@ -61,7 +44,6 @@ export function Modal({
         onClose={() => setOuvert(false)}
         onCancel={() => setOuvert(false)}
         onClick={(e) => {
-          // Un clic sur le fond, en dehors du panneau, referme.
           if (e.target === e.currentTarget) setOuvert(false);
         }}
         className={`m-auto w-[calc(100vw-32px)] ${
@@ -83,13 +65,6 @@ export function Modal({
                 <X size={15} />
               </button>
             </div>
-            {/*
-              Seule cette zone défile, jamais la boîte elle-même. `relative`
-              ancre ici ce qui est en position absolue dans le formulaire —
-              un champ de fichier masqué, par exemple : sans cela il se plaçait
-              par rapport à la boîte, loin sous le dernier bouton, et la boîte
-              se laissait défiler dans un grand vide blanc.
-            */}
             <div className="relative max-h-[70vh] overflow-y-auto">
               {children(() => setOuvert(false))}
             </div>

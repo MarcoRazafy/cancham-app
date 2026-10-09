@@ -57,7 +57,6 @@ const STATUT_ONGLET = {
   absents: "absent",
 } as const;
 
-/** Lignes par page de la liste d'accueil. */
 const TAILLES = [
   { cle: "10", libelle: "10" },
   { cle: "50", libelle: "50" },
@@ -88,8 +87,6 @@ export default async function EvenementAdmin({
   const e = await getEvent(id);
   if (!e) notFound();
 
-  // L'événement terminé, les personnes non pointées sont absentes : la liste
-  // est mise à jour avant d'être lue.
   await marquerAbsentsPasses(id);
   const [participants, membres] = await Promise.all([
     getParticipants(id),
@@ -100,7 +97,6 @@ export default async function EvenementAdmin({
     ? (sp.onglet as (typeof ONGLETS)[number]["cle"])
     : "tous";
   const recherche = sp.q?.trim() ?? "";
-  // Terminé à l'heure de fin, pas seulement le lendemain.
   const passe = estTermine({ date: e.date, fin: e.fin ?? null });
 
   const trouves = recherche
@@ -120,8 +116,6 @@ export default async function EvenementAdmin({
   const presents = compte("present");
   const restantes = Math.max(0, e.cap - participants.length);
 
-  // La liste d'accueil ne s'ouvre qu'à la demande, depuis les chiffres : par
-  // défaut, la page présente l'événement.
   const vueListe = sp.vue === "inscrits";
   const par = TAILLES.some((t) => t.cle === sp.par)
     ? (sp.par as (typeof TAILLES)[number]["cle"])
@@ -132,7 +126,6 @@ export default async function EvenementAdmin({
   const visibles = liste.slice((page - 1) * taille, page * taille);
 
   const base = `/admin/evenements/${id}`;
-  /** Adresse de la liste ouverte ; ce qui n'est pas précisé est conservé, sauf la page. */
   const adresse = (
     change: { onglet?: string; par?: string; page?: number } = {},
   ) => {
@@ -146,10 +139,8 @@ export default async function EvenementAdmin({
     if (n > 1) q.set("page", String(n));
     return `${base}?${q}`;
   };
-  /** Où revenir après un pointage : exactement la liste affichée. */
   const ici = adresse({ page });
   const lien = (o: string) => adresse({ onglet: o });
-  /** Une carte de chiffres ouvre la liste sur son onglet, ou la referme. */
   const bascule = (o: string) =>
     vueListe && onglet === o ? base : adresse({ onglet: o, par });
 
@@ -162,7 +153,6 @@ export default async function EvenementAdmin({
         <ArrowLeft size={14} /> Tous les événements
       </Link>
 
-      {/* ==================== En-tête ==================== */}
       <Card className="p-0 overflow-hidden mb-5">
         <div className="grid md:grid-cols-[320px_1fr]">
           <Partage nom={`evenement-${e.id}`}>
@@ -233,8 +223,6 @@ export default async function EvenementAdmin({
               >
                 <Pencil size={14} /> Modifier
               </Link>
-              {/* La page publique, telle que le public la voit ; l'espace
-                  membre, lui, est fermé à l'équipe. */}
               {e.public ? (
                 <a
                   href={`/evenements/${e.id}`}
@@ -251,7 +239,6 @@ export default async function EvenementAdmin({
         </div>
       </Card>
 
-      {/* ==================== Chiffres ==================== */}
       <div className="cascade grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
         <Compteur
           icone={<Users size={22} />}
@@ -313,7 +300,6 @@ export default async function EvenementAdmin({
       </div>
 
       {vueListe ? (
-        /* ==================== Liste d'accueil ==================== */
         <Card className="p-0 min-w-0">
           <div className="px-6 pt-5 flex items-end justify-between gap-4 flex-wrap">
             <div>
@@ -408,11 +394,6 @@ export default async function EvenementAdmin({
                     {PASTILLES[p.statut].libelle}
                   </Pill>
                   <span className="flex items-center gap-1">
-                    {/*
-                      Tant que le règlement n'est pas constaté, il n'y a rien à
-                      pointer : la seule action est de valider l'inscription,
-                      ce qui envoie enfin les billets.
-                    */}
                     {p.statut === "a_valider" ? (
                       <ValiderInscriptionButton
                         attendeeId={p.id}
@@ -461,7 +442,6 @@ export default async function EvenementAdmin({
           ) : null}
         </Card>
       ) : (
-        /* ==================== Présentation et programme ==================== */
         <div className="grid gap-4 lg:grid-cols-[1fr_400px] items-start">
           <Panneau titre="Présentation" teinte="vert">
             <p className="m-0 text-[14.3px] text-muted leading-[1.75] whitespace-pre-line">
@@ -518,12 +498,6 @@ export default async function EvenementAdmin({
   );
 }
 
-/* ============================ Pagination ============================ */
-
-/**
- * Pied de la liste d'accueil : combien de lignes par page — 10, 50 ou tout
- * —, où l'on en est, et les pages.
- */
 function Pagination({
   total,
   page,
@@ -544,8 +518,6 @@ function Pagination({
   const debut = (page - 1) * taille + 1;
   const fin = Math.min(page * taille, total);
 
-  // Toutes les pages quand elles sont peu nombreuses ; sinon la première, la
-  // dernière et les voisines de la page courante, séparées par « … ».
   const numeros: (number | "…")[] = [];
   for (let n = 1; n <= pages; n++) {
     if (pages <= 7 || n === 1 || n === pages || Math.abs(n - page) <= 1) {

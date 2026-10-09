@@ -13,23 +13,6 @@ import {
   type ModeReglement,
 } from "@/lib/reglements";
 
-/**
- * L'écran commun d'un règlement, pour les moyens qui n'ont pas le leur —
- * les plateformes tierces aujourd'hui. La carte, les portefeuilles, le
- * virement, le dépôt et les espèces ont chacun leur écran, repris de leur
- * maquette.
- *
- * Ce qu'on montre au membre une fois son moyen choisi.
- *
- * Trois choses, toujours dans le même ordre : où envoyer l'argent, la
- * référence à recopier, et le bouton qui dit « c'est parti ». La référence
- * est mise en avant parce que c'est elle, et elle seule, qui permettra de
- * rattacher l'argent arrivé à qui l'a envoyé — un virement sans motif est un
- * virement que l'équipe cherchera pendant une semaine.
- *
- * Annoncer n'est pas payer : l'écran le dit, et la facture reste due jusqu'à
- * ce que l'équipe constate l'arrivée.
- */
 export function TunnelReglement({
   mode,
   reference,
@@ -114,10 +97,6 @@ export function TunnelReglement({
             </div>
           ) : null}
 
-          {/*
-            Le numéro du portefeuille choisi, et lui seul : afficher les trois
-            opérateurs inviterait à envoyer l'argent sur le mauvais.
-          */}
           {estPortefeuille(mode) ? (
             <>
               <Copiable
@@ -135,11 +114,6 @@ export function TunnelReglement({
           ) : null}
         </div>
 
-        {/*
-          La référence, détachée du reste : c'est la seule chose que le membre
-          doit absolument recopier, et la seule que sa banque ne remplira pas
-          à sa place.
-        */}
         <div className="mt-4">
           <Copiable
             libelle={
@@ -177,7 +151,6 @@ export function TunnelReglement({
   );
 }
 
-/** Le formulaire d'annonce, séparé pour rester au bas de la page. */
 export function AnnonceReglement({
   reglementId,
   mode,

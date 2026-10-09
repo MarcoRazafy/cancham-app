@@ -1,13 +1,3 @@
-// Schéma CanCham Connect — traduit depuis lib/types.ts.
-//
-// Deux principes structurants hérités de la conception :
-//   1. `Member` (l'entreprise adhérente, porteuse de la cotisation) et `User`
-//      (la personne qui se connecte) sont deux entités distinctes. Une
-//      entreprise peut avoir plusieurs utilisateurs.
-//   2. Le retard de cotisation n'est PAS stocké : seule la date de bascule
-//      (`retardDepuis`) l'est, et le nombre de jours se recalcule à la volée.
-//      Aucun job nocturne, aucune désynchronisation possible.
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -17,20 +7,17 @@ datasource db {
   provider = "postgresql"
 }
 
-// ============================ Énumérations ============================
-
-/// Statut d'adhésion. Pilote l'accès à toute l'application.
 enum MemberStatus {
-  candidature // demande déposée, pas encore examinée
-  refusee // demande écartée par l'équipe ; le dossier reste, l'accès non
-  en_attente // approuvée, en attente du paiement
-  a_jour // cotisation réglée
-  en_retard // cotisation non renouvelée
+  candidature
+  refusee
+  en_attente
+  a_jour
+  en_retard
 }
 
 enum MemberType {
-  morale // entreprise
-  physique // indépendant
+  morale
+  physique
 }
 
 enum UserRole {
@@ -39,11 +26,8 @@ enum UserRole {
   admin
 }
 
-/// Ce qu'une personne de l'équipe peut faire dans le back-office.
 enum NiveauEquipe {
-  /// Tout, y compris ouvrir et retirer les accès de l'équipe.
   administrateur
-  /// Tout, sauf la gestion de l'équipe elle-même.
   manager
 }
 
@@ -54,8 +38,6 @@ enum EventFormat {
 }
 
 enum AttendeeStatus {
-  /// Inscription à un événement payant, tant que l'équipe n'a pas constaté le
-  /// règlement : ni QR code envoyé, ni entrée possible.
   a_valider @map("à valider")
   confirme  @map("confirmé")
   present   @map("présent")
@@ -91,18 +73,14 @@ enum ResourceFormat {
   docx  @map("DOCX")
   video @map("Vidéo")
   image @map("Photo")
-  /// Une page composée dans la plateforme : des blocs, pas un fichier.
   page  @map("Page")
 }
 
-/// Gratuit ou facturé. Partagé par les services de la chambre et les ressources.
 enum PricingType {
   gratuit
   payant
 }
 
-/// Où une offre de membre s'affiche : dans le rail des Actualités, sur le
-/// tableau de bord des membres, ou aux deux endroits.
 enum EmplacementOffre {
   partout
   actualites
@@ -119,10 +97,6 @@ enum ThreadType {
   groupe
 }
 
-// ============================ Membres & utilisateurs ============================
-
-/// Formule d'adhésion, telle que la propose la fiche d'inscription de la chambre.
-/// Le tarif de chacune vit dans `lib/membership.ts` : la base ne garde que le choix.
 enum Formule {
   mg_consultant @map("madagascar_consultant")
   mg_entreprise @map("madagascar_entreprise")
@@ -131,32 +105,19 @@ enum Formule {
   sur_mesure    @map("sur_mesure")
 }
 
-/// Devise d'une facture. Les formules canadiennes se règlent en dollars.
 enum Devise {
   MGA
   CAD
 }
 
-/// Où en est un règlement.
 enum PaiementStatut {
-  /// Ouvert : le tunnel est commencé, rien n'est encore arrivé.
   en_cours
-  /// Le membre annonce avoir payé hors ligne. L'équipe doit constater.
   annonce
-  /// Encaissé : notification du prestataire, ou constat de l'équipe.
   reussie
-  /// Refusé par la banque, le prestataire, ou l'équipe.
   echouee
-  /// Resté sans réponse : le membre a fermé la page.
   abandonnee
 }
 
-/// Par où l'argent arrive.
-///
-/// Les deux premiers s'encaissent tout seuls, par le prestataire : la
-/// plateforme apprend le paiement sans que personne n'ait rien à faire. Les
-/// cinq autres se passent hors ligne — la plateforme accompagne, donne une
-/// référence à recopier, et c'est l'équipe qui constate l'arrivée.
 enum ModeReglement {
   mvola
   orange_money
@@ -175,55 +136,29 @@ model Member {
   secteur      String
   ville        String
   statut       MemberStatus @default(candidature)
-  /// Formule choisie à l'inscription. Elle fixe le montant de la cotisation.
-  /// Choisie par le membre en complétant son dossier, ou par l'équipe.
-  /// `null` tant que personne ne l'a choisie : aucune cotisation n'est alors
-  /// attendue, et rien n'est facturé.
   formule      Formule?
-  /// Date d'adhésion.
   adhesion     DateTime     @db.Date
-  /// Date de bascule en retard. Le nombre de jours s'en déduit.
   retardDepuis DateTime?    @db.Date
 
-  /// Description courte, en tête de fiche.
   activite String
-  /// Description détaillée.
   desc     String
-  /// Ce que le membre recherche — moteur de la mise en relation.
   besoins  String?
-  /// Secteurs et collaborations qui l'intéressent.
   interets String?
 
-  // Renseignés à la candidature, consultés par l'équipe CanCham.
   statutJuridique String?
   pays            String?
   siteweb         String?
   motivation      String?
 
-  /// Trace du dernier règlement enregistré.
   paiementNote String?
 
-  /// Inscription commencée, présentation pas encore terminée : l'inscription
-  /// ne demande que l'essentiel, le reste se complète étape par étape
-  /// (`/bienvenue`). Les membres créés autrement ne passent pas par là.
   accueilEnCours Boolean @default(false)
 
-  /// Photo de couverture de la fiche, par URL. `null` = dégradé décoratif.
   cover  String?
-  /// Cadrage de la couverture : le point de la photo qui reste visible quand
-  /// le cadre la rogne, en pourcentages (0 = bord gauche ou haut, 100 = bord
-  /// droit ou bas). 50 / 50 : centrée. Remis au centre à chaque nouvelle photo.
   coverX Int     @default(50)
   coverY Int     @default(50)
-  /// Vignette ronde du membre : portrait pour une personne physique, logo ou
-  /// visuel d'activité pour une personne morale. `null` = monogramme.
   photo  String?
-  /// Logo de l'organisation, par URL. Affiché en `contain` sur fond blanc : il
-  /// a des marges propres et de la transparence, un cadrage le mutilerait.
   logo   String?
-  /// Vidéo de présentation de la fiche : le nom de son fichier dans le
-  /// stockage (`videos/`), jamais un chemin. `null` = pas de vidéo, et la
-  /// fiche n'en montre aucune trace.
   video  String?
 
   createdAt DateTime @default(now())
@@ -248,30 +183,20 @@ model Member {
 model User {
   id           String        @id @default(cuid())
   role         UserRole      @default(membre)
-  /// Pour l'équipe (`role = admin`) : administrateur ou manager. `null` hors
-  /// de l'équipe — et, par prudence, lu comme « manager ».
   niveauEquipe NiveauEquipe?
   nom          String
   fonction     String
   email        String        @unique
   tel          String?
-  /// Portrait de l'utilisateur, par URL. `null` = initiales.
   photo        String?
 
-  /// Empreinte du mot de passe (scrypt), jamais le mot de passe lui-même.
-  /// `null` pour un compte créé par l'équipe qui ne s'est pas encore connecté.
   motDePasse String?
 
-  /// Dernier changement de mot de passe. Toute session ouverte avant cette
-  /// date est refusée : changer de mot de passe met dehors quiconque se
-  /// serait connecté avec l'ancien.
   motDePasseModifieLe DateTime?
 
-  /// `null` pour l'équipe CanCham et les visiteurs.
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  /// Contact principal de l'entreprise — un seul par membre.
   contactPrincipal Boolean @default(false)
 
   jaimes             NewsLike[]
@@ -292,34 +217,23 @@ model User {
   @@map("users")
 }
 
-/// Un navigateur abonné aux notifications de l'appareil (Web Push).
-///
-/// Une ligne par navigateur : qui active les notifications sur son
-/// téléphone et sur son ordinateur en a deux. L'adresse (`endpoint`) est
-/// propre au navigateur, qui la change parfois ; le service worker renvoie
-/// alors la nouvelle. Une adresse que le service de notifications déclare
-/// disparue s'efface au premier envoi qui échoue.
 model AbonnementPush {
   id       String  @id @default(cuid())
   endpoint String  @unique
-  /// Les deux clés du chiffrement, telles que le navigateur les donne.
   p256dh   String
   auth     String
-  /// Le navigateur et le système, en clair, pour reconnaître l'appareil.
   appareil String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  /// Dernière inscription ou réinscription de ce navigateur.
   vuLe      DateTime @default(now())
 
   @@index([userId])
   @@map("abonnements_push")
 }
 
-/// Nature d'une offre du catalogue d'un membre.
 enum ProduitType {
   produit
   service
@@ -327,19 +241,11 @@ enum ProduitType {
 
 model Produit {
   id          String      @id @default(cuid())
-  /// Titre de l'offre.
   label       String
   type        ProduitType @default(service)
-  /// Ce que l'offre comprend, pour qui, à quelles conditions.
   description String?
-  /// Prix indicatif, en clair : « 25 000 Ar le flacon », « Sur devis ».
-  /// Un champ libre plutôt qu'un montant : la plupart des services se chiffrent
-  /// au cas par cas, et un nombre obligatoire pousserait à inventer.
   prix        String?
-  /// Galerie du produit, dans l'ordre d'affichage. La première photo sert de
-  /// vignette partout où une seule image tient ; vide = dégradé décoratif.
   photos      String[]    @default([])
-  /// Ordre d'affichage sur la fiche membre.
   ordre       Int         @default(0)
 
   memberId String
@@ -349,33 +255,21 @@ model Produit {
   @@map("produits")
 }
 
-// ============================ Événements ============================
-
 model Event {
   id         String      @id @default(cuid())
   titre      String
   date       DateTime    @db.Date
   lieu       String
   format     EventFormat
-  /// Capacité d'accueil.
   cap        Int
-  /// Payant pour les membres : `prix` est leur tarif.
   payant     Boolean     @default(false)
-  /// Tarif membre, en Ariary. 0 si inclus dans l'adhésion.
   prix       Int         @default(0)
-  /// Diffusé aussi sur la page publique, où l'on s'inscrit sans compte.
-  /// Faux : l'événement n'existe que sur la plateforme, pour les membres.
   public     Boolean     @default(true)
-  /// Tarif public, en Ariary, pour une inscription depuis la page publique.
-  /// 0 si gratuite.
   prixPublic Int         @default(0)
   desc       String
   photo      String?
-  /// Heure de début, « HH:MM ». `null` = toute la journée.
   debut      String?
-  /// Heure de fin, « HH:MM ». `null` = pas d'heure de fin annoncée.
   fin        String?
-  /// À qui l'événement s'adresse en priorité.
   pourQui    String?
 
   createdAt DateTime @default(now())
@@ -390,10 +284,8 @@ model Event {
   @@map("events")
 }
 
-/// Inscription d'un membre à un événement.
 model Registration {
   id   String @id @default(cuid())
-  /// Code présenté à l'accueil.
   code String @unique
 
   eventId  String
@@ -403,16 +295,12 @@ model Registration {
 
   createdAt DateTime @default(now())
 
-  /// Un membre ne s'inscrit qu'une fois par événement.
   @@unique([eventId, memberId])
   @@map("registrations")
 }
 
-/// Personne présente à un événement, membre ou non.
-/// Une étape du déroulé d'un événement.
 model EventAgenda {
   id     String  @id @default(cuid())
-  /// Heure de l'étape : « 18 h 00 ».
   heure  String
   titre  String
   detail String?
@@ -430,16 +318,9 @@ model Attendee {
   nom        String
   entreprise String
   email      String
-  /// Téléphone donné à l'inscription, pour joindre la personne avant
-  /// l'événement. `null` pour les inscriptions d'avant ce champ.
   telephone  String?
   statut     AttendeeStatus @default(confirme)
-  /// Code d'accueil de l'inscription d'un membre — celui de son QR code. Le
-  /// scanner le lit à l'entrée et pointe la personne présente. `null` pour
-  /// une personne inscrite par l'équipe.
   code       String?        @unique
-  /// Heure du pointage « présent » : l'historique du scanner s'ordonne par
-  /// elle. `null` tant que la personne n'est pas pointée.
   presentLe  DateTime?
 
   eventId String
@@ -451,19 +332,11 @@ model Attendee {
   @@map("attendees")
 }
 
-// ============================ Agenda ============================
-
-/// Rappel personnel noté dans l'agenda.
-///
-/// Il appartient à une personne, pas à l'entreprise : deux collaborateurs d'un
-/// même membre ne partagent pas leurs pense-bêtes. Les événements et les
-/// échéances, eux, ne sont pas stockés ici : ils se lisent là où ils vivent.
 model Rappel {
   id    String   @id @default(cuid())
   titre String
   note  String?
   jour  DateTime @db.Date
-  /// « HH:MM ». `null` = toute la journée.
   heure String?
   fait  Boolean  @default(false)
 
@@ -477,8 +350,6 @@ model Rappel {
   @@map("rappels")
 }
 
-// ============================ Contenus ============================
-
 model News {
   id      String       @id @default(cuid())
   titre   String
@@ -486,32 +357,19 @@ model News {
   cat     NewsCategory
   extrait String
   corps   String
-  /// Diffusée aussi sur la page publique. Faux : réservée aux membres, sur
-  /// la plateforme.
   public  Boolean      @default(false)
 
   mediaType     MediaType
   mediaTheme    MediaTheme
-  /// Photos de l'article, dans l'ordre d'affichage : la première sert de
-  /// couverture dans le fil. Vide = dégradé décoratif.
   images        String[]   @default([])
-  /// Durée de la vidéo, au format mm:ss. `null` pour une photo.
   mediaDuration String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  /// L'entreprise membre qui a publié, quand ce n'est pas la chambre.
-  /// `null` : une actualité de la chambre, écrite par l'équipe. Quelle que
-  /// soit son origine, l'équipe peut la modifier ou la supprimer.
   memberId  String?
   member    Member? @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  /// La personne qui l'a écrite, telle qu'elle s'appelait ce jour-là.
   auteurNom String?
-  /// Publication libre : un membre a écrit un texte, sans titre ni résumé —
-  /// ceux de la ligne en sont tirés, pour les listes et les notifications.
-  /// Le fil et la page affichent alors le texte seul. Faux pour un article,
-  /// y compris quand l'équipe donne un vrai titre à une publication libre.
   libre     Boolean @default(false)
 
   commentaires Comment[]
@@ -522,11 +380,6 @@ model News {
   @@map("news")
 }
 
-/// Un « j'aime » posé par un utilisateur sur une publication.
-///
-/// Une ligne par personne, et la contrainte d'unicité en garantit une seule :
-/// un compteur incrémenté aurait laissé cliquer dix fois de suite, et n'aurait
-/// pas su dire si la personne qui regarde a déjà aimé.
 model NewsLike {
   id String @id @default(cuid())
 
@@ -547,38 +400,20 @@ model Resource {
   titre  String
   cat    ResourceCategory
   fmt    ResourceFormat
-  /// Poids du fichier ou durée de la vidéo — c'est une étiquette, pas une mesure.
   taille String
   date   DateTime         @db.Date
 
-  /// Nom du fichier source, rangé dans le stockage privé des ressources —
-  /// jamais dans `public/`, sans quoi il suffirait de son URL pour le récupérer.
-  /// `null` = ressource sans contenu consultable.
   fichier     String?
-  /// Nombre de pages rendues en images, pour un document. `null` pour une vidéo.
   pages       Int?
-  /// Visuel de la carte dans la bibliothèque. `null` = motif décoratif.
   cover       String?
-  /// Quelques lignes sous le titre, pour dire ce qu'elle contient.
   description String?
-  /// Les blocs d'une page composée dans la plateforme — titre, texte, photo,
-  /// vidéo —, dans l'ordre (voir `lib/blocs.ts`). `null` pour une ressource
-  /// faite d'un fichier.
   contenu     Json?
 
-  /// Inclus dans l'adhésion, ou facturé en supplément.
   type PricingType @default(gratuit)
-  /// En Ariary. 0 si gratuit.
   prix Int         @default(0)
 
-  /// Son rang parmi les ressources du même dossier, du plus petit au plus
-  /// grand. 0 tant que l'équipe n'a rien rangé : la date départage alors,
-  /// les plus récentes d'abord.
   ordre Int @default(0)
 
-  /// Dossier qui la range. `null` = à la racine de la bibliothèque.
-  /// `SetNull` et non `Cascade` : supprimer un classeur ne doit jamais
-  /// emporter les documents qu'il contenait.
   dossierId String?
   dossier   DossierRessource? @relation(fields: [dossierId], references: [id], onDelete: SetNull)
 
@@ -594,16 +429,6 @@ model Resource {
   @@map("resources")
 }
 
-/// Accès d'une entreprise membre à une ressource payante.
-///
-/// Une ressource incluse dans l'adhésion n'a pas de liste : tout membre à
-/// jour la lit. Une ressource facturée, elle, ne s'ouvre qu'à celles qui
-/// l'ont acquise — et c'est l'équipe qui le constate, le paiement en ligne
-/// des ressources n'étant pas branché.
-///
-/// L'accès est donné à l'entreprise, pas à la personne : la cotisation est
-/// celle de l'entreprise, et ses collaborateurs travaillent sur les mêmes
-/// documents.
 model AccesRessource {
   id String @id @default(cuid())
 
@@ -612,8 +437,6 @@ model AccesRessource {
   memberId   String
   member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  /// Qui de l'équipe a ouvert l'accès. Recopié : un compte supprimé ne doit
-  /// pas rendre la décision anonyme.
   ouvertPar String
 
   createdAt DateTime @default(now())
@@ -623,14 +446,6 @@ model AccesRessource {
   @@map("acces_ressources")
 }
 
-/// Dossier de la bibliothèque : un classeur, et des classeurs dedans.
-///
-/// La bibliothèque était une liste à plat : passé une trentaine de documents,
-/// on ne retrouve plus rien. Les dossiers s'imbriquent, et une ressource se
-/// dépose dans celui qu'on veut — ou à la racine, comme avant.
-/// Une ressource qu'une personne a ouverte : de quoi lui montrer où elle en
-/// est dans un dossier. Tenu par personne, et non par entreprise : deux
-/// collègues n'avancent pas du même pas.
 model LectureRessource {
   id String @id @default(cuid())
 
@@ -649,20 +464,13 @@ model LectureRessource {
 model DossierRessource {
   id          String  @id @default(cuid())
   nom         String
-  /// Visuel du dossier, sur sa vue. `null` = le bandeau garde son dégradé,
-  /// et la colonne de côté prend la couverture d'une de ses ressources.
   cover       String?
-  /// Qui a conçu le dossier, présenté à côté de son contenu. Tout est
-  /// facultatif ; sans nom, l'encart n'apparaît pas.
   auteurNom   String?
   auteurRole  String?
   auteurBio   String?
   auteurPhoto String?
-  /// Réservé aux entreprises que l'équipe a choisies (`acces`) : les autres
-  /// membres ne voient ni le dossier, ni rien de ce qu'il contient.
   restreint   Boolean @default(false)
 
-  /// `null` = dossier de premier niveau.
   parentId String?
   parent   DossierRessource?  @relation("Arborescence", fields: [parentId], references: [id], onDelete: Cascade)
   enfants  DossierRessource[] @relation("Arborescence")
@@ -677,8 +485,6 @@ model DossierRessource {
   @@map("dossiers_ressources")
 }
 
-/// Une entreprise à qui un dossier réservé est ouvert. Comme pour une
-/// ressource payante, l'accès va à l'entreprise, pas à la personne.
 model AccesDossier {
   id String @id @default(cuid())
 
@@ -687,8 +493,6 @@ model AccesDossier {
   memberId  String
   member    Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  /// Qui de l'équipe a ouvert l'accès. Recopié : un compte supprimé ne doit
-  /// pas rendre la décision anonyme.
   ouvertPar String
 
   createdAt DateTime @default(now())
@@ -698,7 +502,6 @@ model AccesDossier {
   @@map("acces_dossiers")
 }
 
-/// Commentaire sur une actualité ou sur une ressource.
 model Comment {
   id         String   @id @default(cuid())
   auteur     String
@@ -711,12 +514,8 @@ model Comment {
   resourceId String?
   resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 
-  /// Auteur du commentaire : lui seul peut le modifier ou le supprimer. Le
-  /// nom et l'entreprise restent copiés à côté, pour qu'un compte supprimé
-  /// ne rende pas le commentaire anonyme.
   userId    String?
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  /// Dernière modification par son auteur.
   modifieLe DateTime?
 
   jaimes CommentLike[]
@@ -728,7 +527,6 @@ model Comment {
   @@map("comments")
 }
 
-/// Un « j'aime » posé sur un commentaire. Une ligne par personne.
 model CommentLike {
   id String @id @default(cuid())
 
@@ -744,19 +542,10 @@ model CommentLike {
   @@map("comment_likes")
 }
 
-/// Note de l'équipe sur un membre, dans sa fiche d'annuaire.
-///
-/// Interne, et strictement : jamais lue par l'espace membre, ni renvoyée à
-/// un adhérent sous quelque forme que ce soit. C'est le carnet de l'équipe —
-/// « rappeler en janvier », « a changé de gérant », « paie toujours en
-/// retard mais paie ». L'intéressé ne doit pas la voir, sans quoi elle
-/// cesserait d'être franche et ne servirait plus à rien.
 model NoteMembre {
   id    String @id @default(cuid())
   texte String
 
-  /// Nom de l'auteur, recopié : un compte supprimé ne doit pas rendre la
-  /// note anonyme, comme pour les commentaires.
   auteur String
 
   memberId String
@@ -770,18 +559,12 @@ model NoteMembre {
   @@map("notes_membres")
 }
 
-/// Promotion publiée PAR un membre, à destination des autres membres.
 model Offer {
   id          String           @id @default(cuid())
   titre       String
   desc        String
-  /// Visuel de l'offre. `null` = la couverture de l'entreprise qui la propose.
   image       String?
-  /// Où l'on en profite : page de commande, formulaire, offre détaillée.
-  /// `null` = pas de lien, on écrit alors au contact de l'entreprise.
   lien        String?
-  /// Où l'équipe a choisi de la montrer. Les offres d'avant ce choix
-  /// s'affichent partout, comme elles le faisaient.
   emplacement EmplacementOffre @default(partout)
 
   memberId String
@@ -794,21 +577,14 @@ model Offer {
   @@map("offers")
 }
 
-/// Service proposé PAR la chambre à ses membres. À ne pas confondre avec Offer.
 model CanchamService {
   id    String      @id @default(cuid())
   titre String
   desc  String
   type  PricingType @default(gratuit)
-  /// En Ariary. 0 si gratuit.
   prix  Int         @default(0)
   icon  String      @default("award")
-  /// Photo de couverture de la carte, par URL. `null` = dégradé aux couleurs
-  /// du type de service.
   image String?
-  /// Où mène le bouton du service : une page de la plateforme, rangée en
-  /// chemin (« /membre/rendez-vous?type=… »), ou une adresse web complète.
-  /// `null` : le bouton envoie la demande à l'équipe, par la messagerie.
   lien  String?
   ordre Int         @default(0)
 
@@ -818,42 +594,25 @@ model CanchamService {
   @@map("cancham_services")
 }
 
-// ============================ Facturation ============================
-
 model Invoice {
   id      String        @id @default(cuid())
   numero  String        @unique
   date    DateTime      @db.Date
   objet   String
-  /// Montant dans la devise de la facture, en unités entières.
   montant Int
   devise  Devise        @default(MGA)
   statut  InvoiceStatus @default(envoyee)
-  /// Le jour où le règlement a été reçu — celui que la facture imprime :
-  /// « Paiement reçu le… ». Pour une facture émise déjà réglée, c'est sa
-  /// propre date ; pour une facture réglée plus tard, le jour du paiement.
-  /// `null` tant qu'elle n'est pas payée.
   payeeLe DateTime?     @db.Date
 
-  /// Le membre facturé. `null` une fois le membre supprimé : la facture est
-  /// une pièce comptable, elle reste — avec son destinataire figé ci-dessous.
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
-  /// Nom du membre supprimé, tel qu'il était : pour les listes et la
-  /// recherche. `null` tant que le membre existe.
   destinataireNom String?
-  /// Coordonnées du destinataire à la suppression du membre, pour réimprimer
-  /// la facture à l'identique (voir `DestinataireFige` dans `lib/factures.ts`).
   destinataire    Json?
 
-  /// L'événement facturé, pour une participation : c'est lui qui permet, la
-  /// facture réglée, de confirmer l'inscription et d'envoyer les billets sans
-  /// que l'équipe n'ait rien à faire. `null` pour tout le reste.
   eventId String?
   event   Event?  @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
-  /// Tentatives de règlement en ligne de cette facture.
   paiements Paiement[]
 
   createdAt DateTime @default(now())
@@ -864,54 +623,29 @@ model Invoice {
   @@map("invoices")
 }
 
-/// Tentative de règlement en ligne d'une facture, chez Vanilla Pay.
-///
-/// Une ligne par tentative, pas une par facture : un membre dont la carte est
-/// refusée recommence, et l'on doit pouvoir dire ce qui s'est passé à chaque
-/// fois. C'est aussi ce qui rend la notification du prestataire rejouable
-/// sans danger — elle retrouve sa tentative par la référence, et une
-/// tentative déjà réussie ne se règle pas deux fois.
 model Paiement {
   id String @id @default(cuid())
 
-  /// Référence envoyée au prestataire, et qu'il nous renvoie. Unique : c'est
-  /// la seule clé qui relie une notification à sa tentative.
   reference String         @unique
   statut    PaiementStatut @default(en_cours)
 
-  /// Montant et devise figés à l'ouverture. Une facture corrigée après coup
-  /// ne doit pas changer ce qui a été demandé au membre.
   montant Int
   devise  Devise @default(MGA)
 
   mode ModeReglement
 
-  /// Identifiant de la transaction chez le prestataire, connu à la réponse.
   transaction  String?
-  /// Dernière charge utile reçue, telle quelle : de quoi retrouver ce qui
-  /// s'est dit le jour où un membre conteste.
   notification Json?
-  /// Horodatage de l'encaissement confirmé.
   regleLe      DateTime?
 
-  /// Ce que le membre a saisi après son virement : la référence que sa banque
-  /// lui a donnée. Facultative, mais elle accélère le rapprochement.
   refBancaire String?
-  /// Précisions du tunnel : lieu et moment d'une remise en espèces, nom de la
-  /// plateforme tierce. Ce qui n'a de sens que pour un moyen donné.
   detail      Json?
-  /// Quand le membre a annoncé avoir payé hors ligne.
   annonceLe   DateTime?
-  /// Qui de l'équipe a constaté l'arrivée de l'argent.
   confirmePar String?
 
-  /// La facture réglée. `null` pour ce qui n'en a pas encore — une
-  /// inscription à un événement, l'achat d'une ressource.
   invoiceId String?
   invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  /// Qui paie. Recopié ici parce qu'un règlement d'événement ou de ressource
-  /// n'a pas de facture pour le porter.
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
@@ -924,20 +658,12 @@ model Paiement {
   @@map("paiements")
 }
 
-/// Les coordonnées où la chambre reçoit l'argent.
-///
-/// Une seule ligne, tenue depuis le back-office : un changement de banque ne
-/// doit pas demander un déploiement. Tout est facultatif — un moyen dont les
-/// coordonnées manquent n'est simplement pas proposé au membre, ce qui vaut
-/// mieux qu'un virement envoyé dans le vide.
 model CoordonneesPaiement {
   id String @id @default("uniques")
 
-  /// Titulaire du compte, tel qu'il doit être écrit sur un virement.
   titulaire String @default("")
   banque    String @default("")
   agence    String @default("")
-  /// RIB en clair, tel qu'on le recopie au guichet.
   rib       String @default("")
   iban      String @default("")
   bic       String @default("")
@@ -946,11 +672,9 @@ model CoordonneesPaiement {
   orangeMoney String @default("")
   airtelMoney String @default("")
 
-  /// Où et quand remettre des espèces.
   adresseBureau String @default("")
   horaires      String @default("")
 
-  /// Plateformes tierces acceptées, une par ligne : nom et adresse.
   plateformes String @default("")
 
   updatedAt DateTime @updatedAt
@@ -958,31 +682,14 @@ model CoordonneesPaiement {
   @@map("coordonnees_paiement")
 }
 
-// ============================ Messagerie ============================
-
-/// Un fil de discussion : un échange entre deux personnes, un groupe, ou
-/// l'assistance d'un membre par l'équipe CanCham.
-///
-/// Ce qui s'affiche en tête d'un échange individuel dépend de qui regarde :
-/// chacun voit l'autre. Le nom et le visuel ne sont donc stockés que pour un
-/// groupe — ou pour l'assistance, que le membre voit sous le nom de la chambre.
 model MessageThread {
   id     String     @id @default(cuid())
   type   ThreadType
-  /// Nom du groupe, ou « Équipe CanCham ». `null` pour un échange individuel.
   nom    String?
-  /// Photo du groupe. `null` = initiales.
   avatar String?
-  /// Fil d'assistance : le membre y parle à la chambre, pas à une personne.
-  /// Toute l'équipe y participe, et chacun de ses membres y voit le membre.
   equipe Boolean    @default(false)
 
-  /// Fil ouvert depuis la vitrine par une personne sans compte : ce qu'elle a
-  /// donné d'elle — nom, adresse et téléphone (voir `Visiteur`). `null` pour
-  /// un fil de membre.
   visiteur    Json?
-  /// Clé du visiteur, gardée dans son navigateur. Elle seule rouvre son fil :
-  /// sans compte, c'est ce qui tient lieu de session.
   visiteurCle String? @unique
 
   createdAt DateTime @default(now())
@@ -993,17 +700,12 @@ model MessageThread {
   @@map("message_threads")
 }
 
-/// Participation d'un utilisateur à un fil. C'est elle qui ouvre l'accès :
-/// un fil n'est visible, et ses pièces jointes lisibles, que par ses
-/// participants.
 model ParticipantFil {
   threadId String
   thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   userId   String
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  /// Dernière ouverture du fil. Les messages postérieurs écrits par les autres
-  /// sont non lus ; `null` = jamais ouvert.
   luLe     DateTime?
   ajouteLe DateTime  @default(now())
 
@@ -1021,16 +723,10 @@ model Message {
   threadId String
   thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
-  /// Auteur du message, quand il s'agit d'un utilisateur connu.
   userId String?
 
-  /// Dernière modification du texte par son auteur.
   modifieLe  DateTime?
-  /// Suppression par son auteur. La ligne reste, vidée de son texte et de ses
-  /// pièces : la conversation garde la trace qu'un message a existé à cet
-  /// endroit, sans en conserver le contenu.
   supprimeLe DateTime?
-  /// Copie d'un message transféré depuis une autre conversation.
   transfere  Boolean   @default(false)
 
   piecesJointes PieceJointe[]
@@ -1045,18 +741,11 @@ enum TypePieceJointe {
   pdf
 }
 
-/// Fichier joint à un message : image, vidéo ou PDF.
-///
-/// Rangé dans le stockage privé et servi par une route contrôlée, comme les
-/// ressources : une conversation n'a pas à être lisible par qui devine une URL.
 model PieceJointe {
   id      String          @id @default(cuid())
-  /// Nom d'origine, affiché tel que l'expéditeur l'a envoyé.
   nom     String
   type    TypePieceJointe
-  /// Nom du fichier dans le stockage privé.
   fichier String
-  /// Poids en octets, pour l'afficher sans relire le fichier.
   taille  Int
 
   messageId String
@@ -1068,21 +757,12 @@ model PieceJointe {
   @@map("pieces_jointes")
 }
 
-// ============================ Journal ============================
-
-/// Journal des opérations sensibles.
-///
-/// Une opération financière ne doit jamais disparaître silencieusement : une
-/// suppression de membre ou une validation de paiement laisse une trace ici.
 model AuditLog {
   id        String   @id @default(cuid())
   action    String
-  /// Modèle concerné, ex. « Member » ou « Invoice ».
   entite    String
   entiteId  String
-  /// Qui a agi.
   acteur    String
-  /// Détail libre de l'opération.
   detail    String?
   createdAt DateTime @default(now())
 
@@ -1090,16 +770,9 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-/// Lien à usage unique envoyé par e-mail : réinitialiser son mot de passe,
-/// ou choisir le premier quand l'équipe a créé le compte (invitation).
-///
-/// Seule l'empreinte du jeton est gardée : une fuite de la base ne donne
-/// aucun lien utilisable.
 model JetonCompte {
   id        String    @id @default(cuid())
-  /// SHA-256 du jeton envoyé, en hexadécimal.
   empreinte String    @unique
-  /// « reinitialisation » (une heure) ou « invitation » (sept jours).
   usage     String
   expire    DateTime
   utiliseLe DateTime?
@@ -1113,26 +786,14 @@ model JetonCompte {
   @@map("jetons_compte")
 }
 
-/// Inscrit à la lettre d'information, depuis la page publique.
-///
-/// La chambre tient sa liste chez systeme.io ; celle-ci recueille ce qui
-/// arrive par la plateforme, à charge pour l'équipe de l'y reporter — ou de
-/// brancher un jour la synchronisation. L'adresse est unique : une seconde
-/// inscription ne crée pas de doublon, elle confirme simplement.
 model Abonne {
   id     String @id @default(cuid())
   prenom String
-  /// Toujours en minuscules : deux graphies d'une même adresse sont la même.
   email  String @unique
-  /// D'où vient l'inscription. « vitrine » aujourd'hui, d'autres demain.
   source String @default("vitrine")
 
-  /// Retrait de la liste. `null` tant que la personne y est.
   desabonneLe DateTime?
 
-  /// Moment où le contact a rejoint la liste de la chambre chez systeme.io.
-  /// `null` : l'inscription n'y est pas encore arrivée — clé absente, ou
-  /// service injoignable ce jour-là.
   synchroniseLe DateTime?
 
   createdAt DateTime @default(now())
@@ -1140,48 +801,29 @@ model Abonne {
   @@map("abonnes")
 }
 
-// ============================ Rendez-vous ============================
-
-/// Un type de rendez-vous que la chambre propose à ses membres : conseil
-/// export, accueil d'un nouveau membre, point sur la cotisation…
-///
-/// La durée décide du découpage des créneaux : une plage de 9 h à 12 h offre
-/// six rendez-vous de trente minutes, quatre de quarante-cinq.
 model TypeRendezvous {
   id     String  @id @default(cuid())
   titre  String
   detail String?
-  /// Durée en minutes.
   duree  Int     @default(30)
-  /// Proposé aux membres. Faux : retiré de la liste sans effacer l'historique.
   actif  Boolean @default(true)
-  /// Ordre d'affichage.
   ordre  Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   rendezvous Rendezvous[]
-  /// Les heures d'accueil ouvertes pour ce type de rendez-vous.
   plages     Disponibilite[]
 
   @@map("types_rendezvous")
 }
 
-/// Une plage où l'équipe reçoit, un jour de semaine donné.
-///
-/// Plusieurs plages par jour sont possibles — matin et après-midi séparés par
-/// la pause du midi, par exemple.
 model Disponibilite {
   id    String @id @default(cuid())
-  /// Jour de la semaine, 1 = lundi à 7 = dimanche (norme ISO).
   jour  Int
-  /// « HH:MM », heure de Madagascar.
   debut String
   fin   String
 
-  /// Chaque type a ses propres heures : on ne reçoit pas pour un entretien
-  /// d'une heure aux heures réservées aux points rapides.
   typeId String
   type   TypeRendezvous @relation(fields: [typeId], references: [id], onDelete: Cascade)
 
@@ -1191,36 +833,24 @@ model Disponibilite {
   @@map("disponibilites")
 }
 
-/// Un rendez-vous pris par un membre avec l'équipe.
-///
-/// Le créneau est unique tant que le rendez-vous tient : un index partiel, posé
-/// à la main dans la migration, refuse deux réservations à la même heure. C'est
-/// la base qui tranche, et non une vérification préalable — deux personnes
-/// peuvent cliquer dans la même seconde.
 model Rendezvous {
   id String @id @default(cuid())
 
   typeId String
   type   TypeRendezvous @relation(fields: [typeId], references: [id])
 
-  /// Qui a pris le rendez-vous.
   userId   String
   user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  /// Son entreprise au moment de la prise, pour l'équipe.
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
   jour  DateTime @db.Date
-  /// « HH:MM », heure de Madagascar.
   debut String
   fin   String
 
-  /// Ce que le membre souhaite aborder.
   motif String?
 
-  /// Annulation. `null` tant que le rendez-vous tient.
   annuleLe  DateTime?
-  /// Qui a annulé : le membre ou l'équipe.
   annulePar String?
 
   createdAt DateTime @default(now())

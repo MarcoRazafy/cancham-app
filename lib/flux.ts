@@ -4,19 +4,10 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
 
-/**
- * Sert un fichier du stockage privé, requêtes `Range` comprises.
- *
- * Les plages sont indispensables pour la vidéo : sans elles, le lecteur ne
- * peut ni avancer ni reculer, et le navigateur télécharge tout d'un bloc avant
- * de lire. Pour une image ou un PDF, le navigateur ne demande pas de plage et
- * reçoit le fichier entier.
- */
 export async function servirFichier(
   requete: Request,
   chemin: string,
   entetes: Record<string, string>,
-  /** Taille maximale d'un morceau, quand le client n'en fixe pas la fin. */
   morceau = 1024 * 1024,
 ): Promise<Response> {
   const { size } = await stat(chemin);

@@ -1,12 +1,3 @@
-/*
- * Service worker de l'application CanCham.
- *
- * Volontairement minimal : il ne met rien en cache de ce que la plateforme
- * affiche — les pages d'un espace membre changent sans cesse et doivent
- * toujours venir du serveur. Il ne garde qu'une page, « Hors ligne », qu'il
- * montre quand une navigation échoue faute de réseau : sans lui,
- * l'application installée afficherait l'écran d'erreur du navigateur.
- */
 const CACHE = "cancham-hors-ligne-v1";
 const HORS_LIGNE = "/hors-ligne.html";
 
@@ -18,7 +9,6 @@ self.addEventListener("install", (evenement) => {
 });
 
 self.addEventListener("activate", (evenement) => {
-  // Les caches d'une version précédente partent : il n'en reste qu'un.
   evenement.waitUntil(
     caches
       .keys()
@@ -32,8 +22,6 @@ self.addEventListener("activate", (evenement) => {
 });
 
 self.addEventListener("fetch", (evenement) => {
-  // Seules les navigations — l'ouverture d'une page — sont concernées ;
-  // les données, images et scripts suivent leur chemin habituel.
   if (evenement.request.mode !== "navigate") return;
   evenement.respondWith(
     fetch(evenement.request).catch(() =>
@@ -42,13 +30,6 @@ self.addEventListener("fetch", (evenement) => {
   );
 });
 
-/* ---------- Notifications de l'appareil ---------- */
-
-/*
- * Le serveur envoie un petit JSON : titre, corps, page à ouvrir, étiquette.
- * L'étiquette regroupe : une nouvelle notification d'un même fil remplace la
- * précédente au lieu de s'empiler.
- */
 self.addEventListener("push", (evenement) => {
   let n = {};
   try {
@@ -68,10 +49,6 @@ self.addEventListener("push", (evenement) => {
   );
 });
 
-/*
- * Au clic, la page qui traite la notification : dans une fenêtre de la
- * plateforme déjà ouverte s'il y en a une, sinon dans une nouvelle.
- */
 self.addEventListener("notificationclick", (evenement) => {
   evenement.notification.close();
   const url = new URL(
@@ -94,11 +71,6 @@ self.addEventListener("notificationclick", (evenement) => {
   );
 });
 
-/*
- * Le navigateur a changé l'adresse de l'abonnement : on se réinscrit avec la
- * même clé et on prévient le serveur, sinon les envois partiraient dans le
- * vide.
- */
 self.addEventListener("pushsubscriptionchange", (evenement) => {
   const ancien = evenement.oldSubscription;
   const nouveau = evenement.newSubscription

@@ -7,11 +7,6 @@ import {
   titreDePublication,
 } from "@/lib/publications";
 
-/**
- * Une publication libre n'a qu'un texte : le titre et le résumé que gardent
- * la base, les notifications et la recherche en sont tirés ici.
- */
-
 describe("texte d'une publication", () => {
   it("retire les blancs autour et unifie les fins de ligne", () => {
     expect(textePublication("  \n\nBonjour\r\nle réseau  \n\n")).toBe(
@@ -70,7 +65,6 @@ describe("titre tiré du texte", () => {
     expect(t.endsWith("…")).toBe(true);
     expect(Array.from(t).length).toBeLessThanOrEqual(91);
     expect(ligne.startsWith(t.slice(0, -1))).toBe(true);
-    // Le mot qui suit la coupe est entier dans le texte d'origine.
     expect(ligne.charAt(t.length - 1)).toBe(" ");
   });
 

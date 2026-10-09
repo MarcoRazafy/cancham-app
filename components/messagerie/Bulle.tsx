@@ -18,21 +18,12 @@ import type { Message, Space } from "@/lib/types";
 import { useActionsMessages } from "./ActionsMessages";
 import { PiecesJointes } from "./PiecesJointes";
 
-/** Encombrement du menu d'un message, en pixels (`w-[190px]`, quatre entrées). */
 const LARGEUR_MENU = 190;
 const HAUTEUR_MENU = 170;
 
-/** Lien lisible sur la bulle rouge de l'expéditeur. */
 const LIEN_SUR_ROUGE =
   "text-white underline underline-offset-2 decoration-white/60 hover:decoration-white [overflow-wrap:anywhere]";
 
-/**
- * Une bulle de conversation, avec son menu.
- *
- * Tout le monde peut transférer un message ou en copier le texte ; seul son
- * auteur peut le modifier ou le supprimer. Le menu apparaît au survol de la
- * bulle, et reste visible sur les écrans tactiles, qui n'ont pas de survol.
- */
 export function Bulle({
   message: m,
   heure,
@@ -42,27 +33,13 @@ export function Bulle({
   space,
 }: {
   message: Message;
-  /** Heure exacte, calculée côté serveur pour éviter un écart de fuseau. */
   heure: string;
-  /**
-   * Le nom de l'auteur s'affiche au-dessus du texte : dans un groupe, et dans
-   * la conversation d'assistance, où plusieurs personnes répondent.
-   */
   groupe: boolean;
-  /**
-   * Nom affiché à la place de celui de l'auteur : le membre voit répondre
-   * « Équipe CanCham », pas la personne de permanence.
-   */
   nomAuteur?: string;
-  /**
-   * Dans l'assistance vue par l'équipe, ses messages se rangent à droite,
-   * comme ceux de la personne connectée : en face, il n'y a que le membre.
-   */
   equipeADroite?: boolean;
   space: Space;
 }) {
   const [edition, setEdition] = useState(false);
-  /** Position du menu ouvert, dans la fenêtre. */
   const [menu, setMenu] = useState<{
     haut?: number;
     bas?: number;
@@ -82,8 +59,6 @@ export function Bulle({
       )
         setMenu(null);
     };
-    // Posé en coordonnées de fenêtre, le menu ne suivrait pas la bulle au
-    // défilement : on le referme plutôt que de le laisser flotter ailleurs.
     const refermer = () => setMenu(null);
     document.addEventListener("pointerdown", fermer);
     document.addEventListener("keydown", fermer);
@@ -125,10 +100,6 @@ export function Bulle({
   }
 
   const ouvrirMenu = (bouton: HTMLElement) => {
-    // En position fixe, calé sur la fenêtre : dans la zone de défilement de la
-    // conversation, le menu serait coupé dès qu'elle est basse — sur un
-    // téléphone surtout. Il s'ouvre sous le bouton s'il y a la place, sinon
-    // au-dessus ; vers la gauche pour un message envoyé, si la place le permet.
     const r = bouton.getBoundingClientRect();
     const place = window.innerHeight - r.bottom >= HAUTEUR_MENU + 8;
     const tientAGauche = r.right - LARGEUR_MENU >= 8;
@@ -240,8 +211,6 @@ export function Bulle({
           />
         )}
 
-        {/* L'heure se loge dans la bulle, alignée à droite : posée dessous,
-            elle décalerait l'alignement des messages. */}
         <span
           className={`block text-right text-[10.5px] mt-1 tabular-nums ${
             m.moi ? "text-white/70" : "text-faint"
@@ -326,14 +295,12 @@ export function Bulle({
   );
 }
 
-/** La zone d'édition grandit avec le texte, jusqu'à une hauteur raisonnable. */
 function ajuster(el: HTMLTextAreaElement | null) {
   if (!el) return;
   el.style.height = "auto";
   el.style.height = `${Math.min(el.scrollHeight + 2, 220)}px`;
 }
 
-/** Blanc sur la bulle rouge, rouge sur la bulle grise : lisible sur les deux. */
 function BoutonEnregistrer({ moi }: { moi: boolean }) {
   const { pending } = useFormStatus();
   return (

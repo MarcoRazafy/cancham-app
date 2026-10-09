@@ -21,14 +21,6 @@ import {
 } from "@/lib/queries-admin";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Équipe et accès : qui tient le back-office, et qui peut y entrer.
- *
- * Seul un administrateur ouvre un compte d'équipe : une adresse, une
- * fonction, un rôle, et l'identifiant part par e-mail avec un mot de passe
- * provisoire. Un compte déjà inscrit peut aussi être promu, en le cherchant.
- * Un manager voit l'équipe, sans pouvoir la modifier.
- */
 export default async function AdminEquipe({
   searchParams,
 }: {
@@ -72,7 +64,6 @@ export default async function AdminEquipe({
               <FormulaireNouvelEquipier />
             </Panneau>
 
-            {/* ==================== Recherche ==================== */}
             <Panneau
               titre="Promouvoir un compte existant"
               sousTitre="Quelqu’un qui a déjà un compte de membre et rejoint l’équipe"
@@ -125,7 +116,6 @@ export default async function AdminEquipe({
           </Panneau>
         )}
 
-        {/* ==================== L'équipe ==================== */}
         <Panneau
           titre="L’équipe"
           sousTitre={`${admins.length} compte${admins.length > 1 ? "s" : ""} avec accès au back-office`}
@@ -208,8 +198,6 @@ export default async function AdminEquipe({
     </>
   );
 }
-
-/* ============================ Une ligne de compte ============================ */
 
 function Inscription({ compte: c }: { compte: CompteMembre }) {
   return (

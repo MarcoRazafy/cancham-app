@@ -2,18 +2,6 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import { retard } from "@/lib/traversee";
 
-/**
- * Mosaïque des rencontres CanCham, sur une grille sans trou. Chaque photo
- * grandit légèrement en entrant, l'une après l'autre ; au survol elle zoome
- * et sa légende glisse vers le haut.
- */
-/*
- * Grille de 6 colonnes sur 3 rangées, remplie sans trou :
- *   [ salle  salle  | oratrice | cocktail | public  public ]
- *   [ salle  salle  | oratrice | rdv      | public  public ]
- *   [ musique | equipe | groupe  groupe  groupe  | formation ]
- * `zone` = ligne / colonne de départ et de fin (grid-area).
- */
 const PHOTOS = [
   {
     src: "/traversee/salle.jpg",

@@ -4,24 +4,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, CircleAlert, X } from "lucide-react";
 
-/**
- * Message de retour après une action.
- *
- * Il arrive par l'URL (`?msg=`, et `&ton=erreur` pour une erreur), déposé par
- * l'action serveur. Il s'efface seul et disparaît de l'adresse, pour qu'un
- * rechargement ne le réaffiche pas.
- *
- * Les deux tons ne bougent pas pareil. Une confirmation glisse en place et sa
- * coche se dessine : c'est fait. Une erreur arrive en secouant la tête, en
- * rouge, et reste plus longtemps : elle demande qu'on la lise. Une fine barre
- * dit combien de temps il reste avant qu'elle ne s'efface.
- */
 export function Toast() {
   const params = useSearchParams();
   const message = params.get("msg");
   const erreur = params.get("ton") === "erreur";
-  // La clé force un remontage à chaque nouveau message : le minuteur repart,
-  // et les animations se rejouent.
   return message ? (
     <ToastVisible
       key={`${erreur}:${message}`}
@@ -45,11 +31,6 @@ function ToastVisible({
 
   useEffect(() => {
     const masquer = setTimeout(() => setVisible(false), duree);
-    // Le message quitte l'adresse sans navigation : `replaceState` réécrit
-    // l'URL, et Next suit. Une navigation (`router.replace`) aurait pu
-    // écraser celle d'une action lancée entre-temps — cliquer « Terminer »
-    // juste après un « ajouté » ramenait sur la page quittée. Et seulement
-    // si l'adresse porte encore ce message : sinon, on est déjà ailleurs.
     const nettoyer = setTimeout(() => {
       const url = new URL(window.location.href);
       if (url.searchParams.get("msg") !== message) return;
@@ -72,8 +53,6 @@ function ToastVisible({
         visible ? "anim-glisse" : "opacity-0 pointer-events-none"
       }`}
     >
-      {/* L'entrée glisse ; la secousse d'une erreur vit sur l'enveloppe
-          intérieure, pour ne pas se disputer la même transformation. */}
       <div
         className={`relative overflow-hidden flex items-center gap-2.5 pl-3 pr-3.5 py-3 rounded-[var(--radius-s)] text-white text-[13px] font-medium shadow-[0_16px_40px_-14px_rgba(15,29,44,0.55)] ${
           erreur ? "bg-[var(--refus)] anim-secousse" : "bg-navy"
@@ -101,7 +80,6 @@ function ToastVisible({
         >
           <X size={14} />
         </button>
-        {/* Le temps qu'il reste avant que le message s'efface. */}
         <span
           aria-hidden
           className="absolute left-0 bottom-0 h-[2px] w-full bg-white/45 origin-left"

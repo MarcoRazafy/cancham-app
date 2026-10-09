@@ -35,23 +35,16 @@ import {
 } from "@/lib/actions/content";
 import type { DossierRessource, Space } from "@/lib/types";
 
-/** Les dossiers proposés dans une liste déroulante, décalés selon leur rang. */
 export type Arborescence = { id: string; nom: string; profondeur: number }[];
 
 const decalage = (n: number) => `${"  ".repeat(n)}${n ? "└ " : ""}`;
 
-/**
- * Qui voit un dossier : tous les membres, ou les entreprises que l'équipe
- * coche une à une. Le choix part avec le formulaire qui l'entoure (`acces`,
- * puis un `membre` par entreprise).
- */
 function ChampAccesDossier({
   membres,
   restreint = false,
   acces = [],
 }: {
   membres: MembreChoisissable[];
-  /** L'état actuel du dossier, quand on le règle. */
   restreint?: boolean;
   acces?: string[];
 }) {
@@ -85,10 +78,6 @@ function ChampAccesDossier({
   );
 }
 
-/**
- * Comment un dossier se présente : sa couverture, et qui l'a conçu. Les
- * mêmes champs à la création et dans ses réglages.
- */
 function ChampsPresentation({ dossier: d }: { dossier?: DossierRessource }) {
   return (
     <>
@@ -146,13 +135,11 @@ function ChampsPresentation({ dossier: d }: { dossier?: DossierRessource }) {
   );
 }
 
-/** Nouveau dossier, dans celui qui est ouvert. */
 export function BoutonNouveauDossier({
   parentId,
   membres,
 }: {
   parentId: string | null;
-  /** Les entreprises à qui l'on peut réserver le dossier. */
   membres: MembreChoisissable[];
 }) {
   return (
@@ -207,14 +194,6 @@ export function BoutonNouveauDossier({
   );
 }
 
-/**
- * Un dossier de la bibliothèque, en carte.
- *
- * À gauche, l'icône de dossier, seule — jamais sa couverture, qui se garde
- * pour sa page. Son nom, ce qu'il contient, et un chevron qui dit
- * que la carte s'ouvre. La carte entière mène au dossier — c'est le lien de
- * son nom, étendu à la carte ; le menu de l'équipe reste au-dessus de lui.
- */
 export function CarteDossier({
   dossier: d,
   space,
@@ -226,7 +205,6 @@ export function CarteDossier({
   space: Space;
   admin: boolean;
   arborescence: Arborescence;
-  /** Les entreprises à qui l'on peut réserver le dossier. Équipe seulement. */
   membres: MembreChoisissable[];
 }) {
   const contenu = [
@@ -235,8 +213,6 @@ export function CarteDossier({
       ? `${d.ressources} ressource${d.ressources > 1 ? "s" : ""}`
       : null,
   ].filter(Boolean);
-  // Un dossier réservé le dit : à l'équipe, pour combien d'entreprises ; au
-  // membre qui le voit, que c'est pour la sienne.
   const reserve = !d.restreint
     ? null
     : admin
@@ -246,9 +222,6 @@ export function CarteDossier({
 
   return (
     <Card className="relative flex min-h-[96px] items-stretch overflow-hidden p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]">
-      {/* Toujours l'icône de dossier, seule, sans fond ni cadre : la
-          couverture d'un dossier se montre en tête de sa page, pas sur sa
-          carte. */}
       <span className="m-3 flex w-[70px] shrink-0 items-center justify-center text-accent/65">
         <Icone
           size={32}
@@ -294,11 +267,6 @@ export function CarteDossier({
   );
 }
 
-/**
- * Le menu d'un dossier, derrière ses trois points : qui le voit, ses
- * réglages, sa suppression. Chaque choix referme le menu et ouvre sa
- * fenêtre.
- */
 function MenuDossier({
   dossier: d,
   arborescence,
@@ -310,9 +278,6 @@ function MenuDossier({
 }) {
   type Fenetre = "menu" | "acces" | "reglages" | "supprimer";
   const [fenetre, setFenetre] = useState<Fenetre | null>(null);
-  // Une fenêtre qui se referme ne referme qu'elle-même. Quand un choix du
-  // menu en ouvre une autre, le menu se referme juste après — et sans cette
-  // précaution, il emporterait la fenêtre qu'il vient d'ouvrir.
   const fermer = (laquelle: Fenetre) => () =>
     setFenetre((f) => (f === laquelle ? null : f));
 
@@ -418,10 +383,6 @@ function ChoixDossier({
   );
 }
 
-/**
- * Une fenêtre pilotée de l'extérieur — par le menu d'un dossier — plutôt
- * que par son propre bouton.
- */
 interface Pilotage {
   ouvert?: boolean;
   onFermer?: () => void;
@@ -430,11 +391,6 @@ interface Pilotage {
 const BTN_ICONE =
   "flex h-8 w-8 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted cursor-pointer";
 
-/**
- * Les commandes de l'équipe sur un dossier — qui le voit, son nom et son
- * rangement, sa suppression —, pour les poser ailleurs que sur sa carte :
- * dans l'en-tête de sa section, ou sur la vue du dossier ouvert.
- */
 export function CommandesDossier({
   dossier,
   arborescence,
@@ -453,11 +409,6 @@ export function CommandesDossier({
   );
 }
 
-/**
- * Qui voit le dossier : tous les membres, ou les entreprises cochées. Dans
- * sa propre fenêtre, à part du nom et du rangement : c'est une autre
- * décision, et la liste des entreprises prend de la place.
- */
 function AccesDossier({
   dossier: d,
   membres,
@@ -515,10 +466,6 @@ function AccesDossier({
   );
 }
 
-/**
- * Les réglages d'un dossier : son nom, sa couverture et son auteur d'un
- * côté, son rangement de l'autre — deux décisions, deux boutons.
- */
 function ReglagesDossier({
   dossier: d,
   arborescence,

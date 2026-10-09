@@ -1,13 +1,5 @@
 import Image from "next/image";
 
-/**
- * Petits outils partagés par les composants de la messagerie.
- *
- * Volontairement hors de `components/domain.tsx` : ces composants sont des
- * composants client, et importer `domain` les obligerait à embarquer tout ce
- * module dans le navigateur pour un simple rond.
- */
-
 export function Pastille({
   src,
   alt,
@@ -48,7 +40,6 @@ export function Pastille({
   );
 }
 
-/** Minuscules, sans accents : « Événement » et « evenement » se valent. */
 export function normaliser(s: string): string {
   return s
     .normalize("NFD")
@@ -56,16 +47,11 @@ export function normaliser(s: string): string {
     .toLowerCase();
 }
 
-/** Poids lisible : « 842 ko », « 3,4 Mo ». */
 export function poids(octets: number): string {
   if (octets < 1024 * 1024)
     return `${Math.max(1, Math.round(octets / 1024))} ko`;
   return `${(octets / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`;
 }
 
-/**
- * URL d'une pièce jointe, servie par la route contrôlée. L'espace indique au
- * serveur quel utilisateur vérifier parmi les participants du fil.
- */
 export const urlPiece = (id: string, espace: string, telecharger = false) =>
   `/api/messagerie/pieces/${id}?espace=${espace}${telecharger ? "&telecharger=1" : ""}`;

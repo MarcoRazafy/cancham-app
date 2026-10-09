@@ -5,18 +5,6 @@ import { prisma } from "@/lib/db";
 import { minutes, origineAppelante, tentative } from "@/lib/limite";
 import { inscrireContact } from "@/lib/systeme-io";
 
-/**
- * Inscription à la lettre d'information, depuis la page publique.
- *
- * Deux champs, comme sur la page d'inscription de la chambre : le prénom et
- * l'adresse. C'est un point d'entrée ouvert à tous, donc tout y est vérifié
- * et compté.
- *
- * Une adresse déjà inscrite reçoit la même réponse qu'une nouvelle : dire
- * « vous êtes déjà dans la liste » révélerait à un inconnu qui s'y trouve.
- */
-
-/** Inscriptions qu'une même origine peut tenter en une heure. */
 const PAR_HEURE = 10;
 
 const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -61,17 +49,12 @@ export async function inscrireInfolettre(saisie: {
     };
   }
 
-  // Une réinscription remet la personne dans la liste plutôt que d'échouer
-  // sur l'unicité de l'adresse.
   const abonne = await prisma.abonne.upsert({
     where: { email },
     update: { prenom, desabonneLe: null },
     create: { prenom, email, source: "vitrine" },
   });
 
-  // La liste qui sert aux envois est celle de la chambre, chez systeme.io :
-  // le contact l'y rejoint après la réponse, pour ne pas faire attendre
-  // devant un formulaire. L'inscription est déjà enregistrée ici.
   after(async () => {
     if (await inscrireContact({ prenom, email })) {
       await prisma.abonne.update({

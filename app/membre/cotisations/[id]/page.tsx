@@ -6,7 +6,6 @@ import { PrintButton } from "@/components/forms/PrintButton";
 import { getFacture } from "@/lib/factures";
 import { getCurrentUser } from "@/lib/session";
 
-/** Une facture du membre, à imprimer ou à enregistrer en PDF. */
 export default async function FactureMembre({
   params,
 }: {
@@ -15,7 +14,6 @@ export default async function FactureMembre({
   const { id } = await params;
   const user = await getCurrentUser("membre");
   const f = await getFacture(id);
-  // La facture d'un autre membre n'existe pas pour lui.
   if (!f || f.membreId !== user.memberId) notFound();
 
   return (

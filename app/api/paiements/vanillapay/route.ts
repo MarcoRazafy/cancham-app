@@ -1,26 +1,8 @@
 import { revalidatePath } from "next/cache";
 import { conclurePaiement } from "@/lib/paiements";
-import {
-  chargeDepuisCorps,
-  lireEtat,
-  signatureValide,
-} from "@/lib/vanillapay";
+import { chargeDepuisCorps, lireEtat, signatureValide } from "@/lib/vanillapay";
 
-/**
- * Notification de Vanilla Pay : c'est elle, et elle seule, qui règle une
- * facture.
- *
- * Le retour du navigateur ne prouve rien — un membre peut fabriquer cette
- * adresse. Ici, la requête est signée : on recalcule le HMAC du corps brut
- * avec la clé secrète et on refuse tout ce qui ne correspond pas.
- *
- * Une fois la signature vérifiée, on répond 200 même quand il n'y a rien à
- * faire — référence inconnue, paiement déjà encaissé. Répondre en erreur les
- * ferait réessayer indéfiniment pour un cas qui ne se réglera jamais.
- */
 export async function POST(req: Request) {
-  // Le corps est lu tel qu'il est arrivé : le relire après un `JSON.parse`
-  // changerait un espace ou l'ordre des clés, et la signature tomberait faux.
   const corps = await req.text();
   const signature =
     req.headers.get("VPI-Signature") ?? req.headers.get("vpi-signature");
@@ -30,8 +12,6 @@ export async function POST(req: Request) {
     return new Response("signature invalide", { status: 401 });
   }
 
-  // En JSON d'après leur document, mais annoncé comme un formulaire : on lit
-  // l'un, à défaut l'autre.
   const charge = chargeDepuisCorps(corps);
   if (!charge) return new Response("corps illisible", { status: 400 });
 

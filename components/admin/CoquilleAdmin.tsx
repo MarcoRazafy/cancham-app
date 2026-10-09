@@ -14,14 +14,6 @@ import { titrePour, type NavGroup } from "@/lib/nav";
 import type { Notification } from "@/lib/notifications";
 import type { User } from "@/lib/types";
 
-/**
- * Coquille du back-office.
- *
- * Même charte que l'espace membre — polices, barre latérale en dégradé rouge
- * vers vert, barre supérieure bleue — pour que l'équipe travaille dans l'outil
- * que voient les membres. La mention « Back-office » sous le logo dit où l'on
- * est.
- */
 export function CoquilleAdmin({
   user,
   nav,
@@ -31,7 +23,6 @@ export function CoquilleAdmin({
 }: {
   user: User;
   nav: NavGroup[];
-  /** Compteurs affichés à droite des entrées de menu. Clé = href. */
   badges?: Record<string, number>;
   notifications?: Notification[];
   children: ReactNode;
@@ -50,14 +41,12 @@ export function CoquilleAdmin({
         />
       ) : null}
 
-      {/* ==================== Barre latérale ==================== */}
       <aside
         className={`print:hidden w-[274px] shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 text-white transition-transform duration-200 ${
           menuOuvert ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
         style={{
           background: "var(--laterale)",
-          // Point fixe pendant les transitions de page : seul le contenu bouge.
           viewTransitionName: "barre-laterale",
         }}
       >
@@ -77,8 +66,6 @@ export function CoquilleAdmin({
               className="w-full h-auto"
             />
           </Link>
-          {/* La mention de l'espace, soulignée d'un filet clair : sur le
-              dégradé, un trait rouge et vert se perdrait dans le fond. */}
           <div className="mt-5 flex items-center gap-2.5">
             <span className="surtitre text-white/70">Back-office</span>
             <span className="h-px flex-1 bg-white/25" />
@@ -158,7 +145,6 @@ export function CoquilleAdmin({
         <BoutonDeconnexion />
       </aside>
 
-      {/* ==================== Contenu ==================== */}
       <div className="flex-1 min-w-0 flex flex-col lg:ml-[274px] print:ml-0">
         <header
           className="print:hidden sticky top-0 z-30 border-b border-white/10 flex items-center gap-4 px-4 md:px-7 py-3 text-white"
@@ -234,7 +220,6 @@ function Portrait({ user, taille }: { user: User; taille: number }) {
   );
 }
 
-/** Recherche transversale, en formulaire GET : partageable et sans JavaScript. */
 function Recherche() {
   const pathname = usePathname();
   const params = useSearchParams();

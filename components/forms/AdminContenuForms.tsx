@@ -56,9 +56,6 @@ const CATEGORIES: NewsCategory[] = [
 const BTN_ICONE =
   "w-9 h-9 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center cursor-pointer text-muted";
 
-/* ============================ Actualités ============================ */
-
-/** Rédaction d'une actualité, sur sa propre page. */
 export function FormulaireActualite({ news }: { news?: NewsItem }) {
   return (
     <form
@@ -84,7 +81,6 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
         >
           <textarea
             name="extrait"
-            // Une publication libre peut n'être faite que de photos.
             required={!news?.libre}
             rows={3}
             defaultValue={news?.extrait}
@@ -194,8 +190,6 @@ export function SupprimerActualiteButton({
   );
 }
 
-/* ============================ Offres des membres ============================ */
-
 export function OffreButton({
   offre,
   membres,
@@ -279,11 +273,6 @@ export function OffreButton({
               label="Lien « En profiter »"
               hint="Page de commande, formulaire, offre détaillée. Sans lien, le membre écrit au contact de l’entreprise."
             >
-              {/*
-                En texte, comme le site web d'une fiche membre : `type="url"`
-                refuserait « exemple.mg/offre » tant que « https:// » n'est pas
-                tapé, alors que l'enregistrement complète l'adresse lui-même.
-              */}
               <input
                 name="lien"
                 type="text"
@@ -294,10 +283,6 @@ export function OffreButton({
                 className={INPUT}
               />
             </Field>
-            {/*
-              Un groupe de cases, et non un `Field` : celui-ci est déjà une
-              étiquette, et chaque case a la sienne.
-            */}
             <fieldset className="m-0 min-w-0 border-0 p-0">
               <legend className="mb-1.5 block p-0 text-[12.3px] font-semibold text-muted">
                 Où afficher l’offre
@@ -384,9 +369,6 @@ export function SupprimerOffreButton({
   );
 }
 
-/* ============================ Ressources ============================ */
-
-/** Même plafond que le serveur, pour prévenir avant d'envoyer pour rien. */
 const PLAFOND_MO = PLAFOND_FICHIER_MO;
 
 export interface RessourceEditee {
@@ -404,29 +386,23 @@ export interface RessourceEditee {
   dossierId: string | null;
 }
 
-/** Ajout ou modification d'une ressource, fichier compris. */
 export function FormulaireRessource({
   ressource,
   dossiers,
   dossierParDefaut,
 }: {
   ressource?: RessourceEditee;
-  /** Les dossiers de la bibliothèque, à plat, pour la liste déroulante. */
   dossiers: {
     id: string;
     nom: string;
     profondeur: number;
     restreint?: boolean;
   }[];
-  /** Le dossier ouvert quand on a cliqué « Nouvelle ressource ». */
   dossierParDefaut?: string;
 }) {
   const [payant, setPayant] = useState(ressource?.type === "payant");
   const [fichier, setFichier] = useState<File | null>(null);
   const trop = fichier ? fichier.size > PLAFOND_MO * 1024 * 1024 : false;
-  // Le fichier part dès qu'on le choisit — une vidéo de plusieurs centaines
-  // de Mo surtout : on suit son envoi au pourcentage, et l'enregistrement
-  // n'aura plus qu'à reprendre le jeton.
   const aEnvoyer = useMemo(
     () => (fichier && !trop ? [fichier] : []),
     [fichier, trop],
@@ -591,7 +567,6 @@ export function FormulaireRessource({
   );
 }
 
-/** L'envoi d'un fichier, sous son nom : une barre, et le pourcentage. */
 function BarreEnvoi({ envoi }: { envoi: Envoi }) {
   const pct = pourcentage(envoi);
   return (
@@ -654,12 +629,6 @@ export function SupprimerRessourceButton({
       )}
     >
       {(fermer) => (
-        /*
-          Pas de <form> ici : ce bouton vit sur une carte de la bibliothèque,
-          à l'intérieur du formulaire du copier-coller, et un formulaire ne
-          peut pas en contenir un autre. Le navigateur ignorait celui-ci :
-          « Retirer » n'envoyait rien. L'action est donc appelée directement.
-        */
         <>
           <ModalBody>
             <p className="m-0 text-[13.6px] text-muted">
@@ -703,24 +672,13 @@ export function SupprimerRessourceButton({
   );
 }
 
-/* ============================ Photos d'une actualité ============================ */
-
 const MAX_PHOTOS = 10;
-/** L'envoi entier est borné (lib/plafonds.ts) : on prévient avant l'envoi. */
 const POIDS_MAX_ENVOI = PLAFOND_FICHIER;
 
 type PhotoEditee =
   | { cle: string; type: "existante"; url: string }
   | { cle: string; type: "nouvelle"; fichier: File; apercu: string };
 
-/**
- * Plusieurs photos pour une publication : ajout en lot, retrait, ordre.
- *
- * La première est la couverture du fil ; « Mettre en couverture » l'y place.
- * Les fichiers ajoutés partent par un champ caché reconstruit à chaque
- * changement — un `FileList` ne se modifie pas —, et `ordre` dit au serveur
- * où ranger chacun parmi les photos gardées.
- */
 function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
   const [photos, setPhotos] = useState<PhotoEditee[]>(() =>
     actuelles.map((url) => ({ cle: `e:${url}`, type: "existante", url })),
@@ -728,8 +686,6 @@ function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const champ = useRef<HTMLInputElement>(null);
 
-  // Mémorisée : l'effet ci-dessous ne reconstruit le champ fichier que si
-  // la liste des nouvelles photos a vraiment changé.
   const nouvelles = useMemo(
     () =>
       photos.filter(
@@ -739,9 +695,6 @@ function ChampPhotosActualite({ actuelles }: { actuelles: string[] }) {
     [photos],
   );
   const poids = nouvelles.reduce((n, p) => n + p.fichier.size, 0);
-  // Chaque nouvelle photo part dès qu'on l'ajoute ; son pourcentage
-  // s'affiche sur sa vignette. Les jetons suivent l'ordre des nouvelles,
-  // celui que `ordre` désigne par rang.
   const fichiersNouveaux = useMemo(
     () => nouvelles.map((p) => p.fichier),
     [nouvelles],

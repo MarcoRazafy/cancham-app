@@ -15,15 +15,6 @@ import { INDICATIFS, PAYS } from "@/lib/accueil";
 import { deposerCandidature } from "@/lib/actions/accueil";
 import { utilisateurConnecte } from "@/lib/session";
 
-/**
- * Demande d'adhésion : la fiche d'inscription de la chambre, champ pour
- * champ, sans mot de passe.
- *
- * La demande part à l'équipe. Quand elle la valide (« Envoyer l’accès »), un e-mail
- * apporte le lien pour créer son mot de passe.
- * La suite — fonction, détails de l'entreprise, formule, visuels, produits —
- * se complète à la première connexion, sur `/bienvenue`.
- */
 export default async function InscriptionPage() {
   const connecte = await utilisateurConnecte();
   if (connecte) redirect(connecte.role === "admin" ? "/admin" : "/membre");
@@ -86,7 +77,6 @@ export default async function InscriptionPage() {
           />
         </ChampAuth>
 
-        {/* Indicatif et numéro : deux champs sous une même étiquette. */}
         <div>
           <span
             id="etiquette-tel"
@@ -100,7 +90,6 @@ export default async function InscriptionPage() {
               defaultValue="+261"
               aria-label="Indicatif du pays"
               className={`${CHAMP_AUTH} px-2.5`}
-              // Largeur fixe : `w-full`, dans les classes communes, l'emporterait.
               style={{ width: 118, flex: "none" }}
             >
               {INDICATIFS.map((i) => (
@@ -171,11 +160,6 @@ export default async function InscriptionPage() {
           </select>
         </ChampAuth>
 
-        {/*
-          La formule se choisit ici, et non plus à la première connexion : le
-          candidat doit savoir ce qu'il demande, et pour quel montant. Le
-          profil écrit sous chaque pays dit qui paie quoi.
-        */}
         <fieldset className="m-0 p-0 border-0">
           <legend className="block text-[13px] font-semibold text-ink mb-1.5">
             Formule d’adhésion

@@ -8,12 +8,6 @@ import {
   signatureValide,
 } from "@/lib/vanillapay";
 
-/**
- * La notification du prestataire est ce qui règle une facture : si sa
- * signature se vérifiait mal, n'importe qui pourrait nous annoncer un
- * paiement. Ces épreuves n'ont besoin ni de réseau ni de base.
- */
-
 const CLE = "cle-secrete-de-test";
 const CORPS = JSON.stringify({
   reference: "CC-2026-0001-AB12CD",
@@ -21,7 +15,6 @@ const CORPS = JSON.stringify({
   montant: 500000,
 });
 
-/** La signature telle que Vanilla Pay la calcule : HMAC-SHA256, hexadécimal. */
 const signer = (corps: string, cle = CLE) =>
   createHmac("sha256", cle).update(corps, "utf8").digest("hex");
 
@@ -127,7 +120,6 @@ describe("lecture de l’état d’un paiement", () => {
   });
 
   it("lit la notification d'une carte : l'Ariary est dans montant_mga", () => {
-    // Document d'intégration 2.3, § 6.1.1.
     expect(
       lireEtat({
         reference_VPI: "VPI23120101010101",
@@ -147,7 +139,6 @@ describe("lecture de l’état d’un paiement", () => {
   });
 
   it("lit la notification d'un portefeuille, sans se fier à son montant", () => {
-    // § 6.1.2 : le montant d'un portefeuille peut être net de frais.
     expect(
       lireEtat({
         reference_VPI: "MM23120101010101",
@@ -173,13 +164,14 @@ describe("lecture de l’état d’un paiement", () => {
       etat: "SUCCESS",
     });
     expect(
-      lireEtat(chargeDepuisCorps("reference=R1&etat=FAILED&reference_VPI=VPI9")),
+      lireEtat(
+        chargeDepuisCorps("reference=R1&etat=FAILED&reference_VPI=VPI9"),
+      ),
     ).toMatchObject({ reference: "R1", echoue: true, transaction: "VPI9" });
     expect(chargeDepuisCorps("")).toBeNull();
   });
 
   it("lit leur statut réel : un paiement ouvert, montants en euros", () => {
-    // Relevé sur leur API de production, le 1er octobre 2026.
     const etat = lireEtat({
       CodeRetour: 200,
       DescRetour: "Transaction status.",
@@ -198,7 +190,6 @@ describe("lecture de l’état d’un paiement", () => {
       reference: "CC-2026-XZLM6L",
       reussi: false,
       echoue: false,
-      // 1,01 € ne se compare pas à 5 000 Ar : le montant n'est pas retenu.
       montant: null,
       transaction: "VPI26100109190423",
     });
@@ -234,7 +225,6 @@ describe("lecture de l’état d’un paiement", () => {
 
 describe("référence de la transaction, lue sur le lien de paiement", () => {
   it("décode la référence que porte l'identifiant du lien", () => {
-    // Les liens du document : une carte, puis un portefeuille.
     expect(
       referenceDuLien(
         "https://bo.vanilla-pay.net/webpayment?id=eyJhbGciOiJIUzI1NiJ9.VlBJMjMxMjIxMTA1MjUzOTQ.signature",
@@ -248,7 +238,11 @@ describe("référence de la transaction, lue sur le lien de paiement", () => {
   });
 
   it("garde l'identifiant tel quel quand il ne se décode pas", () => {
-    expect(referenceDuLien("http://localhost:3000/bac-a-sable/paiement?id=CC-2026-AB12CD")).toBe("CC-2026-AB12CD");
+    expect(
+      referenceDuLien(
+        "http://localhost:3000/bac-a-sable/paiement?id=CC-2026-AB12CD",
+      ),
+    ).toBe("CC-2026-AB12CD");
     expect(referenceDuLien("pas une adresse")).toBeNull();
   });
 });
@@ -257,7 +251,6 @@ describe("référence d’une tentative", () => {
   it("porte le numéro de la facture et un suffixe lisible", () => {
     const r = referencePaiement("CC-2026-0008");
     expect(r).toMatch(/^CC-2026-0008-[A-Z2-9]{6}$/);
-    // Ni O ni 0, ni I ni 1 : la référence se relit au téléphone.
     expect(r.slice(13)).not.toMatch(/[O0I1]/);
   });
 

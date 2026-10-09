@@ -5,17 +5,8 @@ import { MORCEAU_VIDEO } from "@/lib/video-presentation";
 import { ouvrirEnvoi } from "@/lib/videos";
 import { dIci, refus, reponseDErreur } from "./commun";
 
-/** Envois de vidéo ouverts par une même personne, en une heure. */
 const ENVOIS_PAR_HEURE = 12;
 
-/**
- * Ouvre l'envoi d'une vidéo de présentation.
- *
- * Le navigateur annonce le nom et le poids du fichier ; s'ils conviennent, il
- * reçoit l'identifiant sous lequel envoyer la vidéo, morceau par morceau
- * (`/api/fiche/video/[id]`). Un membre n'ouvre un envoi que pour sa propre
- * fiche ; l'équipe, pour celle qu'elle désigne.
- */
 export async function POST(requete: Request) {
   if (!dIci(requete)) return refus("Requête refusée.", 403);
 

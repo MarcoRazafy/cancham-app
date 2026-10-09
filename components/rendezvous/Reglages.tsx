@@ -20,26 +20,12 @@ import { enMinutes, estHeure } from "@/lib/agenda";
 import { JOURS_SEMAINE } from "@/lib/rendezvous";
 import type { TypeRendezvous } from "@/lib/rendezvous-donnees";
 
-/**
- * Réglages des rendez-vous, côté équipe.
- *
- * Un type porte ses propres heures d'accueil : c'est le couple durée +
- * plages qui donne des créneaux, et il se règle donc d'un seul geste. Un
- * entretien d'une heure peut ainsi demander une matinée dégagée, là où un
- * point rapide se glisse en fin de journée.
- */
-
-/** Une plage en cours de saisie. */
 interface Ligne {
   jour: number;
   debut: string;
   fin: string;
 }
 
-/**
- * Le lien d'un type de rendez-vous : il mène droit à ses créneaux. L'équipe
- * le copie pour l'envoyer à un membre, ou le coller dans un service.
- */
 export function LienRendezvous({
   lien,
   titre,
@@ -56,14 +42,10 @@ export function LienRendezvous({
       await navigator.clipboard.writeText(lien);
       fait = true;
     } catch {
-      // Hors HTTPS, le presse-papier moderne n'existe pas : on passe par la
-      // sélection du champ, que tous les navigateurs savent copier.
       champ.current?.select();
       try {
         fait = document.execCommand("copy");
-      } catch {
-        // Rien à faire : le lien reste sélectionné, prêt pour Ctrl+C.
-      }
+      } catch {}
     }
     if (!fait) return;
     setCopie(true);
@@ -73,7 +55,6 @@ export function LienRendezvous({
   return (
     <div className="mt-2 flex items-center gap-1.5 rounded-[var(--radius-s)] border border-line bg-surface-2 py-1 pl-2.5 pr-1">
       <Link2 size={13} className="shrink-0 text-faint" aria-hidden />
-      {/* Sélectionnable d'un clic : si le presse-papier est refusé, on copie à la main. */}
       <input
         ref={champ}
         readOnly
@@ -151,7 +132,6 @@ function FormulaireType({
 }) {
   const [confirmer, setConfirmer] = useState(false);
   const [duree, setDuree] = useState(type?.duree ?? 30);
-  // Un type neuf arrive avec une matinée : plus rapide à corriger qu'à créer.
   const [plages, setPlages] = useState<Ligne[]>(
     type?.plages.length
       ? type.plages.map((p) => ({ jour: p.jour, debut: p.debut, fin: p.fin }))
@@ -190,7 +170,6 @@ function FormulaireType({
   return (
     <form action={enregistrerTypeRendezvous}>
       {type ? <input type="hidden" name="typeId" value={type.id} /> : null}
-      {/* Les plages partent en JSON : le formulaire en ajoute et en retire. */}
       <input type="hidden" name="plages" value={JSON.stringify(plages)} />
       <FermerApresEnvoi fermer={fermer} />
       <ModalBody>
@@ -233,7 +212,6 @@ function FormulaireType({
           />
         </Field>
 
-        {/* ==================== Heures d'accueil ==================== */}
         <div>
           <span className="block text-[12.3px] font-semibold text-muted mb-1.5">
             Heures d’accueil pour ce rendez-vous
@@ -343,7 +321,6 @@ function FormulaireType({
   );
 }
 
-/** « 14 créneaux de 30 min par semaine » : ce que les réglages donnent. */
 function resume(plages: Ligne[], duree: number): string {
   if (!duree || duree <= 0) return "";
   const total = plages.reduce((n, p) => {

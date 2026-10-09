@@ -24,14 +24,6 @@ import { getCurrentUser } from "@/lib/session";
 import { urlPublique } from "@/lib/courriel";
 import { cheminRendezvous } from "@/lib/liens";
 
-/**
- * Rendez-vous, côté équipe : ce qui est pris, ce qu'on propose, et quand on
- * reçoit.
- *
- * Les créneaux offerts aux membres se déduisent des deux réglages de droite :
- * une durée découpe une plage d'accueil. Rien à tenir à jour en plus — un
- * rendez-vous pris retire son créneau de lui-même.
- */
 export default async function RendezvousEquipePage() {
   await getCurrentUser("admin");
 
@@ -40,8 +32,6 @@ export default async function RendezvousEquipePage() {
     getTypesRendezvous(true),
   ]);
 
-  // Chaque type a son lien, qui mène droit à ses créneaux : l'équipe le copie
-  // pour l'envoyer, ou pour le coller dans un service.
   const liens = new Map(
     await Promise.all(
       types.map(
@@ -50,7 +40,6 @@ export default async function RendezvousEquipePage() {
     ),
   );
 
-  // Un type ne donne des créneaux que s'il porte des heures d'accueil.
   const proposes = types.filter((t) => t.actif && t.plages.length);
   const manque = !proposes.length;
 
@@ -73,7 +62,6 @@ export default async function RendezvousEquipePage() {
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
-        {/* ==================== Ce qui est pris ==================== */}
         <section>
           <SectionTitle>
             À venir
@@ -99,7 +87,6 @@ export default async function RendezvousEquipePage() {
           )}
         </section>
 
-        {/* ==================== Les réglages ==================== */}
         <aside>
           <SectionTitle>Ce que vous proposez</SectionTitle>
           <Card className="p-3.5 flex flex-col gap-3.5">
@@ -147,7 +134,6 @@ export default async function RendezvousEquipePage() {
                       </p>
                     )}
 
-                    {/* Un type masqué ou sans créneau n'a rien à ouvrir. */}
                     {t.actif && t.plages.length ? (
                       <LienRendezvous
                         lien={liens.get(t.id) ?? ""}

@@ -89,7 +89,6 @@ export default async function TableauDeBord() {
         actions={<AddMemberButton />}
       />
 
-      {/* ==================== Compteurs ==================== */}
       <div className="cascade grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
         <Compteur
           icone={<Users size={22} />}
@@ -133,7 +132,6 @@ export default async function TableauDeBord() {
         />
       </div>
 
-      {/* ==================== Derniers messages + répartition ==================== */}
       <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
         <Panneau
           titre={
@@ -149,8 +147,6 @@ export default async function TableauDeBord() {
           {messages.length ? (
             <ul className="list-none m-0 p-0">
               {messages.map((m) => {
-                // La première ligne sert d'objet : « Paiement — … »,
-                // « Réservation — … », ou le début du message.
                 const [objet, ...reste] = m.texte.split("\n").filter(Boolean);
                 return (
                   <li key={m.id} className="border-t border-line">
@@ -245,7 +241,6 @@ export default async function TableauDeBord() {
         </Panneau>
       </div>
 
-      {/* ==================== Programme + paiements ==================== */}
       <div className="grid gap-4 mb-5 lg:grid-cols-2 items-start">
         <Panneau
           titre="Prochains événements"
@@ -379,7 +374,6 @@ export default async function TableauDeBord() {
         </Panneau>
       </div>
 
-      {/* ==================== Activité + raccourcis ==================== */}
       <div className="grid gap-4 lg:grid-cols-[1fr_360px] items-start">
         <Panneau
           titre={

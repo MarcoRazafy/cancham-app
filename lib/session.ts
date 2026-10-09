@@ -5,22 +5,12 @@ import { prisma } from "@/lib/db";
 import { fermerSession, sessionCourante, sessionPerimee } from "@/lib/auth";
 import type { Space, User, UserRole } from "@/lib/types";
 
-/**
- * Utilisateur courant, d'après le cookie de session.
- *
- * Chaque espace attend un rôle : une personne connectée comme membre n'entre
- * pas dans le back-office, et l'inverse non plus. Sans session valable, on
- * repart vers la page de connexion — c'est le seul endroit de l'application
- * qui sait comment l'utilisateur est résolu.
- */
-
 const ROLE_PAR_ESPACE: Record<Space, UserRole> = {
   public: "visiteur",
   membre: "membre",
   admin: "admin",
 };
 
-/** Page d'accueil de chaque rôle, pour renvoyer chacun chez lui. */
 const ACCUEIL: Record<UserRole, string> = {
   membre: "/membre",
   admin: "/admin",
@@ -29,20 +19,12 @@ const ACCUEIL: Record<UserRole, string> = {
 
 export const CONNEXION = "/auth";
 
-/**
- * Efface le cookie quand c'est permis. Pendant le rendu d'une page, Next
- * interdit d'écrire les cookies : on n'insiste pas — un cookie refusé l'est
- * de nouveau à chaque requête, et la prochaine connexion le remplace.
- */
 async function oublierCookie(): Promise<void> {
   try {
     await fermerSession();
-  } catch {
-    /* Rendu d'une page : écriture des cookies impossible, sans conséquence. */
-  }
+  } catch {}
 }
 
-/** La personne connectée, sans exiger d'espace. `null` si personne. */
 export async function utilisateurConnecte(): Promise<{
   id: string;
   role: UserRole;
@@ -62,8 +44,6 @@ export async function utilisateurConnecte(): Promise<{
     },
   });
   if (!u || sessionPerimee(session, u.motDePasseModifieLe)) {
-    // Compte supprimé, ou mot de passe changé depuis l'ouverture de la
-    // session : le cookie ne vaut plus rien.
     await oublierCookie();
     return null;
   }
@@ -84,7 +64,6 @@ export async function getCurrentUser(space: Space): Promise<User> {
   return {
     id: u.id,
     role: u.role,
-    // Un compte d'équipe sans niveau enregistré n'a que les droits du manager.
     niveauEquipe: u.role === "admin" ? (u.niveauEquipe ?? "manager") : null,
     space,
     memberId: u.memberId,

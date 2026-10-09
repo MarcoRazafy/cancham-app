@@ -64,7 +64,6 @@ import {
   RETARD_BLOCAGE_JOURS,
 } from "@/lib/membership";
 
-/** Le cadre de la couverture — celui de la fiche de l'annuaire. */
 const CADRE_COUVERTURE = "h-[190px] w-full sm:h-[260px]";
 
 export default async function ProfilPage() {
@@ -77,7 +76,6 @@ export default async function ProfilPage() {
   ]);
 
   const pending = ADHESION_PENDING.includes(m.statut);
-  // Un an après le dernier règlement — pas après l'inscription.
   const renouvellement = renouvellementCotisation({
     factures: myInvoices,
     adhesion: m.adhesion,
@@ -174,10 +172,6 @@ export default async function ProfilPage() {
       ) : null}
 
       <Card className="overflow-hidden mb-[22px] p-0">
-        {/*
-          Le cadre de la fiche de l'annuaire, à l'identique : ce que le membre
-          règle ici est ce que les autres verront là-bas.
-        */}
         <CouvertureReglable
           memberId={m.id}
           src={m.cover}
@@ -208,11 +202,6 @@ export default async function ProfilPage() {
           </Agrandir>
         </CouvertureReglable>
         <div className="flow-root p-[22px]">
-          {/*
-            La vidéo de présentation tient à droite du nom et du texte. Le
-            membre l'ajoute, la remplace ou la retire d'ici ; sans vidéo,
-            l'annuaire n'en montre aucune trace.
-          */}
           <PresentationAvecVideo
             memberId={m.id}
             nom={m.nom}
@@ -263,7 +252,6 @@ export default async function ProfilPage() {
             </p>
           </PresentationAvecVideo>
 
-          {/* Les besoins s'ajoutent dans « Modifier ma fiche ». */}
           <NeedsAndInterests member={m} aRemplir />
 
           {m.motivation ? (
@@ -274,15 +262,12 @@ export default async function ProfilPage() {
                   Vos <Saillant>motivations</Saillant>
                 </h2>
               </div>
-              {/* Donnée à l'inscription ; « Modifier ma fiche » la reprend. */}
               <p className="m-0 text-[14px] text-muted leading-relaxed max-w-[70ch] whitespace-pre-line">
                 <TexteLie texte={m.motivation} />
               </p>
             </>
           ) : null}
 
-          {/* `clear-both` : les produits prennent toute la largeur, ils
-              attendent que la vidéo flottante soit passée. */}
           <div className="clear-both flex items-center gap-2.5 mt-[22px] mb-3.5 flex-wrap">
             <div className="w-[3px] self-stretch min-h-[18px] bg-accent rounded-sm" />
             <h2 className="text-[17px] font-semibold m-0">
@@ -291,10 +276,6 @@ export default async function ProfilPage() {
             <span className="flex-1" />
             <AjouterServiceButton memberId={m.id} />
           </div>
-          {/*
-            Une carte par offre, trois par page ; un clic ouvre sa fiche de
-            détail, avec toutes ses photos et sa description.
-          */}
           {m.produits.length ? (
             <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
               {m.produits.map((p, i) => (
@@ -329,8 +310,6 @@ export default async function ProfilPage() {
             actionContact={(c) => (
               <div className="flex flex-col gap-1.5 shrink-0">
                 <EditContactButton contact={c} seul={contacts.length === 1} />
-                {/* Le dernier contact n'est pas retirable : l'action le refuse
-                    aussi côté serveur, le bouton absent n'est qu'un confort. */}
                 {contacts.length > 1 ? (
                   <RemoveContactButton contactId={c.id} nom={c.nom} />
                 ) : null}

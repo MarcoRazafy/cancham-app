@@ -35,35 +35,14 @@ import type {
   ResumeSupport,
 } from "@/lib/support";
 
-/**
- * Bulle de support flottante, à la manière des bulles de discussion de
- * Messenger.
- *
- * Côté membre, elle ouvre la conversation avec l'équipe CanCham : on écrit,
- * l'équipe répond, la réponse arrive dans la bulle sans recharger la page.
- * Côté back-office, elle rassemble les demandes des membres et permet d'y
- * répondre depuis n'importe quel écran.
- *
- * Ce n'est qu'une fenêtre sur le fil d'assistance de la messagerie : la même
- * conversation se retrouve, entière, pièces jointes comprises, dans
- * « Messagerie ».
- *
- * La bulle se glisse n'importe où, se range contre le bord le plus proche
- * quand on la lâche, et retient sa place d'une page et d'une visite à l'autre.
- */
-
 const TAILLE = 56;
 const MARGE = 16;
-/** Sous la barre supérieure : la bulle ne doit pas masquer la recherche. */
 const HAUT_MIN = 80;
-/** En deçà, un déplacement est un clic un peu appuyé. */
 const SEUIL_GLISSE = 6;
 
-/** Rythme de relecture : vif quand la conversation est sous les yeux. */
 const RELECTURE_OUVERTE = 4_000;
 const RELECTURE_FERMEE = 30_000;
 
-/** Premiers mots proposés au membre qui n'a encore jamais écrit. */
 const SUGGESTIONS = [
   "Je souhaite régler ma cotisation.",
   "J’ai une question sur un événement.",
@@ -73,11 +52,8 @@ const SUGGESTIONS = [
 
 type Espace = "membre" | "admin";
 
-/* ============================ Position retenue ============================ */
-
 interface Position {
   cote: "gauche" | "droite";
-  /** Hauteur relative, de 0 (en haut) à 1 (en bas) : survit au redimensionnement. */
   haut: number;
 }
 
@@ -110,9 +86,7 @@ const lireFenetre = () => `${window.innerWidth}x${window.innerHeight}`;
 function enregistrerPosition(p: Position) {
   try {
     localStorage.setItem(CLE, JSON.stringify(p));
-  } catch {
-    /* Stockage indisponible : la bulle revient à sa place par défaut. */
-  }
+  } catch {}
   abonnes.forEach((rappel) => rappel());
 }
 
@@ -121,29 +95,17 @@ function versPosition(brut: string): Position {
     const p = JSON.parse(brut);
     if ((p.cote === "gauche" || p.cote === "droite") && Number.isFinite(p.haut))
       return { cote: p.cote, haut: borne(p.haut, 0, 1) };
-  } catch {
-    /* Valeur absente ou abîmée. */
-  }
+  } catch {}
   return DEFAUT;
 }
 
 const borne = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(min, n));
 
-/* ============================ État du panneau ============================ */
-
-/*
- * L'état du panneau vit hors du composant : ouvert ou fermé, la demande
- * suivie par l'équipe et les brouillons survivent à un nouveau rendu de la
- * coquille. Un message à moitié écrit ne se perd pas en refermant la bulle.
- */
 interface EtatPanneau {
   ouvert: boolean;
-  /** Demande ouverte par l'équipe ; `null` = la liste. */
   fil: string | null;
-  /** Messages non lus, pour la pastille. */
   nonLus: number;
-  /** Brouillon par conversation. */
   brouillons: Record<string, string>;
 }
 
@@ -168,23 +130,17 @@ function modifierPanneau(maj: Partial<EtatPanneau>) {
   abonnesPanneau.forEach((rappel) => rappel());
 }
 
-/* ============================ Données ============================ */
-
 interface Donnees {
-  /** Adresse interrogée : une réponse tardive d'une autre demande est ignorée. */
   cle: string;
   conversation: ConversationSupport | null;
   fils: ResumeSupport[];
 }
-
-/* ============================ Bulle ============================ */
 
 export function BulleSupport({
   espace,
   prenom,
 }: {
   espace: Espace;
-  /** Prénom de la personne connectée, pour l'accueil. */
   prenom: string;
 }) {
   const pathname = usePathname();
@@ -210,10 +166,7 @@ export function BulleSupport({
   const saisie = useRef<HTMLTextAreaElement>(null);
   const defilement = useRef<HTMLDivElement>(null);
 
-  // Sur la messagerie complète, la bulle ferait doublon.
   const masquee = pathname.startsWith(`/${espace}/messagerie`);
-
-  /* ---------- Lecture ---------- */
 
   const url = `/api/support?espace=${espace}${
     filActif ? `&t=${encodeURIComponent(filActif)}` : ""
@@ -245,8 +198,6 @@ export function BulleSupport({
     }
   }, [url]);
 
-  // Relecture régulière, plus vive bulle ouverte ; aucune quand l'onglet est
-  // caché. Changer de page relit aussi : une réponse a pu arriver entre-temps.
   useEffect(() => {
     if (masquee) return;
     const lire = () => {
@@ -268,8 +219,6 @@ export function BulleSupport({
   const fils = donnees?.fils ?? [];
   const chargement = !donnees || (filActif !== null && donnees.cle !== url);
 
-  /* ---------- Lecture des messages reçus ---------- */
-
   const marque = useRef<string | null>(null);
   useEffect(() => {
     if (!ouvert || !conversation?.nonLus) return;
@@ -280,8 +229,6 @@ export function BulleSupport({
       .then(charger)
       .catch(() => {});
   }, [ouvert, conversation, espace, charger]);
-
-  /* ---------- Envoi ---------- */
 
   const cleBrouillon = espace === "membre" ? "membre" : (filActif ?? "");
   const brouillon = panneauEtat.brouillons[cleBrouillon] ?? "";
@@ -315,19 +262,14 @@ export function BulleSupport({
     }
   };
 
-  /* ---------- Défilement : toujours sur le dernier message ---------- */
-
   const dernier = conversation?.messages.at(-1)?.id;
   useEffect(() => {
     const zone = defilement.current;
     if (zone) zone.scrollTop = zone.scrollHeight;
   }, [ouvert, conversation?.id, dernier, envoi]);
 
-  /* ---------- Fermeture : clic à côté, touche Échap ---------- */
-
   useEffect(() => {
     if (!ouvert) return;
-    // Une image agrandie depuis le panneau garde la main.
     const dialogueOuvert = () => !!document.querySelector("dialog[open]");
     const clic = (e: globalThis.PointerEvent) => {
       const cible = e.target as Node;
@@ -350,10 +292,7 @@ export function BulleSupport({
     };
   }, [ouvert]);
 
-  // Côté serveur, la fenêtre est inconnue.
   if (!fenetre || masquee) return null;
-
-  /* ---------- Géométrie ---------- */
 
   const [L, H] = fenetre.split("x").map(Number);
   const yMax = Math.max(HAUT_MIN, H - TAILLE - MARGE);
@@ -398,17 +337,9 @@ export function BulleSupport({
   const basculer = () => {
     const ouvrir = !ouvert;
     setOuvert(ouvrir);
-    // Sur ordinateur, on peut écrire aussitôt. Sur téléphone, le clavier
-    // masquerait la conversation avant qu'on l'ait lue.
     if (ouvrir && !telephone) setTimeout(() => saisie.current?.focus(), 50);
   };
 
-  /*
-   * L'ouverture se décide au relâchement plutôt qu'au clic : avec la capture
-   * du pointeur, un toucher sur téléphone ne produit pas toujours de clic.
-   * Relâcher sans avoir glissé ouvre ou ferme ; relâcher après un glisser
-   * range la bulle.
-   */
   const auPointerUp = (e: PointerEvent<HTMLButtonElement>) => {
     if (!depart.current) return;
     const fin = versPoint(e);
@@ -417,7 +348,6 @@ export function BulleSupport({
       if (e.type === "pointerup") basculer();
       return;
     }
-    // On la lâche : elle se range contre le bord le plus proche.
     enregistrerPosition({
       cote: fin.x + TAILLE / 2 < L / 2 ? "gauche" : "droite",
       haut: borne((fin.y - HAUT_MIN) / (yMax - HAUT_MIN || 1), 0, 1),
@@ -425,15 +355,10 @@ export function BulleSupport({
     setGlisse(null);
   };
 
-  /** Seul le clavier (Entrée, Espace) passe par le clic : `detail` vaut 0. */
   const auClic = (e: MouseEvent<HTMLButtonElement>) => {
     if (e.detail === 0) basculer();
   };
 
-  /* ---------- Panneau ---------- */
-
-  // Sur ordinateur, le panneau s'ouvre à côté de la bulle, centré sur elle
-  // sans sortir de l'écran.
   const hauteurPanneau = Math.min(620, H - 24);
   const stylePanneau: CSSProperties = telephone
     ? {
@@ -518,7 +443,6 @@ export function BulleSupport({
           }`}
           style={stylePanneau}
         >
-          {/* ---------- En-tête ---------- */}
           <div
             className="flex items-center gap-3 px-3.5 py-3 text-white shrink-0"
             style={{ background: "var(--superieure)" }}
@@ -609,7 +533,6 @@ export function BulleSupport({
             </button>
           </div>
 
-          {/* ---------- Corps ---------- */}
           {liste ? (
             <ListeDemandes
               fils={fils}
@@ -659,7 +582,6 @@ export function BulleSupport({
                 ) : null}
               </div>
 
-              {/* ---------- Saisie ---------- */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -683,7 +605,6 @@ export function BulleSupport({
                       t.style.height = `${Math.min(t.scrollHeight, 120)}px`;
                     }}
                     onKeyDown={(e) => {
-                      // Entrée envoie, Maj + Entrée passe à la ligne.
                       if (
                         e.key === "Enter" &&
                         !e.shiftKey &&
@@ -712,7 +633,6 @@ export function BulleSupport({
                     <SendHorizontal size={17} />
                   </button>
                 </div>
-                {/* Sur écran tactile, pas de touche Maj : l'aide n'y a pas de sens. */}
                 <p className="m-0 mt-1.5 text-[11px] text-faint pointer-coarse:hidden">
                   Entrée pour envoyer · Maj + Entrée pour aller à la ligne
                 </p>
@@ -725,8 +645,6 @@ export function BulleSupport({
   );
 }
 
-/* ============================ Messages ============================ */
-
 function FilMessages({
   messages,
   espace,
@@ -738,19 +656,14 @@ function FilMessages({
     <>
       {messages.map((m, i) => {
         const precedent = messages[i - 1];
-        // Un séparateur dès que l'on change de jour, et devant le premier.
         const jour = jourLisible(m.envoyeLe);
         const nouveauJour =
           !precedent || jourLisible(precedent.envoyeLe) !== jour;
-        // Côté équipe, qui a répondu : le nom en tête de chaque suite. Côté
-        // membre, c'est la chambre qui répond, pas une personne.
         const signe =
           m.equipe &&
           !m.supprime &&
           (nouveauJour || precedent?.de !== m.de || precedent?.moi);
 
-        // Vue de l'équipe, ses messages se rangent tous à droite : en face,
-        // il n'y a que le membre.
         const aDroite = m.moi || (espace === "admin" && m.equipe);
         const cote = aDroite ? "self-end" : "self-start";
         return (
@@ -810,8 +723,6 @@ function FilMessages({
   );
 }
 
-/* ============================ Accueil du membre ============================ */
-
 function Accueil({
   prenom,
   choisir,
@@ -842,8 +753,6 @@ function Accueil({
     </div>
   );
 }
-
-/* ============================ Demandes, côté équipe ============================ */
 
 function ListeDemandes({
   fils,

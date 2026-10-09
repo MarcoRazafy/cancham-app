@@ -39,7 +39,6 @@ const ICONES: Record<Notification["categorie"], LucideIcon> = {
   rendezvous: CalendarClock,
 };
 
-/** Rouge pour ce qui presse, ocre pour ce qui attend, bleu nuit pour ce qui informe. */
 const TUILES: Record<Notification["ton"], string> = {
   bad: "bg-accent text-white",
   warn: "bg-[#8a6410] text-white",
@@ -48,17 +47,8 @@ const TUILES: Record<Notification["ton"], string> = {
 
 const CLE = "cancham:notifications-vues";
 
-/**
- * Une notification reste « nouvelle » tant qu'on ne l'a pas vue sous cette
- * forme : « 2 messages non lus » devenu « 3 messages non lus » l'est à nouveau.
- */
 const signature = (n: Notification) => `${n.id}:${n.titre}`;
 
-/*
- * Mémoire des notifications vues, dans le stockage du navigateur. Lue comme
- * une source externe : le serveur n'en sait rien, et l'affichage se met à
- * jour dès qu'elle change, y compris depuis un autre onglet.
- */
 const abonnes = new Set<() => void>();
 
 function sAbonner(rappel: () => void) {
@@ -81,9 +71,7 @@ function lireBrut(): string {
 function enregistrerVues(signatures: string[]) {
   try {
     localStorage.setItem(CLE, JSON.stringify(signatures));
-  } catch {
-    /* Stockage indisponible : tout restera « nouveau », sans gêne. */
-  }
+  } catch {}
   abonnes.forEach((rappel) => rappel());
 }
 
@@ -95,15 +83,6 @@ function versEnsemble(brut: string): Set<string> {
   }
 }
 
-/**
- * Cloche et fenêtre des notifications.
- *
- * Un clic sur une notification mène à la page qui la traite — la
- * conversation, la fiche, la facture —, pas à une liste où la chercher. Le
- * compteur ne retient que les nouvelles depuis la dernière ouverture ; cette
- * mémoire vit dans le navigateur, et son absence ne gêne rien : tout apparaît
- * alors comme nouveau.
- */
 export function MenuNotifications({
   notifications,
 }: {
@@ -112,15 +91,12 @@ export function MenuNotifications({
   const [ouvert, setOuvert] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
 
-  // `null` côté serveur : on n'y affiche aucun compteur de nouvelles.
   const brut = useSyncExternalStore(sAbonner, lireBrut, () => null);
   const vues = useMemo(
     () => (brut === null ? null : versEnsemble(brut)),
     [brut],
   );
 
-  // Ce qui était déjà vu à l'ouverture : les nouvelles restent marquées dans
-  // la fenêtre, même si le compteur de la cloche s'éteint aussitôt.
   const [vuesAOuverture, setVuesAOuverture] = useState<Set<string> | null>(
     null,
   );
@@ -149,7 +125,6 @@ export function MenuNotifications({
 
   const ouvrir = () => {
     if (!ouvert) {
-      // Ouvrir la fenêtre vaut avoir vu ce qu'elle contient.
       setVuesAOuverture(vues);
       enregistrerVues(notifications.map(signature));
     }
@@ -260,7 +235,6 @@ export function MenuNotifications({
             </div>
           )}
 
-          {/* Les notifications sur l'appareil lui-même, hors de la plateforme. */}
           <NotificationsAppareil />
         </div>
       ) : null}

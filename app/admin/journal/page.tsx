@@ -30,7 +30,6 @@ export default async function Journal({
   });
   const pages = Math.max(1, Math.ceil(total / PAR_PAGE));
 
-  /** Adresse de la même vue avec un paramètre changé. */
   const lien = (changes: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
     const tout = { famille, q: recherche, page: String(page), ...changes };

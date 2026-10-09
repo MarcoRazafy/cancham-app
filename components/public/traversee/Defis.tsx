@@ -4,12 +4,6 @@ import { Check, Heart, Image as ImageIcon } from "lucide-react";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT, retard } from "@/lib/traversee";
 
-/**
- * Les trois défis, sur le dégradé de la charte. Chaque carte se soulève au
- * survol et déroule un filet rouge vers vert à sa base.
- *
- * `billetterie` : où réserver — la fiche de l'événement sur la plateforme.
- */
 const DEFIS = [
   {
     num: 1,

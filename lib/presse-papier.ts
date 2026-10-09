@@ -1,18 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
 
-/**
- * Le presse-papier de la bibliothèque.
- *
- * Il vit dans un cookie et non dans la page : entre « couper » et « coller
- * ici », l'équipe change de dossier, donc de page rendue côté serveur. Un
- * état gardé dans le navigateur ne survivrait pas à cette navigation.
- *
- * Il ne contient que des identifiants et un mode — rien de sensible, et rien
- * qu'un membre ne puisse déjà voir. Sa durée est courte : un presse-papier
- * oublié d'une semaine ferait coller n'importe quoi n'importe où.
- */
-
 const COOKIE = "cancham_presse_papier";
 const DUREE_MINUTES = 60;
 

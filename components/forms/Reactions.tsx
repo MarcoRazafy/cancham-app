@@ -6,18 +6,6 @@ import { MessageSquare, ThumbsUp } from "lucide-react";
 import { basculerJaime } from "@/lib/actions/content";
 import type { Space } from "@/lib/types";
 
-/**
- * Barre de réactions d'une publication : « j'aime » et commentaires.
- *
- * Le « j'aime » répond à l'instant, avant que le serveur n'ait confirmé : une
- * pastille qui attend un aller-retour réseau pour changer de couleur paraît
- * cassée, surtout sur une connexion malgache. Si l'action échoue, React
- * rétablit de lui-même l'état confirmé au rendu suivant.
- *
- * Le bouton de commentaire est un lien vers le formulaire de l'article, pas
- * un champ déplié dans le fil : un fil où chaque carte ouvre sa propre zone de
- * saisie devient illisible dès la deuxième.
- */
 export function Reactions({
   newsId,
   space,
@@ -31,7 +19,6 @@ export function Reactions({
   jaimes: number;
   jaimeParMoi: boolean;
   commentaires: number;
-  /** Ancre du formulaire de commentaire, sur la page de l'article. */
   lienCommentaires: string;
 }) {
   const [etat, basculer] = useOptimistic(

@@ -5,21 +5,10 @@ import { initialesDe, LOGO_EQUIPE } from "@/lib/avatars";
 import { visiteurDuFil } from "@/lib/support-visiteur";
 import type { PieceJointe } from "@/lib/types";
 
-/**
- * Lecture du support pour la bulle flottante.
- *
- * Le support n'est pas une boîte à part : c'est le fil d'assistance de la
- * messagerie (`equipe`). Le membre y parle à la chambre, l'équipe y répond ;
- * la bulle n'en est qu'une fenêtre, toujours à portée de main, et la même
- * conversation reste lisible dans la messagerie complète.
- */
-
 export interface MessageSupport {
   id: string;
-  /** Auteur tel qu'enregistré. */
   de: string;
   moi: boolean;
-  /** Message de l'équipe, vu du membre ; d'un autre membre de l'équipe, vu d'elle. */
   equipe: boolean;
   texte: string;
   envoyeLe: string;
@@ -33,7 +22,6 @@ export interface ConversationSupport {
   sousTitre: string;
   avatar: string | null;
   init: string;
-  /** Entreprise du membre, pour ouvrir sa fiche depuis le back-office. */
   membreId: string | null;
   nonLus: number;
   messages: MessageSupport[];
@@ -47,7 +35,6 @@ export interface ResumeSupport {
   init: string;
   nonLus: number;
   apercu: string;
-  /** Dernière activité, ISO. */
   le: string;
 }
 
@@ -59,10 +46,8 @@ const PERSONNE = {
   member: { select: { id: true, nom: true } },
 } as const;
 
-/** Nombre de messages chargés : la fin de la conversation, pas tout l'historique. */
 const DERNIERS = 60;
 
-/** Messages non lus par fil, pour l'utilisateur, sur les seuls fils d'assistance. */
 async function nonLusParFil(userId: string): Promise<Map<string, number>> {
   const lignes = await prisma.$queryRaw<{ fil: string; n: number }[]>`
     SELECT m."threadId" AS fil, count(*)::int AS n
@@ -87,8 +72,6 @@ async function messagesDe(
     take: DERNIERS,
     include: { piecesJointes: { orderBy: { createdAt: "asc" } } },
   });
-  // Qui écrit au nom de l'équipe : le membre voit que c'est la chambre qui
-  // répond, et l'équipe distingue ses collègues du membre.
   const auteurs = [...new Set(lignes.map((m) => m.userId).filter(Boolean))];
   const admins = new Set(
     (
@@ -118,13 +101,6 @@ async function messagesDe(
   }));
 }
 
-/* ============================ Côté membre ============================ */
-
-/**
- * Le fil d'assistance du membre, s'il existe. Il n'est pas créé ici : une
- * simple ouverture de la bulle ne doit pas laisser de conversation vide dans
- * la messagerie de toute l'équipe. Le premier message le crée.
- */
 export async function supportMembre(userId: string): Promise<{
   conversation: ConversationSupport | null;
   nonLus: number;
@@ -157,8 +133,6 @@ export async function supportMembre(userId: string): Promise<{
   };
 }
 
-/* ============================ Côté équipe ============================ */
-
 interface Participant {
   user: {
     id: string;
@@ -169,7 +143,6 @@ interface Participant {
   };
 }
 
-/** Qui l'équipe a en face d'elle dans un fil d'assistance. */
 function membreDuFil(participants: Participant[]) {
   return (
     participants.find((p) => p.user.role !== "admin")?.user ??
@@ -178,7 +151,6 @@ function membreDuFil(participants: Participant[]) {
   );
 }
 
-/** Demandes des membres, la plus récemment active en tête. */
 export async function supportEquipe(userId: string): Promise<{
   fils: ResumeSupport[];
   nonLus: number;
@@ -208,9 +180,7 @@ export async function supportEquipe(userId: string): Promise<{
         apercu =
           dernier.userId === userId
             ? `Vous : ${corps}`
-            : // Le visiteur n'a pas de compte : ses messages n'ont pas d'auteur
-              // connu, et c'est bien lui qui parle.
-              dernier.userId === null || dernier.userId === membre?.id
+            : dernier.userId === null || dernier.userId === membre?.id
               ? corps
               : `${dernier.auteur.split(" ")[0]} : ${corps}`;
       }
@@ -237,7 +207,6 @@ export async function supportEquipe(userId: string): Promise<{
   };
 }
 
-/** Une demande ouverte depuis le back-office. `null` si l'on n'y participe pas. */
 export async function conversationEquipe(
   threadId: string,
   userId: string,
@@ -275,8 +244,6 @@ export async function conversationEquipe(
   };
 }
 
-/* ============================ Tableau de bord ============================ */
-
 export interface MessageRecu {
   id: string;
   threadId: string;
@@ -286,17 +253,10 @@ export interface MessageRecu {
   init: string;
   texte: string;
   pieces: number;
-  /** Envoi, ISO. */
   le: string;
-  /** Arrivé depuis la dernière ouverture du fil par cette personne de l'équipe. */
   nonLu: boolean;
 }
 
-/**
- * Les derniers messages écrits par les membres dans le chat du support, le
- * plus récent en tête : ce que l'équipe doit lire, message par message. Les
- * réponses de l'équipe n'y figurent pas.
- */
 export async function derniersMessagesMembres(
   userId: string,
   limite = 6,

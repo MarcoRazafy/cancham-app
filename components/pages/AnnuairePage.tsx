@@ -11,14 +11,6 @@ export interface ParametresAnnuaire {
   secteur?: string;
 }
 
-/**
- * L'annuaire des membres, le même pour les membres et pour l'équipe : ce que
- * voit l'équipe est ce que voient les adhérents. Seules les fiches s'ouvrent
- * dans l'espace de chacun.
- *
- * Le filtrage passe par l'URL plutôt que par un état client : la recherche
- * reste partageable, et la page fonctionne sans JavaScript.
- */
 export async function AnnuairePage({
   espace,
   searchParams,
@@ -28,12 +20,8 @@ export async function AnnuairePage({
 }) {
   const [{ q = "", secteur = "" }, visibles] = await Promise.all([
     searchParams,
-    // Une candidature n'est pas encore un membre : elle est exclue par la requête.
     getMembresAnnuaire(),
   ]);
-  // Le filtre propose la liste fermée des secteurs. Une fiche saisie avant
-  // elle garde son ancien libellé : il s'ajoute à la suite, pour qu'elle
-  // reste trouvable. Une étape d'inscription sautée n'est pas un secteur.
   const autresSecteurs = [...new Set(visibles.map((m) => m.secteur))]
     .filter((s) => !estSecteur(s) && s !== PROVISOIRE.secteur)
     .sort((a, b) => a.localeCompare(b, "fr"));
@@ -77,7 +65,6 @@ export async function AnnuairePage({
               {s}
             </option>
           ))}
-          {/* Fiches saisies avant la liste fermée : toujours trouvables. */}
           {autresSecteurs.map((s) => (
             <option key={s} value={s}>
               {s}

@@ -1,10 +1,3 @@
-/**
- * Traduction entre les valeurs d'énumération Prisma et les libellés affichés.
- *
- * En base, les libellés français avec accents sont conservés (`@map`), mais le
- * client Prisma expose les noms d'identifiants (`presentiel`, `evenement_passe`).
- * Ces tables font le pont dans les deux sens.
- */
 import type {
   EventFormat as DbEventFormat,
   NewsCategory as DbNewsCategory,
@@ -19,7 +12,6 @@ import type {
   ResourceCategory,
 } from "@/lib/types";
 
-/** Les deux niveaux d'accès de l'équipe, tels que l'interface les nomme. */
 export const NIVEAU_EQUIPE_LABEL: Record<NiveauEquipe, string> = {
   administrateur: "Administrateur",
   manager: "Manager",
@@ -67,16 +59,10 @@ export const RESOURCE_FMT_LABEL: Record<DbResourceFormat, Resource["fmt"]> = {
   page: "Page",
 };
 
-/** Les dates du modèle de vue sont des ISO courtes (YYYY-MM-DD). */
 export function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/**
- * Horodatage d'un message, rendu tel qu'on l'affiche dans un fil : l'heure pour
- * aujourd'hui, « Hier », le jour de la semaine en deçà d'une semaine, la date
- * au-delà.
- */
 export function heureRelative(d: Date, maintenant = new Date()): string {
   const jour = (x: Date) =>
     new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
@@ -95,7 +81,6 @@ export function heureRelative(d: Date, maintenant = new Date()): string {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 }
 
-/** Heure d'envoi d'un message, « 14:32 ». */
 export function heureExacte(iso: string): string {
   return new Date(iso).toLocaleTimeString("fr-FR", {
     hour: "2-digit",
@@ -103,13 +88,6 @@ export function heureExacte(iso: string): string {
   });
 }
 
-/**
- * Jour d'envoi, tel qu'on l'écrit sur un séparateur de conversation.
- *
- * « Aujourd'hui » et « Hier » plutôt que la date : dans un fil, c'est ce que
- * le lecteur cherche. Au-delà, la date complète, sans l'année tant qu'on est
- * dans l'année courante.
- */
 export function jourLisible(iso: string, maintenant = new Date()): string {
   const d = new Date(iso);
   const jour = (x: Date) =>

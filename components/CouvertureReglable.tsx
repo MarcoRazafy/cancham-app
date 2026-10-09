@@ -23,18 +23,6 @@ import {
   type Cadrage,
 } from "@/lib/cadrage";
 
-/**
- * La couverture d'une fiche, que l'on peut repositionner.
- *
- * Au repos, elle s'affiche comme partout ailleurs (`children`), avec un
- * bouton « Repositionner ». Le bouton ouvre le réglage : on fait glisser la
- * photo dans son cadre — à la souris, au doigt ou aux flèches du clavier —,
- * puis on enregistre. Le cadre du réglage est celui de la fiche de
- * l'annuaire : ce qu'on y voit est ce que verront les autres membres.
- *
- * Seul le point visible est enregistré : la photo, elle, n'est pas retaillée,
- * et s'agrandit toujours en entier.
- */
 export function CouvertureReglable({
   memberId,
   src,
@@ -44,12 +32,9 @@ export function CouvertureReglable({
   children,
 }: {
   memberId: string;
-  /** Sans photo, il n'y a rien à repositionner : le bouton ne paraît pas. */
   src?: string | null;
   cadrage?: Cadrage;
-  /** La page d'où l'on règle : elle dit qui agit, le membre ou l'équipe. */
   retour: string;
-  /** Les dimensions du cadre — les mêmes que celles de l'affichage au repos. */
   className: string;
   children: ReactNode;
 }) {
@@ -63,12 +48,8 @@ export function CouvertureReglable({
   const photo = useRef<HTMLImageElement>(null);
   const zone = useRef<HTMLDivElement>(null);
   const bouton = useRef<HTMLButtonElement>(null);
-  /** Le réglage a déjà été ouvert : à sa fermeture, le focus revient au bouton. */
   const aRegle = useRef(false);
 
-  // Ouvrir le réglage démonte le bouton qui portait le focus, et le refermer
-  // démonte la zone : sans cela, le clavier retombait sur la page, et les
-  // flèches la faisaient défiler au lieu de déplacer la photo.
   useEffect(() => {
     if (reglage) {
       aRegle.current = true;
@@ -77,7 +58,6 @@ export function CouvertureReglable({
       bouton.current?.focus();
     }
   }, [reglage]);
-  /** Le geste en cours : d'où il part, et quel doigt le mène. */
   const geste = useRef<{
     id: number;
     x: number;
@@ -109,8 +89,6 @@ export function CouvertureReglable({
           retour,
         });
       } catch (e) {
-        // Une redirection de Next — session expirée, accès refusé — suit son
-        // cours ; le reste est une panne de réseau, et le réglage reste là.
         unstable_rethrow(e);
         setErreur(
           "Le cadrage n’a pas été enregistré. Vérifiez votre connexion, puis réessayez.",
@@ -118,8 +96,6 @@ export function CouvertureReglable({
         return;
       }
       if ("erreur" in r) setErreur(r.erreur);
-      // Dans la transition : le réglage se referme avec la page revalidée,
-      // d'un seul tenant, sans repasser par l'ancien cadrage.
       else lancer(() => setReglage(false));
     });
   };
@@ -134,7 +110,6 @@ export function CouvertureReglable({
   };
 
   const debut = (e: PointerEvent<HTMLDivElement>) => {
-    // À la souris, seul le bouton principal fait glisser.
     if (envoi || (e.pointerType === "mouse" && e.button !== 0)) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     geste.current = { id: e.pointerId, x: e.clientX, y: e.clientY, depart: c };
@@ -160,7 +135,6 @@ export function CouvertureReglable({
     setSaisie(false);
   };
 
-  // Les flèches déplacent le regard, pas la photo : « haut » montre le haut.
   const auClavier = (e: KeyboardEvent<HTMLDivElement>) => {
     if (envoi) return;
     const pas: Record<string, [number, number]> = {
@@ -178,8 +152,6 @@ export function CouvertureReglable({
     if (!d) return;
     e.preventDefault();
     const borne = (v: number) => Math.min(100, Math.max(0, v));
-    // Comme au glissement : rien ne bouge dans le sens où la photo ne
-    // dépasse pas — on enregistrerait un décalage qu'on n'a pas vu.
     const t = tailles();
     const deb = debordement(t.cadre, t.photo);
     setC((v) => ({
@@ -207,8 +179,6 @@ export function CouvertureReglable({
   return (
     <div>
       <div ref={cadre} className={`relative overflow-hidden ${className}`}>
-        {/* Une image ordinaire : il faut ses dimensions réelles pour savoir
-            de combien elle dépasse, et elle suit le doigt sans attendre. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={photo}
@@ -228,7 +198,6 @@ export function CouvertureReglable({
           onPointerUp={fin}
           onPointerCancel={fin}
           onKeyDown={auClavier}
-          // `touch-none` : le doigt déplace la photo, pas la page.
           className={`absolute inset-0 touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white ${
             saisie ? "cursor-grabbing" : "cursor-grab"
           }`}

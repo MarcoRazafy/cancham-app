@@ -1,6 +1,5 @@
 import type { CommentaireFixture, Resource } from "../../lib/types";
 
-/** Bibliothèque de documents mise à disposition des membres. */
 export const RESOURCES: (Omit<Resource, "commentaires"> & {
   commentaires: CommentaireFixture[];
 })[] = [

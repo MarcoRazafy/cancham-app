@@ -3,12 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Smile } from "lucide-react";
 
-/**
- * Émojis proposés. Une sélection plutôt qu'une bibliothèque de plusieurs
- * centaines de kilo-octets : les réactions d'un réseau professionnel tiennent
- * en quelques dizaines de symboles. Partagée par la messagerie et les
- * commentaires.
- */
 export const EMOJIS = [
   "😀",
   "😊",
@@ -44,7 +38,6 @@ export const EMOJIS = [
   "🤔",
 ];
 
-/** Insère un texte au curseur d'une zone de saisie, et y replace le curseur. */
 export function insererAuCurseur(
   zone: HTMLTextAreaElement | HTMLInputElement,
   texte: string,
@@ -58,10 +51,6 @@ export function insererAuCurseur(
   zone.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/**
- * Bouton émoji et sa palette. La palette s'ouvre au-dessus ou au-dessous du
- * bouton, et se referme au clic à côté ou avec Échap.
- */
 export function SelecteurEmojis({
   onChoisir,
   vers = "haut",

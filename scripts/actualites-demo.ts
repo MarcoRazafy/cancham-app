@@ -1,17 +1,3 @@
-/**
- * Diffuse sur la page publique les actualités du jeu de démonstration.
- *
- *   npm run actualites:demo
- *
- * Le jeu de données les annonce publiques depuis toujours, et le seed écrit
- * bien cette colonne. Mais une base chargée avant l'arrivée de la diffusion
- * publique a gardé ses lignes privées, faute de colonne à remplir : la
- * vitrine reste alors vide alors que les articles existent.
- *
- * Le script ne touche qu'aux identifiants du jeu de démonstration, et rien
- * qu'à ceux restés privés : une actualité volontairement réservée aux membres
- * depuis le back-office n'est pas republiée par mégarde.
- */
 import { prisma } from "../lib/db";
 import { NEWS } from "../prisma/fixtures/news";
 

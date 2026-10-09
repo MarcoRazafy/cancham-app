@@ -1,9 +1,3 @@
-/**
- * Pastilles d'initiales de l'annuaire.
- *
- * La teinte est tirée de l'identifiant : une même entreprise garde toujours la
- * même couleur, d'un écran à l'autre et d'un rendu à l'autre.
- */
 const TEINTES = [
   { background: "#1e3a5f", color: "#93c5fd" },
   { background: "#3b1f2b", color: "#f0a6b4" },
@@ -29,10 +23,4 @@ export function initialesDe(nom: string): string {
     .toUpperCase();
 }
 
-/**
- * Le visage de l'équipe CanCham dans la messagerie et le chat de support :
- * l'emblème de la chambre, sur un rond blanc. Il vient d'ici, pas de la
- * conversation enregistrée — changer le logo change toutes les
- * conversations, anciennes comprises.
- */
 export const LOGO_EQUIPE = "/marque/avatar-equipe.png";

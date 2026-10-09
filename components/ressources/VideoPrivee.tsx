@@ -13,39 +13,10 @@ import {
 } from "lucide-react";
 import { lienVideo } from "@/lib/blocs";
 
-/**
- * Une vidéo donnée par un lien, lue sans que son adresse ne serve de porte
- * de sortie.
- *
- * Le lecteur d'un hébergeur est fait pour ramener chez lui : titre
- * cliquable, « Regarder sur YouTube », bouton de partage, « Copier
- * l'adresse » au clic droit, ouverture dans Drive. Trois protections se
- * superposent ici.
- *
- * 1. Le cadre est mis en bac à sable, sans droit d'ouvrir une fenêtre ni de
- *    changer la page : c'est le navigateur qui refuse, quoi qu'on clique.
- * 2. Pour YouTube et Vimeo, un voile couvre tout le cadre. Aucun clic
- *    n'atteint le lecteur de l'hébergeur : on le pilote d'ici, par messages,
- *    avec nos propres commandes. Avant le lancement et à la fin, le voile
- *    est opaque — l'image d'attente et les suggestions restent dessous. Au
- *    démarrage et à chaque commande, l'hébergeur affiche quelques secondes
- *    le titre de la vidéo et son logo : deux bandes les couvrent, le temps
- *    qu'ils s'effacent.
- * 3. Google Drive ne se pilote pas. Son lecteur reste donc le sien, bouton
- *    d'ouverture couvert, et toujours en bac à sable.
- *
- * Ce que cela ne fait pas : l'adresse de la vidéo figure dans le code de la
- * page, comme tout ce qu'un navigateur affiche. Qui sait ouvrir ce code la
- * retrouvera. Une vidéo qui ne doit vraiment pas sortir se dépose en
- * fichier : elle reste alors sur la plateforme, derrière le contrôle d'accès.
- */
-
-/** Ni fenêtre nouvelle, ni changement de page : le cadre ne mène nulle part. */
 const BAC_A_SABLE = "allow-scripts allow-same-origin allow-presentation";
 
 type Etat = "attente" | "lecture" | "pause" | "tampon" | "fin";
 
-/** Ce qu'un message du lecteur nous apprend. */
 interface Nouvelles {
   etat?: Etat;
   temps?: number;
@@ -53,18 +24,14 @@ interface Nouvelles {
   muet?: boolean;
 }
 
-/** Ce qu'il faut savoir d'un hébergeur pour piloter son lecteur. */
 interface Pilote {
   origine: string;
-  /** L'adresse du cadre, réglée pour être pilotée et montrer le moins possible. */
   adresse: (integration: string, ici: string) => string;
-  /** Le message qui demande au lecteur de nous tenir au courant. */
   salut: object;
   lire: object;
   pause: object;
   aller: (secondes: number) => object;
   couper: (muet: boolean) => object;
-  /** Ce qu'un message apprend, et ce qu'il faut répondre. `null` : rien. */
   recevoir: (
     message: Record<string, unknown>,
     connu: boolean,
@@ -135,7 +102,6 @@ const VIMEO: Pilote = {
   couper: (muet) => ({ method: "setVolume", value: muet ? 0 : 1 }),
   recevoir: (message, connu) => {
     const donnees = (message.data ?? {}) as Record<string, unknown>;
-    // Prêt, ou réponse à notre salut : on s'abonne à ce qui nous intéresse.
     if (message.event === "ready" || message.method === "ping") {
       return {
         nouvelles: {},
@@ -159,7 +125,6 @@ const VIMEO: Pilote = {
         return { nouvelles: { etat: "lecture" } };
       case "pause":
         return { nouvelles: { etat: "pause" } };
-      // Le lecteur annonce la fin et l'avancement sous leurs anciens noms.
       case "ended":
       case "finish":
         return { nouvelles: { etat: "fin" } };
@@ -181,7 +146,6 @@ const VIMEO: Pilote = {
   },
 };
 
-/** « 3:07 », « 1:02:45 ». */
 function duree(secondes: number): string {
   const s = Math.max(0, Math.floor(secondes));
   const h = Math.floor(s / 3600);
@@ -202,7 +166,6 @@ export function VideoPrivee({ url, titre }: { url: string; titre: string }) {
     <LecteurPilote
       pilote={video.plateforme === "youtube" ? YOUTUBE : VIMEO}
       integration={video.integration}
-      // L'image d'attente de YouTube. Vimeo n'en donne pas sans sa clé.
       affiche={
         video.plateforme === "youtube"
           ? `https://i.ytimg.com/vi/${/\/embed\/([^?]+)/.exec(video.integration)?.[1]}/hqdefault.jpg`
@@ -213,13 +176,6 @@ export function VideoPrivee({ url, titre }: { url: string; titre: string }) {
   );
 }
 
-/**
- * Google Drive : son lecteur, sans sa sortie.
- *
- * Le bac à sable empêche déjà le bouton « Ouvrir dans une nouvelle fenêtre »
- * d'ouvrir quoi que ce soit ; la bande posée en haut du cadre le couvre, pour
- * qu'on ne le voie même pas réagir.
- */
 function CadreDrive({ adresse, titre }: { adresse: string; titre: string }) {
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-m)] bg-black">
@@ -251,29 +207,19 @@ function LecteurPilote({
 }) {
   const conteneur = useRef<HTMLDivElement>(null);
   const cadre = useRef<HTMLIFrameElement>(null);
-  /** Le dernier état connu, pour les minuteries qui le consultent plus tard. */
   const dernier = useRef<Etat>("attente");
   const garde = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /** Pose les bandes qui couvrent l'habillage de l'hébergeur, un moment. */
   const habiller = useRef<() => void>(() => {});
 
   const [etat, setEtat] = useState<Etat>("attente");
   const [temps, setTemps] = useState(0);
   const [total, setTotal] = useState(0);
   const [muet, setMuet] = useState(false);
-  /** Le lecteur a répondu : on peut le piloter. */
   const [pret, setPret] = useState(false);
-  /**
-   * Le voile laisse passer les clics. Dernier recours, quand le lecteur ne
-   * se laisse pas lancer d'ici — certains téléphones exigent un toucher sur
-   * la vidéo elle-même. Le bac à sable, lui, reste en place.
-   */
   const [libre, setLibre] = useState(false);
   const [plein, setPlein] = useState(false);
-  /** Les bandes sont en place : le titre et le logo de l'hébergeur sont dessous. */
   const [habille, setHabille] = useState(false);
 
-  // L'adresse du cadre porte celle de la page : connue du navigateur seul.
   const ici = useSyncExternalStore(
     sansAbonnement,
     () => window.location.origin,
@@ -302,7 +248,6 @@ function LecteurPilote({
     };
     const recevoir = (e: MessageEvent) => {
       const fenetre = cadre.current?.contentWindow;
-      // Seuls les messages du cadre lui-même, venus de son hébergeur.
       if (e.origin !== pilote.origine || !fenetre || e.source !== fenetre) {
         return;
       }
@@ -325,21 +270,15 @@ function LecteurPilote({
       if (nouvelles.duree !== undefined) setTotal(nouvelles.duree);
       if (nouvelles.muet !== undefined) setMuet(nouvelles.muet);
       if (nouvelles.etat) {
-        // La vidéo démarre ou reprend : l'hébergeur remontre son titre. Pas
-        // à chaque mise en mémoire — sur une connexion lente, les bandes
-        // n'arrêteraient pas de revenir.
         const jouait =
           dernier.current === "lecture" || dernier.current === "tampon";
         if (nouvelles.etat === "lecture" && !jouait) habiller.current();
         dernier.current = nouvelles.etat;
         setEtat(nouvelles.etat);
-        // La vidéo joue : le voile reprend sa place.
         if (nouvelles.etat === "lecture") setLibre(false);
       }
     };
     window.addEventListener("message", recevoir);
-    // Le lecteur ne parle que si on le lui demande, et il n'écoute qu'une
-    // fois chargé : on le salue jusqu'à ce qu'il réponde.
     const salut = setInterval(() => {
       if (connu) clearInterval(salut);
       else {
@@ -349,7 +288,6 @@ function LecteurPilote({
         );
       }
     }, 500);
-    // S'il ne répond jamais, on ne laisse pas la vidéo derrière un voile.
     const abandon = setTimeout(() => {
       if (!connu) setLibre(true);
     }, 8000);
@@ -378,8 +316,6 @@ function LecteurPilote({
   const lancer = () => {
     habiller.current();
     dire(pilote.lire);
-    // Si rien ne démarre, c'est que le navigateur veut un toucher sur la
-    // vidéo même : on lui laisse le passage.
     if (garde.current) clearTimeout(garde.current);
     garde.current = setTimeout(() => {
       if (dernier.current !== "lecture" && dernier.current !== "tampon") {
@@ -416,7 +352,6 @@ function LecteurPilote({
           ref={cadre}
           src={pilote.adresse(integration, ici)}
           title={titre}
-          // Hors du parcours au clavier : on ne pilote la vidéo que d'ici.
           tabIndex={-1}
           sandbox={BAC_A_SABLE}
           allow="autoplay; encrypted-media"
@@ -425,7 +360,6 @@ function LecteurPilote({
         />
       ) : null}
 
-      {/* ---------- Les bandes : le titre et le logo de l'hébergeur, dessous ---------- */}
       {["top-0", "bottom-0"].map((bord) => (
         <span
           key={bord}
@@ -436,7 +370,6 @@ function LecteurPilote({
         />
       ))}
 
-      {/* ---------- Le voile : aucun clic n'atteint le lecteur de l'hébergeur ---------- */}
       <button
         type="button"
         onClick={basculer}
@@ -445,9 +378,6 @@ function LecteurPilote({
         className={`absolute inset-0 flex h-full w-full cursor-pointer items-center justify-center border-0 p-0 disabled:cursor-wait ${
           libre ? "pointer-events-none" : ""
         } ${
-          // Opaque avant le lancement et à la fin : l'image d'attente et les
-          // suggestions de l'hébergeur restent dessous. En pause, l'image
-          // reste lisible — on s'arrête souvent sur une diapositive.
           joue || libre
             ? "bg-transparent"
             : etat === "attente" || etat === "fin"
@@ -486,7 +416,6 @@ function LecteurPilote({
         </p>
       ) : null}
 
-      {/* ---------- Nos commandes ---------- */}
       {pret && etat !== "attente" ? (
         <div
           className={`absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-gradient-to-t from-black/85 to-transparent px-2.5 pb-2 pt-7 transition-opacity focus-within:opacity-100 group-hover/video:opacity-100 ${

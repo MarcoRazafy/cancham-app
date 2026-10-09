@@ -7,16 +7,6 @@ import {
 } from "@/lib/push";
 import { utilisateurConnecte } from "@/lib/session";
 
-/**
- * L'abonnement d'un navigateur aux notifications de l'appareil.
- *
- * GET donne la clé publique avec laquelle s'abonner ; POST rattache
- * l'abonnement à la personne connectée ; DELETE le retire. Le service worker
- * appelle aussi POST de lui-même quand le navigateur change l'adresse de
- * l'abonnement — il n'a pas d'action serveur sous la main, d'où cette
- * route. Réservé aux personnes connectées.
- */
-
 const connexionRequise = () =>
   NextResponse.json({ erreur: "Connexion requise." }, { status: 401 });
 

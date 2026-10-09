@@ -5,15 +5,6 @@ import Link from "next/link";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import { annoncerReglement } from "@/lib/actions/reglements";
 
-/**
- * La référence de l'opération, et un bouton qui suit ce qu'on a fait.
- *
- * Comme sur la maquette : la plupart des membres arrivent ici *avant*
- * d'aller à la banque. Tant que le champ est vide, le geste utile est de
- * partir — « Je ferai le virement plus tard » ; la référence saisie, il
- * devient « J'ai fait le virement », qui prévient l'équipe. Rien n'est
- * annoncé par erreur, et personne n'a à chercher le bon bouton.
- */
 export function AnnonceAdaptative({
   reglementId,
   libelle,
@@ -26,16 +17,11 @@ export function AnnonceAdaptative({
 }: {
   reglementId: string;
   libelle: string;
-  /** À droite du libellé, en discret : « facultatif », « après le dépôt ». */
   aide: string;
   exemple: string;
-  /** Le libellé du bouton tant que rien n'est saisi. */
   plusTard: string;
-  /** Le libellé du bouton une fois la référence saisie. */
   fait: string;
-  /** Où mène « plus tard ». */
   apres?: string;
-  /** La forme du champ, pour suivre le dessin de chaque écran. */
   champ?: string;
 }) {
   const [reference, setReference] = useState("");

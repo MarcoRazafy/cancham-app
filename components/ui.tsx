@@ -5,8 +5,6 @@ import { Check, Clock, Plus, X } from "lucide-react";
 import { statusLabel } from "@/lib/format";
 import type { AttendeeStatus, InvoiceStatus, MemberStatus } from "@/lib/types";
 
-/* ============================ Primitives ============================ */
-
 export function Card({
   className = "",
   children,
@@ -36,7 +34,6 @@ export function ViewHead({
   children,
   action,
 }: {
-  /** Un nœud, pas une chaîne : les titres portent des mots saillants. */
   title: ReactNode;
   children?: ReactNode;
   action?: ReactNode;
@@ -125,8 +122,6 @@ export function StatusPill({
   );
 }
 
-/* ============================ Boutons ============================ */
-
 type BtnVariant = "primary" | "line" | "ghost";
 
 const BTN_VARIANTS: Record<BtnVariant, string> = {
@@ -146,8 +141,6 @@ export function Btn({
   children,
   ...rest
 }: ComponentProps<"button"> & { variant?: BtnVariant; sm?: boolean }) {
-  // Le bouton primaire porte son propre gabarit : taille, rayon et majuscules
-  // viennent de `.btn-action`, pas des utilitaires de taille.
   const primaire = variant === "primary";
   const size = primaire
     ? sm
@@ -190,8 +183,6 @@ export function BtnLink({
     </Link>
   );
 }
-
-/* ============================ Blocs ============================ */
 
 export function Stat({
   k,
@@ -283,7 +274,6 @@ export function Avatar({
   size = 34,
 }: {
   initials: string;
-  /** Portrait réel. Les initiales servent de repli quand il manque. */
   src?: string | null;
   alt?: string;
   className?: string;
@@ -313,8 +303,6 @@ export function Avatar({
   );
 }
 
-/* ============================ Tableau ============================ */
-
 export function TableWrap({ children }: { children: ReactNode }) {
   return (
     <div className="overflow-x-auto border border-line rounded-[var(--radius-m)] bg-surface">
@@ -343,17 +331,6 @@ export function Td({ children, className = "" }: ComponentProps<"td">) {
   );
 }
 
-/**
- * Mot saillant d'un titre.
- *
- * La chambre écrit ses titres en posant le mot qui compte dans une couleur de
- * la charte — « Le pont entre le Canada et Madagascar », rouge puis vert. Le
- * rouge est le défaut ; le vert sert au second terme d'une paire, ou partout
- * où le rouge dirait « attention » à tort.
- *
- * Un seul mot ou groupe par titre, deux au maximum : au-delà, plus rien ne
- * ressort.
- */
 export function Saillant({
   children,
   ton = "rouge",

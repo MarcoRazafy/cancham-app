@@ -11,13 +11,6 @@ import {
 } from "@/lib/rendezvous-donnees";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Rendez-vous d'un membre avec l'équipe de la chambre.
- *
- * Ses rendez-vous à venir d'abord — c'est ce qu'on vient vérifier le plus
- * souvent — puis la prise de rendez-vous, qui ne montre que des créneaux
- * réellement libres.
- */
 export default async function RendezvousPage({
   searchParams,
 }: {
@@ -64,7 +57,6 @@ export default async function RendezvousPage({
       </div>
 
       <SectionTitle>Prendre un rendez-vous</SectionTitle>
-      {/* Venu par le lien d'un rendez-vous qui n'est plus proposé. */}
       {p.type && !type ? (
         <div className="mb-4">
           <Banner tone="warn" title="Ce rendez-vous n’est plus proposé">

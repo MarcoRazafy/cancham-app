@@ -3,11 +3,6 @@ import "server-only";
 import { gabarit, type Courriel } from "@/lib/courriel";
 import { pngQr } from "@/lib/qr";
 
-/**
- * Les e-mails de la plateforme, un par situation. Chacun dit pourquoi il
- * arrive, ce qu'il faut faire, et ce qui se passe si l'on ne fait rien.
- */
-
 const prenom = (nom: string) => nom.split(" ")[0] || nom;
 
 export function courrielReinitialisation(
@@ -76,7 +71,6 @@ export function courrielDemandeRecue(a: string, nom: string): Courriel {
 export function courrielNouvelleInscription(
   a: string,
   email: string,
-  /** Ce que la personne a dit d'elle : fonction, téléphone, motivation… */
   precisions: (string | null)[],
   lien: string,
 ): Courriel {
@@ -100,7 +94,6 @@ export function courrielRelanceCotisation(
   d: {
     nom: string;
     entreprise: string;
-    /** Absents tant qu'aucune formule n'a été choisie. */
     montant: string | null;
     formule: string | null;
     retardJours: number | null;
@@ -114,8 +107,6 @@ export function courrielRelanceCotisation(
       titre: "Votre cotisation CanCham",
       paragraphes: [
         `Bonjour ${prenom(d.nom)},`,
-        // La formule entre parenthèses, quand elle est connue : sinon la
-        // phrase annoncerait un montant « à définir ».
         `La cotisation de ${d.entreprise}${
           d.formule && d.montant ? ` (${d.formule}, ${d.montant} par an)` : ""
         } est en attente de règlement${
@@ -138,14 +129,9 @@ export function courrielDemandeApprouvee(
   d: {
     nom: string;
     entreprise: string;
-    /** Absents tant qu'aucune formule n'a été choisie. */
     montant: string | null;
     formule: string | null;
     lien: string;
-    /**
-     * Vrai quand la personne n'a pas encore de mot de passe : le lien mène à
-     * sa création, valable sept jours. Faux : il mène à la connexion.
-     */
     creerMotDePasse: boolean;
   },
 ): Courriel {
@@ -201,26 +187,14 @@ export function courrielCompteEquipe(
   };
 }
 
-/** Ce qu'un e-mail dit d'un événement : de quoi s'y rendre sans rien chercher. */
 interface Rendezvous {
   evenement: string;
-  /** Date et horaire, déjà mis en forme : « mardi 6 octobre 2026 · 17 h 30 – 20 h 00 ». */
   quand: string;
   lieu: string;
-  /** Les personnes inscrites, chacune avec son code d'accueil. */
   participants: { nom: string; code: string }[];
-  /** Page où retrouver l'inscription : billets publics, ou fiche de l'événement. */
   lien: string;
 }
 
-/**
- * Les billets d'une inscription : un QR code par personne, joint au message.
- *
- * Il part dès l'inscription quand l'événement est gratuit, et seulement après
- * validation du règlement quand il est payant. Le code est aussi écrit en
- * clair : une messagerie qui n'affiche pas les images laisse quand même de
- * quoi être accueilli.
- */
 export async function courrielBilletsEvenement(
   a: string,
   d: Rendezvous,
@@ -265,16 +239,10 @@ export async function courrielBilletsEvenement(
   };
 }
 
-/**
- * Inscription à un événement payant : elle est enregistrée, elle attend le
- * règlement. Le QR code ne part qu'ensuite — c'est dit ici, pour que
- * personne ne se présente à l'accueil sans billet.
- */
 export function courrielInscriptionEnAttente(
   a: string,
   d: Omit<Rendezvous, "participants"> & {
     participants: { nom: string }[];
-    /** Montant total à régler, déjà mis en forme. */
     aRegler: string;
   },
 ): Courriel {
@@ -303,11 +271,6 @@ export function courrielInscriptionEnAttente(
   };
 }
 
-/**
- * L'équipe n'a pas retrouvé le paiement qu'un visiteur avait annoncé pour
- * son inscription. Il n'a pas de compte : c'est cet e-mail qui le lui dit,
- * avec le lien où choisir à nouveau.
- */
 export function courrielReglementEcarte(
   a: string,
   d: { evenement: string; reference: string; lien: string },
@@ -330,12 +293,6 @@ export function courrielReglementEcarte(
   };
 }
 
-/**
- * Une personne sans compte vient d'écrire depuis la vitrine.
- *
- * L'équipe n'est pas forcément devant le back-office : l'alerte porte la
- * question et de quoi rappeler, sans avoir à ouvrir quoi que ce soit.
- */
 export function courrielQuestionVisiteur(
   a: string,
   d: {
@@ -363,7 +320,6 @@ export function courrielQuestionVisiteur(
   };
 }
 
-/** L'équipe a répondu à un visiteur : il n'a pas de compte, on l'en avertit. */
 export function courrielReponseVisiteur(
   a: string,
   d: { nom: string; reponse: string; lien: string },
@@ -387,21 +343,16 @@ export function courrielReponseVisiteur(
   };
 }
 
-/** Ce qu'un e-mail dit d'un rendez-vous : de quoi s'y rendre sans chercher. */
 interface RendezvousCourriel {
   type: string;
-  /** Jour mis en forme : « mercredi 30 septembre 2026 ». */
   jour: string;
-  /** « 09 h 00 – 09 h 30 ». */
   horaire: string;
-  /** Qui l'a pris. */
   personne: string;
   entreprise: string | null;
   motif: string | null;
   lien: string;
 }
 
-/** Le rendez-vous est pris : la confirmation part au membre. */
 export function courrielRendezvousPris(
   a: string,
   d: RendezvousCourriel,
@@ -426,7 +377,6 @@ export function courrielRendezvousPris(
   };
 }
 
-/** L'équipe est prévenue qu'un créneau vient d'être pris. */
 export function courrielRendezvousEquipe(
   a: string,
   d: RendezvousCourriel,
@@ -448,7 +398,6 @@ export function courrielRendezvousEquipe(
   };
 }
 
-/** Un rendez-vous tombe : celui qui ne l'a pas annulé l'apprend. */
 export function courrielRendezvousAnnule(
   a: string,
   d: RendezvousCourriel & { par: string },

@@ -37,9 +37,6 @@ import type { CanchamEvent } from "@/lib/types";
 
 const BTN_PRIMARY = "btn-action btn-action-sm";
 
-/* ============================ Côté membre ============================ */
-
-/** Un contact de l'entreprise, que l'on peut inscrire. */
 export interface ContactInscrivable {
   id: string;
   nom: string;
@@ -56,25 +53,14 @@ export function RegisterButton({
   libelle = "S’inscrire",
 }: {
   event: CanchamEvent;
-  /** Nom de l'entreprise du membre : c'est elle qui s'inscrit. */
   entreprise: string;
-  /** Ses contacts, parmi lesquels choisir les représentants. */
   contacts: ContactInscrivable[];
-  /** La personne connectée, choisie d'office. */
   moi: string;
-  /** Ses coordonnées, proposées d'office pour joindre les inscrits. */
   coordonnees: { email: string; telephone?: string | null };
-  /**
-   * Les moyens de règlement proposables, pour un événement payant. Vide —
-   * aucune coordonnée renseignée au back-office —, l'écran du paiement n'a
-   * rien à offrir : la facture se règle auprès de l'équipe comme avant.
-   */
   modesPaiement?: ModeReglement[];
-  /** Intitulé du bouton déclencheur — « M’inscrire » sur la vue d'ensemble. */
   libelle?: string;
 }) {
   const restantes = event.cap - event.inscrits;
-  // Payant, et la chambre a de quoi encaisser : l'écran du moyen suivra.
   const paiementEnLigne = event.payant && modesPaiement.length > 0;
   return (
     <Modal
@@ -100,7 +86,6 @@ export function RegisterButton({
               </div>
             </div>
             <Field label="Nom de l’entreprise">
-              {/* Une seule entreprise possible : la sienne. */}
               <select
                 name="entreprise"
                 defaultValue={entreprise}
@@ -130,11 +115,6 @@ export function RegisterButton({
           </ModalBody>
           <ModalFooter>
             <CancelButton onClick={fermer} />
-            {/*
-              Le moyen ne se choisit pas ici : l'inscription d'abord, le
-              paiement ensuite, sur son écran à lui. « Suivant » dit qu'il
-              reste une étape, pour qu'on ne croie pas régler en confirmant.
-            */}
             <SubmitButton pendingLabel="Inscription…">
               {paiementEnLigne ? (
                 <>
@@ -153,10 +133,6 @@ export function RegisterButton({
   );
 }
 
-/**
- * Coordonnées d'une inscription : où joindre les inscrits avant
- * l'événement — un changement d'horaire, une question sur le règlement.
- */
 export function ChampsCoordonnees({
   email = "",
   telephone = "",
@@ -192,13 +168,6 @@ export function ChampsCoordonnees({
   );
 }
 
-/**
- * « Nom du représentant » : une liste déroulante à choix multiple.
- *
- * Fermée, elle résume les personnes choisies ; ouverte, elle coche et
- * décoche parmi les contacts de l'entreprise. Les cases restent dans le
- * formulaire même panneau fermé : ce sont elles qui partent au serveur.
- */
 function ChoixRepresentants({
   contacts,
   moi,
@@ -218,7 +187,6 @@ function ChoixRepresentants({
   );
   const cadre = useRef<HTMLDivElement>(null);
 
-  // Un clic ailleurs referme la liste, comme un menu déroulant.
   useEffect(() => {
     if (!ouvert) return;
     const ailleurs = (e: PointerEvent) => {
@@ -269,8 +237,6 @@ function ChoixRepresentants({
           aria-multiselectable="true"
           aria-labelledby="etiquette-representants"
           hidden={!ouvert}
-          // Dans le flux, pas en surplomb : la fenêtre qui défile la
-          // rognerait, et le dernier contact disparaîtrait sous son bord.
           className="mt-1 max-h-[240px] overflow-y-auto rounded-[var(--radius-s)] border border-line bg-surface shadow-[0_8px_24px_-14px_rgba(15,29,44,0.35)] py-1"
         >
           {contacts.map((c) => (
@@ -330,8 +296,6 @@ export function CancelRegistrationButton({ eventId }: { eventId: string }) {
   );
 }
 
-/* ============================ Côté admin ============================ */
-
 export function DeleteEventButton({
   eventId,
   titre,
@@ -373,10 +337,6 @@ export function DeleteEventButton({
   );
 }
 
-/**
- * Pointage à l'accueil : « Présent » et « Absent », côte à côte. Le bouton
- * de l'état actuel est allumé et inactif ; l'autre le corrige d'un clic.
- */
 export function AttendanceButton({
   attendeeId,
   eventId,
@@ -386,7 +346,6 @@ export function AttendanceButton({
   attendeeId: string;
   eventId: string;
   statut: "confirme" | "present" | "absent";
-  /** La liste où revenir après le pointage : onglet, recherche, page. */
   retour?: string;
 }) {
   return (
@@ -433,14 +392,6 @@ function BoutonPresence({
   );
 }
 
-/** Retrait d'une personne de la liste d'accueil, après confirmation. */
-/**
- * Validation d'une inscription payante, une fois le règlement constaté.
- *
- * L'alerte dit ce que le clic déclenche : toute l'inscription passe inscrite,
- * et les billets partent par e-mail. C'est la première fois que la personne
- * reçoit son QR code — on ne le fait pas par mégarde.
- */
 export function ValiderInscriptionButton({
   attendeeId,
   eventId,
@@ -547,7 +498,6 @@ export function AddAttendeeButton({
 }: {
   eventId: string;
   membres: { id: string; nom: string; contact: string; email: string }[];
-  /** La liste où revenir après l'inscription. */
   retour?: string;
 }) {
   return (

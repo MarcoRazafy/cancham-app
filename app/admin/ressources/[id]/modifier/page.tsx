@@ -20,7 +20,6 @@ export default async function ModifierRessource({
   ]);
   const r = ressources.find((x) => x.id === id);
   if (!r) notFound();
-  // Une page composée se rouvre dans l'éditeur ; un fichier, dans son formulaire.
   const blocs = r.fmt === "page" ? await getBlocsRessource(id) : null;
 
   return (

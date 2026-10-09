@@ -37,7 +37,6 @@ export default async function AdminMembres({
   const membres = await getMembers();
   const retenus = filtrerHorsStatut(membres, filtres);
   const liste = retenus.filter((m) => statut === "tous" || m.statut === statut);
-  // Où en est l'accès de chacun : actif, lien envoyé, ou à envoyer.
   const acces = await getAccesMembres(liste.map((m) => m.id));
   const retourListe = `/admin/membres${parametresFiltres(filtres)}`;
 
@@ -132,7 +131,6 @@ export default async function AdminMembres({
         </Card>
       ) : (
         <>
-          {/* ---------- Grand écran : tableau ---------- */}
           <Card className="hidden md:block p-0 overflow-hidden">
             <table className="w-full border-collapse text-[13.4px]">
               <thead>
@@ -213,7 +211,6 @@ export default async function AdminMembres({
             </table>
           </Card>
 
-          {/* ---------- Téléphone : cartes ---------- */}
           <ul className="md:hidden list-none m-0 p-0 flex flex-col gap-3">
             {liste.map((m) => {
               const s = situation(m);
@@ -248,7 +245,6 @@ export default async function AdminMembres({
                         {s.detail}
                       </p>
                     </Link>
-                    {/* Hors du lien : un bouton ne se glisse pas dans un <a>. */}
                     <div className="mt-3 pt-3 border-t border-line flex items-center justify-between gap-3 flex-wrap">
                       <span className="text-[12px] font-semibold text-muted">
                         Accès

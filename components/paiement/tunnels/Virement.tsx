@@ -12,19 +12,11 @@ import {
 } from "@/components/paiement/tunnels/commun";
 import { fmtMontant } from "@/lib/membership";
 
-/**
- * Le virement bancaire, d'après la maquette : un bandeau bleu marine, trois
- * onglets — Montant, Coordonnées, Confirmation —, et le RIB de la chambre
- * dessiné comme on le tient en main, prêt à recopier.
- *
- * Le montant est celui de la facture : il se lit, il ne se choisit pas.
- */
 const MARINE = "#16355c";
 
 export function TunnelVirement(p: PropsReglement) {
   const etape = conclu(p.statut) ? 3 : p.etape === "2" ? 2 : 1;
   const somme = fmtMontant(p.montant, p.devise);
-  // Revenir en arrière, c'est remonter d'une étape — ou rouvrir le choix.
   const page = `/membre/cotisations/payer/${p.reglementId}`;
   const precedent =
     etape === 2 ? page : etape === 3 ? "/membre/cotisations" : p.retour;
@@ -103,7 +95,6 @@ export function TunnelVirement(p: PropsReglement) {
             </h2>
             <CarteRib {...p} />
 
-            {/* Le motif, détaché du RIB : c'est lui que la banque ne remplira pas. */}
             <div className="mt-4 flex flex-wrap items-center gap-4 rounded-[12px] border border-dashed border-[#c9a55c] bg-[#fffaf0] px-4 py-3.5">
               <div className="min-w-0 flex-1">
                 <p className="m-0 text-[13px] text-muted">
@@ -143,7 +134,6 @@ export function TunnelVirement(p: PropsReglement) {
   );
 }
 
-/** Les trois onglets, soulignés à mesure qu'on avance. */
 function Onglets({ etape }: { etape: 1 | 2 | 3 }) {
   return (
     <ol className="m-0 grid list-none grid-cols-3 p-0">
@@ -166,7 +156,6 @@ function Onglets({ etape }: { etape: 1 | 2 | 3 }) {
   );
 }
 
-/** Le RIB en quatre cases, quand il a bien ses vingt-trois chiffres. */
 function decouperRib(rib: string) {
   const c = rib.replace(/\D/g, "");
   if (c.length !== 23) return null;
@@ -178,11 +167,6 @@ function decouperRib(rib: string) {
   };
 }
 
-/**
- * Le RIB de la chambre, dessiné comme un relevé qu'on tient en main — un
- * fond guilloché, le titulaire en grand, les quatre cases du RIB. Un seul
- * bouton copie le tout, espaces compris, tel que les banques l'acceptent.
- */
 function CarteRib({ coordonnees: c }: PropsReglement) {
   const cases = decouperRib(c.rib);
   const ribComplet = cases
@@ -243,8 +227,6 @@ function CarteRib({ coordonnees: c }: PropsReglement) {
         </p>
       ) : null}
 
-      {/* L'IBAN et le BIC : ce qu'une banque étrangère demande, un membre au
-          Canada compris. */}
       {c.iban || c.bic ? (
         <p className="relative m-0 mt-2.5 font-[family-name:var(--font-mono)] text-[13px] tracking-[0.04em] text-muted [overflow-wrap:anywhere]">
           {c.iban ? <span className="block">IBAN {c.iban}</span> : null}
@@ -264,11 +246,6 @@ function CarteRib({ coordonnees: c }: PropsReglement) {
   );
 }
 
-/**
- * Le fond guilloché des papiers de banque : deux familles d'ondes qui se
- * croisent. Du décor seulement — assez pâle pour ne rien disputer aux
- * chiffres.
- */
 function Guilloche() {
   const ondes: string[] = [];
   for (let i = 0; i < 7; i++) {

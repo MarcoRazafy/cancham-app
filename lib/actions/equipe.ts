@@ -17,11 +17,6 @@ import { supprimerVideo } from "@/lib/videos";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-/**
- * Profil de la personne de l'équipe connectée : nom, fonction, coordonnées,
- * photo. C'est sous ce nom qu'elle apparaît dans la messagerie et au journal
- * d'activité.
- */
 export async function modifierProfilEquipe(formData: FormData) {
   const retour = "/admin/profil";
   const user = await getCurrentUser("admin");
@@ -37,7 +32,6 @@ export async function modifierProfilEquipe(formData: FormData) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     redirectWithErreur(retour, "Indiquez une adresse e-mail valide.");
   }
-  // L'adresse servira d'identifiant de connexion : elle est unique.
   const pris = await prisma.user.findFirst({
     where: { email, id: { not: user.id } },
     select: { id: true },
@@ -76,31 +70,14 @@ export async function modifierProfilEquipe(formData: FormData) {
   redirectWithFlash(retour, "Profil mis à jour");
 }
 
-/* ============================ Accès au back-office ============================ */
-
-/**
- * Qui tient le back-office.
- *
- * Deux niveaux : l'administrateur a le contrôle total ; le manager a tout,
- * sauf la gestion de l'équipe elle-même. Seul un administrateur ouvre un
- * compte d'équipe — une adresse, une fonction, un niveau, et un e-mail part
- * avec l'identifiant et un mot de passe provisoire —, promeut un compte
- * existant, change un niveau ou retire un accès.
- *
- * Deux garde-fous : on ne touche pas à son propre accès, et la plateforme
- * garde au moins un administrateur.
- */
-
 const EQUIPE = "/admin/equipe";
 
-/** Le niveau choisi dans le formulaire. À défaut, le moins étendu. */
 function niveauSaisi(fd: FormData): NiveauEquipe {
   return texte(fd, "niveau") === "administrateur"
     ? "administrateur"
     : "manager";
 }
 
-/** « administrateur », « manager » : le niveau dans une phrase. */
 const enClair = (n: NiveauEquipe) => NIVEAU_EQUIPE_LABEL[n].toLowerCase();
 
 async function journal(
@@ -114,15 +91,6 @@ async function journal(
   });
 }
 
-/**
- * Nouveau membre de l'équipe : son adresse et sa fonction suffisent. Le nom
- * se tire de l'adresse en attendant qu'il le donne dans « Mon profil ».
- *
- * L'identifiant et le mot de passe provisoire partent par e-mail, attendus
- * ici : si l'envoi échoue, le compte n'est pas gardé — personne n'en
- * connaîtrait le mot de passe. Sans service d'e-mails (en local), le compte
- * est créé et le message écrit dans le journal du serveur.
- */
 export async function creerCompteEquipe(formData: FormData) {
   const acteur = await exigerAdministrateur(EQUIPE);
   const email = texte(formData, "email").toLowerCase();
@@ -175,8 +143,6 @@ export async function creerCompteEquipe(formData: FormData) {
     );
   }
 
-  // Le nouveau venu rejoint les conversations d'assistance en cours : une
-  // demande de membre s'adresse à l'équipe, pas à ses anciens.
   await rattacherEquipe();
   await journal(
     "equipe_ajoutee",
@@ -193,7 +159,6 @@ export async function creerCompteEquipe(formData: FormData) {
   );
 }
 
-/** Entrée d'un compte existant dans l'équipe, au niveau choisi. */
 export async function promouvoirAdmin(formData: FormData) {
   const acteur = await exigerAdministrateur(EQUIPE);
   const userId = texte(formData, "userId");
@@ -230,9 +195,6 @@ export async function promouvoirAdmin(formData: FormData) {
     redirectWithErreur(EQUIPE, `${u.nom} fait déjà partie de l’équipe.`);
   }
 
-  // La fiche d'entreprise créée à l'inscription n'a plus lieu d'être quand
-  // l'inscrit se révèle être un collaborateur — à condition qu'elle soit
-  // restée une candidature vide, rattachée à ce seul compte.
   const fiche = u.member;
   const effacable =
     fiche !== null &&
@@ -275,11 +237,6 @@ export async function promouvoirAdmin(formData: FormData) {
   );
 }
 
-/**
- * Retrait de l'accès au back-office. Le compte rattaché à une entreprise
- * redevient un compte membre ; les autres n'ont plus d'espace, sans être
- * supprimés : leurs messages et leurs traces au journal restent lisibles.
- */
 export async function retirerAdmin(formData: FormData) {
   const acteur = await exigerAdministrateur(EQUIPE);
   const userId = texte(formData, "userId");
@@ -324,11 +281,6 @@ export async function retirerAdmin(formData: FormData) {
   );
 }
 
-/**
- * Passage d'administrateur à manager, ou l'inverse. On ne change pas son
- * propre niveau : un administrateur qui se rétrograderait par erreur ne
- * pourrait plus revenir en arrière seul.
- */
 export async function changerNiveauEquipe(formData: FormData) {
   const acteur = await exigerAdministrateur(EQUIPE);
   const userId = texte(formData, "userId");

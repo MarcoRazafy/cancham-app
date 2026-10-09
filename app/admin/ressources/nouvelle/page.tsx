@@ -6,14 +6,6 @@ import { EditeurPage } from "@/components/ressources/EditeurPage";
 import { Saillant } from "@/components/ui";
 import { getArborescenceDossiers } from "@/lib/queries";
 
-/**
- * Une nouvelle ressource.
- *
- * Par défaut, on la compose dans la plateforme, bloc après bloc — titres,
- * textes, photos, vidéos. `?mode=fichier` garde l'autre chemin : déposer un
- * fichier tout fait (PDF, Word, vidéo, photo), que la bibliothèque prépare
- * pour la lecture protégée.
- */
 export default async function NouvelleRessource({
   searchParams,
 }: {

@@ -1,19 +1,3 @@
-/**
- * Visuels de l'espace public.
- *
- * Chaque URL a été vérifiée en HTTP 200 avec un content-type image/*, deux fois
- * et indépendamment. Elles sont regroupées ici pour être remplaçables en un
- * seul endroit le jour où la chambre fournira ses propres photos.
- *
- * Next optimise et met ces images en cache côté serveur : le visiteur ne dépend
- * pas de la disponibilité de l'hébergeur à chaque chargement.
- *
- * Depuis la livraison des photos de la chambre, tout ce qui montre un événement
- * CanCham pointe sur `public/photos/`. Ne restent en banque d'images que les
- * deux moitiés symboliques de la bannière — Toronto et l'allée des baobabs —
- * qu'aucune photo de la chambre ne remplace. Unsplash autorise l'usage
- * commercial sans attribution et le lien direct depuis son CDN.
- */
 export interface VisuelPublic {
   url: string;
   alt: string;
@@ -21,35 +5,22 @@ export interface VisuelPublic {
 
 export const VISUELS: Record<"hero" | "toronto" | "madagascar", VisuelPublic> =
   {
-    /**
-     * La même photo qu'à la connexion : intervenants et partenaires réunis
-     * devant les kakémonos de la chambre. Une vitrine et sa page de connexion
-     * qui ouvrent sur la même image, c'est une maison, pas deux.
-     */
     hero: {
       url: "/photos/auth-rencontre.jpg",
       alt: "Intervenants et partenaires réunis lors d’une rencontre CanCham",
     },
 
-    /** Skyline de Toronto à l'heure bleue — moitié canadienne de la bannière. */
     toronto: {
       url: "https://images.unsplash.com/photo-1543962226-818f4301073f?w=1600&q=80&auto=format&fit=crop",
       alt: "",
     },
 
-    /** Allée des baobabs à contre-jour — moitié malgache de la bannière. */
     madagascar: {
       url: "https://images.unsplash.com/photo-1597426061335-e50c8697630b?w=1600&q=80&auto=format&fit=crop",
       alt: "",
     },
   };
 
-/**
- * Visuels des cartes d'événement.
- *
- * Attribués dans l'ordre chronologique, ce qui fait correspondre le port à
- * conteneurs à l'étape de Canada Expo à Tamatave — ville portuaire.
- */
 export const VISUELS_EVENEMENTS: VisuelPublic[] = [
   {
     url: "/photos/cancham-07.jpg",
@@ -65,7 +36,6 @@ export const VISUELS_EVENEMENTS: VisuelPublic[] = [
   },
 ];
 
-/** Visuel d'un événement, choisi de façon stable à partir de son rang. */
 export function visuelEvenement(
   _id: string,
   index: number,

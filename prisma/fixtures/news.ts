@@ -1,10 +1,5 @@
 import type { CommentaireFixture, NewsItem } from "../../lib/types";
 
-/** Fil d'actualité de la chambre. Contenus d'exemple. */
-/**
- * Les « j'aime » sont des lignes rattachées à des utilisateurs, posées au
- * chargement : la fixture ne décrit que la publication elle-même.
- */
 export const NEWS: (Omit<
   NewsItem,
   "jaimes" | "jaimeParMoi" | "commentaires"

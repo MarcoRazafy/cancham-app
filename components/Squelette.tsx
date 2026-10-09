@@ -1,18 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
 
-/**
- * Squelettes de chargement.
- *
- * Pendant qu'une page se prépare, on montre sa forme — titre, cartes,
- * lignes — parcourue d'un reflet, plutôt qu'un écran vide ou une roue qui
- * tourne au milieu de nulle part. La mise en page ne saute pas quand le
- * contenu arrive : il prend la place de sa silhouette.
- *
- * Les formes sont purement décoratives (`aria-hidden`) ; le conteneur
- * annonce une seule fois « Chargement… » aux lecteurs d'écran.
- */
-
-/** Un bloc gris parcouru d'un reflet. */
 export function Bloc({
   className = "",
   style,
@@ -23,7 +10,6 @@ export function Bloc({
   return <div aria-hidden className={`squelette ${className}`} style={style} />;
 }
 
-/** Conteneur d'un écran en chargement, avec la barre en haut de l'écran. */
 export function Chargement({ children }: { children: ReactNode }) {
   return (
     <div role="status" aria-busy="true" aria-live="polite">
@@ -34,7 +20,6 @@ export function Chargement({ children }: { children: ReactNode }) {
   );
 }
 
-/** Titre de page et son chapeau. */
 export function SqueletteEnTete() {
   return (
     <div className="mb-6 flex flex-col gap-3">
@@ -45,7 +30,6 @@ export function SqueletteEnTete() {
   );
 }
 
-/** Rangée de compteurs, comme en tête du tableau de bord. */
 export function SqueletteCompteurs({ nombre = 4 }: { nombre?: number }) {
   return (
     <div className="grid gap-4 mb-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -66,7 +50,6 @@ export function SqueletteCompteurs({ nombre = 4 }: { nombre?: number }) {
   );
 }
 
-/** Grille de cartes à image : annuaire, événements, offres. */
 export function SqueletteCartes({
   nombre = 6,
   hauteurImage = 150,
@@ -97,7 +80,6 @@ export function SqueletteCartes({
   );
 }
 
-/** Liste de lignes avec pastille : membres, messages, participants. */
 export function SqueletteListe({ lignes = 6 }: { lignes?: number }) {
   return (
     <div className="rounded-[var(--radius-m)] border border-line bg-surface">
@@ -118,7 +100,6 @@ export function SqueletteListe({ lignes = 6 }: { lignes?: number }) {
   );
 }
 
-/** Panneau à titre, avec quelques lignes : les encadrés du back-office. */
 export function SquelettePanneau({ lignes = 4 }: { lignes?: number }) {
   return (
     <div className="rounded-[var(--radius-m)] border border-line bg-surface p-6 flex flex-col gap-3">
@@ -137,7 +118,6 @@ export function SquelettePanneau({ lignes = 4 }: { lignes?: number }) {
   );
 }
 
-/** Messagerie : la liste des conversations et une conversation ouverte. */
 export function SqueletteMessagerie() {
   return (
     <div className="flex border border-line rounded-[var(--radius-m)] bg-surface overflow-hidden md:h-[min(680px,calc(100vh-220px))] md:min-h-[480px]">

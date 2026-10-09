@@ -13,15 +13,8 @@ import {
 import { ajouterJours, fmtJour } from "@/lib/agenda";
 import { fmtMontant } from "@/lib/membership";
 
-/**
- * Le règlement en espèces, d'après la maquette : une page indigo, une carte
- * blanche où l'on dit où et quand on apporte l'argent, puis un bon de
- * remise à présenter le jour venu — avec sa souche, comme un carnet de
- * reçus.
- */
 export function TunnelEspeces(
   p: PropsReglement & {
-    /** Revenir sur un rendez-vous déjà pris. */
     modifier: boolean;
   },
 ) {
@@ -32,8 +25,6 @@ export function TunnelEspeces(
     moment?: string;
     remisPar?: string;
   };
-  // Le bon existe dès que le rendez-vous est pris — et tant qu'on ne le
-  // modifie pas.
   const bon =
     !p.modifier &&
     Boolean(d.jour) &&
@@ -86,11 +77,6 @@ export function TunnelEspeces(
   );
 }
 
-/**
- * Le bon de remise : le ticket jaune et sa souche détachable. La souche se
- * replie sur téléphone — il n'y a pas la place de la montrer à côté —, et
- * l'ensemble s'imprime seul.
- */
 function BonDeRemise({
   d,
   reference,
@@ -177,7 +163,6 @@ function BonDeRemise({
           ) : null}
         </section>
 
-        {/* La souche : le double que garde l'équipe. */}
         <div
           aria-hidden
           className="-ml-2 hidden w-[92px] shrink-0 rotate-[6deg] flex-col items-center gap-3 self-stretch rounded-[12px] border-l-2 border-dashed border-[#b39d45] bg-[#eed878] py-6 sm:flex"

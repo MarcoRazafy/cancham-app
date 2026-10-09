@@ -5,7 +5,6 @@ import {
   SquelettePanneau,
 } from "@/components/Squelette";
 
-/** Back-office : chiffres en tête, encadrés dessous. */
 export default function ChargementAdmin() {
   return (
     <Chargement>

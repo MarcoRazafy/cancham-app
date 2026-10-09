@@ -20,14 +20,7 @@ import {
   type ElementAgenda,
 } from "@/lib/agenda";
 
-/**
- * Les trois vues de l'agenda. Composants serveur : une grille de calendrier
- * n'a besoin d'aucun JavaScript, seuls les rappels en embarquent.
- */
-
 const JOURS_COURTS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-
-/* ============================ Mois ============================ */
 
 export function VueMois({
   date,
@@ -109,7 +102,6 @@ export function VueMois({
                     {Number(jour.slice(8))}
                   </span>
 
-                  {/* Sur ordinateur : les premiers éléments en toutes lettres. */}
                   <span className="hidden md:flex flex-col gap-[3px] min-w-0">
                     {items.slice(0, 3).map((e) => (
                       <PuceAgenda key={e.id} element={e} />
@@ -121,7 +113,6 @@ export function VueMois({
                     ) : null}
                   </span>
 
-                  {/* Sur téléphone : une pastille par élément. */}
                   <span className="md:hidden flex justify-center gap-[3px] flex-wrap">
                     {items.slice(0, 4).map((e) => (
                       <span
@@ -161,15 +152,8 @@ export function VueMois({
   );
 }
 
-/* ============================ Semaine ============================ */
-
-/** Hauteur d'une heure dans la grille, en pixels. */
 const HEURE_PX = 52;
 
-/**
- * Colonnes côte à côte pour les éléments qui se chevauchent : chacun prend la
- * première colonne libre à son heure de début.
- */
 function enColonnes(items: ElementAgenda[]) {
   const fins: number[] = [];
   const places = items.map((e) => {
@@ -200,7 +184,6 @@ export function VueSemaine({
   const parJ = parJour(elements);
 
   const horaires = elements.filter((e) => e.debut);
-  // Plage affichée : 7 h – 21 h, élargie si un élément en déborde.
   const premiere = Math.min(
     7,
     ...horaires.map((e) => Math.floor(enMinutes(e.debut!) / 60)),
@@ -221,7 +204,6 @@ export function VueSemaine({
 
   return (
     <>
-      {/* Ordinateur : grille horaire. */}
       <Card className="hidden md:block overflow-hidden">
         <div className="grid grid-cols-[58px_repeat(7,minmax(0,1fr))] bg-surface-2 border-b border-line">
           <div />
@@ -342,7 +324,6 @@ export function VueSemaine({
         </div>
       </Card>
 
-      {/* Téléphone : les sept jours les uns sous les autres. */}
       <div className="md:hidden flex flex-col gap-5">
         {jours.map((jour) => (
           <JourListe
@@ -359,7 +340,6 @@ export function VueSemaine({
   );
 }
 
-/** Un élément de la grille : sa page, ou la modification d'un rappel. */
 function BlocSemaine({
   element,
   retour,
@@ -396,8 +376,6 @@ function BlocSemaine({
     </BlocRappel>
   );
 }
-
-/* ============================ À venir ============================ */
 
 export function VueListe({
   du,
@@ -450,9 +428,6 @@ export function VueListe({
   );
 }
 
-/* ============================ Listes ============================ */
-
-/** « Aujourd'hui 17 septembre », « Mardi 22 septembre ». */
 function TitreJour({ jour, aujourdhui }: { jour: string; aujourdhui: string }) {
   const proche = Math.abs(ecartJours(aujourdhui, jour)) <= 1;
   return (

@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { minutes, oublier, tentative } from "@/lib/limite";
 
-/** Les essais de mots de passe en série finissent par attendre. */
-
 const QUART_HEURE = 15 * 60 * 1000;
 
 afterEach(() => vi.useRealTimers());

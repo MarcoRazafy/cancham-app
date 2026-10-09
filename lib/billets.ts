@@ -13,16 +13,6 @@ import {
 } from "@/lib/modeles-courriels";
 import { notifierEquipe, notifierMembre } from "@/lib/push";
 
-/**
- * Les billets d'un événement : ce qu'on envoie, et quand.
- *
- * Partagé entre l'inscription (`lib/actions/events.ts`), qui envoie les
- * billets d'un événement gratuit sur-le-champ, et le règlement d'une
- * facture de participation (`delivrerBillets`), qui les fait partir dès que
- * l'argent est constaté — par le prestataire en ligne comme par l'équipe.
- */
-
-/** Ce qu'un e-mail doit savoir d'un événement pour y conduire quelqu'un. */
 export type EvenementCourriel = {
   id: string;
   titre: string;
@@ -32,25 +22,16 @@ export type EvenementCourriel = {
   lieu: string;
 };
 
-/** Date et horaire d'un événement, tels que les e-mails les annoncent. */
 export function quandEvenement(e: EvenementCourriel): string {
   return [fmtDate(toISODate(e.date)), plageHoraire(e.debut, e.fin)]
     .filter(Boolean)
     .join(" · ");
 }
 
-/** Les lignes d'accueil d'une inscription : son code, et ses déclinaisons. */
 export const lignesDe = (code: string) => ({
   OR: [{ code }, { code: { startsWith: `${code}-` } }],
 });
 
-/**
- * Les billets d'une inscription : un QR code par participant, envoyés à
- * l'adresse donnée au moment de s'inscrire.
- *
- * L'envoi a lieu après la réponse : une messagerie lente ne doit pas faire
- * attendre devant un formulaire, et l'inscription, elle, est déjà écrite.
- */
 export function envoyerBillets(
   e: EvenementCourriel,
   participants: { nom: string; code: string }[],
@@ -70,7 +51,6 @@ export function envoyerBillets(
   );
 }
 
-/** Événement payant : l'inscription est prise, le billet attend le règlement. */
 export function envoyerAttente(
   e: EvenementCourriel,
   participants: { nom: string }[],
@@ -92,14 +72,6 @@ export function envoyerAttente(
   );
 }
 
-/**
- * Une facture de participation réglée : l'inscription se confirme et les
- * billets partent, sans que l'équipe n'ait rien à valider.
- *
- * Rejouable sans risque : les lignes déjà confirmées ne le sont pas deux
- * fois, et une facture qui n'est pas une participation — une cotisation —
- * ne fait rien. Vrai si des billets sont partis.
- */
 export async function delivrerBillets(
   factureId: string,
   acteur: string,
@@ -141,7 +113,6 @@ export async function delivrerBillets(
     }),
   ]);
 
-  // Les lignes d'une inscription partagent l'adresse donnée à l'inscription.
   const email = lignes[0].email;
   const participants = lignes.flatMap((l) =>
     l.code ? [{ nom: l.nom, code: l.code }] : [],
@@ -160,23 +131,12 @@ export async function delivrerBillets(
   return true;
 }
 
-/**
- * Une inscription publique réglée en ligne : elle se confirme et ses billets
- * partent, comme pour un membre. Il n'y a ni facture ni compte : c'est le
- * code de l'inscription qui relie le règlement à ses lignes d'accueil.
- *
- * Rejouable sans risque — des lignes déjà confirmées ne le sont pas deux
- * fois. Vrai si des billets sont partis.
- */
 export async function delivrerBilletsPublics(
   eventId: string,
   code: string,
   acteur: string,
-  /** Comment le règlement a été constaté : il s'écrit au journal. */
   moyen = "en ligne",
 ): Promise<boolean> {
-  // Seconde barrière : un code mal formé désignerait toutes les inscriptions
-  // en attente de l'événement.
   if (!estCodeInscription(code)) return false;
   const [event, lignes] = await Promise.all([
     prisma.event.findUnique({ where: { id: eventId } }),
@@ -225,7 +185,6 @@ export async function delivrerBilletsPublics(
       ),
     );
   }
-  // L'équipe n'a rien à valider, mais elle doit le savoir.
   after(() =>
     notifierEquipe({
       titre: `Inscription publique réglée : ${event.titre}`,

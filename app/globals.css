@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-/* ============================================================
-   Design tokens — portés depuis le prototype CanCham Connect.
-   Rouge dominant, bleu marine en second plan, vert en touches.
-   ============================================================ */
-
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -43,7 +38,6 @@
 }
 
 :root {
-  /* Dégradé des boutons d'action, disponible dans toute l'application. */
   --bouton-rouge: linear-gradient(
     120deg,
     #d81f3a 0%,
@@ -84,17 +78,6 @@
   color-scheme: light;
 }
 
-/*
- * L'application se tient en clair, quel que soit le réglage du navigateur.
- *
- * Les blocs « prefers-color-scheme: dark » et « [data-theme] » ont été retirés :
- * un outil de gestion consulté à plusieurs n'a pas à changer d'apparence selon
- * la machine, et le sélecteur de thème a disparu de l'interface.
- *
- * L'espace public garde son fond sombre, défini plus bas dans `.marque` :
- * c'est une vitrine, pas un outil, et sa charte l'impose.
- */
-
 * {
   box-sizing: border-box;
 }
@@ -134,14 +117,6 @@ h3 {
   }
 }
 
-/* ============================================================
-   Charte CanCham — appliquée à l'espace public uniquement.
-
-   Les espaces membre et back-office gardent la palette applicative
-   définie plus haut : ce sont des outils de travail, pas des supports
-   de communication. Ici on suit la charte de la chambre à la lettre.
-   ============================================================ */
-
 @theme inline {
   --color-marque-nuit: var(--marque-nuit);
   --color-marque-nuit-2: var(--marque-nuit-2);
@@ -154,13 +129,11 @@ h3 {
 }
 
 :root {
-  /* Valeurs exactes de la charte, page « Couleurs ». */
   --marque-nuit: #0f1d2c;
   --marque-rouge: #ad0707;
   --marque-vert: #007140;
   --marque-texte: #163254;
 
-  /* Déclinaisons nécessaires à l'écran, dérivées des trois couleurs ci-dessus. */
   --marque-nuit-2: #16283c;
   --marque-nuit-3: #1d3450;
   --marque-rouge-clair: #d32020;
@@ -168,15 +141,7 @@ h3 {
   --marque-degrade: linear-gradient(90deg, #ad0707, #007140);
 }
 
-/* Le public suit la charte quel que soit le thème du visiteur : c'est une
-   vitrine, son apparence ne doit pas dépendre des réglages du navigateur. */
 .marque {
-  /*
-   * Fond blanc, texte bleu nuit : la version « fond pâle » de la charte, où
-   * le rouge et le vert se lisent tels quels. Seule la bannière d'accueil
-   * reste sombre (`.sur-sombre`). Les tokens applicatifs sont redéfinis pour
-   * que les primitives de components/ui.tsx suivent.
-   */
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: #f4f6f9;
@@ -200,11 +165,6 @@ h3 {
   color-scheme: light;
 }
 
-/*
- * Hammersmith One n'a qu'une graisse. On la force ici : sans cela, un
- * `font-bold` hérité ferait fabriquer un faux gras par le navigateur, plus
- * lourd et moins net que la fonte réelle.
- */
 .marque h1,
 .marque h2,
 .marque h3,
@@ -220,7 +180,6 @@ h3 {
   font-weight: 600;
 }
 
-/* Surtitre en capitales espacées, motif récurrent de la charte. */
 .marque .surtitre {
   font-family: var(--font-texte);
   font-size: 11.5px;
@@ -234,12 +193,6 @@ h3 {
   color: #ffffff;
 }
 
-/*
- * Contour de focus rouge, sauf sur les champs de saisie : ils ont leur propre
- * repère — fond teinté, bordure verte —, et un contour rouge par-dessus
- * faisait un double cadre rouge et vert. Cases à cocher et boutons radio le
- * gardent : c'est leur seul repère au clavier.
- */
 .marque
   :focus-visible:not(
     input:not([type="checkbox"], [type="radio"]),
@@ -250,7 +203,6 @@ h3 {
   outline-offset: 3px;
 }
 
-/* Bannière d'accueil : le seul bloc sombre de l'espace public. */
 .marque .sur-sombre {
   color: #ffffff;
   color-scheme: dark;
@@ -260,17 +212,9 @@ h3 {
   outline-color: #ffffff;
 }
 
-/*
- * Un champ masqué (`sr-only`) est en position absolue. Sans ancêtre
- * positionné dans la zone qui défile, il se place par rapport à un cadre
- * plus lointain — une fenêtre, un panneau — et l'allonge d'un grand vide
- * sous le contenu. Son étiquette l'ancre : il reste où on l'a écrit.
- */
 label:has(.sr-only) {
   position: relative;
 }
-
-/* ---------- Animations de l'espace public ---------- */
 
 @keyframes marque-apparition {
   from {
@@ -283,18 +227,10 @@ label:has(.sr-only) {
   }
 }
 
-/*
- * `both` conserve l'état final : le contenu reste visible une fois l'animation
- * jouée. Sans cela, un rechargement interrompu laisserait la page vide.
- */
 .marque .apparition {
   animation: marque-apparition 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
-/*
- * Zoom très lent sur la photo des écrans d'identification : l'image respire
- * sans jamais attirer l'œil hors du formulaire.
- */
 @keyframes marque-zoom {
   from {
     transform: scale(1);
@@ -308,7 +244,6 @@ label:has(.sr-only) {
   animation: marque-zoom 26s ease-in-out infinite alternate;
 }
 
-/* Le dégradé de la charte glisse lentement d'un bord à l'autre. */
 @keyframes marque-glisse {
   from {
     background-position: 0% 50%;
@@ -323,13 +258,6 @@ label:has(.sr-only) {
   animation: marque-glisse 18s ease-in-out infinite alternate;
 }
 
-/*
- * Grille fine des écrans d'identification.
- *
- * Deux dégradés linéaires suffisent — un pour les verticales, un pour les
- * horizontales —, et le motif dérive d'une case en continu. Pas d'image, donc
- * rien à charger, et la grille reste nette à toute densité d'écran.
- */
 @keyframes marque-grille {
   from {
     background-position:
@@ -353,7 +281,6 @@ label:has(.sr-only) {
   animation: marque-grille 38s linear infinite;
 }
 
-/* Halos de couleur, qui respirent lentement derrière la grille. */
 @keyframes marque-halo {
   from {
     transform: translate3d(0, 0, 0) scale(1);
@@ -376,10 +303,6 @@ label:has(.sr-only) {
   }
 }
 
-/*
- * Boutons de l'espace public : ils se soulèvent d'un pixel au survol et
- * reposent au clic. Rien de plus — le geste doit se sentir, pas se regarder.
- */
 .marque .btn-action,
 .marque .btn-contour {
   transition:
@@ -418,23 +341,10 @@ label:has(.sr-only) {
   }
 }
 
-/*
- * Le menu déroulant natif hérite sinon du blanc du formulaire, ce qui rend les
- * options illisibles sur le fond clair que le système leur applique.
- */
 .marque select option {
   color: #0f1d2c;
   background-color: #ffffff;
 }
-
-/* ============================================================
-   Espaces membre et back-office — habillage aux couleurs de la chambre.
-
-   Le bloc redéfinit les tokens applicatifs plutôt que d'introduire une
-   palette parallèle : toutes les primitives de components/ui.tsx s'y
-   conforment sans qu'aucune page n'ait à changer. Les deux espaces
-   partagent la charte ; seule la barre latérale les distingue.
-   ============================================================ */
 
 .espace-membre,
 .espace-admin {
@@ -447,7 +357,6 @@ label:has(.sr-only) {
   --text-muted: #5b6b7a;
   --text-faint: #8797a6;
 
-  /* Rouge de la charte, lisible tel quel sur fond clair. */
   --accent: #ad0707;
   --accent-strong: #8b0512;
   --accent-soft: #fdeaed;
@@ -469,11 +378,6 @@ label:has(.sr-only) {
   --shadow:
     0 1px 2px rgb(15 29 44 / 0.05), 0 12px 28px -18px rgb(15 29 44 / 0.22);
 
-  /*
-   * Barre latérale : le dégradé linéaire de la charte, basculé à la verticale.
-   * Il part du rouge #ad0707 et arrive au vert #007140 — les deux couleurs de
-   * la chambre, reliées par une zone sombre qui laisse respirer le menu.
-   */
   --laterale: linear-gradient(
     180deg,
     #a3122a 0%,
@@ -485,10 +389,8 @@ label:has(.sr-only) {
     #007140 100%
   );
 
-  /* Barre supérieure : bleu de la charte. */
   --superieure: linear-gradient(90deg, #14293e 0%, #0f1d2c 100%);
 
-  /* Dégradé des boutons d'action : rouge clair vers rouge foncé. */
   --bouton-rouge: linear-gradient(
     120deg,
     #d81f3a 0%,
@@ -508,14 +410,6 @@ label:has(.sr-only) {
   color-scheme: light;
 }
 
-/*
- * Titres en gras.
- *
- * Hammersmith One n'existe qu'en graisse 400 : l'appeler en gras produirait un
- * faux gras fabriqué par le navigateur, épais et flou. Les espaces de travail
- * passent donc sur Inter 700, qui a une vraie graisse grasse. L'espace public
- * garde Hammersmith One : c'est là que la fonte porte la voix de la marque.
- */
 .espace-membre h1,
 .espace-membre h2,
 .espace-membre h3,
@@ -539,14 +433,12 @@ label:has(.sr-only) {
   text-transform: uppercase;
 }
 
-/* Le menu déroulant natif hérite sinon du texte clair du formulaire. */
 .espace-membre select option,
 .espace-admin select option {
   color: #0f1d2c;
   background-color: #ffffff;
 }
 
-/* Le certificat et les factures s'impriment seuls, comme dans le prototype. */
 @media print {
   .no-print {
     display: none !important;
@@ -555,14 +447,6 @@ label:has(.sr-only) {
     display: block !important;
   }
 }
-
-/* ============================================================
-   Boutons d'action.
-
-   Une classe dédiée plutôt qu'une règle posée sur `bg-accent` : cette
-   utilitaire sert aussi à l'entrée de menu active et aux pastilles, qui ne
-   doivent ni passer en majuscules ni recevoir le dégradé.
-   ============================================================ */
 
 .btn-action {
   display: inline-flex;
@@ -599,17 +483,12 @@ label:has(.sr-only) {
   cursor: wait;
 }
 
-/* Variante compacte, pour les pieds de carte et les barres d'outils. */
 .btn-action-sm {
   padding: 10px 18px;
   font-size: 12px;
   gap: 8px;
 }
 
-/*
- * Bouton secondaire : même gabarit et même rayon, contour au lieu du plein.
- * Les deux doivent pouvoir se poser côte à côte sans décalage.
- */
 .btn-contour {
   display: inline-flex;
   align-items: center;
@@ -646,7 +525,6 @@ label:has(.sr-only) {
   );
 }
 
-/* Les pastilles et petits repères gardent un aplat : un dégradé y serait illisible. */
 .espace-membre .pastille.bg-accent,
 .espace-membre [class*="rounded-full"].bg-accent,
 .espace-admin .pastille.bg-accent,
@@ -654,25 +532,12 @@ label:has(.sr-only) {
   background-image: none;
 }
 
-/* ============================================================
-   Tuiles d'icône.
-
-   Un carré plein à angles arrondis, icône en blanc. Au survol de la carte qui
-   l'héberge, la tuile bascule sur l'autre couleur de la chambre et s'incline :
-   le mouvement va toujours du rouge au vert ou l'inverse, jamais vers une
-   teinte neutre — c'est ce va-et-vient qui fait la signature.
-   ============================================================ */
-
 .tuile {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 52px;
   height: 52px;
-  /*
-   * Rayon volontairement contenu — environ un cinquième du côté. Au-delà, la
-   * tuile perd son caractère de carré et l'icône paraît flotter au centre.
-   */
   border-radius: 11px;
   color: #ffffff;
   transition:
@@ -701,7 +566,6 @@ label:has(.sr-only) {
   background-color: #007140;
 }
 
-/* L'hôte est la carte ou le lien qui contient la tuile. */
 .tuile-hote:hover .tuile {
   transform: rotate(-7deg) scale(1.07);
   box-shadow: 0 10px 22px -12px rgb(0 0 0 / 0.45);
@@ -727,17 +591,8 @@ label:has(.sr-only) {
   }
 }
 
-/* ============================================================
-   Filet de survol.
-
-   Un trait qui balaie le haut de la carte au passage de la souris. Chaque
-   carte porte sa couleur, tirée des trois de la chambre plus le dégradé qui
-   les relie.
-   ============================================================ */
-
 .carte-filet {
   position: relative;
-  /* Sans quoi le trait déborderait des angles arrondis. */
   overflow: hidden;
 }
 
@@ -759,53 +614,20 @@ label:has(.sr-only) {
   width: 100%;
 }
 
-/*
- * Carte statique — ni lien ni action.
- *
- * Le trait qui se déroule est une promesse : il annonce que la carte répond au
- * clic. Sur une carte qui ne mène nulle part, il ment. On l'affiche donc en
- * entier d'emblée, comme un simple filet décoratif.
- */
 .filet-fixe::before {
   width: 100%;
   transition: none;
 }
 
-/*
- * Carte coiffée d'une photo pleine largeur.
- *
- * En haut, le trait se poserait sur l'image et s'y perdrait — sur une photo
- * sombre il disparaît, sur une photo rouge il se confond. Il passe donc au pied
- * de la carte, où le fond est toujours uni.
- */
 .filet-bas::before {
   inset: auto auto 0 0;
 }
-
-/* ============================================================
-   BARRES DE DÉFILEMENT
-
-   Les barres par défaut du système — grises, épaisses, avec leurs flèches
-   haut et bas — juraient partout : sur le dégradé du menu latéral surtout,
-   où elles posaient une bande claire au milieu du rouge et du vert.
-
-   Un pouce fin et arrondi, sans flèches, sur un rail transparent. Il reste
-   discret au repos et se fonce au survol, pour qui cherche à le saisir.
-
-   Deux mécanismes, un par famille de navigateurs. Chrome et Safari lisent
-   les pseudo-éléments `::-webkit-scrollbar`, qui permettent l'arrondi et
-   la suppression des flèches. Firefox ne connaît que `scrollbar-width` et
-   `scrollbar-color` — mais Chrome les comprend aussi, et dès qu'ils sont
-   posés il ignore les pseudo-éléments. D'où le `@supports` : les propriétés
-   standard ne s'appliquent qu'aux navigateurs qui n'ont rien d'autre.
-   ============================================================ */
 
 :root {
   --pouce: rgb(15 29 44 / 0.22);
   --pouce-survol: rgb(15 29 44 / 0.42);
 }
 
-/* Sur fond sombre — menu latéral, espace public — le pouce passe au blanc. */
 .defilement-sombre {
   --pouce: rgb(255 255 255 / 0.26);
   --pouce-survol: rgb(255 255 255 / 0.46);
@@ -828,11 +650,6 @@ label:has(.sr-only) {
   background: transparent;
 }
 
-/*
- * La bordure transparente, rognée par `background-clip`, laisse un pouce
- * visible de 6 px dans une zone de saisie de 10 px : fin à l'œil, facile à
- * attraper à la souris.
- */
 ::-webkit-scrollbar-thumb {
   background-color: var(--pouce);
   border: 2px solid transparent;
@@ -844,24 +661,11 @@ label:has(.sr-only) {
   background-color: var(--pouce-survol);
 }
 
-/* Les flèches haut et bas : c'étaient elles, surtout, qui faisaient daté. */
 ::-webkit-scrollbar-button {
   display: none;
   width: 0;
   height: 0;
 }
-
-/* ============================================================
-   ENTRÉES DU MENU LATÉRAL
-
-   Même vocabulaire que la grille tarifaire du site : une ligne à coins
-   arrondis, et un filet vertical qui se déplie sur son bord gauche au
-   passage de la souris. Le filet naît du centre et s'étire vers les deux
-   bords, ce qui accroche l'œil sans déplacer le texte.
-
-   L'entrée courante le garde déployé en permanence : c'est le même signe,
-   et il dit « vous êtes ici » plutôt que « vous pourriez aller ici ».
-   ============================================================ */
 
 .entree-menu {
   position: relative;
@@ -886,7 +690,6 @@ label:has(.sr-only) {
   height: 62%;
 }
 
-/* Déployé sur toute la hauteur : l'entrée courante est un état, pas un survol. */
 .entree-menu-actif::before {
   height: 100%;
 }
@@ -897,18 +700,6 @@ label:has(.sr-only) {
   }
 }
 
-/* ============================================================
-   MOTS SAILLANTS DANS LES TITRES
-
-   La chambre écrit ses titres en posant un ou deux mots dans une couleur
-   de la charte : « Le pont entre le Canada et Madagascar », rouge puis
-   vert. C'est la seule fantaisie typographique du site, et elle porte à
-   chaque fois le mot qui compte.
-
-   Le rouge est le défaut. Le vert sert au second terme d'une paire, ou
-   partout où le rouge dirait « attention » à tort.
-   ============================================================ */
-
 .saillant {
   color: var(--ton-saillant, var(--marque-rouge));
   font-style: italic;
@@ -918,22 +709,6 @@ label:has(.sr-only) {
   --ton-saillant: var(--marque-vert);
 }
 
-/*
- * Espace public.
- *
- * Hammersmith One n'existe qu'en romain : l'italique y serait synthétique et
- * jurerait avec le reste du titre. La couleur suffit.
- *
- * Sur le fond blanc, les teintes de la charte se lisent telles quelles. Sur la
- * bannière sombre, elles s'éteindraient — le vert #007140 y passe pour du gris
- * foncé : on y prend leurs déclinaisons claires.
- */
-/*
- * Le mot saillant passe à l'italique d'Inter — un vrai italique, dessiné.
- * Hammersmith One n'ayant que le romain, l'italique y serait une simple
- * inclinaison ; on change donc de police pour ces quelques mots, et la
- * différence de dessin sert l'accent au lieu de le trahir.
- */
 .marque .saillant {
   font-family: var(--font-texte);
   font-style: italic;
@@ -969,7 +744,6 @@ label:has(.sr-only) {
   --filet: #14263a;
 }
 
-/* Le dégradé de la charte, pour les cartes qui portent l'accent principal. */
 .filet-degrade {
   --filet: linear-gradient(90deg, #ad0707 0%, #007140 100%);
 }
@@ -980,47 +754,21 @@ label:has(.sr-only) {
   }
 }
 
-/*
- * Lecteur de ressources : rien à l'impression.
- *
- * Le raccourci d'impression est neutralisé par le lecteur, mais le menu du
- * navigateur reste accessible ; cette règle couvre ce chemin-là.
- */
 @media print {
   .lecteur-protege {
     display: none !important;
   }
 }
 
-/*
- * Une photo ouverte en plein écran sort du flux de la page : le flou que le
- * lecteur pose sur son contenu ne l'atteint pas. Elle se floute donc
- * d'elle-même quand le lecteur masque.
- */
 .lecteur-protege[data-masque="oui"] dialog[open] {
   filter: blur(40px);
 }
-
-/* ============================================================
-   Mouvement : chargement, transitions et retours.
-
-   Trois durées pour tout le site. Ce qui part s'efface vite, pour ne pas
-   disputer l'attention à ce qui arrive ; ce qui arrive prend un peu plus de
-   temps, pour qu'on le voie arriver. Les déplacements restent courts —
-   10 px, pas une traversée d'écran.
-
-   Rien ici ne s'impose à qui a demandé moins d'animations à son système :
-   la règle `prefers-reduced-motion` plus haut ramène toutes les durées à
-   zéro, et les transitions de page sont coupées plus bas.
-   ============================================================ */
 
 :root {
   --duree-sortie: 150ms;
   --duree-entree: 220ms;
   --duree-deplacement: 380ms;
   --courbe-entree: cubic-bezier(0.16, 1, 0.3, 1);
-  /* Le rouge d'un refus, le même dans tous les espaces — la teinte « bad »
-     de la palette de base tire vers le violet. */
   --refus: #c0152f;
 }
 
@@ -1066,7 +814,6 @@ label:has(.sr-only) {
   }
 }
 
-/* Une confirmation : l'icône surgit, dépasse un peu, se pose. */
 @keyframes rebond {
   0% {
     opacity: 0;
@@ -1081,7 +828,6 @@ label:has(.sr-only) {
   }
 }
 
-/* Une erreur : un « non » de la tête, bref. */
 @keyframes secousse {
   0%,
   100% {
@@ -1101,7 +847,6 @@ label:has(.sr-only) {
   }
 }
 
-/* Le trait d'une coche qui se dessine. */
 @keyframes trace {
   from {
     stroke-dashoffset: 24;
@@ -1141,15 +886,6 @@ label:has(.sr-only) {
   }
 }
 
-/* ---------- Classes d'usage ---------- */
-
-/*
- * Les entrées se jouent en `backwards` : l'état de départ s'applique pendant
- * le délai, et rien ne reste une fois l'animation finie. Une transformation
- * laissée en place écraserait les effets de survol, et ferait d'un élément
- * le repère des enfants en position fixe.
- */
-
 .anim-fondu {
   animation: fondu var(--duree-entree) ease-out backwards;
 }
@@ -1174,23 +910,16 @@ label:has(.sr-only) {
   animation: secousse 420ms ease-in-out backwards;
 }
 
-/* Coche dessinée : sur le <polyline> ou le <path> d'une icône. */
 .anim-trace path,
 .anim-trace polyline {
   stroke-dasharray: 24;
   animation: trace 380ms ease-out 120ms backwards;
 }
 
-/* Chaque page arrive en glissant à peine vers le haut. */
 .entree-page {
   animation: glisse-haut 320ms var(--courbe-entree) backwards;
 }
 
-/*
- * Cascade : les éléments d'une liste ou d'une grille arrivent l'un après
- * l'autre, 40 ms d'écart, et tous ensemble passé le douzième — une longue
- * liste ne doit pas faire attendre.
- */
 .cascade > * {
   animation: glisse-haut 420ms var(--courbe-entree) backwards;
 }
@@ -1228,11 +957,7 @@ label:has(.sr-only) {
   animation-delay: 440ms;
 }
 
-/* ---------- Chargement ---------- */
-
-/* Squelette : la forme de ce qui arrive, parcourue d'un reflet. */
 .squelette {
-  /* Un cran plus soutenu que le fond de page : la silhouette doit se lire. */
   background-color: #e4e9ef;
   background-image: linear-gradient(
     90deg,
@@ -1245,7 +970,6 @@ label:has(.sr-only) {
   border-radius: 8px;
 }
 
-/* Barre de chargement, en haut de l'écran, aux couleurs de la charte. */
 .barre-chargement {
   position: fixed;
   inset: 0 0 auto;
@@ -1263,11 +987,6 @@ label:has(.sr-only) {
   animation: va-et-vient 1.1s ease-in-out infinite;
 }
 
-/* ---------- Écran de passage (connexion, inscription) ---------- */
-
-/* Il n'apparaît qu'après 0,4 s : un mot de passe refusé revient plus vite,
-   et l'écran ne clignote pas pour rien. Le logo respire doucement, la barre
-   avance en va-et-vient. */
 .ecran-passage {
   animation: fondu var(--duree-entree) ease-out 400ms backwards;
 }
@@ -1286,9 +1005,6 @@ label:has(.sr-only) {
   animation: va-et-vient 1.1s ease-in-out infinite;
 }
 
-/* ---------- Fenêtres ---------- */
-
-/* Une fenêtre s'ouvre en grandissant à peine, le fond s'assombrit en fondu. */
 dialog[open] {
   animation: echelle var(--duree-entree) var(--courbe-entree) backwards;
 }
@@ -1296,9 +1012,6 @@ dialog[open]::backdrop {
   animation: fondu var(--duree-entree) ease-out backwards;
 }
 
-/* ---------- Formulaires ---------- */
-
-/* Un champ refusé à l'envoi : bordure rouge, et une secousse (voir RetoursFormulaire). */
 input:user-invalid,
 textarea:user-invalid,
 select:user-invalid {
@@ -1308,24 +1021,15 @@ select:user-invalid {
   animation: secousse 420ms ease-in-out;
 }
 
-/* ---------- Tirer pour rafraîchir ---------- */
-
-/* Dans les espaces, c'est « Tirer pour rafraîchir » qui répond au geste :
-   le rafraîchissement natif du navigateur rechargerait toute la page. */
 html:has(.espace-membre),
 html:has(.espace-admin) {
   overscroll-behavior-y: contain;
 }
 
-/* ---------- Transitions entre pages ---------- */
-
-/* Pendant une transition, les clics passent à la page, pas à l'animation. */
 ::view-transition {
   pointer-events: none;
 }
 
-/* Élément partagé — l'image d'un événement, le logo d'un membre — qui
-   voyage de la liste à sa fiche. Un léger flou masque la mise à l'échelle. */
 ::view-transition-group(.partage) {
   animation-duration: var(--duree-deplacement);
   animation-timing-function: var(--courbe-entree);
@@ -1339,7 +1043,6 @@ html:has(.espace-admin) {
   }
 }
 
-/* Les barres de navigation ne bougent pas : elles sont le point fixe. */
 ::view-transition-group(barre-laterale),
 ::view-transition-group(barre-superieure) {
   animation: none;
@@ -1367,19 +1070,12 @@ html:has(.espace-admin) {
   }
 }
 
-/* --------------------------------------------------------------------------
-   Texte mis en forme d'une page de ressource — le même à la saisie, dans
-   l'éditeur, et à la lecture. Les tailles sont dites en pixels, pas en
-   proportion : un passage « normal » posé dans un passage « grand » doit
-   redevenir normal, et non hériter de sa taille.
-   -------------------------------------------------------------------------- */
 .texte-riche {
   font-size: 16px;
   line-height: 1.7;
   color: var(--text);
   overflow-wrap: anywhere;
 }
-/* Un paragraphe est un <p> à la lecture, un <div> pendant la saisie. */
 .texte-riche p,
 .texte-riche ul,
 .texte-riche ol {
@@ -1410,7 +1106,6 @@ html:has(.espace-admin) {
 .texte-riche strong {
   font-weight: 700;
 }
-/* `font[size]` : ce que le navigateur pose pendant la saisie. */
 .texte-riche font[size="2"],
 .texte-riche [data-taille="petit"] {
   font-size: 13.5px;
@@ -1428,18 +1123,12 @@ html:has(.espace-admin) {
   font-size: 28px;
   line-height: 1.35;
 }
-/* L'invite d'une zone de texte encore vide, dans l'éditeur. */
 .texte-riche[data-vide="oui"]::before {
   content: attr(data-invite);
   color: var(--text-faint);
   pointer-events: none;
   position: absolute;
 }
-/*
- * Dans l'éditeur de page, les champs se fondent dans la page : le titre, le
- * texte, la légende se saisissent là où ils s'afficheront. C'est le cadre du
- * bloc qui dit où l'on écrit — un contour de plus ferait double emploi.
- */
 .champ-fondu:focus,
 .champ-fondu:focus-visible {
   outline: none;

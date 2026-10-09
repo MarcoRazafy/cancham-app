@@ -4,34 +4,11 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { BellRing, Smartphone } from "lucide-react";
 import { lireConsigne, lireMode } from "@/components/Application";
 
-/**
- * « Recevoir les notifications sur cet appareil », au pied de la cloche.
- *
- * Un clic demande l'autorisation au navigateur, abonne l'appareil aux
- * notifications (Web Push) et rattache l'abonnement à la personne connectée.
- * Elle reçoit dès lors messages, factures et événements sur son téléphone ou
- * son ordinateur, application fermée ou non. « Essayer » s'envoie une
- * notification pour vérifier ; « Désactiver » retire l'abonnement.
- *
- * Ce que le navigateur permet se lit une fois, à l'affichage : adresse
- * sans https (un téléphone qui ouvre le serveur de développement), pas de
- * notifications possibles, iPhone sans l'application installée, ou
- * notifications bloquées. Le reste — abonné ou non — se vérifie auprès du
- * service worker.
- */
-
 type Support =
-  | "inconnu"
-  | "non-securise"
-  | "absent"
-  | "ios"
-  | "refuse"
-  | "possible";
+  "inconnu" | "non-securise" | "absent" | "ios" | "refuse" | "possible";
 type Etat = "inconnu" | "inactif" | "actif" | "refuse";
 
 function lireSupport(): Support {
-  // Les navigateurs n'accordent service worker et notifications qu'aux
-  // adresses sûres : https, ou localhost sur la machine même.
   if (!window.isSecureContext) return "non-securise";
   if (
     !("serviceWorker" in navigator) ||
@@ -39,19 +16,16 @@ function lireSupport(): Support {
     !("Notification" in window)
   )
     return "absent";
-  // Sur iPhone et iPad, seule l'application installée reçoit des notifications.
   if (lireConsigne() === "ios" && !lireMode()) return "ios";
   if (Notification.permission === "denied") return "refuse";
   return "possible";
 }
 
-/** L'abonnement du navigateur, s'il en a un. */
 async function abonnementCourant(): Promise<PushSubscription | null> {
   const inscription = await navigator.serviceWorker.ready;
   return inscription.pushManager.getSubscription();
 }
 
-/** La clé VAPID en octets : c'est ainsi que `subscribe` la veut. */
 function cleEnOctets(base64url: string): Uint8Array<ArrayBuffer> {
   const base64 = (base64url + "=".repeat((4 - (base64url.length % 4)) % 4))
     .replace(/-/g, "+")
@@ -59,7 +33,6 @@ function cleEnOctets(base64url: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 }
 
-/** Le navigateur et le système, pour reconnaître l'appareil. */
 function nomAppareil(): string {
   const ua = navigator.userAgent;
   const systeme = /android/i.test(ua)
@@ -94,7 +67,6 @@ const json = (corps: unknown): RequestInit => ({
   body: JSON.stringify(corps),
 });
 
-/** Dit au serveur à qui appartient l'abonnement de ce navigateur. */
 async function rattacher(abonnement: PushSubscription): Promise<boolean> {
   const reponse = await fetch("/api/push/abonnement", {
     method: "POST",
@@ -121,8 +93,6 @@ export function NotificationsAppareil() {
         if (annule) return;
         if (abonnement && Notification.permission === "granted") {
           setEtat("actif");
-          // Le navigateur reste rattaché à qui est connecté : un autre
-          // compte ouvert ici reprend l'abonnement à son nom.
           void rattacher(abonnement).catch(() => null);
         } else {
           setEtat("inactif");
@@ -199,8 +169,8 @@ export function NotificationsAppareil() {
       setMessage(
         reponse.ok
           ? "Notification d’essai envoyée : elle arrive dans quelques secondes."
-          : ((await reponse.json()) as { erreur?: string }).erreur ??
-              "L’essai n’est pas parti.",
+          : (((await reponse.json()) as { erreur?: string }).erreur ??
+              "L’essai n’est pas parti."),
       );
     } catch {
       setMessage("L’essai n’est pas parti. Réessayez dans un instant.");
@@ -224,8 +194,8 @@ export function NotificationsAppareil() {
       ) : support === "ios" ? (
         <p className="m-0 flex items-start gap-2 text-muted">
           <Smartphone size={15} className="mt-0.5 shrink-0" aria-hidden />
-          Sur iPhone et iPad, installez d’abord l’application (bouton
-          « Installer ») pour recevoir les notifications.
+          Sur iPhone et iPad, installez d’abord l’application (bouton «
+          Installer ») pour recevoir les notifications.
         </p>
       ) : support === "refuse" || etat === "refuse" ? (
         <p className="m-0 text-muted">

@@ -5,19 +5,11 @@ import { Search, Users } from "lucide-react";
 import { INPUT } from "@/components/form-bits";
 import type { MembreChoisissable } from "@/components/forms/BibliothequeOutils";
 
-/**
- * Les entreprises à qui un dossier de la bibliothèque est réservé.
- *
- * Une liste à cocher, avec une recherche pour la parcourir. Les choix sont
- * portés par des champs cachés `membre`, un par entreprise : une case que la
- * recherche a masquée ne disparaît pas du formulaire.
- */
 export function ChoixEntreprises({
   membres,
   initiales,
 }: {
   membres: MembreChoisissable[];
-  /** Déjà cochées : les entreprises à qui l'accès est ouvert. */
   initiales: string[];
 }) {
   const titre = useId();

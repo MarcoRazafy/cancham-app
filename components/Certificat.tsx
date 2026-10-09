@@ -6,67 +6,20 @@ import { libelleFormule } from "@/lib/membership";
 import { affichageSite } from "@/lib/liens";
 import type { Member } from "@/lib/types";
 
-/**
- * Les titres du certificat, dans la fonte des titres du site.
- *
- * Même traitement que `TITRE_GRAS` sur la vitrine : la fonte de texte en 700.
- * Hammersmith One n'a qu'une graisse, et la charte interdit le faux gras ;
- * c'est donc Inter qui porte les titres, ici comme sur le site. Les `!`
- * passent devant les règles de l'espace membre, qui coiffent tous les titres
- * de la plateforme — un document officiel de la chambre parle sa langue, pas
- * celle de l'outil qui l'affiche.
- */
 const TITRE_CHARTE =
   "font-[family-name:var(--font-texte)]! font-bold! tracking-[-0.015em]";
 
-/**
- * Certificat d'adhésion, tel qu'il s'imprime.
- *
- * Une feuille A4 posée à l'italienne : ce qu'on voit à l'écran a exactement
- * les proportions de ce qui sortira de l'imprimante. Les tailles sont
- * exprimées en `cqw` — un pourcentage de la largeur de la feuille —, si bien
- * que le document se lit pareil dans une fenêtre de 900 pixels et sur 297
- * millimètres de papier. Le `@container` est donc posé sur l'enveloppe, et
- * non sur la feuille : une unité `cqw` se mesure sur un conteneur ancêtre,
- * jamais sur l'élément qui la porte.
- *
- * La feuille porte la classe `marque` : un document officiel de la chambre
- * suit sa charte, et non les polices de l'espace membre, qui n'est qu'un
- * outil de travail.
- *
- * Elle est enveloppée dans `ProtectionDocument` : ni sélection, ni copie, ni
- * « Enregistrer l'image sous… ». L'impression reste entière — c'est l'usage
- * prévu.
- *
- * Partagé par la fenêtre ouverte depuis « Mon entreprise » et par la page
- * d'impression.
- */
 export function CertificatAdhesion({
   membre: m,
   fin,
 }: {
   membre: Pick<Member, "nom" | "formule">;
-  /** Fin de la période couverte, ISO court. Absente, la mention s'efface. */
   fin?: string | null;
 }) {
   return (
     <ProtectionDocument className="mx-auto w-full max-w-[1000px] print:max-w-none">
       <div className="@container aspect-[297/210] w-full print:h-[210mm] print:w-[297mm]">
-        {/*
-          Le cadre en dégradé, du rouge au vert : les deux couleurs de la
-          charte se rejoignent sur la tranche du document, comme les deux pays.
-        */}
-        {/*
-          Le cadre en dégradé habille l'écran ; à l'impression il disparaît —
-          une bordure pleine page vide une cartouche d'encre et sort baveuse
-          sur une imprimante de bureau. Reste la feuille, avec son filet.
-        */}
         <div className="certificat flex h-full w-full bg-[linear-gradient(100deg,#ad0707_0%,#7a4a1f_52%,#007140_100%)] p-[1.1cqw] print:bg-none print:p-0">
-          {/*
-            `marque` va sur la feuille et non sur le cadre : la charte pose un
-            fond blanc, écrit hors des couches de Tailwind, qui l'emporte donc
-            sur une classe utilitaire — le dégradé du cadre disparaîtrait.
-          */}
           <div className="marque flex h-full w-full bg-white p-[1.2cqw]">
             <div className="flex h-full w-full flex-col items-center border border-[#0f1d2c]/20 px-[5cqw] py-[2.6cqw] text-center text-[#0f1d2c]">
               <Image
@@ -104,11 +57,6 @@ export function CertificatAdhesion({
 
               <p className="m-0 mt-[2.1cqw] max-w-[68cqw] text-[1.7cqw] leading-relaxed text-[#243447]">
                 est membre de la CanCham Madagascar
-                {/*
-                  Sans formule choisie, la phrase saute la catégorie : en
-                  inventer une sur un document officiel serait pire que de n'en
-                  pas mettre.
-                */}
                 {m.formule ? (
                   <>
                     {" "}
@@ -122,7 +70,6 @@ export function CertificatAdhesion({
                 aux membres.
               </p>
 
-              {/* La validité à gauche, le sceau au centre, la signature à droite. */}
               <div className="mt-auto grid w-full grid-cols-3 items-end gap-[2cqw]">
                 <div className="text-left">
                   {fin ? (
@@ -142,10 +89,6 @@ export function CertificatAdhesion({
                 <SceauMembre className="mx-auto w-[9.5cqw]" />
 
                 <div className="text-right">
-                  {/*
-                    La signature repose sur le trait, comme à la main : elle
-                    déborde d'un cheveu dessus plutôt que de flotter au-dessus.
-                  */}
                   <Image
                     src="/marque/signature-presidente.png"
                     alt="Signature de la présidente du Conseil d’Administration"
@@ -180,14 +123,6 @@ export function CertificatAdhesion({
   );
 }
 
-/**
- * Le sceau de la chambre, dessiné et non photographié.
- *
- * En vectoriel, il reste net à l'impression quelle que soit la taille du
- * papier, et il n'y a pas d'image à aller chercher — ni à enregistrer d'un
- * clic droit. L'anneau prend le dégradé de la charte, le liseré pointillé
- * rappelle le tampon, et le disque vert porte la coche.
- */
 function SceauMembre({ className }: { className?: string }) {
   const rayon = 39;
   const tour = 2 * Math.PI * rayon;

@@ -46,13 +46,6 @@ import type {
   Space,
 } from "@/lib/types";
 
-/* ==================== Visuels de remplacement ==================== */
-
-/**
- * Faute de vrais visuels, on génère un dégradé décoratif stable à partir d'une
- * graine. Deux appels avec la même graine donnent toujours la même couleur, ce
- * qui évite le scintillement entre rendus.
- */
 export function PhotoPlaceholder({
   seed,
   className = "",
@@ -88,14 +81,6 @@ export function PhotoPlaceholder({
   );
 }
 
-/**
- * Vignette ronde : la photo si elle existe, les initiales sinon.
- *
- * Une seule implémentation pour l'annuaire, la messagerie et la barre du haut,
- * de sorte que le repli soit identique partout le jour où une URL casse — et
- * qu'il n'y ait qu'un endroit à toucher quand la chambre versera ses propres
- * portraits.
- */
 export function AvatarRond({
   src,
   alt,
@@ -109,14 +94,8 @@ export function AvatarRond({
   alt: string;
   initiales: string;
   taille: number;
-  /** Habillage du repli en initiales : fond, texte, bordure. */
   className?: string;
   style?: CSSProperties;
-  /**
-   * `couverture` remplit le rond en rognant — c'est ce qu'il faut d'un
-   * portrait ou d'une photo. `contenu` inscrit l'image entière dans le rond :
-   * un logo a ses propres marges, les rogner le mutile.
-   */
   ajuste?: "couverture" | "contenu";
 }) {
   if (src) {
@@ -183,9 +162,6 @@ export function LogoMark({
       </div>
     );
   }
-  // Le logo passe avant tout : c'est l'identité officielle de l'organisation.
-  // Le cadre s'allonge au lieu de le comprimer : presque tous les logos sont
-  // horizontaux, et dans un carré ils se réduisent à une bande illisible.
   if (member.logo) {
     return (
       <div
@@ -204,7 +180,6 @@ export function LogoMark({
     );
   }
 
-  // À défaut, le visuel d'activité. Le monogramme ne sert que de dernier repli.
   if (member.photo) {
     return (
       <div
@@ -233,12 +208,6 @@ export function LogoMark({
   );
 }
 
-/**
- * Visuel réel s'il existe, dégradé décoratif sinon.
- *
- * Toutes les vignettes de l'application passent par ici : le jour où la chambre
- * fournit ses propres photos, il n'y a qu'un champ à renseigner en base.
- */
 export function Visuel({
   src,
   alt,
@@ -257,12 +226,7 @@ export function Visuel({
   icon?: ReactNode;
   iconSize?: number;
   sizes?: string;
-  /** Quelle partie de l'image garder quand elle est rognée. */
   cadrage?: "object-center" | "object-top";
-  /**
-   * Cadrage sur mesure, en `object-position` — celui qu'un membre a choisi
-   * pour sa couverture. Il prime sur `cadrage`.
-   */
   position?: string;
 }) {
   if (!src) {
@@ -289,13 +253,6 @@ export function Visuel({
   );
 }
 
-/* ==================== Membres ==================== */
-
-/**
- * Secteur d'activité, en étiquette. En simple ligne grise sous le nom, on ne
- * le reconnaissait pas pour ce qu'il est : c'est pourtant le premier filtre
- * de l'annuaire.
- */
 export function PuceSecteur({
   secteur,
   grand = false,
@@ -316,31 +273,20 @@ export function PuceSecteur({
   );
 }
 
-/** Cases de la rangée de produits d'une carte de l'annuaire. */
 const VIGNETTES_PAR_CARTE = 4;
 
 export function MemberCard({ member, href }: { member: Member; href: string }) {
-  // Trois fonds sobres : le bleu marine sur bleu marine du jeu précédent
-  // rendait le libellé illisible sur fond sombre.
   const swatches = [
     "bg-surface-2 text-muted",
     "bg-surface-3 text-muted",
     "bg-accent-soft text-accent-strong",
   ];
-  // Le carré n'a de sens que pour montrer une photo de produit. Sans photo,
-  // il laissait un grand vide autour d'un libellé de deux mots.
   const avecPhotos = member.produits.some((p) => p.photos.length > 0);
-  // Des cases de taille fixe, les mêmes d'une carte à l'autre : partager la
-  // largeur entre les produits donnait de grandes vignettes à qui en a trois
-  // et des timbres-poste à qui en a cinq. Au-delà, la dernière case dit
-  // combien il en reste.
   const vignettes = avecPhotos
     ? member.produits.slice(0, VIGNETTES_PAR_CARTE)
     : member.produits;
   const reste = member.produits.length - vignettes.length;
   return (
-    // `min-w-0` : dans une grille, une carte n'impose jamais sa largeur à la
-    // colonne — sur téléphone, elle déborderait de l'écran.
     <Link href={href} prefetch className="no-underline block min-w-0">
       <Card
         className={`carte-filet filet-bas ${filetDe(member.id)} h-full flex flex-col transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)] p-0`}
@@ -350,8 +296,6 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
           position={positionObjet(member.cadrage)}
           alt=""
           seed={member.id}
-          // Assez haute pour qu'on reconnaisse la photo : à 104 px, une
-          // couverture n'était plus qu'un bandeau.
           className="h-[150px] w-full"
           sizes="(max-width: 768px) 100vw, 380px"
           icon={
@@ -373,17 +317,12 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
             <PuceSecteur secteur={member.secteur} />
           </div>
         </div>
-        {/*
-          Ni la ville ni l'état de la cotisation : l'annuaire présente des
-          entreprises, pas leur situation vis-à-vis de la chambre.
-        */}
         {member.type === "physique" ? (
           <div className="flex gap-1.5 flex-wrap px-4 pb-3">
             <Pill icon={<UserIcon size={10} />}>Indépendant</Pill>
           </div>
         ) : null}
         <p className="px-4 text-[12.8px] text-muted flex-1 m-0">
-          {/* La carte entière est un lien : pas de `<a>` dans le `<a>`. */}
           <TexteLie texte={member.activite} dansUnLien />
         </p>
         <div
@@ -424,27 +363,13 @@ export function MemberCard({ member, href }: { member: Member; href: string }) {
   );
 }
 
-/**
- * Bloc « Besoins & intérêts » — le moteur de la mise en relation entre membres.
- *
- * Besoins et intérêts se lisent en une seule liste à tirets, sous « Recherche
- * actuellement » : deux colonnes de prose disaient deux fois la même chose, là
- * où un lecteur cherche d'un coup d'œil s'il peut répondre. Chaque ligne saisie
- * devient un tiret ; un tiret tapé en tête de ligne est retiré, pour ne pas
- * s'afficher en double.
- */
 export function NeedsAndInterests({
   member,
   action,
   aRemplir = false,
 }: {
   member: Member;
-  /** Bouton d'ajout, côté équipe : la section s'affiche alors même vide. */
   action?: ReactNode;
-  /**
-   * Sur sa propre fiche : la section s'affiche même vide, et dit où la
-   * remplir — les besoins s'ajoutent dans « Modifier ma fiche ».
-   */
   aRemplir?: boolean;
 }) {
   const lignes = [member.besoins, member.interets]
@@ -499,8 +424,6 @@ export function NeedsAndInterests({
     </>
   );
 }
-
-/* ==================== Événements ==================== */
 
 export function EventCard({
   event,
@@ -563,11 +486,7 @@ export function EventCard({
     </Card>
   );
 
-  // Fiche préchargée en entier : au clic, elle est prête, et l'image peut
-  // voyager de la carte au bandeau.
   return href ? (
-    // `min-w-0` : dans une grille, une carte n'impose jamais sa largeur à la
-    // colonne — sur téléphone, elle déborderait de l'écran.
     <Link href={href} prefetch className="no-underline block min-w-0">
       {body}
     </Link>
@@ -641,8 +560,6 @@ export function EventRow({
   );
 }
 
-/* ==================== Actualités ==================== */
-
 export function MediaBanner({
   media,
   lg = false,
@@ -686,14 +603,6 @@ export function MediaBanner({
   );
 }
 
-/**
- * Photos d'une publication dans le fil, chacune dans ses propres
- * proportions : rien n'est rogné. Une seule se centre, à sa forme ;
- * plusieurs se rangent sur deux colonnes, de gauche à droite — la première
- * de trois occupe la largeur. Au-delà de quatre, la dernière case annonce
- * combien il en reste. Chaque photo mène à l'article, où la galerie
- * complète se parcourt.
- */
 export function MosaiquePhotos({
   images,
   alt,
@@ -746,22 +655,10 @@ export function MosaiquePhotos({
   );
 }
 
-/**
- * Qui publie, et quand : la chambre avec son sigle, ou l'entreprise membre
- * avec son logo. Le même en-tête dans le fil et sur la page d'une
- * publication libre.
- */
 export function SignaturePublication({ news }: { news: NewsItem }) {
   return (
     <div className="flex items-center gap-2.5">
-      {/*
-        Le sigle est large (1888 × 1159) : en `contain` et sans marge, il
-        occupe toute la largeur du rond et reste lisible jusqu'au mot
-        « CanCham ». Un `cover` lui couperait la feuille d'érable.
-      */}
       {news.auteur ? (
-        // Une publication de membre porte le logo et le nom de son
-        // entreprise : on sait d'un coup d'œil que ce n'est pas la chambre.
         <AvatarRond
           src={news.auteur.logo}
           alt={news.auteur.membre}
@@ -792,7 +689,6 @@ export function SignaturePublication({ news }: { news: NewsItem }) {
         <div className="text-[11.5px] text-faint">
           {fmtDate(news.date)}
           {news.auteur?.personne ? ` · ${news.auteur.personne}` : ""}
-          {/* Une publication de membre que l'équipe a diffusée au public. */}
           {news.auteur && news.public ? " · Page publique" : ""}
         </div>
       </div>
@@ -809,12 +705,9 @@ export function NewsFeedItem({
   news: NewsItem;
   base: string;
   space: Space;
-  /** Commandes de l'équipe, posées à côté du lien vers l'article. */
   actions?: ReactNode;
 }) {
   const href = `${base}/${news.id}`;
-  // Une publication libre s'affiche comme elle a été écrite : le texte, sans
-  // le titre qu'on en a tiré — il le répéterait. Un texte long se replie.
   const replie = Boolean(news.libre) && publicationLongue(news.corps);
   return (
     <article className="border border-line rounded-[var(--radius-m)] bg-surface p-4 mb-3">
@@ -848,8 +741,6 @@ export function NewsFeedItem({
       {news.images.length ? (
         <MosaiquePhotos images={news.images} alt={news.titre} href={href} />
       ) : news.libre ? null : (
-        // Un texte seul reste un texte : pas de bandeau décoratif sous une
-        // publication libre.
         <MediaBanner media={news.media} />
       )}
       <div className="flex items-center justify-between gap-3 flex-wrap mt-3 pt-3 border-t border-line">
@@ -875,15 +766,6 @@ export function NewsFeedItem({
   );
 }
 
-/* ==================== Offres & services ==================== */
-
-/**
- * Une offre entre membres.
- *
- * La carte ne dit que l'essentiel ; le détail et les coordonnées de
- * l'entreprise s'ouvrent en fenêtre, pour ne pas faire quitter la page en
- * cours de lecture.
- */
 export function OfferCard({
   offer,
   carre = false,
@@ -891,22 +773,8 @@ export function OfferCard({
   etiquette,
 }: {
   offer: Offer;
-  /**
-   * Posée sur la photo, en haut à gauche : pour l'équipe, l'endroit où
-   * l'offre s'affiche.
-   */
   etiquette?: ReactNode;
-  /**
-   * Carte carrée : la photo prend tout le haut, le texte se resserre dessous.
-   * Pour un rail assez large, où le bandeau de 88 px laissait des cartes
-   * plates et étirées.
-   */
   carre?: boolean;
-  /**
-   * Pour borner la carte depuis la page — sa hauteur, par exemple. Une carte
-   * carrée garde toute la largeur de sa colonne : bornée en hauteur, elle
-   * s'aplatit au lieu de rétrécir et de laisser un vide à côté.
-   */
   className?: string;
 }) {
   return (
@@ -938,13 +806,6 @@ export function OfferCard({
         </div>
         <div className={`p-4 flex flex-col ${carre ? "shrink-0" : "flex-1"}`}>
           <Pill className="self-start">{offer.membre}</Pill>
-          {/*
-            Deux lignes au plus, quelle que soit la forme de la carte : une
-            offre longuement décrite étirait la sienne et désalignait toute la
-            rangée. C'est une accroche — la fenêtre donne le texte entier.
-            `anywhere` coupe au besoin un mot interminable, qui déborderait
-            sinon de la carte.
-          */}
           <div className="font-semibold text-[13.2px] mt-2 mb-1 line-clamp-2 [overflow-wrap:anywhere]">
             {offer.titre}
           </div>
@@ -970,11 +831,6 @@ export function ServiceCard({
     <Card
       className={`tuile-hote carte-filet filet-fixe filet-bas ${gratuit ? "filet-vert" : "filet-rouge"} p-0 flex flex-col`}
     >
-      {/*
-        Vert pour ce qui est inclus dans l'adhésion, rouge pour ce qui est
-        facturé. L'icône dit la même chose que la couleur : une étiquette pour
-        ce qui est offert, une carte bancaire pour ce qui se règle.
-      */}
       <div className="relative h-[168px] shrink-0">
         {service.image ? (
           <>
@@ -985,13 +841,9 @@ export function ServiceCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 420px"
               className="object-cover"
             />
-            {/* Un voile en pied de photo : la tuile qui chevauche le bord
-                s'y détache, quelle que soit l'image. */}
             <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
           </>
         ) : (
-          // Sans photo, un dégradé à la couleur du type, et l'icône en grand,
-          // à peine marquée : la carte garde la même hauteur que ses voisines.
           <div
             className="absolute inset-0 overflow-hidden text-white"
             style={{
@@ -1041,12 +893,6 @@ export function ServiceCard({
   );
 }
 
-/* ==================== Ressources ==================== */
-
-/**
- * Carte ressource, calquée sur `EventCard` : visuel de couverture, étiquette en
- * pastille blanche au-dessus, puis catégorie, titre et métadonnées.
- */
 export function ResourceCard({
   resource,
   footer,
@@ -1054,7 +900,6 @@ export function ResourceCard({
 }: {
   resource: Resource;
   footer?: ReactNode;
-  /** Posé sur le visuel, en haut à droite : la case de sélection. */
   coin?: ReactNode;
 }) {
   const video = resource.fmt === "Vidéo";
@@ -1065,11 +910,6 @@ export function ResourceCard({
       } h-full flex flex-col p-0 transition-shadow hover:shadow-[0_12px_28px_-20px_rgba(15,29,44,0.45)]`}
     >
       <div className="relative">
-        {/*
-          La couverture est tirée du fichier : la première page d'un
-          document, calée en haut pour qu'on en lise le titre ; une image
-          de la vidéo ou la photo, centrée.
-        */}
         <Visuel
           src={resource.cover}
           alt=""
@@ -1128,16 +968,6 @@ export function ResourceCard({
   );
 }
 
-/* ==================== Contacts ==================== */
-
-/**
- * Les personnes à joindre chez un membre.
- *
- * Partagée par « Mon entreprise », la fiche d'annuaire et le back-office. Les
- * deux dernières la lisent sans rien pouvoir changer : on ne gère pas les
- * contacts d'une autre entreprise. Les commandes arrivent donc de l'appelant
- * plutôt que d'être câblées ici, ce qui garde ce fichier libre de tout client.
- */
 export function ListeContacts({
   contacts,
   titre = "Contacts",
@@ -1149,11 +979,8 @@ export function ListeContacts({
   contacts: Contact[];
   titre?: string;
   intro?: string;
-  /** Commande d'en-tête, par exemple « Ajouter un contact ». */
   action?: ReactNode;
-  /** Commande par ligne, par exemple le retrait. */
   actionContact?: (contact: Contact) => ReactNode;
-  /** Sous les coordonnées d'un contact, sur toute la largeur de la carte. */
   piedContact?: (contact: Contact) => ReactNode;
 }) {
   if (!contacts.length) return null;

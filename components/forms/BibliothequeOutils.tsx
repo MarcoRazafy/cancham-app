@@ -38,10 +38,8 @@ import {
   retirerAccesPour,
 } from "@/lib/actions/content";
 
-/** Une entreprise, telle que la liste de choix l'affiche. */
 export type MembreChoisissable = { id: string; nom: string; statut: string };
 
-/** Un accès déjà ouvert. */
 export type AccesOuvert = {
   memberId: string;
   nom: string;
@@ -52,17 +50,6 @@ export type AccesOuvert = {
 const BTN_CARTE =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink";
 
-/**
- * Le menu d'une ressource.
- *
- * En fenêtre et non en liste déroulante : la carte est tronquée à ses bords
- * — c'est ce qui donne ses coins arrondis au visuel —, et un menu qui
- * dépassait s'y trouvait coupé.
- *
- * Il appelle l'action directement, sans formulaire : la carte vit à
- * l'intérieur du formulaire de sélection, et un formulaire ne s'imbrique pas
- * dans un autre.
- */
 export function MenuRessource({
   id,
   titre,
@@ -72,11 +59,6 @@ export function MenuRessource({
   id: string;
   titre: string;
   dossierId: string | null;
-  /**
-   * Proposer « Mettre en premier / en dernier ». À la racine et dans les
-   * résultats d'une recherche, la liste suit un tri : un rang n'y changerait
-   * rien à l'écran.
-   */
   rangement?: boolean;
 }) {
   const [enCours, demarrer] = useTransition();
@@ -205,12 +187,6 @@ function Choix({
   );
 }
 
-/**
- * Qui a accès à une ressource payante, et comment l'ouvrir.
- *
- * En fenêtre plutôt qu'en page : on vérifie un accès au milieu d'un
- * rangement, sans vouloir quitter la bibliothèque et y revenir.
- */
 export function BoutonAcces({
   resourceId,
   titre,
@@ -398,10 +374,6 @@ function ContenuAcces({
   );
 }
 
-/**
- * La barre du presse-papier : elle n'apparaît que quand il porte quelque
- * chose, et colle dans le dossier ouvert.
- */
 export function BarrePressePapier({
   nombre,
   mode,
@@ -434,13 +406,6 @@ export function BarrePressePapier({
   );
 }
 
-/**
- * Ce qu'on fait des ressources cochées.
- *
- * Les boutons vivent dans le formulaire de la liste : chaque case cochée
- * part avec, sans qu'aucun état n'ait à être tenu côté navigateur. Seul
- * « tout sélectionner » a besoin du navigateur — cocher n'est pas envoyer.
- */
 export function BarreSelection({
   membres,
   dossierId,
@@ -485,7 +450,6 @@ export function BarreSelection({
   );
 }
 
-/** Ouvrir un accès à plusieurs entreprises, pour toutes les cartes cochées. */
 function BoutonOuvrirAcces({
   membres,
   dossierId,

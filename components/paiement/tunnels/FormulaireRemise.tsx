@@ -5,14 +5,6 @@ import Link from "next/link";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import { preparerRemiseEspeces } from "@/lib/actions/reglements";
 
-/**
- * Où et quand le membre remet l'argent.
- *
- * Deux lieux, en cartes à cocher : le bureau de la chambre, ou l'équipe
- * qui passe. Choisir le passage ouvre le champ d'adresse — inutile de le
- * montrer à qui vient au bureau. Le moment se choisit d'un clic, matin ou
- * après-midi : c'est ce qu'il faut à l'équipe pour s'organiser.
- */
 export function FormulaireRemise({
   reglementId,
   montant,
@@ -24,15 +16,12 @@ export function FormulaireRemise({
   initial,
 }: {
   reglementId: string;
-  /** « 250 000 », déjà mis en forme. */
   montant: string;
   sigle: string;
   adresseBureau: string;
   horaires: string;
   aujourdhui: string;
-  /** Le dernier jour qu'on peut choisir. */
   limite: string;
-  /** Un rendez-vous déjà pris, qu'on modifie. */
   initial: {
     lieu?: string;
     adresse?: string;
@@ -148,10 +137,6 @@ export function FormulaireRemise({
           <legend className="mb-1.5 text-[14px] font-semibold text-ink">
             Quand ?
           </legend>
-          {/*
-            Le moment choisi se lit en foncé sur l'ambre : du blanc sur cette
-            couleur tomberait sous le seuil de lisibilité.
-          */}
           <div className="grid min-h-12 grid-cols-2 overflow-hidden rounded-[12px] border border-line bg-white">
             {(
               [

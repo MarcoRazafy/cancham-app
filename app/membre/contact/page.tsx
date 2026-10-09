@@ -15,25 +15,9 @@ import { envoyerDemandeContact } from "@/lib/actions/messages";
 import { COORDONNEES, MOTIFS_CONTACT, chiffres } from "@/lib/coordonnees";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Classe des champs, recopiée de `form-bits` : ce module est marqué
- * `"use client"`, et une constante qui en est importée par une page serveur
- * n'est pas garantie d'arriver sous forme de chaîne. Même choix que la page
- * d'adhésion publique.
- */
 const INPUT =
   "w-full border border-line bg-surface text-ink rounded-[var(--radius-s)] px-3 py-[9px] text-[13.6px] disabled:opacity-60";
 
-/**
- * Contacter l'équipe de la chambre.
- *
- * Le formulaire alimente le fil « Équipe CanCham » de la messagerie : la
- * réponse arrive dans la même conversation. Les coordonnées, à droite, sont
- * celles que la chambre publie sur son site.
- *
- * Page ouverte même quand l'accès est restreint : un membre bloqué doit
- * pouvoir demander de l'aide.
- */
 export default async function ContactPage({
   searchParams,
 }: {
@@ -77,7 +61,6 @@ export default async function ContactPage({
       ) : null}
 
       <div className="grid gap-4 items-start lg:grid-cols-[1.35fr_1fr]">
-        {/* ==================== Formulaire ==================== */}
         <Card className="carte-filet filet-fixe filet-degrade p-6">
           <Kicker>Formulaire de contact</Kicker>
           <h2 className="mt-1.5 mb-1 text-[19px]">
@@ -162,7 +145,6 @@ export default async function ContactPage({
           </form>
         </Card>
 
-        {/* ==================== Coordonnées ==================== */}
         <div className="flex flex-col gap-4">
           <Card className="carte-filet filet-fixe filet-bleu p-6">
             <Kicker>Coordonnées</Kicker>
@@ -246,7 +228,6 @@ export default async function ContactPage({
   );
 }
 
-/** Une ligne de coordonnées, cliquable quand elle mène quelque part. */
 function Coordonnee({
   icone,
   teinte,

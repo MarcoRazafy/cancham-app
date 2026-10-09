@@ -4,14 +4,6 @@ import { Card } from "@/components/ui";
 import type { Resource } from "@/lib/types";
 import { EtapeEnVue } from "./EtapeEnVue";
 
-/**
- * Les étapes du dossier, à côté de la ressource qu'on lit.
- *
- * Une ressource rangée dans un dossier est une étape d'un parcours : on la
- * lit en sachant où l'on en est, ce qu'on a déjà terminé, ce qui vient
- * ensuite — sans repasser par le dossier pour changer d'étape. Le membre y
- * voit sa progression ; l'équipe, la liste seule.
- */
 export function EtapesDossier({
   space,
   dossier,
@@ -20,9 +12,7 @@ export function EtapesDossier({
 }: {
   space: "membre" | "admin";
   dossier: { id: string; nom: string };
-  /** Les ressources du dossier, dans l'ordre que l'équipe leur a donné. */
   etapes: Resource[];
-  /** La ressource ouverte. */
   courante: string;
 }) {
   const faites = etapes.filter((e) => e.terminee).length;

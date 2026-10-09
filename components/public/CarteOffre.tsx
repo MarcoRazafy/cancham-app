@@ -5,13 +5,6 @@ import { TITRE_GRAS } from "@/components/public/CadreVitrine";
 import { positionObjet } from "@/lib/cadrage";
 import type { Offer } from "@/lib/types";
 
-/**
- * Une offre entre membres, telle que la vitrine la montre.
- *
- * Un clic ouvre l'offre en fenêtre : ce qu'elle est, comment joindre
- * l'entreprise qui la propose, et où en profiter. L'annuaire complet, lui,
- * reste réservé aux adhérents.
- */
 export function CarteOffre({ offre }: { offre: Offer }) {
   return (
     <ModaleOffre offre={offre}>
@@ -44,10 +37,6 @@ export function CarteOffre({ offre }: { offre: Offer }) {
         </div>
 
         <div className="flex flex-col flex-1 p-5">
-          {/*
-            Bornés, comme dans l'espace membre : la carte n'est qu'une
-            accroche, et sans cela une offre bavarde étirait sa colonne.
-          */}
           <h3
             className={`${TITRE_GRAS} text-[17px] leading-[1.35] text-[var(--marque-nuit)] m-0 mb-2 line-clamp-2 [overflow-wrap:anywhere]`}
           >

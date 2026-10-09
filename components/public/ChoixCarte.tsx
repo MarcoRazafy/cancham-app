@@ -6,14 +6,6 @@ import {
   type FormuleId,
 } from "@/lib/membership";
 
-/**
- * Bouton radio présenté en carte : une icône en haut à gauche, le rond de
- * sélection en haut à droite. Choisie, la carte prend une bordure verte et un
- * fond vert pâle.
- *
- * Partagé par la demande d'adhésion et la page de bienvenue : les deux
- * posent les mêmes questions, elles doivent les poser de la même façon.
- */
 export function ChoixCarte({
   name,
   value,
@@ -27,7 +19,6 @@ export function ChoixCarte({
   name: string;
   value: string;
   defaultChecked: boolean;
-  /** Le groupe doit être renseigné : le navigateur bloque l'envoi à vide. */
   requis?: boolean;
   titre: string;
   detail?: string;
@@ -44,7 +35,6 @@ export function ChoixCarte({
         required={requis}
         className="sr-only"
       />
-      {/* Le rond de sélection, dessiné : le bouton natif est masqué. */}
       <span
         aria-hidden
         className="absolute top-4 right-4 w-5 h-5 rounded-full border-2 border-line bg-white transition-colors group-has-checked:border-marque-vert group-has-checked:bg-[radial-gradient(circle,var(--marque-vert)_45%,white_50%)]"
@@ -68,25 +58,8 @@ export function ChoixCarte({
   );
 }
 
-/**
- * Le choix de la formule d'adhésion, cartes et tarifs.
- *
- * Le profil est écrit sous le pays : c'est lui qui décide du montant — une
- * entreprise malgache ne paie pas comme un consultant, ni comme un adhérent
- * de la diaspora. Sans cette mention, le candidat choisit un prix sans savoir
- * s'il y a droit.
- *
- * La grille vient de `lib/membership.ts`, celle qui facture : la demande
- * d'adhésion ne peut pas annoncer un tarif que la plateforme ne pratique plus.
- */
 export function ChoixFormules({ actuelle }: { actuelle?: FormuleId | null }) {
   return (
-    /*
-      Une carte par ligne, et deux seulement quand le cadre est assez large :
-      la mesure se prend sur le conteneur, pas sur la fenêtre — le formulaire
-      d'adhésion occupe une colonne étroite au milieu d'un grand écran, et
-      « Madagascar » s'y faisait couper par le rond de sélection.
-    */
     <div className="@container">
       <div className="grid gap-3 @md:grid-cols-2">
         {ORDRE_FORMULES.map((f) => (

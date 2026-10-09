@@ -22,7 +22,6 @@ import type { Space } from "@/lib/types";
 import { poids } from "./outils";
 import { PLAFOND_FICHIER, PLAFOND_FICHIER_MO } from "@/lib/plafonds";
 
-/** Les types acceptés ; le plafond est celui du serveur, vérifié avant l'envoi. */
 type TypePiece = "image" | "video" | "pdf";
 const MAX_PIECES = 5;
 const ACCEPTE = "image/*,video/mp4,video/webm,video/quicktime,application/pdf";
@@ -35,16 +34,6 @@ function typeDe(f: File): TypePiece | null {
   return null;
 }
 
-/**
- * Zone de saisie d'un fil : texte, émojis et pièces jointes.
- *
- * Entrée envoie, Maj + Entrée passe à la ligne. Les fichiers choisis
- * s'affichent en étiquettes retirables avant l'envoi ; comme un `FileList`
- * ne se modifie pas, on reconstruit celui du champ caché à chaque retrait.
- *
- * Le composant est remonté après chaque envoi (clé posée par la page) : les
- * étiquettes et le texte repartent à vide.
- */
 export function Composeur({
   threadId,
   space,
@@ -59,12 +48,8 @@ export function Composeur({
   const [erreur, setErreur] = useState<string | null>(null);
   const [emojis, setEmojis] = useState(false);
   const [vide, setVide] = useState(true);
-  // Chaque pièce jointe part dès qu'on la choisit : son pourcentage
-  // s'affiche sur son étiquette, et le message n'enverra que des jetons.
   const { etats, jetons } = useEnvois(fichiers);
 
-  // Le champ caché reflète toujours la liste affichée : c'est lui que le
-  // formulaire envoie.
   useEffect(() => {
     if (!champFichiers.current) return;
     const dt = new DataTransfer();
@@ -137,7 +122,6 @@ export function Composeur({
         className="sr-only"
         tabIndex={-1}
         onChange={(e) => {
-          // On lit les fichiers choisis, puis la liste affichée reprend la main.
           choisir(e.target.files);
         }}
       />

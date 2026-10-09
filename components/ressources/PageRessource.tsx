@@ -9,19 +9,6 @@ import {
 import { PhotoPleinEcran } from "./PhotoPleinEcran";
 import { VideoPrivee } from "./VideoPrivee";
 
-/**
- * Une page de ressource composée dans la plateforme, telle qu'on la lit.
- *
- * Le texte mis en forme est redessiné à partir de sa description — tel
- * passage en gras, tel autre en lien : aucun HTML saisi n'est injecté. Les
- * photos et les vidéos déposées se chargent par une route qui revérifie
- * l'accès ; une vidéo donnée par un lien se lit dans la page, sans sortie
- * vers son hébergeur (`VideoPrivee`).
- *
- * Sans état ni effet : le même composant dessine la page côté serveur, pour
- * la lecture, et dans l'éditeur, pour l'aperçu d'une vidéo.
- */
-
 const ALIGNEMENT: Record<Alignement, string> = {
   centre: "text-center",
   droite: "text-right",
@@ -48,7 +35,6 @@ function Passages({ passages }: { passages: Passage[] }) {
       );
     }
     if (p.lien) {
-      // Un chemin de la plateforme s'ouvre sur place ; le reste, à côté.
       const interne = p.lien.startsWith("/");
       contenu = (
         <a
@@ -72,7 +58,6 @@ export function TexteMisEnForme({ lignes }: { lignes: Ligne[] }) {
             key={i}
             className={l.alignement ? ALIGNEMENT[l.alignement] : undefined}
           >
-            {/* Un paragraphe vide est une ligne blanche : il garde sa hauteur. */}
             {l.passages.length ? <Passages passages={l.passages} /> : <br />}
           </p>
         ) : l.genre === "ul" ? (
@@ -97,13 +82,6 @@ export function TexteMisEnForme({ lignes }: { lignes: Ligne[] }) {
   );
 }
 
-/**
- * Une vidéo donnée par son lien, dans le cadre de son hébergeur, tel quel.
- *
- * Pour l'aperçu de l'éditeur seulement : l'équipe y vérifie qu'elle a collé
- * la bonne vidéo, titre compris. Les membres, eux, la lisent par
- * `VideoPrivee`, qui ne laisse aucune sortie vers l'hébergeur.
- */
 export function VideoEnLien({ url, titre }: { url: string; titre: string }) {
   const video = lienVideo(url);
   if (!video) return null;
@@ -148,14 +126,12 @@ function BlocLu({
 
   const source = (fichier: string) => `/api/ressources/${id}/blocs/${fichier}`;
   if (bloc.type === "photo") {
-    // Un clic l'ouvre en plein écran : une capture ne se lit pas en colonne.
     return (
       <PhotoPleinEcran src={source(bloc.fichier)} legende={bloc.legende} />
     );
   }
 
   if (bloc.source === "lien") {
-    // À la lecture, l'adresse de la vidéo ne doit pas servir de sortie.
     return <VideoPrivee url={bloc.url} titre={titre} />;
   }
   return (
@@ -181,7 +157,6 @@ export function PageRessource({
   blocs,
 }: {
   id: string;
-  /** Le titre de la ressource : il nomme ses vidéos pour les lecteurs d'écran. */
   titre: string;
   blocs: Bloc[];
 }) {

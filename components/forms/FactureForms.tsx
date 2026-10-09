@@ -22,11 +22,9 @@ const MODES = ["Espèces", "Virement bancaire", "Mobile Money", "Chèque"];
 
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
-/** Nouvelle facture : stand, participation, prestation, cotisation hors cycle. */
 export function NouvelleFactureButton({
   membres,
 }: {
-  /** La devise suit la formule du membre, modifiable au besoin. */
   membres: { id: string; nom: string; devise: Devise }[];
 }) {
   const [devise, setDevise] = useState<Devise>(membres[0]?.devise ?? "MGA");
@@ -144,7 +142,6 @@ export function NouvelleFactureButton({
   );
 }
 
-/** Enregistre le règlement d'une facture émise. */
 export function MarquerPayeeButton({
   factureId,
   numero,
@@ -154,7 +151,6 @@ export function MarquerPayeeButton({
   factureId: string;
   numero: string;
   montant: string;
-  /** Une cotisation réglée remet le membre à jour : on le dit avant. */
   cotisation: boolean;
 }) {
   return (
@@ -210,12 +206,6 @@ export function MarquerPayeeButton({
   );
 }
 
-/**
- * Suppression d'une facture émise par erreur.
- *
- * L'alerte dit ce qui disparaît — la pièce et son montant dans les totaux —
- * et ce qui reste : la trace au journal, avec le numéro et l'auteur.
- */
 export function SupprimerFactureButton({
   factureId,
   numero,
@@ -227,7 +217,6 @@ export function SupprimerFactureButton({
   numero: string;
   montant: string;
   membre: string;
-  /** Une facture réglée emporte son encaissement : on le dit. */
   payee: boolean;
 }) {
   return (

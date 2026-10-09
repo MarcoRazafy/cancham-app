@@ -30,14 +30,6 @@ import {
   getStatsPubliques,
 } from "@/lib/queries";
 
-/**
- * À qui la chambre s'adresse, repris du site cancham.mg.
- *
- * Chaque carte porte sa couleur : le vert de Madagascar pour ceux qui y sont,
- * le rouge du Canada pour ceux qui le regardent, et le dégradé qui relie les
- * deux pour la diaspora. Le trait se déroule au survol, la tuile s'allume et
- * s'incline — de quoi donner envie de lire la suivante.
- */
 const PROFILS = [
   {
     icone: Building2,
@@ -73,10 +65,6 @@ const PROFILS = [
   },
 ];
 
-/**
- * Ce que l'adhésion apporte, tel que la chambre l'annonce. Les flèches
- * alternent ses deux couleurs, comme sur son site.
- */
 const AVANTAGES = [
   "Accès prioritaire à nos missions économiques et événements signature",
   "Tarifs préférentiels sur les formations et événements payants",
@@ -84,19 +72,6 @@ const AVANTAGES = [
   "Visibilité institutionnelle au sein de la communauté CanCham",
 ];
 
-/**
- * Celles et ceux qui dirigent la chambre.
- *
- * Écrits ici et non en base : le conseil ne change qu'à l'assemblée générale,
- * et le back-office n'a pas d'écran pour le tenir. Le jour où il en aura un,
- * cette constante partira ; en attendant, une élection se reporte en
- * modifiant ces lignes et en déposant les portraits dans `public/equipe/`.
- *
- * Un portrait qu'on remplace prend un nouveau nom de fichier (`…-2.jpg`) :
- * une image optimisée reste quatre heures en cache, côté serveur comme dans
- * les navigateurs, et un fichier écrasé sous le même nom continuerait
- * d'afficher l'ancienne photo.
- */
 const PRESIDENTE = {
   nom: "Ando Lalaina RATOVOMANANA",
   role: "Présidente du Conseil d’Administration",
@@ -105,33 +80,19 @@ const PRESIDENTE = {
     "Dix ans après sa création, la CanCham continue d’évoluer, portée par la motivation de celles et ceux qui la font vivre. Nous innovons dans nos formats, nos missions et nos outils, avec une seule boussole : ouvrir de vraies portes entre le Canada et Madagascar.",
 };
 
-/**
- * Quelle partie d'un portrait garder quand sa carte le rogne.
- *
- * Une photo d'identité se cadre un peu sous son bord haut : centrée, on lui
- * couperait le front. Un portrait posé — la série sur fond beige, prise à
- * mi-corps — a la tête tout en haut de l'image : il se cale sur le bord
- * supérieur, sinon ce sont les cheveux qui partent.
- */
 const CADRAGE = {
   identite: "object-[center_20%]",
   pose: "object-top",
 } as const;
 
-/**
- * Une élue ou un élu du Conseil, tel que sa carte le montre : le prénom sur
- * une ligne, le nom sur la suivante.
- */
 interface Elu {
   prenom: string;
   nom: string;
-  /** Sa fonction au bureau. Les conseillères n'en portent pas. */
   role?: string;
   photo: string;
   cadrage?: string;
 }
 
-/** Le bureau du Conseil : les élus, autour de la présidente. */
 const BUREAU: Elu[] = [
   {
     prenom: "Rojonirina Patrick",
@@ -177,11 +138,6 @@ const CONSEILLERES: Elu[] = [
   { prenom: "Elodie", nom: "RABENIVO", photo: "/equipe/elodie-rabenivo.jpg" },
 ];
 
-/**
- * La carte d'une élue ou d'un élu : son portrait à gauche, en vignette
- * carrée, son prénom et son nom à droite sur deux lignes, sa fonction dessous
- * quand elle ou il en porte une.
- */
 function CarteElu({
   elu,
   serree = false,
@@ -189,10 +145,6 @@ function CarteElu({
   style,
 }: {
   elu: Elu;
-  /**
-   * Quatre cartes de front : le portrait et le nom se resserrent, pour que
-   * le plus long des noms tienne sur sa ligne.
-   */
   serree?: boolean;
   className?: string;
   style?: React.CSSProperties;
@@ -202,7 +154,6 @@ function CarteElu({
       style={style}
       className={`flex items-center rounded-xl bg-surface p-1.5 ${serree ? "gap-3 pr-2.5" : "gap-3.5 pr-3.5 sm:gap-4"} ${SURVOL_CARTE} ${className}`}
     >
-      {/* Chaque portrait a son cadrage : voir `CADRAGE`. */}
       <Image
         src={elu.photo}
         alt={`Portrait de ${elu.prenom} ${elu.nom}`}
@@ -212,8 +163,6 @@ function CarteElu({
         className={`block ${serree ? "w-[clamp(92px,7.2vw,104px)]" : "w-[clamp(92px,9vw,128px)]"} shrink-0 aspect-square object-cover ${elu.cadrage ?? CADRAGE.identite} rounded-[9px]`}
       />
       <div className="min-w-0">
-        {/* Un nom malgache est long : plutôt que de sortir de la carte, il
-            passe à la ligne. */}
         <h3
           className={`m-0 font-[family-name:var(--font-texte)]! font-medium! tracking-normal! ${serree ? "text-[clamp(15.5px,1.2vw,17px)]" : "text-[clamp(15.5px,1.3vw,19.5px)]"} leading-[1.45] [overflow-wrap:anywhere]`}
         >
@@ -228,11 +177,6 @@ function CarteElu({
   );
 }
 
-/**
- * L'équipe permanente, salariée — à ne pas confondre avec le Conseil, qui est
- * élu. D'où le bloc à part et le vert : ce sont les personnes qu'un membre a
- * au téléphone.
- */
 const EQUIPE = [
   {
     nom: "Alice RATISBONNE",
@@ -256,21 +200,12 @@ const EQUIPE = [
   },
 ];
 
-/**
- * Le filet rouge-vert de la charte, posé sur le bleu nuit.
- *
- * Les teintes pleines y perdent : le vert #007140 passe pour du gris foncé.
- * On prend leurs déclinaisons claires, celles que la vitrine sombre réserve
- * déjà au texte de marque.
- */
 const FILET =
   "bg-[linear-gradient(90deg,var(--marque-rouge-clair),var(--marque-vert-clair))]";
 
-/** Le même filet, tout en vert : il signale l'équipe salariée, pas les élus. */
 const FILET_VERT =
   "bg-[linear-gradient(90deg,var(--marque-vert-clair),#3fc98a)]";
 
-/** L'accueil porte le titre du site, sans suffixe : il l'est déjà. */
 export const metadata: Metadata = {
   title: {
     absolute:
@@ -279,24 +214,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/**
- * Page d'accueil publique, conforme à la charte CanCham.
- *
- * Tous les chiffres et les événements viennent de la base : la vitrine dit ce
- * que l'annuaire contient réellement et se met à jour d'elle-même.
- */
-/** Une section à la hauteur de l'écran, son contenu centré. */
 const PLEIN_ECRAN = "min-h-screen flex flex-col justify-center";
 
 export default async function PublicHome() {
-  // Lue à chaque visite : sans cela, Next la calculerait une fois pour
-  // toutes à la compilation, et les chiffres comme les prochains événements
-  // resteraient ceux du jour du déploiement.
   await connection();
   const [stats, evenements, actualites] = await Promise.all([
     getStatsPubliques(),
     getProchainsEvenements(8),
-    // Seules les actualités diffusées sur la page publique.
     getActualitesPubliques(8),
   ]);
 
@@ -317,19 +241,9 @@ export default async function PublicHome() {
 
   return (
     <>
-      {/*
-        Chaque section occupe au moins la hauteur de l'écran, sur toute
-        machine, son contenu centré : on en lit une à la fois. Le conseil et
-        l'infolettre gardent leur hauteur propre. Un contenu plus haut que
-        l'écran — sur téléphone — pousse simplement la section.
-      */}
-      {/* ==================== Bannière ==================== */}
       <section
         className={`sur-sombre relative overflow-hidden bg-[var(--marque-nuit)] ${PLEIN_ECRAN}`}
       >
-        {/* Toronto à gauche, les baobabs à droite : les deux pays encadrent la
-            bannière. Entre eux, le dégradé linéaire 90° de la charte, posé
-            franchement — le rouge et le vert doivent se lire, pas se deviner. */}
         <div className="absolute inset-0" aria-hidden="true">
           {VISUELS.toronto.url ? (
             <div className="absolute inset-y-0 left-0 w-[52%] md:w-[42%]">
@@ -341,7 +255,6 @@ export default async function PublicHome() {
                 sizes="50vw"
                 className="object-cover"
               />
-              {/* Estompe le bord droit de la photo vers le fond de page. */}
               <div className="absolute inset-0 bg-linear-to-r from-transparent via-[var(--marque-nuit)]/40 to-[var(--marque-nuit)]" />
             </div>
           ) : null}
@@ -359,8 +272,6 @@ export default async function PublicHome() {
             </div>
           ) : null}
 
-          {/* Le dégradé de la charte, en teinte : il colore les photos au lieu
-              de les masquer, d'où le mode « overlay ». */}
           <div
             className="absolute inset-0 mix-blend-overlay"
             style={{
@@ -368,7 +279,6 @@ export default async function PublicHome() {
                 "linear-gradient(90deg, #ad0707 0%, #ad0707 16%, rgba(173,7,7,0) 42%, rgba(0,113,64,0) 58%, #007140 86%, #007140 100%)",
             }}
           />
-          {/* Reprise en opacité franche pour retrouver la densité de la charte. */}
           <div
             className="absolute inset-0"
             style={{
@@ -376,7 +286,6 @@ export default async function PublicHome() {
                 "linear-gradient(90deg, rgba(173,7,7,0.62) 0%, rgba(140,20,40,0.30) 24%, rgba(15,29,44,0.80) 45%, rgba(15,29,44,0.80) 56%, rgba(0,113,64,0.32) 78%, rgba(0,113,64,0.60) 100%)",
             }}
           />
-          {/* Voile minimal, juste de quoi garantir la lisibilité du texte. */}
           <div className="absolute inset-0 bg-[var(--marque-nuit)]/22" />
         </div>
 
@@ -390,11 +299,6 @@ export default async function PublicHome() {
                 CanCham • 10 ans
               </span>
 
-              {/*
-                Le « 10 ans » doré est une image : c'est un logotype
-                anniversaire, dessiné, que nulle police ne reproduirait. Il
-                porte l'annonce, et le titre passe dessous en une ligne.
-              */}
               <h1 className="m-0 mt-6">
                 <Image
                   src="/marque/10-ans.png"
@@ -440,14 +344,6 @@ export default async function PublicHome() {
             </div>
 
             {VISUELS.hero.url ? (
-              /*
-                La photo n'est pas posée à plat : elle est montée, comme sur
-                les visuels de la chambre. Deux formes arrondies la calent —
-                le bleu nuit et le rouge —, une bande verticale rappelle les
-                deux pays, et la légende déborde en bas sur une pastille
-                blanche. Tout l'habillage est décoratif : seul le lien de la
-                photo compte pour la navigation.
-              */
               <figure
                 className="apparition relative m-0 mb-10 group"
                 style={{ animationDelay: "0.3s" }}
@@ -481,7 +377,6 @@ export default async function PublicHome() {
                   />
                 </div>
 
-                {/* Les deux pays, sur la tranche. */}
                 <span
                   aria-hidden
                   className="hidden sm:flex absolute -right-4 top-10 bottom-16 w-[42px] rounded-[16px] bg-[var(--marque-rouge)] items-center justify-center"
@@ -498,7 +393,6 @@ export default async function PublicHome() {
             ) : null}
           </div>
 
-          {/* ==================== Chiffres ==================== */}
           <dl
             className="apparition grid grid-cols-2 md:grid-cols-4 gap-y-7 mt-12 mb-0 pb-11 border-t border-white/12 pt-9"
             style={{ animationDelay: "0.68s" }}
@@ -521,7 +415,6 @@ export default async function PublicHome() {
         </div>
       </section>
 
-      {/* ==================== À qui nous parlons ==================== */}
       <section className={`${CONTENEUR} w-full pt-10 pb-14 ${PLEIN_ECRAN}`}>
         <div>
           <div className="scene grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end">
@@ -538,8 +431,6 @@ export default async function PublicHome() {
             </p>
           </div>
 
-          {/* Les cartes grandissent l'une après l'autre ; sur chacune,
-              l'icône surgit une fois la carte posée. */}
           <div className="scene grid gap-6 sm:grid-cols-2 mt-7">
             {PROFILS.map((p, i) => (
               <article
@@ -547,14 +438,6 @@ export default async function PublicHome() {
                 style={retard(i * 70)}
                 className={`reveler reveler-zoom carte-filet ${p.filet} group rounded-xl bg-white p-10`}
               >
-                {/*
-                  Quatre dixièmes de seconde et une détente douce, comme le
-                  modèle : la tuile s'allume, s'incline et grandit d'un
-                  vingtième. Rien ne saute — et rien ne bouge non plus si le
-                  système demande moins d'animations (`motion-reduce`).
-                */}
-                {/* L'icône et le titre sur une même ligne : on lit d'un coup
-                    d'œil à qui la carte s'adresse. */}
                 <div className="flex items-center gap-4 mb-3.5">
                   <span
                     style={retard(220 + i * 70)}
@@ -575,7 +458,6 @@ export default async function PublicHome() {
             ))}
           </div>
 
-          {/* Le bouton du modèle, avec son halo rouge : il descend au formulaire. */}
           <div className="scene reveler flex justify-center mt-9">
             <LienAncre
               href="#newsletter"
@@ -587,19 +469,9 @@ export default async function PublicHome() {
         </div>
       </section>
 
-      {/* ==================== Devenir membre ==================== */}
-      {/*
-        Une bande claire au bas d'une page sombre, comme sur cancham.mg : la
-        page s'achève sur l'invitation, et le changement de fond la détache du
-        reste. Les couleurs y sont écrites en clair — les jetons de la vitrine
-        sont taillés pour le bleu nuit.
-      */}
       <section className={`vitrine-claire overflow-x-clip ${PLEIN_ECRAN}`}>
         <div className={`${CONTENEUR} w-full py-16`}>
-          {/* Le texte monte, les avantages arrivent ligne à ligne par la
-              gauche, et l'encadré des formules vient de la droite. */}
           <div className="scene grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-            {/* ---------- L'invitation ---------- */}
             <div>
               <h2 className={`${TITRE_SECTION} reveler mb-6`}>
                 Devenir <Saillant>membre,</Saillant> c’est entrer dans{" "}
@@ -642,7 +514,6 @@ export default async function PublicHome() {
               </div>
             </div>
 
-            {/* ---------- Les formules ---------- */}
             <div
               style={retard(160)}
               className="reveler reveler-droite carte-filet filet-fixe filet-degrade rounded-2xl bg-white p-8 md:p-12 shadow-[0_20px_60px_rgba(15,29,44,0.08)]"
@@ -660,17 +531,8 @@ export default async function PublicHome() {
                 notre communauté.
               </p>
 
-              {/*
-                Les tarifs viennent de la grille de `lib/membership.ts`, celle
-                qui facture : la vitrine ne peut pas annoncer un prix que la
-                plateforme ne pratique plus.
-              */}
               <ul className="list-none m-0 mt-6 p-0 flex flex-col gap-2.5">
                 {ORDRE_FORMULES.map((f, i) => (
-                  /*
-                    La bordure gauche existe déjà au repos, transparente :
-                    elle s'allume sans pousser le texte d'un pixel.
-                  */
                   <li
                     key={f}
                     style={retard(360 + i * 45)}
@@ -697,7 +559,6 @@ export default async function PublicHome() {
         </div>
       </section>
 
-      {/* ==================== Événements ==================== */}
       <section id="evenements" className={`scroll-mt-[124px] ${PLEIN_ECRAN}`}>
         <div className={`${CONTENEUR} w-full pt-10 pb-8`}>
           <div>
@@ -718,12 +579,6 @@ export default async function PublicHome() {
             </div>
 
             {evenements.length ? (
-              /*
-                La scène est le carrousel entier, pas chaque carte : les cartes
-                entrent en cascade quand il arrive à l'écran, et le défilement
-                horizontal ne rejoue rien ensuite. Elles grandissent sur place
-                sans monter — un déplacement vertical ferait déborder la piste.
-              */
               <div className="scene mt-8">
                 <CarrouselCartes debord="" libelle="Prochains rendez-vous">
                   {evenements.map((e, i) => (
@@ -746,20 +601,12 @@ export default async function PublicHome() {
         </div>
       </section>
 
-      {/* ==================== Actualités ==================== */}
       {actualites.length ? (
-        /*
-          Bande claire, comme sur le site de la chambre : l'actualité se lit
-          sur du papier, pas sur le bleu nuit. Les teintes y sont écrites en
-          clair — celles de la vitrine sont taillées pour le fond sombre.
-        */
         <section
           id="actualites"
           className={`vitrine-claire scroll-mt-[124px] bg-[#fafafa]! ${PLEIN_ECRAN}`}
         >
           <div className={`${CONTENEUR} w-full py-16`}>
-            {/* Le trait du surtitre se déroule, le titre monte, puis les
-                cartes grandissent l'une après l'autre. */}
             <div className="scene">
               <div className="grid gap-x-10 gap-y-4 lg:grid-cols-2 lg:items-end mt-2.5">
                 <h2 style={retard(80)} className={`${TITRE_SECTION} reveler`}>
@@ -795,33 +642,15 @@ export default async function PublicHome() {
           </div>
         </section>
       ) : null}
-      {/* ==================== Conseil d'administration ==================== */}
-      {/*
-        Les visages de la chambre, juste avant qu'on propose de s'inscrire :
-        on rejoint des personnes autant qu'une organisation, et la parole de
-        la présidente dit mieux que nos arguments pourquoi la maison existe.
-
-        Le filet en haut détache la section de la bande claire des actualités.
-        En bas, rien : l'infolettre ouvre déjà sur son propre dégradé, et deux
-        dégradés qui se touchent ne feraient que du bruit.
-      */}
       <section id="conseil" className="relative scroll-mt-[124px]">
-        {/* Le filet se déroule de gauche à droite en arrivant sur la section. */}
         <span
           aria-hidden
           className={`scene reveler reveler-trait absolute inset-x-0 top-0 h-2.5 ${FILET}`}
         />
 
         <div className={`${CONTENEUR} py-16 md:py-24`}>
-          {/*
-            Le titre à gauche, la parole de la présidente à droite, dans son
-            encadré, dont le haut s'aligne sur celui du titre. Plus étroit,
-            l'encadré passe sous le texte.
-          */}
           <div className="scene grid gap-x-12 gap-y-12 xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)] xl:items-start">
             <div>
-              {/* Un cran sous l’échelle commune sur grand écran : le titre
-                  tient alors en deux lignes dans sa colonne. */}
               <h2 className={`${TITRE_SECTION} reveler xl:text-[50px]`}>
                 Celles et ceux qui portent <Saillant>la chambre.</Saillant>
               </h2>
@@ -840,14 +669,10 @@ export default async function PublicHome() {
               </p>
             </div>
 
-            {/* ---------- La présidente ---------- */}
-            {/* L'encadré vient de la droite, et son guillemet surgit en dernier. */}
             <figure
               style={retard(150)}
               className="reveler reveler-droite relative m-0 flex flex-col gap-x-7 gap-y-5 rounded-[22px] bg-surface p-4 sm:flex-row sm:p-[18px]"
             >
-              {/* Le guillemet ouvrant, dessiné : aucune police ne le donne à
-                  cette taille. Il déborde du coin de l'encadré. */}
               <svg
                 width="64"
                 height="46"
@@ -869,11 +694,6 @@ export default async function PublicHome() {
               />
 
               <div className="flex min-w-0 flex-1 flex-col sm:pt-3.5 sm:pr-3.5">
-                {/*
-                  En italique d'Inter, comme les mots saillants des titres :
-                  la vitrine n'a que deux fontes, et Hammersmith One n'existe
-                  qu'en romain.
-                */}
                 <blockquote className="m-0 text-[clamp(16px,1.42vw,20px)] font-semibold italic leading-[1.42]">
                   {PRESIDENTE.citation}
                 </blockquote>
@@ -890,13 +710,10 @@ export default async function PublicHome() {
             </figure>
           </div>
 
-          {/* ---------- Le bureau du Conseil ---------- */}
           <div className="scene mt-12">
             <div className="reveler surtitre text-white">
               Le bureau du Conseil
             </div>
-            {/* Trois cartes de front sur grand écran ; deux, puis une seule,
-                quand les noms n'y tiendraient plus. */}
             <div className="mt-6 grid gap-5 min-[52rem]:grid-cols-2 xl:grid-cols-3">
               {BUREAU.map((m, i) => (
                 <CarteElu
@@ -909,13 +726,8 @@ export default async function PublicHome() {
             </div>
           </div>
 
-          {/* ---------- Les conseillères ---------- */}
           <div className="scene mt-10">
             <div className="reveler surtitre text-white">Les conseillères</div>
-            {/* Quatre de front là où le conteneur atteint sa pleine largeur.
-                Les seuils sont en rem, comme ceux de Tailwind : en pixels,
-                ils se rangeraient mal parmi eux, et le plus petit
-                l’emporterait. */}
             <div className="mt-6 grid gap-5 min-[44rem]:grid-cols-2 min-[87.5rem]:grid-cols-4">
               {CONSEILLERES.map((c, i) => (
                 <CarteElu
@@ -929,12 +741,6 @@ export default async function PublicHome() {
             </div>
           </div>
 
-          {/* ---------- L'équipe permanente ---------- */}
-          {/*
-            Dans son propre cadre, et en vert : le Conseil est élu, l'équipe
-            est salariée. Ce sont deux choses différentes, et ce sont ces
-            personnes-là qu'un membre a au téléphone.
-          */}
           <div className="scene reveler relative mt-16 overflow-hidden rounded-3xl bg-[var(--marque-nuit-2)] p-7 md:p-12">
             <span
               aria-hidden
@@ -993,24 +799,10 @@ export default async function PublicHome() {
         </div>
       </section>
 
-      {/* ==================== Newsletter ==================== */}
-      {/*
-        La bande du site de la chambre, avec son dégradé qui va du rouge au
-        vert en passant par le bleu nuit.
-
-        Le formulaire enregistre l'inscription : la plateforme garde sa
-        propre liste d'abonnés, que l'équipe retrouve dans son journal. La
-        chambre tient la sienne chez systeme.io — les deux se rejoindront le
-        jour où la synchronisation sera branchée.
-      */}
       <section
         id="newsletter"
         className="relative overflow-hidden scroll-mt-[124px] bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_30%,#0f1d2c_55%,#1b7e3e_85%,#0f5028_100%)] text-white"
       >
-        {/*
-          La trame du modèle : deux traits blancs à trois pour cent, tous les
-          cinquante pixels. Elle donne du grain au dégradé sans se voir.
-        */}
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"

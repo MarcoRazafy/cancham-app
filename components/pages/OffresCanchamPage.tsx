@@ -5,19 +5,11 @@ import { getServices } from "@/lib/queries";
 import { getTypesRendezvous } from "@/lib/rendezvous-donnees";
 import { typeDuLienRendezvous } from "@/lib/liens";
 
-/**
- * Services proposés par la chambre, vus par les membres. À ne pas confondre
- * avec les offres publiées par les membres entre eux, qui vivent dans le rail
- * des actualités. L'équipe les gère depuis le back-office.
- */
 export async function OffresCanchamPage() {
   const [services, types] = await Promise.all([
     getServices(),
     getTypesRendezvous(),
   ]);
-  // Un service peut mener à un rendez-vous que l'équipe a masqué, supprimé ou
-  // vidé de ses heures depuis : son bouton ne doit pas finir dans une
-  // impasse. Il redevient alors la demande par message.
   const ouverts = new Set(
     types.filter((t) => t.plages.length).map((t) => t.id),
   );

@@ -28,21 +28,8 @@ import { matriceQr } from "@/lib/qr";
 import { codeInscription, extraireCode } from "@/lib/codes-accueil";
 import { getBilletsPublics, getEvent } from "@/lib/queries";
 
-// Des noms et une adresse derrière une clé : rien à indexer.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-/**
- * Les billets d'une inscription faite depuis la vitrine : un QR code par
- * participant, à présenter à l'accueil ou à télécharger. On y arrive juste
- * après l'inscription, puis par le lien de l'e-mail de confirmation.
- *
- * Pour un événement payant, c'est aussi d'ici qu'on règle : la page propose
- * les moyens de paiement, comme la fenêtre des membres. La carte mène chez
- * le prestataire, qui ramène ici avec la référence du paiement (`ref`) : la
- * page demande alors où il en est — la notification a pu ne pas arriver
- * encore —, et les QR codes s'affichent dès qu'il est confirmé. Les autres
- * moyens affichent où envoyer l'argent ; l'équipe confirme à réception.
- */
 export default async function BilletsPublics({
   params,
   searchParams,
@@ -54,9 +41,6 @@ export default async function BilletsPublics({
     params,
     searchParams,
   ]);
-  // Avant de lire les billets : un paiement confirmé à l'instant les change.
-  // Le code de l'inscription, et non celui d'un de ses billets : c'est lui
-  // que portent les règlements, quel que soit le premier billet affiché.
   const base = codeInscription(extraireCode(code));
   const paiement = ref ? await suivrePaiementPublic(ref, base) : null;
   const [e, billets] = await Promise.all([
@@ -69,13 +53,9 @@ export default async function BilletsPublics({
     .filter(Boolean)
     .join(" · ");
   const plusieurs = billets.length > 1;
-  // Événement payant : les billets n'existent qu'une fois le règlement
-  // constaté par l'équipe. D'ici là, cette page dit où l'on en est.
   const enAttente = billets.some((b) => b.statut === "a_valider");
   const aRegler =
     e.prixPublic * billets.filter((b) => b.statut === "a_valider").length;
-  // Les moyens offerts — les mêmes que dans l'espace membre —, le règlement
-  // déjà ouvert pour cette inscription, et les coordonnées de la chambre.
   const [modes, reglement, ecarte, coordonnees] =
     enAttente && e.prixPublic > 0
       ? await Promise.all([
@@ -146,9 +126,6 @@ export default async function BilletsPublics({
             code={base}
             montant={aRegler}
             modes={modes}
-            // « Changer de moyen » rouvre le choix sans rien effacer : le
-            // règlement ne change que si une autre tuile est choisie. Un
-            // paiement annoncé, lui, reste affiché : l'équipe le traite.
             reglement={
               reglement &&
               reglement.mode !== "carte" &&

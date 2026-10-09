@@ -9,70 +9,22 @@ import { chiffres, COORDONNEES } from "@/lib/coordonnees";
 import { fmtDate } from "@/lib/format";
 import { getProchainsEvenements } from "@/lib/queries";
 
-/**
- * En-tête et pied de la vitrine, sur le modèle du site cancham.mg.
- *
- * En haut, un bandeau rouge fait défiler les prochains rendez-vous ; dessous,
- * la barre blanche : le logo de la chambre, les liens, et le bouton rouge
- * « Se connecter ». Les deux restent collés en haut au défilement.
- *
- * La barre garde ses propres couleurs, écrites en clair : posée sur la
- * vitrine sombre, les jetons de teinte de l'application y rendraient le
- * texte blanc sur blanc.
- */
-
-/**
- * Le conteneur de la vitrine, mesuré sur cancham.mg : 1 320 pixels de contenu
- * à 40 des bords. Notre page s'arrêtait à 1 120, centrés dans 1 400 — deux
- * fois plus de vide sur les côtés que sur le site de la chambre.
- *
- * Toutes les sections publiques le partagent, en-tête et pied compris : un
- * logo aligné sur un bord et un titre sur un autre se voit tout de suite.
- */
 export const CONTENEUR = "max-w-[1400px] mx-auto px-5 md:px-10";
 
-/**
- * Les titres de la vitrine, en vrai gras.
- *
- * Hammersmith One, la fonte des titres de la charte, n'existe qu'en une seule
- * graisse : l'appeler en gras produirait un faux gras fabriqué par le
- * navigateur, épais et flou. Les titres prennent donc la fonte de texte de
- * l'espace public en 700 — même épaisseur à l'œil, dessin net. Les `!`
- * passent devant la règle qui coiffe tous les titres de la marque.
- */
 export const TITRE_GRAS =
   "font-[family-name:var(--font-texte)]! font-bold! tracking-[-0.015em]";
 
-/**
- * Titre de section de la vitrine.
- *
- * Une seule échelle pour toute la page : les sections se suivaient en 58, 54,
- * 52 et 40 pixels, et deux titres voisins ne pesaient pas le même poids. Le
- * `clamp` garde la lecture confortable du téléphone au grand écran.
- */
 export const TITRE_SECTION = `${TITRE_GRAS} text-[clamp(30px,4.4vw,56px)] leading-[1.08] m-0`;
 
-/** Titre d'un bloc à l'intérieur d'une section — une carte, un encadré. */
 export const TITRE_BLOC = `${TITRE_GRAS} text-[clamp(22px,2.4vw,28px)] leading-[1.25] m-0`;
 
-/**
- * Retard d'un élément dans une cascade d'apparitions (`vitrine.css`).
- *
- * Les cartes d'une rangée entrent l'une après l'autre, de gauche à droite :
- * la suivante part soixante-dix millisecondes après la précédente. En deçà,
- * la cascade ne se voit pas ; au-delà, la quatrième carte se fait attendre.
- */
 export const retard = (ms: number): CSSProperties =>
   ({ "--retard": `${ms}ms` }) as CSSProperties;
 
-/** Les liens de la barre, dans l'ordre où on les lit. */
 const LIENS = [
   { href: "/", libelle: "Accueil" },
   { href: "/#evenements", libelle: "Événements" },
   { href: "/#actualites", libelle: "Actualités" },
-  // Une action, pas une page à lire : sur grand écran, elle devient le bouton
-  // à côté de « Se connecter ». En deçà, deux boutons ne tiennent pas sur la
-  // ligne avec le logo et les liens : elle reste dans la rangée des liens.
   {
     href: "/auth/inscription",
     libelle: "Devenir membre",
@@ -80,38 +32,20 @@ const LIENS = [
   },
 ];
 
-/**
- * Un lien de la barre. Sous celui de la page où l'on est — `aria-current`,
- * posé par `NavigationPublique` —, un trait rouge vers vert ; sous les autres,
- * il se déroule au survol. La graisse ne change pas : un lien qui s'élargit
- * ferait bouger toute la barre au fil du défilement.
- */
 const lien =
   "relative inline-flex items-center min-h-11 lg:min-h-0 px-2.5 md:px-3 lg:px-4 py-1.5 md:py-2 text-[14px] md:text-[14.5px] font-semibold text-[#3d4b5c] no-underline whitespace-nowrap transition-colors hover:text-[var(--marque-nuit)] aria-[current=page]:text-[var(--marque-nuit)] after:absolute after:left-2.5 after:right-2.5 md:after:left-3 md:after:right-3 lg:after:left-4 lg:after:right-4 after:bottom-0.5 after:h-[2px] after:rounded-full after:bg-[linear-gradient(90deg,var(--marque-rouge),var(--marque-vert))] after:origin-left after:scale-x-0 after:transition-transform after:duration-300 hover:after:scale-x-100 aria-[current=page]:after:scale-x-100";
 
-/** Ce que le bandeau annonce quand aucun événement n'est programmé. */
 const ANNONCES_PAR_DEFAUT = [
   { texte: "Le réseau des entreprises du Canada et de Madagascar", href: null },
   { texte: "Adhésions ouvertes toute l’année", href: "/auth/inscription" },
   { texte: "Événements, ressources et mises en relation", href: null },
 ];
 
-/**
- * Assez d'annonces pour couvrir un grand écran : la piste défile de la
- * moitié de sa longueur, puis reprend au début sans à-coup.
- */
 const ANNONCES_MIN = 8;
 
-/**
- * Secondes accordées à chaque annonce pour traverser l'écran. Le bandeau doit
- * se lire au passage, pas se poursuivre : à sept secondes, l'œil n'avait pas
- * fini une ligne qu'elle était partie.
- */
 const SECONDES_PAR_ANNONCE = 13;
 
 export async function EnTetePublique() {
-  // Lu à chaque visite, jamais à la compilation : la base n'est pas joignable
-  // pendant le build, et le bandeau doit suivre la programmation.
   await connection();
   const evenements = await getProchainsEvenements(6);
   const annonces = evenements.length
@@ -132,7 +66,6 @@ export async function EnTetePublique() {
 
   return (
     <header className="sticky top-0 z-40">
-      {/* ---------- Bandeau des annonces ---------- */}
       <div
         className="bandeau-annonces overflow-hidden bg-marque-rouge text-white"
         aria-label="Prochains rendez-vous"
@@ -175,15 +108,7 @@ export async function EnTetePublique() {
         </div>
       </div>
 
-      {/* ---------- Barre de navigation ---------- */}
-      {/* Une ombre courte sous la barre : collée en haut, elle passe
-          au-dessus du contenu, et doit s'en détacher. */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-[#e3e8ee] text-[#3d4b5c] shadow-[0_6px_24px_-18px_rgba(15,29,44,0.35)]">
-        {/*
-          Sur téléphone et sur tablette, les liens passent sous le logo : ils
-          ne tiennent pas sur la ligne avec lui et le bouton, et les cacher
-          rendrait le site impraticable là où on le consulte le plus.
-        */}
         <div
           className={`${CONTENEUR} flex flex-wrap items-center justify-between gap-x-4 py-2.5 lg:py-0 lg:h-[72px]`}
         >
@@ -198,11 +123,6 @@ export async function EnTetePublique() {
             />
           </Link>
 
-          {/*
-            Les actions, à part des liens : rejoindre la chambre, en contour,
-            et se connecter, en plein. Toujours « Se connecter », même pour
-            qui l'est déjà : `/auth` renvoie alors directement vers son espace.
-          */}
           <div className="order-2 lg:order-3 flex items-center gap-2 shrink-0">
             <div className="hidden xl:block">
               <Link
@@ -219,8 +139,6 @@ export async function EnTetePublique() {
 
           <nav
             aria-label="Navigation principale"
-            // Sur téléphone, la rangée se fait glisser : le bord droit se
-            // fond, pour qu'on devine qu'elle continue.
             className="order-3 lg:order-2 w-full lg:w-auto flex items-center gap-1 md:gap-2 mt-1 lg:mt-0 -mx-1 px-1 lg:mx-0 lg:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-lg:[mask-image:linear-gradient(90deg,#000_calc(100%-36px),transparent)]"
           >
             <NavigationPublique liens={LIENS} className={lien} />
@@ -231,7 +149,6 @@ export async function EnTetePublique() {
   );
 }
 
-/** Les colonnes de liens du pied, dans l'ordre où on les lit. */
 const COLONNES = [
   {
     titre: "Navigation",
@@ -250,7 +167,6 @@ const COLONNES = [
   },
 ];
 
-/** Les pages légales de la chambre, et son site : elles vivent ailleurs. */
 const LEGAL = [
   { libelle: "Mentions légales", href: COORDONNEES.legal.mentions },
   {
@@ -260,13 +176,6 @@ const LEGAL = [
   { libelle: "cancham.mg", href: COORDONNEES.site },
 ];
 
-/**
- * Pied de la vitrine, sur le modèle du site cancham.mg.
- *
- * Quatre colonnes : la marque et ses réseaux, la navigation, l'espace
- * membre, et de quoi joindre la chambre. Seules les pages qui existent y
- * figurent — un pied de page plein de liens morts dessert plus qu'il ne sert.
- */
 export function PiedPublique() {
   const lien =
     "text-[13.5px] text-white/70 no-underline transition-colors hover:text-white";
@@ -275,11 +184,9 @@ export function PiedPublique() {
 
   return (
     <footer className="border-t border-white/10 bg-[var(--marque-nuit)] mt-auto">
-      {/* Les quatre colonnes montent l'une après l'autre. */}
       <div
         className={`scene ${CONTENEUR} py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1.3fr]`}
       >
-        {/* ---------- La marque ---------- */}
         <div className="reveler">
           <Link
             href="/"
@@ -300,8 +207,6 @@ export function PiedPublique() {
               aria-label="CanCham sur LinkedIn"
               className={reseau}
             >
-              {/* Lucide n'a plus d'icônes de marques : le sigle du réseau
-                  fait l'affaire, et rien n'est à embarquer. */}
               <span aria-hidden="true">in</span>
             </a>
             <a
@@ -316,7 +221,6 @@ export function PiedPublique() {
           </div>
         </div>
 
-        {/* ---------- Les colonnes de liens ---------- */}
         {COLONNES.map((c, i) => (
           <nav
             key={c.titre}
@@ -337,7 +241,6 @@ export function PiedPublique() {
           </nav>
         ))}
 
-        {/* ---------- Joindre la chambre ---------- */}
         <div style={retard(220)} className="reveler">
           <h2 className="surtitre m-0 mb-4 text-white/55">Contact</h2>
           <ul className="list-none m-0 p-0 flex flex-col gap-3 text-[13.5px] text-white/70">
@@ -367,11 +270,7 @@ export function PiedPublique() {
         </div>
       </div>
 
-      {/* ---------- Bas de page ---------- */}
       <div className="border-t border-white/10">
-        {/* Sur téléphone, la bulle d'assistance flotte au-dessus du coin
-            droit : on lui laisse la place plutôt que de la voir masquer le
-            copyright. */}
         <div
           className={`${CONTENEUR} py-5 pb-20 sm:pb-5 flex flex-wrap items-center justify-between gap-3 text-[12.5px] text-white/50`}
         >

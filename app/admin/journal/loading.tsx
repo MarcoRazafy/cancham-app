@@ -5,7 +5,6 @@ import {
   SqueletteListe,
 } from "@/components/Squelette";
 
-/** Une liste du back-office : filtres, puis les lignes. */
 export default function ChargementListe() {
   return (
     <Chargement>

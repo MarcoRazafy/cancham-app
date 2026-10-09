@@ -4,12 +4,6 @@ import { Pill } from "@/components/ui";
 import type { AccesMembre } from "@/lib/acces-membres";
 import { fmtDate } from "@/lib/format";
 
-/**
- * Où en est l'accès d'un membre, et le bouton qui l'ouvre.
- *
- * Accès actif : rien à faire. Lien envoyé : on peut le renvoyer. Rien
- * d'envoyé : « Envoyer l’accès ». Sans contact : personne à qui écrire.
- */
 export function EtatAcces({
   acces,
   memberId,
@@ -23,7 +17,6 @@ export function EtatAcces({
   nom: string;
   candidature: boolean;
   retour: string;
-  /** Dans le panneau de la fiche : bouton pleine largeur, détail visible. */
   large?: boolean;
 }) {
   const bouton = (renvoi: boolean) => (
@@ -37,7 +30,6 @@ export function EtatAcces({
     />
   );
 
-  // Une candidature se valide d'abord : le bouton, quel que soit le lien.
   if (candidature && acces.contact) return bouton(false);
 
   switch (acces.etat) {

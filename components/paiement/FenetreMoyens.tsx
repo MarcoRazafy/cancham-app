@@ -8,19 +8,6 @@ import { VisuelMode } from "@/components/paiement/IconeMode";
 import { ouvrirReglement } from "@/lib/actions/reglements";
 import { MODES, ORDRE_MODES, type ModeReglement } from "@/lib/modes-reglement";
 
-/**
- * « Comment payerez-vous ? », en fenêtre.
- *
- * Le choix du moyen s'ouvre par-dessus la page où l'on est — la liste des
- * factures, la fiche de l'événement auquel on vient de s'inscrire —, sans
- * l'emmener ailleurs. Un clic sur une tuile ouvre le règlement dans ce moyen
- * et mène à son écran.
- *
- * `ouverteAuDepart` sert au retour d'une action : l'inscription à un
- * événement payant revient sur sa fiche avec `?regler=…`, et la fenêtre s'y
- * ouvre d'elle-même. La refermer retire ce paramètre, pour qu'un
- * rafraîchissement ne la rouvre pas.
- */
 export function FenetreMoyens({
   facture,
   modes,
@@ -31,19 +18,8 @@ export function FenetreMoyens({
 }: {
   facture: { id: string; numero: string; objet: string; montant: string };
   modes: ModeReglement[];
-  /**
-   * Les moyens que la chambre offre mais qui ne marchent pas encore — la
-   * carte, tant que Vanilla Pay n'est pas branché. Montrés grisés, avec leur
-   * raison, plutôt que cachés : une tuile absente, personne ne sait
-   * l'expliquer.
-   */
   bientot?: ModeReglement[];
   ouverteAuDepart?: boolean;
-  /**
-   * Le contenu du bouton qui ouvre la fenêtre. Du contenu et non une
-   * fonction : une page serveur ne peut pas passer de fonction à un
-   * composant client — le bouton, avec son clic, est donc construit ici.
-   */
   declencheur?: ReactNode;
   classeDeclencheur?: string;
 }) {
@@ -87,11 +63,6 @@ export function FenetreMoyens({
               <form action={ouvrirReglement} className="mt-4">
                 <input type="hidden" name="factureId" value={facture.id} />
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {/*
-                    Le logo et le nom suffisent : une phrase de détail sous
-                    chaque tuile débordait dès que la fenêtre se resserrait,
-                    et n'apprenait rien que le logo ne dise déjà.
-                  */}
                   {ORDRE_MODES.map((m) =>
                     modes.includes(m) ? (
                       <SubmitButton

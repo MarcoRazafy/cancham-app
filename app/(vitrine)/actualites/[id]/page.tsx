@@ -20,7 +20,6 @@ import {
   getDernieresOffres,
 } from "@/lib/queries";
 
-/** Ce qu'un partage affiche : le titre de l'article, son résumé, sa photo. */
 export async function generateMetadata({
   params,
 }: {
@@ -44,11 +43,6 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Une actualité diffusée sur la page publique, lisible sans compte. Celles
- * réservées aux membres n'existent pas ici : elles vivent sur la plateforme,
- * avec leurs commentaires et leurs « j'aime ».
- */
 export default async function ActualitePubliquePage({
   params,
 }: {
@@ -58,7 +52,6 @@ export default async function ActualitePubliquePage({
   const [a, recentes, offres] = await Promise.all([
     getActualitePublique(id),
     getActualitesPubliques(4),
-    // Quatre suffisent : le rail accompagne l'article, il ne le concurrence pas.
     getDernieresOffres(4, "actualites"),
   ]);
   if (!a) notFound();
@@ -66,8 +59,6 @@ export default async function ActualitePubliquePage({
   const [couverture, ...galerie] = a.images;
 
   return (
-    // Un article se lit sur du papier : cette page quitte le bleu nuit de la
-    // vitrine (voir `.vitrine-claire` dans vitrine.css).
     <main className="vitrine-claire w-full flex-1">
       <div className={`${CONTENEUR} py-10`}>
         <Link
@@ -77,11 +68,6 @@ export default async function ActualitePubliquePage({
           <ArrowLeft size={15} /> Toutes les actualités
         </Link>
 
-        {/*
-          Même composition que la plateforme : l'article à gauche, les offres
-          dans un rail qui le suit au défilement. Seul, l'article laissait un
-          grand vide à droite sur un écran large.
-        */}
         <div className="flex gap-10 items-start flex-col xl:flex-row">
           <article className="w-full min-w-0 xl:w-[760px] xl:shrink-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -95,8 +81,6 @@ export default async function ActualitePubliquePage({
             <h1
               className={`${TITRE_GRAS} text-[clamp(28px,4vw,42px)] m-0 mt-2.5`}
             >
-              {/* Une publication libre n'a pas de titre : elle porte le nom
-                  de qui la publie, et son texte suit en entier. */}
               {a.libre ? (a.auteur ?? "Publication d’un membre") : a.titre}
             </h1>
             {a.libre ? null : (
@@ -113,7 +97,6 @@ export default async function ActualitePubliquePage({
                 legende={a.titre}
                 className="mt-7"
               >
-                {/* Dans ses propres proportions : le cadre est la photo. */}
                 <PhotoNaturelle
                   src={couverture}
                   alt=""
@@ -165,10 +148,6 @@ export default async function ActualitePubliquePage({
             </div>
           </article>
 
-          {/*
-            Le rail suit l'article au défilement. Borné en hauteur : plus haut
-            que l'écran, un bloc collant garderait son bas hors d'atteinte.
-          */}
           {offres.length ? (
             <aside className="scene reveler w-full min-w-0 xl:flex-1 xl:sticky xl:top-[124px] xl:max-h-[calc(100dvh-140px)] xl:overflow-y-auto">
               <span className="surtitre text-marque-vert">Entre membres</span>

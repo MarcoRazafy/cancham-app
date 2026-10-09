@@ -6,22 +6,6 @@ import { getCurrentUser } from "@/lib/session";
 import { cheminPiece, mimePiece } from "@/lib/stockage-messagerie";
 import { existe } from "@/lib/stockage-ressources";
 
-/**
- * Une pièce jointe de la messagerie.
- *
- * Contrôle d'accès rejoué ici : `/api` échappe au verrou de `proxy.ts`. La
- * pièce n'est servie qu'aux participants du fil de son message — à qui n'y
- * participe pas, elle répond « introuvable » plutôt qu'« interdite », pour ne
- * pas confirmer qu'elle existe.
- *
- * Tant que l'authentification n'existe pas, l'utilisateur est déduit de
- * l'espace (`?espace=`), comme partout ailleurs dans l'application. Le jour où
- * les sessions arriveront, seul `getCurrentUser` changera.
- *
- * `?telecharger=1` propose l'enregistrement ; sans lui, le navigateur affiche.
- * Contrairement aux ressources, une pièce jointe appartient aux personnes qui
- * l'échangent : elles peuvent la garder.
- */
 export async function GET(
   requete: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -59,8 +43,6 @@ export async function GET(
   return servirFichier(requete, chemin, {
     "Content-Type": mimePiece(piece.fichier),
     "Content-Disposition": `${telecharger ? "attachment" : "inline"}; filename*=UTF-8''${nom}`,
-    // `private` et varié par espace : l'URL porte l'espace, deux lecteurs
-    // différents n'en partagent donc jamais la réponse en cache.
     "Cache-Control": "private, max-age=3600",
     "X-Content-Type-Options": "nosniff",
     "Cross-Origin-Resource-Policy": "same-origin",

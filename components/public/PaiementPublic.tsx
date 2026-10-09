@@ -17,19 +17,6 @@ import {
   type ModeReglement,
 } from "@/lib/modes-reglement";
 
-/**
- * Le règlement d'une inscription publique, sur la page de ses billets.
- *
- * Le visiteur n'a pas de compte : pas de fenêtre, pas d'espace où revenir.
- * Tout tient donc ici, en deux temps. D'abord le choix du moyen — les mêmes
- * tuiles que la fenêtre des membres. Puis, pour un moyen hors ligne, où
- * envoyer l'argent et la référence à rappeler ; le visiteur annonce qu'il a
- * payé, et l'équipe confirme à réception. La carte, elle, part chez le
- * prestataire dès la tuile.
- *
- * Le bloc est en clair (`vitrine-claire`) : les logos des opérateurs et les
- * coordonnées se lisent sur du blanc, pas sur le bleu nuit de la page.
- */
 export function PaiementPublic({
   eventId,
   code,
@@ -42,25 +29,17 @@ export function PaiementPublic({
   page,
 }: {
   eventId: string;
-  /** Le code de l'inscription : il tient lieu de session. */
   code: string;
   montant: number;
   modes: ModeReglement[];
-  /** Le moyen déjà choisi, s'il y en a un et qu'on ne demande pas à en changer. */
   reglement: {
     mode: ModeReglement;
     reference: string;
     statut: string;
   } | null;
-  /**
-   * La référence d'un paiement annoncé que l'équipe n'a pas retrouvé : le
-   * visiteur doit le savoir avant de choisir à nouveau.
-   */
   ecarte?: string | null;
   coordonnees: Coordonnees;
-  /** Le nom que la page du prestataire affiche, s'il n'est pas « CanCham ». */
   marchand: string | null;
-  /** La page des billets, pour le lien « changer de moyen ». */
   page: string;
 }) {
   const cles = (
@@ -145,7 +124,6 @@ export function PaiementPublic({
             </p>
           </div>
         </div>
-        {/* Une fois annoncé, le paiement est entre les mains de l'équipe. */}
         {annonce ? null : (
           <Link
             href={`${page}&moyen=choix`}
@@ -276,7 +254,6 @@ export function PaiementPublic({
   );
 }
 
-/** Une coordonnée qui se lit, sans avoir à se recopier. */
 function Ligne({ libelle, valeur }: { libelle: string; valeur: string }) {
   return (
     <div className="rounded-[var(--radius-m)] border border-line bg-surface-2 px-4 py-3">

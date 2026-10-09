@@ -6,25 +6,13 @@ import { ImageIcon, X } from "lucide-react";
 import type { Produit } from "@/lib/types";
 import { TexteLie } from "@/components/TexteLie";
 
-/**
- * Carte d'une offre du catalogue, et sa fiche de détail.
- *
- * La carte ne montre que l'essentiel — vignette, nature, titre, prix. Un clic
- * ouvre la fiche : toutes les photos, la description complète, et, sur
- * « Mon entreprise », les commandes de modification.
- *
- * La fiche est un `<dialog>` natif : Échap, piège à focus et fond inerte sont
- * fournis par le navigateur.
- */
 export function CarteService({
   produit,
   seed,
   actions,
 }: {
   produit: Produit;
-  /** Graine du dégradé de repli, pour qu'une offre sans photo garde sa couleur. */
   seed: string;
-  /** Commandes affichées au pied de la fiche. Absentes = lecture seule. */
   actions?: ReactNode;
 }) {
   const boite = useRef<HTMLDialogElement>(null);
@@ -101,7 +89,6 @@ export function CarteService({
       >
         {ouverte ? (
           <div className="grid md:grid-cols-[1.35fr_1fr]">
-            {/* ---------- Galerie ---------- */}
             <div className="bg-surface-2 p-6 flex flex-col gap-3.5">
               <div className="relative aspect-[4/3] rounded-[var(--radius-m)] overflow-hidden">
                 {photos[courante] ? (
@@ -145,7 +132,6 @@ export function CarteService({
               ) : null}
             </div>
 
-            {/* ---------- Détail ---------- */}
             <div className="p-8 md:p-10 flex flex-col min-h-0">
               <div className="flex items-start justify-between gap-3">
                 <span className="text-[11.5px] font-bold uppercase tracking-[0.08em] text-accent">
@@ -198,7 +184,6 @@ export function CarteService({
   );
 }
 
-/** Dégradé de repli, stable pour une même graine — même logique que `PhotoPlaceholder`. */
 function Degrade({ seed }: { seed: string }) {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;

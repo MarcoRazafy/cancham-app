@@ -14,13 +14,6 @@ import {
   type Bloc,
 } from "@/lib/blocs";
 
-/**
- * Une page de ressource composée dans l'éditeur arrive du navigateur : rien
- * de ce qu'elle contient n'est tenu pour sûr. Ce qui passe ici sera montré
- * aux membres — une marque inconnue, un lien `javascript:`, un nom de
- * fichier qui remonte les dossiers ne doivent jamais franchir la lecture.
- */
-
 const JETON = "televersement:0f8fad5b-d9cb-469f-a165-70867728950e";
 const blocs = (valeur: unknown): Bloc[] => {
   const lecture = lireBlocs(valeur);

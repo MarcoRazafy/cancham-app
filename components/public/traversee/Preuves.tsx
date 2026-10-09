@@ -1,12 +1,5 @@
 import { retard } from "@/lib/traversee";
 
-/**
- * Dix ans de résultats, en quatre chiffres sur le dégradé de la charte.
- *
- * Les nombres montent de zéro à leur valeur quand la bande entre à l'écran
- * (`data-compteur`, voir Mouvement.tsx). Chiffres repris de la page publique
- * d'origine ; à faire valider par la chambre avant publication.
- */
 const CHIFFRES = [
   {
     valeur: 18,

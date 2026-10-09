@@ -7,21 +7,6 @@ import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { minutes, oublier, tentative } from "@/lib/limite";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Suppression de son propre compte, depuis son profil.
- *
- * Elle est définitive : le compte disparaît, avec ses commentaires, ses
- * « j'aime » et ses rappels. Ce qui appartient à la chambre reste — les
- * messages échangés, les traces du journal, la fiche de l'entreprise et ses
- * factures —, sinon l'historique de la chambre partirait avec un départ.
- *
- * Deux garde-fous : une entreprise garde au moins un contact, et la
- * plateforme au moins un administrateur. Le mot de passe est redemandé : une
- * session laissée ouverte sur un poste partagé ne doit pas suffire à
- * supprimer un compte.
- */
-
-/** Essais du mot de passe tolérés par quart d'heure. */
 const ESSAIS = 5;
 
 export async function supprimerMonCompte(formData: FormData) {
@@ -56,8 +41,6 @@ export async function supprimerMonCompte(formData: FormData) {
   }
   oublier(cle);
 
-  // Une entreprise sans contact ne serait plus joignable, et son accès ne
-  // pourrait plus être rouvert.
   if (compte.memberId) {
     const contacts = await prisma.user.count({
       where: { memberId: compte.memberId, role: "membre" },
@@ -69,8 +52,6 @@ export async function supprimerMonCompte(formData: FormData) {
     }
   }
 
-  // Le dernier administrateur ne part pas : plus personne ne pourrait ouvrir
-  // d'accès ni gérer l'équipe.
   if (user.role === "admin" && compte.niveauEquipe === "administrateur") {
     const restants = await prisma.user.count({
       where: { role: "admin", niveauEquipe: "administrateur" },

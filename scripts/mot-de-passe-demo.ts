@@ -1,12 +1,3 @@
-/**
- * Donne un mot de passe aux comptes qui n'en ont pas encore.
- *
- *   npm run motsdepasse:demo
- *
- * L'authentification est arrivée après les données de démonstration : sans
- * cela, plus personne ne pourrait se connecter. Le mot de passe se règle par
- * MOT_DE_PASSE_DEMO ; il ne touche jamais un compte qui en a déjà un.
- */
 import { prisma } from "../lib/db";
 import { hacher } from "../lib/mots-de-passe";
 

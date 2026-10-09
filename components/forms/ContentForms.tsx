@@ -31,16 +31,6 @@ import {
 import { estCheminFerme, normaliserLien } from "@/lib/liens";
 import type { CanchamService, Space } from "@/lib/types";
 
-/* ============================ Ressources ============================ */
-
-/**
- * Accès à une ressource depuis sa carte.
- *
- * Une ressource incluse s'ouvre dans le lecteur de la plateforme : il n'y a
- * plus de téléchargement, le contenu se consulte ici. Une ressource payante
- * garde « Acheter », qui consigne la demande — le paiement en ligne n'est pas
- * branché.
- */
 export function DownloadResourceButton({
   resourceId,
   space,
@@ -49,10 +39,6 @@ export function DownloadResourceButton({
 }: {
   resourceId: string;
   space: Space;
-  /**
-   * Ouvrable par la personne connectée : gratuite, ou payante dont l'accès a
-   * été ouvert à son entreprise. L'équipe ouvre tout ce qu'elle publie.
-   */
   accessible: boolean;
   video: boolean;
 }) {
@@ -84,14 +70,11 @@ export function DownloadResourceButton({
   );
 }
 
-/* ============================ Services CanCham ============================ */
-
 export function ServiceFormButton({
   service,
   rendezvous = [],
 }: {
   service?: CanchamService;
-  /** Les rendez-vous proposés, et leur lien : suggérés dans le champ « Lien ». */
   rendezvous?: { titre: string; lien: string }[];
 }) {
   const edition = !!service;
@@ -190,8 +173,6 @@ export function ServiceFormButton({
                 defaultValue={service?.lien ?? ""}
                 placeholder="Ex. le lien d’un type de rendez-vous"
                 list={rendezvous.length ? suggestions : undefined}
-                // Contrôlé avant l'envoi : un refus du serveur refermerait la
-                // fenêtre et ferait perdre tout le formulaire.
                 onChange={(e) => {
                   const v = e.currentTarget.value.trim();
                   const lien = v
@@ -276,7 +257,6 @@ export function DeleteServiceButton({
   );
 }
 
-/** Monter ou descendre un service dans sa liste. */
 export function DeplacerServiceButton({
   serviceId,
   sens,

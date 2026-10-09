@@ -1,24 +1,7 @@
 import "server-only";
 
-/**
- * La liste de diffusion de la chambre, tenue chez systeme.io.
- *
- * C'est de là que partent ses envois : une inscription faite sur la
- * plateforme doit y arriver, sinon la personne ne recevrait jamais rien. La
- * plateforme garde sa propre trace (table `abonnes`) ; systeme.io reste la
- * liste qui sert.
- *
- * Sans clé (`SYSTEME_IO_API_KEY`), rien ne part : l'inscription est tout de
- * même enregistrée chez nous, et le journal du serveur le dit.
- */
-
 const BASE = "https://api.systeme.io/api";
 
-/**
- * L'étiquette « NEWSLETTER » du compte de la chambre — celle que pose sa
- * propre page d'inscription. Sans elle, le contact existerait sans jamais
- * entrer dans les envois.
- */
 const ETIQUETTE_NEWSLETTER = 2093797;
 
 export function systemeIoActif(): boolean {
@@ -29,7 +12,6 @@ function entetes(cle: string): HeadersInit {
   return { "X-API-Key": cle, "Content-Type": "application/json" };
 }
 
-/** L'identifiant d'un contact déjà connu de la liste, s'il y est. */
 async function contactExistant(
   cle: string,
   email: string,
@@ -43,12 +25,6 @@ async function contactExistant(
   return items?.[0]?.id ?? null;
 }
 
-/**
- * Inscrit — ou réinscrit — quelqu'un à la lettre d'information de la chambre.
- *
- * Une adresse déjà présente n'est pas une erreur : on récupère le contact et
- * on lui repose l'étiquette. Rend vrai quand la liste a bien été mise à jour.
- */
 export async function inscrireContact(v: {
   prenom: string;
   email: string;
@@ -76,7 +52,6 @@ export async function inscrireContact(v: {
     if (creation.ok) {
       id = ((await creation.json()) as { id?: number }).id ?? null;
     } else if (creation.status === 422) {
-      // Adresse déjà dans la liste : on la retrouve plutôt que d'échouer.
       id = await contactExistant(cle, v.email);
     } else {
       console.error(

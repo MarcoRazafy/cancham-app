@@ -8,17 +8,6 @@ import { signerCorps, simulateurActif } from "@/lib/vanillapay";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-/**
- * Simulateur Vanilla Pay — l'issue d'un paiement.
- *
- * Fait ce que ferait le prestataire une fois le débit confirmé ou refusé sur
- * le téléphone : il envoie à notre webhook la notification signée, et
- * renvoie le membre sur la page de retour. C'est bien le webhook qui règle
- * la facture, par la même porte qu'en production.
- *
- * L'adresse est celle de la requête — le poste local —, jamais `APP_URL` :
- * le simulateur ne parle qu'à lui-même.
- */
 async function origineLocale(): Promise<string> {
   const h = await headers();
   const hote = h.get("host") ?? "localhost:3000";
@@ -53,9 +42,6 @@ export async function simulerIssue(formData: FormData) {
   });
   if (!p) notFound();
 
-  // Les champs de leur notification, tels que leur document les donne : une
-  // carte annonce des euros et le montant en Ariary ; un portefeuille, le
-  // numéro qui a payé et la référence de l'opérateur.
   const horodatage = Date.now().toString().slice(-12);
   const commun = {
     reference,
@@ -94,9 +80,6 @@ export async function simulerIssue(formData: FormData) {
     cache: "no-store",
   });
 
-  // Le vrai prestataire renvoie le navigateur au relais, qui redirige. Ici la
-  // redirection part d'une action : on fait le pas du relais nous-mêmes — une
-  // navigation interne de Next ne suit pas la réponse d'une route d'API.
   const url = new URL(retour);
   redirect(
     url.pathname === RELAIS_RETOUR

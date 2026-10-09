@@ -14,19 +14,6 @@ import { sessionCourante } from "@/lib/auth";
 import { PLAFOND_FICHIER } from "@/lib/plafonds";
 import { dossierStockage } from "@/lib/stockage";
 
-/**
- * Les fichiers envoyés d'avance, avant le formulaire qui les emploie.
- *
- * Une photo — ou une vidéo de ressource — part dès qu'on la choisit, par la
- * route `/api/televersements`, pour que l'écran puisse suivre l'envoi et en
- * montrer le pourcentage : un formulaire envoyé d'un bloc, lui, ne dit rien
- * de sa progression. Le fichier attend ici, hors de `public/`, sous un jeton
- * que le formulaire renvoie à sa place.
- *
- * Un jeton ne sert qu'une fois, qu'à la personne qui a envoyé le fichier,
- * et pas au-delà d'une journée : ce qui n'a pas été repris part au ménage.
- */
-
 const DOSSIER = dossierStockage("televersements-en-cours");
 const DUREE_DE_VIE = 24 * 60 * 60 * 1000;
 const PREFIXE = "televersement:";
@@ -43,10 +30,6 @@ interface Fiche {
 
 export class EnvoiRefuse extends Error {}
 
-/**
- * Reçoit un fichier, lu au fil de l'eau sans le charger en mémoire, et
- * renvoie son jeton. Au-delà du plafond, l'envoi est coupé et rien ne reste.
- */
 export async function recevoirEnvoi(
   corps: ReadableStream<Uint8Array>,
   entete: { userId: string; nom: string; type: string },
@@ -90,11 +73,6 @@ export async function recevoirEnvoi(
   return `${PREFIXE}${id}`;
 }
 
-/**
- * Le fichier d'un champ de formulaire : celui qu'il contient, ou celui
- * qu'un jeton désigne — repris une seule fois, et seulement par qui l'a
- * envoyé. `null` pour un champ vide ou un jeton qui ne vaut rien.
- */
 export async function fichierRecu(
   entree: FormDataEntryValue | null,
 ): Promise<File | null> {
@@ -123,20 +101,10 @@ export async function fichierRecu(
   return new File([new Uint8Array(octets)], fiche.nom, { type: fiche.type });
 }
 
-/**
- * Le fichier qu'un jeton désigne, laissé sur le disque.
- *
- * `fichierRecu` charge le fichier en mémoire : très bien pour une photo, pas
- * pour une vidéo de plusieurs centaines de mégaoctets. Ici on ne rend que son
- * chemin — à l'appelant de le lire ou de le déplacer, puis d'appeler
- * `oublier`. Mêmes règles : le jeton ne vaut que pour qui a envoyé le
- * fichier, et pas au-delà d'une journée.
- */
 export async function envoiEnAttente(jeton: string): Promise<{
   chemin: string;
   nom: string;
   taille: number;
-  /** Efface ce qui reste de l'envoi, une fois le fichier repris. */
   oublier: () => Promise<void>;
 } | null> {
   if (!jeton.startsWith(PREFIXE)) return null;
@@ -164,7 +132,6 @@ export async function envoiEnAttente(jeton: string): Promise<{
   };
 }
 
-/** Tous les fichiers d'un champ multiple, dans l'ordre du formulaire. */
 export async function fichiersRecus(
   entrees: FormDataEntryValue[],
 ): Promise<File[]> {
@@ -181,7 +148,6 @@ async function effacer(id: string) {
   await rm(path.join(DOSSIER, `${id}.json`), { force: true });
 }
 
-/** Ce qu'aucun formulaire n'est venu reprendre dans la journée s'en va. */
 async function menage() {
   try {
     for (const nom of await readdir(DOSSIER)) {
@@ -190,7 +156,5 @@ async function menage() {
         await rm(chemin, { force: true });
       }
     }
-  } catch {
-    // Le ménage est une commodité : son échec ne doit rien empêcher.
-  }
+  } catch {}
 }

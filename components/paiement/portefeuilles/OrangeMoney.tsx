@@ -23,16 +23,6 @@ import {
 import { fmtMontant } from "@/lib/membership";
 import { PORTEFEUILLES } from "@/lib/portefeuilles";
 
-/**
- * Orange Money, d'après la maquette : un bandeau noir qui porte les deux
- * marques, une page blanche aux angles droits, des étapes en chevrons, et un
- * formulaire resserré au centre. C'est le vocabulaire d'Orange — noir, blanc,
- * orange, sans arrondi — et le membre s'y sent chez son opérateur.
- *
- * Seul écart assumé avec la maquette : le texte posé sur l'orange est noir,
- * pas blanc. Blanc sur orange ne donne que 2,9:1, en dessous du seuil de
- * lisibilité ; Orange elle-même écrit en noir sur sa couleur.
- */
 export function TunnelOrangeMoney(p: PropsTunnel) {
   const etape = etapeDu(p);
   const somme = fmtMontant(p.montant, p.devise);
@@ -42,7 +32,6 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
       style={couleurs(p.mode)}
       className="overflow-hidden bg-black font-['Helvetica_Neue',Helvetica,Arial,sans-serif]"
     >
-      {/* ---------- Le bandeau ---------- */}
       <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-3.5 text-white sm:px-8">
         <Link
           href={p.retour}
@@ -75,7 +64,6 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
         </span>
       </header>
 
-      {/* ---------- La page ---------- */}
       <div className="bg-white px-5 pb-10 pt-9 text-black sm:px-10">
         <div className="mx-auto max-w-[860px]">
           <h1 className="m-0 text-[28px] font-bold leading-tight tracking-[-0.01em] sm:text-[32px]">
@@ -92,11 +80,6 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
               <p className="m-0 mb-1.5 text-[14px] font-bold">
                 Montant à régler
               </p>
-              {/*
-                Le montant est celui de la facture : lisible comme un champ,
-                mais pas modifiable — on ne règle pas une autre somme que
-                celle qui est due.
-              */}
               <div className="flex border border-[#b3b3b3]">
                 <output className="flex-1 px-4 py-3 text-[24px] font-bold tabular-nums">
                   {p.montant.toLocaleString("fr-FR")}
@@ -217,11 +200,6 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
   );
 }
 
-/**
- * Les étapes en chevrons, comme sur la maquette. Faite : noire ; en cours :
- * orange ; à venir : grise. L'étape en cours est annoncée aux lecteurs
- * d'écran, pas seulement peinte.
- */
 function Chevrons({ etape }: { etape: Etape }) {
   return (
     <ol className="m-0 mt-6 flex list-none gap-1 p-0">

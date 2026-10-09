@@ -5,21 +5,7 @@ import { utilisateurConnecte } from "@/lib/session";
 import { typeVideo } from "@/lib/video-presentation";
 import { cheminVideo } from "@/lib/videos";
 
-/**
- * Lecture d'une vidéo de présentation, par morceaux.
- *
- * L'annuaire est réservé aux adhérents, et sa vidéo avec : il faut être
- * connecté. Un membre dont l'accès est restreint garde son profil, donc sa
- * propre vidéo, mais pas celles des autres. Et seul le fichier posé sur une
- * fiche se lit : une vidéo remplacée ou retirée ne répond plus, même à qui
- * en a gardé l'adresse.
- *
- * Chaque morceau repasse par ces contrôles : le lecteur du navigateur en
- * demande plusieurs, et l'accès peut se fermer entre deux.
- */
 const ENTETES = {
-  // Le nom d'un fichier ne resert jamais : le navigateur peut le garder,
-  // pour ne pas tout retélécharger à la seconde lecture.
   "Cache-Control": "private, max-age=3600",
   "Content-Disposition": "inline",
   "X-Content-Type-Options": "nosniff",
@@ -27,7 +13,6 @@ const ENTETES = {
   "X-Robots-Tag": "noindex, nofollow",
 } as const;
 
-/** Quatre mégaoctets par réponse : assez pour ne pas hacher la lecture. */
 const MORCEAU = 4 * 1024 * 1024;
 
 export async function GET(
@@ -58,7 +43,6 @@ export async function GET(
   if (!fiche) return new Response("Vidéo introuvable.", { status: 404 });
 
   if (user.role === "membre") {
-    // `isAccessLocked` attend le modèle de vue : la date y est une ISO courte.
     const restreint =
       !moi ||
       isAccessLocked({
@@ -82,7 +66,6 @@ export async function GET(
       MORCEAU,
     );
   } catch {
-    // La fiche nomme un fichier que le disque n'a plus.
     return new Response("Vidéo introuvable.", { status: 404 });
   }
 }

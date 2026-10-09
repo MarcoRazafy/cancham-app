@@ -11,20 +11,11 @@ import { minutes, oublier, origineAppelante, tentative } from "@/lib/limite";
 import { courrielReinitialisation } from "@/lib/modeles-courriels";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Mot de passe oublié, et premier mot de passe d'un compte invité.
- *
- * La demande répond toujours la même chose, que l'adresse ait un compte ou
- * non : sinon, le formulaire servirait à vérifier qui est inscrit. Pour la
- * même raison, la recherche du compte et l'envoi se font après la réponse.
- */
-
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 const OUBLI = "/auth/mot-de-passe-oublie";
 const NOUVEAU = "/auth/nouveau-mot-de-passe";
 
-/** Demandes tolérées par heure : sur une adresse, puis sur une origine. */
 const DEMANDES_PAR_ADRESSE = 3;
 const DEMANDES_PAR_ORIGINE = 10;
 const HEURE = 60 * 60 * 1000;
@@ -59,7 +50,6 @@ export async function demanderReinitialisation(formData: FormData) {
       where: { email },
       select: { id: true, nom: true, role: true },
     });
-    // Un compte retiré de la plateforme ne reçoit rien.
     if (!u || u.role === "visiteur") return;
     const jeton = await creerJeton(u.id, "reinitialisation");
     await envoyerCourriel(
@@ -70,7 +60,6 @@ export async function demanderReinitialisation(formData: FormData) {
   vers(OUBLI, { envoye: email });
 }
 
-/** Choix du mot de passe, depuis le lien reçu par e-mail. */
 export async function definirMotDePasse(formData: FormData) {
   const brut = texte(formData, "jeton");
   const motDePasse = String(formData.get("motDePasse") ?? "");
@@ -99,8 +88,6 @@ export async function definirMotDePasse(formData: FormData) {
   const { user } = jeton;
   const invitation = jeton.usage === "invitation";
   await prisma.$transaction([
-    // La date de changement ferme les sessions ouvertes avant elle : un
-    // mot de passe changé parce qu'il avait fuité ne laisse personne dedans.
     prisma.user.update({
       where: { id: user.id },
       data: { motDePasse: hacher(motDePasse), motDePasseModifieLe: new Date() },
@@ -115,7 +102,6 @@ export async function definirMotDePasse(formData: FormData) {
     prisma.auditLog.create({
       data: {
         action: invitation ? "acces_active" : "mot_de_passe_reinitialise",
-        // Le journal mène à la fiche de l'entreprise, ou à l'équipe.
         entite: user.memberId ? "Member" : "User",
         entiteId: user.memberId ?? user.id,
         acteur: user.nom,
@@ -135,16 +121,8 @@ export async function definirMotDePasse(formData: FormData) {
   redirectWithFlash("/membre", message);
 }
 
-/** Essais du mot de passe actuel tolérés par quart d'heure. */
 const ESSAIS_CHANGEMENT = 5;
 
-/**
- * Changer son mot de passe, connecté, depuis « Mon profil ».
- *
- * L'actuel est exigé : une session laissée ouverte sur un poste partagé ne
- * suffit pas à s'approprier le compte. Le changement ferme les autres
- * sessions ; celle-ci est rouverte aussitôt, pour qu'on reste connecté ici.
- */
 export async function changerMonMotDePasse(formData: FormData) {
   const retour = "/admin/profil";
   const user = await getCurrentUser("admin");

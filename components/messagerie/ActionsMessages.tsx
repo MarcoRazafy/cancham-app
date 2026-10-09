@@ -21,7 +21,6 @@ import { MAX_CIBLES_TRANSFERT } from "@/lib/messagerie";
 import type { Space } from "@/lib/types";
 import { ListeACocher, type ElementACocher } from "./ListeACocher";
 
-/** Ce que les fenêtres rappellent du message visé. */
 export interface MessageVise {
   id: string;
   de: string;
@@ -39,19 +38,12 @@ export function useActionsMessages() {
   return c;
 }
 
-/**
- * Fenêtres « Transférer » et « Supprimer », une seule fois par conversation.
- *
- * Chaque bulle les ouvre par le contexte. Posées dans le menu de la bulle,
- * elles disparaîtraient avec lui dès le clic qui le referme.
- */
 export function ActionsMessages({
   space,
   cibles,
   children,
 }: {
   space: Space;
-  /** Conversations existantes, puis personnes sans conversation ouverte. */
   cibles: { conversations: ElementACocher[]; personnes: ElementACocher[] };
   children: ReactNode;
 }) {

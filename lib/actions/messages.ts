@@ -30,17 +30,12 @@ import { apercu, notifier } from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-/** La messagerie n'existe que dans ces deux espaces. */
 const espace = (fd: FormData): "membre" | "admin" =>
   texte(fd, "space") === "admin" ? "admin" : "membre";
 
 const lienFil = (space: Space, threadId: string) =>
   `/${space}/messagerie?t=${threadId}`;
 
-/**
- * Prévient les autres participants d'un fil, sur leur appareil. Une
- * notification par fil : la suivante remplace la précédente.
- */
 async function prevenirParticipants(
   threadId: string,
   auteur: { id: string; nom: string },
@@ -58,13 +53,15 @@ async function prevenirParticipants(
       corps: contenu
         ? apercu(contenu)
         : `${pieces} pièce${pieces > 1 ? "s" : ""} jointe${pieces > 1 ? "s" : ""}`,
-      url: { membre: lienFil("membre", threadId), admin: lienFil("admin", threadId) },
+      url: {
+        membre: lienFil("membre", threadId),
+        admin: lienFil("admin", threadId),
+      },
       etiquette: `fil-${threadId}`,
     },
   );
 }
 
-/** Un fil n'est lisible, et on ne peut y écrire, qu'en y participant. */
 async function participe(threadId: string, userId: string) {
   const p = await prisma.participantFil.findUnique({
     where: { threadId_userId: { threadId, userId } },
@@ -73,13 +70,6 @@ async function participe(threadId: string, userId: string) {
   return Boolean(p);
 }
 
-/**
- * Le fil individuel entre deux personnes : celui qui existe, sinon un nouveau.
- *
- * Sans cette recherche préalable, chaque clic sur « Envoyer un message » ou
- * chaque transfert ouvrirait un fil de plus avec le même interlocuteur, chacun
- * avec un bout de l'historique.
- */
 async function filIndividuel(moi: string, autre: string): Promise<string> {
   const existant = await prisma.messageThread.findFirst({
     where: {
@@ -107,12 +97,6 @@ async function filIndividuel(moi: string, autre: string): Promise<string> {
   return fil.id;
 }
 
-/**
- * Envoi d'un message dans un fil : du texte, des pièces jointes, ou les deux.
- *
- * Les pièces sont toutes contrôlées avant d'écrire quoi que ce soit : un
- * fichier refusé dans un lot ne doit pas laisser un message à moitié envoyé.
- */
 export async function sendMessage(formData: FormData) {
   const threadId = texte(formData, "threadId");
   const space = espace(formData);
@@ -127,7 +111,6 @@ export async function sendMessage(formData: FormData) {
     );
   }
 
-  // Des fichiers, ou les jetons de leurs envois faits d'avance.
   const fichiers = await fichiersRecus(formData.getAll("pieces"));
 
   if (!contenu && fichiers.length === 0) {
@@ -163,26 +146,18 @@ export async function sendMessage(formData: FormData) {
     },
   });
 
-  // Répondre dans un fil vaut lecture.
   await prisma.participantFil.update({
     where: { threadId_userId: { threadId, userId: user.id } },
     data: { luLe: maintenant },
   });
 
-  // Un visiteur du site n'a pas de plateforme où lire la réponse.
   after(() => prevenirVisiteur(threadId, contenu));
-  // Les autres participants le reçoivent sur leur appareil.
   after(() => prevenirParticipants(threadId, user, contenu, pieces.length));
 
   revalidatePath("/", "layout");
   redirect(retour);
 }
 
-/**
- * Corrige le texte d'un message. Seul son auteur le peut, et le message porte
- * ensuite la mention « modifié » : les autres savent que ce qu'ils lisent
- * n'est plus ce qui a été envoyé.
- */
 export async function modifierMessage(formData: FormData) {
   const space = espace(formData);
   const messageId = texte(formData, "messageId");
@@ -224,13 +199,6 @@ export async function modifierMessage(formData: FormData) {
   redirect(retour);
 }
 
-/**
- * Supprime un message pour tout le monde. Seul son auteur le peut.
- *
- * Le texte et les pièces disparaissent — fichiers compris —, mais la bulle
- * reste sous la forme « Message supprimé » : une réponse qui suivait garde
- * ainsi son contexte, au lieu de sembler répondre à rien.
- */
 export async function supprimerMessage(formData: FormData) {
   const space = espace(formData);
   const messageId = texte(formData, "messageId");
@@ -262,22 +230,12 @@ export async function supprimerMessage(formData: FormData) {
       data: { texte: "", supprimeLe: new Date(), modifieLe: null },
     }),
   ]);
-  // Les fichiers après la base : si l'effacement échouait, il resterait un
-  // fichier orphelin, jamais une pièce jointe qui pointe dans le vide.
   await Promise.all(message.piecesJointes.map((p) => effacerPiece(p.fichier)));
 
   revalidatePath("/", "layout");
   redirect(retour);
 }
 
-/**
- * Transfère un message vers d'autres conversations.
- *
- * Chaque cible est soit un fil existant (`fil:<id>`), soit une personne
- * (`personne:<id>`), avec qui l'on retrouve ou l'on ouvre l'échange
- * individuel. Le message est recopié sous le nom de celui qui transfère,
- * marqué « Transféré », avec ses pièces jointes dupliquées.
- */
 export async function transfererMessage(formData: FormData) {
   const space = espace(formData);
   const messageId = texte(formData, "messageId");
@@ -368,8 +326,6 @@ export async function transfererMessage(formData: FormData) {
   });
 
   revalidatePath("/", "layout");
-  // Vers une seule conversation, on la rejoint ; vers plusieurs, on reste où
-  // l'on était, avec la confirmation.
   if (vises.size === 1) redirect(lienFil(space, [...vises][0]));
   redirectWithFlash(
     retour,
@@ -377,7 +333,6 @@ export async function transfererMessage(formData: FormData) {
   );
 }
 
-/** Personnes valides parmi celles choisies, l'utilisateur courant exclu. */
 async function personnesValides(fd: FormData, userId: string) {
   const ids = [...new Set(fd.getAll("participant").map(String))];
   if (ids.length === 0) return [];
@@ -390,12 +345,6 @@ async function personnesValides(fd: FormData, userId: string) {
 const GROUPES_RESERVES =
   "Seule l’équipe CanCham peut créer un groupe ou y ajouter quelqu’un.";
 
-/**
- * Crée un groupe de discussion avec les personnes choisies.
- *
- * Réservé à l'équipe : les groupes sont un outil d'animation de la chambre.
- * Un membre écrit dans les groupes où on l'a invité, et peut les quitter.
- */
 export async function creerGroupe(formData: FormData) {
   const space = espace(formData);
   const base = `/${space}/messagerie`;
@@ -452,7 +401,6 @@ export async function creerGroupe(formData: FormData) {
   redirect(lienFil(space, fil.id));
 }
 
-/** Ajoute des personnes à un groupe dont on fait partie. Réservé à l'équipe. */
 export async function ajouterParticipants(formData: FormData) {
   const space = espace(formData);
   const threadId = texte(formData, "threadId");
@@ -482,7 +430,6 @@ export async function ajouterParticipants(formData: FormData) {
     );
   }
 
-  // Ceux qui y sont déjà sont ignorés, sans erreur.
   const { count } = await prisma.participantFil.createMany({
     data: invites.map((i) => ({ threadId, userId: i.id })),
     skipDuplicates: true,
@@ -497,10 +444,6 @@ export async function ajouterParticipants(formData: FormData) {
   );
 }
 
-/**
- * Quitter un groupe. Ses messages y restent ; il n'y a simplement plus accès.
- * Le dernier participant parti, le groupe et ses fichiers sont effacés.
- */
 export async function quitterGroupe(formData: FormData) {
   const space = espace(formData);
   const threadId = texte(formData, "threadId");
@@ -533,7 +476,6 @@ export async function quitterGroupe(formData: FormData) {
   redirectWithFlash(base, `Vous avez quitté « ${fil.nom ?? "le groupe"} ».`);
 }
 
-/** Marque un fil comme lu par l'utilisateur, à son ouverture. */
 export async function markThreadRead(threadId: string, space: Space) {
   const user = await getCurrentUser(space === "admin" ? "admin" : "membre");
   const { count } = await prisma.participantFil.updateMany({
@@ -543,13 +485,6 @@ export async function markThreadRead(threadId: string, space: Space) {
   if (count) revalidatePath("/", "layout");
 }
 
-/**
- * Ouvre la conversation avec une entreprise depuis sa fiche d'annuaire.
- *
- * Si l'on échange déjà avec l'une de ses personnes, on y retourne. Sinon le
- * fil s'ouvre avec le contact principal : c'est la personne que l'entreprise
- * désigne comme référente, donc celle qui répondra.
- */
 export async function ouvrirConversation(formData: FormData) {
   const memberId = texte(formData, "memberId");
   const space = espace(formData);
@@ -573,14 +508,10 @@ export async function ouvrirConversation(formData: FormData) {
   });
   if (existant) redirect(lienFil(space, existant.id));
 
-  // L'équipe écrit aussi aux candidats et aux adhésions en attente, que la
-  // messagerie des membres ne propose pas encore.
   const referent = await prisma.user.findFirst({
     where:
       space === "admin"
-        ? // Le demandeur d'une adhésion n'a encore qu'un compte visiteur :
-          // c'est pourtant lui que l'équipe doit pouvoir joindre.
-          { memberId, role: { in: ["membre" as const, "visiteur" as const] } }
+        ? { memberId, role: { in: ["membre" as const, "visiteur" as const] } }
         : { AND: [critereJoignable(user.id), { memberId }] },
     orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
     select: { id: true },
@@ -599,14 +530,6 @@ export async function ouvrirConversation(formData: FormData) {
   redirect(lienFil(space, threadId));
 }
 
-/**
- * Formulaire de contact de l'équipe.
- *
- * La demande n'atterrit pas dans une boîte à part : elle est postée dans le
- * fil d'assistance du membre. L'équipe la voit là où elle répond déjà aux
- * membres, et le membre retrouve la réponse dans la même conversation — sans
- * nouvel outil à surveiller de part et d'autre.
- */
 export async function envoyerDemandeContact(formData: FormData) {
   const motif = texte(formData, "motif");
   const sujet = texte(formData, "sujet");
@@ -641,17 +564,6 @@ export async function envoyerDemandeContact(formData: FormData) {
   redirect(`/membre/contact?envoye=${fil}`);
 }
 
-/**
- * Demande sur un service de la chambre : « Réserver » pour un service
- * gratuit, « Payer » pour un service payant.
- *
- * Un clic suffit : le message part tout rédigé dans le fil de l'équipe. Pour
- * un service gratuit, l'équipe répond avec les disponibilités ; pour un
- * service payant, avec les modalités de règlement — le paiement en ligne
- * n'étant pas branché, c'est elle qui encaisse et émet la facture. La
- * demande laisse aussi une trace au journal, pour qu'aucune ne se perde entre
- * deux permanences.
- */
 export async function reserverService(formData: FormData) {
   const retour = "/membre/offres-cancham";
   const service = await prisma.canchamService.findUnique({
@@ -708,14 +620,6 @@ export async function reserverService(formData: FormData) {
   );
 }
 
-/**
- * Message écrit depuis la bulle de support.
- *
- * Le membre écrit toujours dans son fil d'assistance, créé au premier
- * message ; l'équipe répond dans le fil qu'elle a ouvert, à condition d'y
- * participer. Pas de redirection : la bulle reste ouverte sur la page en
- * cours, et relit la conversation une fois le message enregistré.
- */
 export async function ecrireAuSupport(
   espaceDemande: string,
   threadId: string | null,

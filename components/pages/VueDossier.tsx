@@ -61,46 +61,26 @@ import type {
   Space,
 } from "@/lib/types";
 
-/**
- * Le formulaire de la sélection, côté équipe. Les cases à cocher des lignes
- * s'y rattachent par son identifiant (`form=`), sans en être les enfants :
- * les commandes d'un dossier ont leurs propres formulaires, et un
- * formulaire ne s'imbrique pas dans un autre.
- */
 export const FORMULAIRE = "selection-bibliotheque";
 
-/** Ce dont une ligne a besoin pour se dessiner, partout pareil. */
 export interface Contexte {
   space: Space;
   admin: boolean;
-  /** Le dossier ouvert ; `null` à la racine de la bibliothèque. */
   dossierId: string | null;
   acces: Record<string, AccesOuvert[]>;
   membres: MembreChoisissable[];
   arborescence: Arborescence;
-  /**
-   * On peut ranger les ressources : côté équipe, et sans filtre de tarif —
-   * une liste filtrée ne montre pas tous les rangs, et y déposer une ligne
-   * « entre deux autres » ne voudrait plus rien dire.
-   */
   rangeable: boolean;
-  /**
-   * Les ressources suivent l'ordre que l'équipe leur donne : dans un
-   * dossier ouvert. À la racine et dans une recherche, un tri les range, et
-   * le menu ne propose pas de les mettre en premier ou en dernier.
-   */
   ordonne: boolean;
 }
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
 
-/** Toutes les ressources d'une section, les siennes puis celles qu'elle range. */
 const aPlat = (s: SectionDossier): Resource[] => [
   ...s.ressources,
   ...s.sections.flatMap(aPlat),
 ];
 
-/** La section sans ce que le filtre écarte. */
 const filtrer = (
   s: SectionDossier,
   garder: (r: Resource) => boolean,
@@ -110,27 +90,12 @@ const filtrer = (
   sections: s.sections.map((x) => filtrer(x, garder)),
 });
 
-/**
- * Un dossier de la bibliothèque, ouvert : il se présente comme un parcours.
- *
- * En tête, un bandeau à son nom, sur sa couverture.
- * Dessous, ce qu'il range : chacun de ses sous-dossiers est une section
- * qu'on déplie, ses ressources des lignes — vignette, titre, description —
- * avec, à droite, ce qu'on peut en faire. La colonne de côté porte sa
- * couverture, dit au membre où il en est — chaque ressource est une étape,
- * qu'il termine en fin de lecture — et présente son auteur.
- *
- * L'équipe y retrouve toutes ses commandes : la sélection pour copier,
- * couper et ouvrir des accès, et sur chaque ligne et chaque section, de quoi
- * modifier, ranger et retirer.
- */
 export async function VueDossier({
   space,
   fil,
   actif,
 }: {
   space: Space;
-  /** Le chemin jusqu'au dossier ouvert, lui compris. */
   fil: MaillonDossier[];
   actif: Filtre;
 }) {
@@ -148,8 +113,6 @@ export async function VueDossier({
     ]);
   if (!dossier) return null;
 
-  // Tout ce que le dossier range, quel que soit le filtre : c'est ce que
-  // comptent le bandeau et la liste déroulante.
   const toutes = [...sectionsBrutes.flatMap(aPlat), ...directes];
   const comptes = {
     tout: toutes.length,
@@ -161,8 +124,6 @@ export async function VueDossier({
   const ressources = directes.filter(garder);
   const affichees = [...sections.flatMap(aPlat), ...ressources];
 
-  // Les accès de toutes les ressources payantes affichées, en une requête :
-  // la fenêtre « qui y a accès » s'ouvre alors sans attendre.
   const acces = admin
     ? await getAccesDesRessources(
         affichees.filter((r) => r.type === "payant").map((r) => r.id),
@@ -179,15 +140,10 @@ export async function VueDossier({
     arborescence,
   };
 
-  // Où le membre en est : chaque ressource est une étape, terminée quand il
-  // l'a dit en fin de lecture.
   const terminees = toutes.filter((r) => r.terminee).length;
   const couverture = toutes.find((r) => r.cover);
   const videos = toutes.filter((r) => r.fmt === "Vidéo").length;
 
-  // La recherche et le filtre de tarif. Quand le dossier n'a que ses propres
-  // ressources, ils tiennent dans l'en-tête de leur carte, à côté du titre ;
-  // dès qu'il a des sections, ou qu'il est vide, ils passent au-dessus.
   const outils = (
     <RechercheBibliotheque
       space={space}
@@ -200,7 +156,6 @@ export async function VueDossier({
   );
   const outilsDansLaCarte = !sections.length && ressources.length > 0;
 
-  // La première section qui a de quoi montrer s'ouvre d'elle-même.
   const ouverte = sections.findIndex((s) => aPlat(s).length > 0);
 
   return (
@@ -220,12 +175,7 @@ export async function VueDossier({
         ) : null}
       </div>
 
-      {/* ---------- Le bandeau ---------- */}
       <section className="relative mb-5 overflow-hidden rounded-[var(--radius-l)] bg-[linear-gradient(135deg,#8b0a1f_0%,#c8102e_26%,#0f1d2c_56%,#1b7e3e_88%,#0f5028_100%)] px-6 py-12 text-center text-white md:py-[68px]">
-        {/* La couverture du dossier, quand il en a une : elle remplit le
-            bandeau, sous un voile léger aux couleurs de la charte — juste
-            de quoi garder le titre lisible, sans éteindre l'image. Sans
-            elle, le dégradé du bandeau suffit. */}
         {dossier.cover ? (
           <>
             <Image
@@ -243,8 +193,6 @@ export async function VueDossier({
           </>
         ) : null}
         <div className="relative mx-auto max-w-[720px]">
-          {/* Une ombre courte sous le texte : sur une photo claire, le voile
-              léger ne suffirait pas. */}
           <h1 className="m-0 text-[clamp(26px,3.4vw,40px)] leading-[1.15] text-white [overflow-wrap:anywhere] [text-shadow:0_2px_14px_rgb(0_0_0/0.55)]">
             {dossier.nom}
           </h1>
@@ -265,7 +213,6 @@ export async function VueDossier({
       </section>
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        {/* ---------- Ce que le dossier range ---------- */}
         <div className="min-w-0">
           {admin ? (
             <form id={FORMULAIRE} action={copierRessources}>
@@ -316,11 +263,8 @@ export async function VueDossier({
           )}
         </div>
 
-        {/* ---------- La colonne de côté ---------- */}
         <aside className="flex flex-col gap-4 lg:sticky lg:top-[88px]">
           <Card className="p-3.5">
-            {/* La couverture du dossier ; à défaut, celle d'une de ses
-                ressources — la première page d'un document se cale en haut. */}
             <Visuel
               src={dossier.cover ?? couverture?.cover}
               alt=""
@@ -341,7 +285,6 @@ export async function VueDossier({
                 {pluriel(toutes.length, "ressource")} dans ce dossier
               </div>
             ) : (
-              /* Où le membre en est, étape par étape. */
               <>
                 <div className="mt-3.5 text-[14.5px] font-semibold text-ink">
                   {terminees > 1
@@ -395,8 +338,6 @@ export async function VueDossier({
             ) : null}
           </Card>
 
-          {/* Qui a conçu le dossier. Tant que l'équipe ne l'a pas dit, le
-              membre trouve à la place à qui écrire : la chambre. */}
           {dossier.auteur ? (
             <Card className="p-5">
               <h2 className="m-0 text-[16px]">Auteur</h2>
@@ -472,19 +413,6 @@ export async function VueDossier({
   );
 }
 
-/**
- * Le cadre d'une section : un titre qu'on clique pour déplier ce qu'elle
- * range. L'élément natif `details` s'en charge, sans une ligne de script.
- *
- * Les commandes se posent à côté du titre et non dedans : un clic sur un
- * bouton ne doit pas replier la section, et leurs fenêtres n'ont rien à
- * faire à l'intérieur d'un titre.
- *
- * Les outils — la recherche et le filtre — s'alignent de même sur le titre
- * quand la carte est assez large pour les y loger ; plus étroite, ils
- * passent dessous. C'est la largeur de la carte qui en décide, non celle de
- * l'écran : la colonne de côté la rétrécit bien avant le téléphone.
- */
 function Cadre({
   titre,
   nombre,
@@ -498,12 +426,9 @@ function Cadre({
   titre: string;
   nombre: number;
   ouverte: boolean;
-  /** La recherche et le filtre, à côté du titre. */
   outils?: React.ReactNode;
-  /** « Réservé à … », sous le titre d'un dossier réservé. */
   reserve?: string | null;
   commandes?: React.ReactNode;
-  /** La place à laisser aux commandes, à droite du titre. */
   largeurCommandes?: string;
   children: React.ReactNode;
 }) {
@@ -529,9 +454,6 @@ function Cadre({
             className="shrink-0 text-muted transition-transform duration-200 group-open/section:rotate-180"
           />
         </summary>
-        {/* Dans la section, mais hors de son titre : un clic dans la
-            recherche ne la replie pas. Carte large, ils remontent à la
-            hauteur du titre ; sinon ils restent ici, sous lui. */}
         {outils ? (
           <div className="px-5 pb-3.5 @[680px]:absolute @[680px]:right-[50px] @[680px]:top-[13px] @[680px]:p-0">
             {outils}
@@ -548,7 +470,6 @@ function Cadre({
   );
 }
 
-/** Une section : un sous-dossier, ses ressources, puis ce qu'il range. */
 function Section({
   section: s,
   ouverte,
@@ -611,11 +532,6 @@ function Section({
   );
 }
 
-/**
- * Un dossier rangé dans une section : un bandeau à son nom, puis ses lignes.
- * Plus profond, les dossiers s'enchaînent de la même façon, leur chemin
- * dans le bandeau.
- */
 function SousSection({
   section: s,
   chemin,
@@ -652,14 +568,9 @@ function SousSection({
   );
 }
 
-/** Une ligne : la même, qu'on puisse la déplacer ou non. */
 const CLASSE_LIGNE =
   "relative flex flex-wrap items-start gap-x-4 gap-y-3 border-t border-line px-4 py-4 hover:bg-surface-2 sm:flex-nowrap sm:px-6";
 
-/**
- * Les ressources d'un dossier, en lignes. L'équipe les range à la souris
- * (`ListeTriable`) ; pour le membre, et sous un filtre, la liste est fixe.
- */
 export function Lignes({
   ressources,
   ctx,
@@ -670,7 +581,6 @@ export function Lignes({
   if (ctx.rangeable && ressources.length > 1) {
     return (
       <ListeTriable
-        // L'ordre enregistré a changé : la liste repart de lui.
         key={ressources.map((r) => r.id).join("|")}
         ids={ressources.map((r) => r.id)}
         titres={ressources.map((r) => r.titre)}
@@ -696,14 +606,6 @@ export function Lignes({
 const BTN_LIGNE =
   "flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-s)] border border-line bg-surface text-muted hover:border-faint hover:text-ink";
 
-/**
- * Ce qu'une ligne montre d'une ressource : sa vignette, son titre, sa
- * description, et à droite ce qu'on peut en faire. L'élément de liste qui
- * l'entoure vient de l'appelant — fixe, ou déplaçable.
- *
- * Quand on peut l'ouvrir, toute la ligne y mène — c'est le lien du titre,
- * étendu à la ligne. Les boutons restent au-dessus de lui.
- */
 function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
   const { space, admin } = ctx;
   const video = r.fmt === "Vidéo";
@@ -729,9 +631,6 @@ function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
         </label>
       ) : null}
 
-      {/* La couverture est tirée du fichier : la première page d'un
-          document, calée en haut pour qu'on en lise le titre ; une image
-          de la vidéo ou la photo, centrée. */}
       <Visuel
         src={r.cover}
         alt=""
@@ -777,7 +676,6 @@ function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
         </div>
       </div>
 
-      {/* Au-dessus du lien de la ligne : ce qu'on peut faire de la ressource. */}
       <div className="relative z-10 flex shrink-0 items-center gap-1.5 self-center">
         {admin ? (
           <>
@@ -795,8 +693,6 @@ function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
                 <AlertTriangle size={13} /> Fichier manquant
               </span>
             )}
-            {/* L'œil ne vaut que pour une ressource facturée : une ressource
-                incluse n'a pas de liste d'accès. */}
             {r.type === "payant" ? (
               <BoutonAcces
                 resourceId={r.id}
@@ -829,8 +725,6 @@ function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
             <CheckCircle2 size={22} aria-label="Étape terminée" />
           </span>
         ) : accessible ? (
-          // Un simple repère : sur téléphone, où il passerait seul à la
-          // ligne, la ligne entière suffit à dire qu'elle s'ouvre.
           <span
             aria-hidden
             className="hidden h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted sm:flex"

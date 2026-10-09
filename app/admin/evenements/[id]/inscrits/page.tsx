@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-/** Ancienne adresse de la liste des inscrits, fondue dans la page de l'événement. */
 export default async function AncienneListe({
   params,
   searchParams,

@@ -7,25 +7,14 @@ import {
   libelleFormule,
 } from "@/lib/membership";
 
-/**
- * Contenu du centre d'aide.
- *
- * Chaque réponse décrit ce que fait réellement la plateforme, et les chiffres
- * — tarifs, délai de blocage, nombre de photos — sont lus dans les constantes
- * qui gouvernent son comportement. Si un tarif ou une règle change, la réponse
- * suit d'elle-même ; aucune FAQ recopiée à la main ne resterait juste longtemps.
- */
-
 export interface Lien {
   href: string;
   libelle: string;
 }
 
 export interface Question {
-  /** Ancre stable, pour pouvoir envoyer un lien direct vers une réponse. */
   id: string;
   question: string;
-  /** Paragraphes séparés par une ligne vide. */
   reponse: string;
   liens?: Lien[];
 }
@@ -189,9 +178,6 @@ export const THEMES: Theme[] = [
       {
         id: "payante",
         question: "Comment accéder à une ressource payante ?",
-        // Ne pas promettre plus que la plateforme ne fait : « Acheter » ne
-        // consigne aujourd'hui qu'une ligne de journal, qu'aucun écran du
-        // back-office n'affiche. La voie qui aboutit vraiment, c'est l'équipe.
         reponse:
           "Le paiement en ligne n’est pas encore disponible. Pour obtenir une ressource payante, écrivez à l’équipe en précisant son titre : elle vous indiquera comment la régler.",
         liens: [
@@ -203,7 +189,6 @@ export const THEMES: Theme[] = [
   },
 ];
 
-/** Invitation finale : ce que la FAQ ne résout pas, l'équipe le prend. */
 export const AIDE_CONTACT = {
   telephone: COORDONNEES.telephone,
   email: COORDONNEES.email,

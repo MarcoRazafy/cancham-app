@@ -30,12 +30,9 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
   const user = await getCurrentUser(space);
   const [n, offres] = await Promise.all([
     getNewsItem(id, user.id),
-    // Le même rail que la page des Actualités : quatre offres au plus.
     getDernieresOffres(OFFRES_DU_RAIL, "actualites"),
   ]);
   if (!n) notFound();
-  // L'entreprise du membre qui regarde : c'est elle qui peut reprendre ses
-  // propres publications.
   const entreprise =
     !admin && user.memberId ? await getMember(user.memberId) : null;
 
@@ -45,7 +42,6 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
         <BtnLink href={`/${space}/actualites`} variant="ghost" sm>
           <ArrowLeft size={14} /> Retour aux actualités
         </BtnLink>
-        {/* L'équipe voit l'article comme les membres, avec ses commandes. */}
         {admin ? (
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
@@ -70,7 +66,6 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
             />
           </div>
         ) : entreprise && n.auteur?.membreId === entreprise.id ? (
-          // Sa propre publication : le membre la reprend ou la retire.
           <div className="flex items-center gap-1.5">
             <ComposeurPublication
               key={`${n.corps}|${n.images.join("|")}`}
@@ -99,18 +94,9 @@ export async function ArticlePage({ space, id }: { space: Space; id: string }) {
         ) : null}
       </div>
 
-      {/*
-        Même composition que le fil : l'article à gauche, les offres dans un
-        rail qui le suit au défilement et prend toute la largeur restante, en
-        deux colonnes. Seul, l'article laissait un grand vide à droite sur tout
-        écran large.
-      */}
       <div className="flex gap-7 items-start flex-col xl:flex-row">
         <Card className="p-[22px] w-full min-w-0 xl:w-[680px] 2xl:w-[760px] xl:shrink-0">
           {n.libre ? (
-            // Une publication libre : qui parle, ce qu'il dit, ses photos —
-            // dans l'ordre du fil. Son titre n'est que le début du texte : il
-            // reste pour les lecteurs d'écran, pas à l'affichage.
             <>
               <h1 className="sr-only">{n.titre}</h1>
               <SignaturePublication news={n} />

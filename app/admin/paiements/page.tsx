@@ -79,7 +79,6 @@ export default async function AdminPaiements({
               <Download size={14} /> Exporter
             </a>
             <NouvelleFactureButton
-              /* Sans formule, la devise reste celle de la chambre : l'Ariary. */
               membres={membres
                 .filter((m) => m.statut !== "candidature")
                 .map((m) => ({

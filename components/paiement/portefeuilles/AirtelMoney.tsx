@@ -23,26 +23,13 @@ import {
 import { fmtMontant } from "@/lib/membership";
 import { numeroLisible, PORTEFEUILLES } from "@/lib/portefeuilles";
 
-/**
- * Airtel Money : une colonne unique, pensée pour le téléphone d'où l'on
- * paie. En haut, une carte rouge qui porte le montant en grand et la
- * progression ; par-dessus, une carte blanche arrondie qui porte le geste à
- * faire. Les courbes reprennent celles du « a » d'Airtel — ni le panneau de
- * MVola, ni les angles droits d'Orange.
- *
- * Le rouge de la carte est à peine plus profond que celui du logo
- * (#e0141c contre #ed1c24) : le texte blanc y passe 4,9:1, lisible, là où
- * le rouge exact de la marque plafonne à 4,4:1.
- */
 export function TunnelAirtelMoney(p: PropsTunnel) {
   const etape = etapeDu(p);
   const somme = fmtMontant(p.montant, p.devise);
 
   return (
     <div style={couleurs(p.mode)} className="mx-auto max-w-[620px]">
-      {/* ---------- La carte du montant ---------- */}
       <section className="relative overflow-hidden rounded-[28px] bg-[#e0141c] px-6 pb-14 pt-6 text-white sm:px-8">
-        {/* Deux halos, en écho aux courbes du logo : décor seulement. */}
         <span
           aria-hidden
           className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/10"
@@ -85,7 +72,6 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
         <Progression etape={etape} />
       </section>
 
-      {/* ---------- La carte du geste, qui chevauche la première ---------- */}
       <section className="relative -mt-8 rounded-[28px] border border-line bg-surface p-6 shadow-[0_24px_60px_-30px_rgba(60,10,10,0.45)] sm:p-8">
         {etape === 1 ? (
           <form action={enregistrerNumeroPortefeuille}>
@@ -130,7 +116,6 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
               Envoyez {somme} depuis votre téléphone
             </h1>
 
-            {/* Le menu à composer, comme il s'affiche sur un clavier. */}
             <div className="mt-5 flex items-center gap-4 rounded-[20px] bg-[#101418] px-5 py-4 text-white">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10">
                 <Smartphone size={20} aria-hidden />
@@ -219,11 +204,6 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
   );
 }
 
-/**
- * La progression : trois segments de pilule, remplis en jaune à mesure
- * qu'on avance. Le libellé de l'étape en cours est écrit en gras — la
- * couleur n'est pas le seul indice.
- */
 function Progression({ etape }: { etape: Etape }) {
   return (
     <div className="relative mt-7">
@@ -261,10 +241,6 @@ function Progression({ etape }: { etape: Etape }) {
   );
 }
 
-/**
- * Le récapitulatif en forme de ticket : deux encoches découpées de part et
- * d'autre d'un pointillé, comme un reçu qu'on détache.
- */
 function Ticket({
   lignes,
   pied,

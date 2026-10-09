@@ -29,14 +29,6 @@ import { modesBientot, modesProposes } from "@/lib/reglements";
 import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Cotisations et factures.
- *
- * La page regroupe ce que le profil affichait en bas : statut d'adhésion et
- * historique de facturation. Aucune donnée nouvelle, une entrée de menu dédiée.
- * Elle reste accessible même quand l'accès est restreint — c'est ici que le
- * membre constate sa situation.
- */
 export default async function CotisationsPage({
   searchParams,
 }: {
@@ -52,7 +44,6 @@ export default async function CotisationsPage({
     modesProposes(),
   ]);
   const enAttente = ADHESION_PENDING.includes(m.statut);
-  // Un an après le dernier règlement — pas après l'inscription.
   const renouvellement = renouvellementCotisation({
     factures,
     adhesion: m.adhesion,
@@ -62,9 +53,6 @@ export default async function CotisationsPage({
   const enRetard = isOverdueWarning(m);
   const jours = joursDeRetard(m);
 
-  // Le total se compte dans la devise de la formule : additionner des Ariary
-  // et des dollars donnerait un nombre sans unité et sans aucun sens. Sans
-  // formule choisie, rien n'a encore été facturé : l'Ariary fait l'affaire.
   const devise: Devise = m.formule ? FORMULES[m.formule].devise : "MGA";
   const totalPaye = factures
     .filter((f) => f.statut === "payee" && f.devise === devise)
@@ -186,10 +174,6 @@ export default async function CotisationsPage({
                     >
                       <Download size={13} /> Voir · PDF
                     </Link>
-                    {/*
-                      Toutes les devises : les moyens hors ligne — virement,
-                      dépôt, espèces — ne dépendent d'aucun prestataire.
-                    */}
                     {f.statut === "envoyee" ? (
                       <FenetreMoyens
                         facture={{

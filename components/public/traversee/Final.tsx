@@ -4,10 +4,6 @@ import { CompteARebours } from "@/components/public/traversee/Mouvement";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT, retard } from "@/lib/traversee";
 
-/**
- * Dernier appel à réserver, sur une photo de salle voilée du dégradé de la
- * charte. `billetterie` : la fiche de l'événement ; `prixPass` : son tarif.
- */
 export function Final({
   billetterie,
   prixPass,
@@ -51,10 +47,6 @@ export function Final({
   );
 }
 
-/**
- * Barre de réservation flottante. Invisible tant qu'on est sur le hero et
- * près du pied de page ; `Mouvement` la montre entre les deux.
- */
 export function BarreFlottante({ billetterie }: { billetterie: string }) {
   return (
     <div className="flottante" id="flottante" aria-hidden="true">

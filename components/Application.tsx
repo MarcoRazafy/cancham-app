@@ -12,20 +12,6 @@ import { Download, Share, SquarePlus } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { ModalBody } from "@/components/form-bits";
 
-/**
- * L'application CanCham installée : ce qui la distingue du site ouvert
- * dans un navigateur.
- *
- * - `useDansApplication` dit si l'on tourne dans l'application installée ;
- * - `EnregistrementApplication` inscrit le service worker (la page « hors
- *   ligne ») ;
- * - `BoutonInstaller` propose l'installation depuis les espaces ;
- * - `LienSite` et `RenvoiApplication` gardent la vitrine hors de
- *   l'application.
- */
-
-/* ------------------------- Le mode « installée » ------------------------ */
-
 const EN_APPLICATION = "(display-mode: standalone)";
 
 function suivreMode(rappel: () => void) {
@@ -34,32 +20,17 @@ function suivreMode(rappel: () => void) {
   return () => requete.removeEventListener("change", rappel);
 }
 
-/** Vrai dans l'application installée. Hors composant : voir `useDansApplication`. */
 export function lireMode(): boolean {
   return (
     window.matchMedia(EN_APPLICATION).matches ||
-    // Safari sur iPhone signale l'écran d'accueil à sa façon.
     (navigator as { standalone?: boolean }).standalone === true
   );
 }
 
-/** Vrai dans l'application installée ; faux dans un navigateur, et au rendu serveur. */
 export function useDansApplication(): boolean {
   return useSyncExternalStore(suivreMode, lireMode, () => false);
 }
 
-/* -------------------- L'invitation du navigateur ------------------------ */
-
-/**
- * Chrome, Edge et Android annoncent qu'on peut installer par l'événement
- * `beforeinstallprompt`. On le garde pour le rejouer au clic sur notre
- * bouton — et l'on retient la petite bannière du navigateur, pour qu'il n'y
- * ait qu'une seule invitation, la nôtre, et seulement dans les espaces.
- *
- * L'écoute est posée dès le chargement du module, avant même l'affichage :
- * l'événement peut arriver tôt, et un bouton qui l'aurait manqué ne
- * s'afficherait jamais.
- */
 interface InvitationInstallation extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -88,12 +59,6 @@ function suivreInvitation(rappel: () => void) {
   };
 }
 
-/**
- * Là où il n'y a pas d'invitation automatique, on explique le geste :
- * l'iPhone et l'iPad passent par « Partager », Safari sur Mac par le menu
- * Fichier. Firefox sur ordinateur n'installe pas d'application : rien à
- * proposer.
- */
 type Consigne = "ios" | "mac" | null;
 
 export function lireConsigne(): Consigne {
@@ -111,31 +76,16 @@ export function lireConsigne(): Consigne {
   return null;
 }
 
-/* ----------------------------- Le service worker ----------------------- */
-
-/** Inscrit le service worker, une fois, pour toutes les pages. */
 export function EnregistrementApplication() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     navigator.serviceWorker
       .register("/sw.js", { scope: "/", updateViaCache: "none" })
-      .catch(() => {
-        // Sans service worker, tout fonctionne encore — sauf la page hors ligne.
-      });
+      .catch(() => {});
   }, []);
   return null;
 }
 
-/* ----------------------------- Le bouton ------------------------------- */
-
-/**
- * « Installer l'application », dans la barre du haut des espaces.
- *
- * Il n'apparaît que lorsqu'on peut réellement installer — jamais dans
- * l'application elle-même, ni dans un navigateur qui ne le permet pas. Sur
- * Chrome et Android, un clic ouvre la fenêtre d'installation du système ;
- * sur iPhone, iPad et Safari pour Mac, il montre les gestes à faire.
- */
 export function BoutonInstaller() {
   const dansApplication = useDansApplication();
   const inv = useSyncExternalStore(
@@ -159,8 +109,6 @@ export function BoutonInstaller() {
     }
     await inv.prompt();
     await inv.userChoice;
-    // L'invitation ne sert qu'une fois ; le navigateur en renverra une
-    // autre s'il le juge utile.
     invitation = null;
     prevenir();
   };
@@ -240,13 +188,6 @@ function Etape({ n, children }: { n: number; children: ReactNode }) {
   );
 }
 
-/* ---------------------- La vitrine, hors de l'application --------------- */
-
-/**
- * Un lien vers le site public — le logo de la page de connexion. Dans
- * l'application, il n'emmène nulle part : l'application ne montre pas le
- * site.
- */
 export function LienSite({
   className,
   children,
@@ -263,13 +204,6 @@ export function LienSite({
   );
 }
 
-/**
- * Posé dans la mise en page de la vitrine : ouverte dans l'application —
- * un lien reçu par WhatsApp que le téléphone y envoie —, une page du site
- * renvoie vers son équivalent dans l'espace membre. Un événement vers sa
- * fiche membre, une actualité vers la sienne ; le reste vers la connexion,
- * qui mène elle-même à l'espace de chacun.
- */
 export function RenvoiApplication() {
   const dansApplication = useDansApplication();
   const chemin = usePathname();

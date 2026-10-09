@@ -28,11 +28,6 @@ import { estTermine } from "@/lib/presences";
 import { getEvent, getProchainsEvenements } from "@/lib/queries";
 import { modesPublics } from "@/lib/reglements";
 
-/**
- * Ce qu'un partage affiche : le titre de l'événement, sa date et son lieu,
- * et sa photo. Sans cela, un lien collé dans une conversation n'annonce que
- * le nom du site.
- */
 export async function generateMetadata({
   params,
 }: {
@@ -55,13 +50,6 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Fiche publique d'un événement.
- *
- * Visible sans compte, et l'inscription aussi : on y saisit son entreprise,
- * ses représentants et ses coordonnées, et chacun reçoit son QR code. Les
- * membres gardent leur formulaire, dans leur espace, avec leurs contacts.
- */
 export default async function EvenementPublic({
   params,
 }: {
@@ -72,7 +60,6 @@ export default async function EvenementPublic({
     getEvent(id),
     getProchainsEvenements(8),
   ]);
-  // Réservé à la plateforme : il n'existe pas pour le public.
   if (!e || !e.public) notFound();
 
   const index = Math.max(
@@ -80,11 +67,6 @@ export default async function EvenementPublic({
     prochains.findIndex((p) => p.id === e.id),
   );
 
-  /**
-   * Les autres rendez-vous, chacun accompagné de son rang d'origine : le visuel
-   * d'un événement est choisi à partir de ce rang, il doit donc rester le même
-   * ici que sur la page d'accueil.
-   */
   const autres = prochains
     .map((evenement, rang) => ({ evenement, rang }))
     .filter(({ evenement }) => evenement.id !== e.id);
@@ -95,18 +77,11 @@ export default async function EvenementPublic({
   const termine = estTermine({ date: e.date, fin: e.fin ?? null });
   const horaire = plageHoraire(e.debut, e.fin);
 
-  // Payant, avec au moins un moyen de paiement à offrir : l'inscription mène
-  // au choix du moyen, sur la page des billets.
   const choixDuMoyen =
     e.prixPublic > 0 && (await modesPublics(e.prixPublic)).length > 0;
 
   return (
     <>
-      {/*
-        Un événement se lit sur du papier : la page entière quitte le bleu
-        nuit de la vitrine, comme celle d'une actualité (voir
-        `.vitrine-claire` dans vitrine.css).
-      */}
       <main className="vitrine-claire w-full flex-1">
         <div className={`${CONTENEUR} py-10`}>
           <Link
@@ -136,11 +111,6 @@ export default async function EvenementPublic({
             </Agrandir>
           ) : null}
 
-          {/*
-          Sur téléphone, la participation vient juste après le titre : c'est
-          la question qu'on se pose, pas une note à trouver sous la
-          description. Sur ordinateur, elle reste à droite et suit le défilement.
-        */}
           <div className="grid gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,1fr)_320px] items-start">
             <div className="lg:col-start-1 lg:row-start-1 min-w-0">
               <span className="surtitre text-marque-rouge">{e.format}</span>

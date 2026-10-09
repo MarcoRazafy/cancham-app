@@ -6,8 +6,6 @@ import {
   extraireCode,
 } from "@/lib/codes-accueil";
 
-/** Chaque représentant a son QR code ; le scanner doit retrouver le bon. */
-
 describe("codes d'accueil", () => {
   it("donne au premier représentant le code de l'inscription, aux suivants leur rang", () => {
     expect(codeRepresentant("CC-VOPA-K7Q2PX", 0)).toBe("CC-VOPA-K7Q2PX");

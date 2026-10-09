@@ -22,10 +22,6 @@ import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
 import { numeroLisible, PORTEFEUILLES } from "@/lib/portefeuilles";
 
-/**
- * MVola : le panneau jaune de la maquette, à gauche, qui raconte les trois
- * gestes et récapitule ce qui part ; le formulaire à droite.
- */
 export function TunnelMvola(p: PropsTunnel) {
   const { ussd } = PORTEFEUILLES[p.mode];
   const titre = MODES[p.mode].titre;
@@ -48,12 +44,7 @@ export function TunnelMvola(p: PropsTunnel) {
       style={couleurs(p.mode)}
       className="grid overflow-hidden rounded-[var(--radius-l)] border border-line bg-surface lg:grid-cols-[minmax(0,400px)_1fr]"
     >
-      {/* ---------- Le panneau de l'opérateur ---------- */}
       <aside className="bg-[var(--pf-fond)] p-7 text-[var(--pf-encre)]">
-        {/*
-          Chaque logo dans sa pastille blanche : posée sur le jaune, une
-          marque s'y perdrait.
-        */}
         <div className="flex items-center gap-3">
           <span className="flex h-14 items-center rounded-[var(--radius-m)] bg-white px-4">
             <Image
@@ -119,7 +110,6 @@ export function TunnelMvola(p: PropsTunnel) {
           })}
         </ol>
 
-        {/* Le récapitulatif, en sombre : ce qui part, et vers qui. */}
         <dl className="m-0 mt-6 rounded-[var(--radius-m)] bg-[#101418] px-5 py-4 text-white">
           <Ligne libelle="Montant">
             <span className="text-[17px] font-bold text-[var(--pf-valeur)]">
@@ -136,7 +126,6 @@ export function TunnelMvola(p: PropsTunnel) {
         <MentionSecret mode={p.mode} className="mt-5 text-[var(--pf-douce)]" />
       </aside>
 
-      {/* ---------- Ce qu'il y a à faire ---------- */}
       <section className="p-7">
         <div className="flex items-center justify-between gap-4">
           <Link

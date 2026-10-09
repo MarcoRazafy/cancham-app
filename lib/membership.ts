@@ -1,43 +1,14 @@
 import { parseISO, today } from "@/lib/format";
 import type { Member, MemberStatus } from "@/lib/types";
 
-/**
- * Règles d'adhésion — le cœur du produit.
- *
- * L'accès à l'application est conditionné par le paiement de la cotisation.
- * C'est le modèle économique de la chambre, encodé ici.
- *
- * Ces fonctions sont volontairement PURES et SANS ÉTAT : le retard est
- * recalculé à la volée à partir de `retardDepuis`, jamais stocké. Il n'y a donc
- * aucun job nocturne à faire tourner pour « passer les membres en retard », et
- * aucune désynchronisation possible entre le statut affiché et la réalité.
- */
-
-/**
- * Photos par produit, au plus.
- *
- * Assez pour montrer un produit sous plusieurs angles ; au-delà, la galerie
- * s'étire et chaque fiche pèse plus lourd à charger depuis Madagascar.
- */
 export const PHOTOS_PAR_PRODUIT = 5;
 
-/** Plafond de besoins sur une fiche : au-delà, la liste ne se lit plus. */
 export const BESOINS_PAR_FICHE = 15;
 
-/** Au-delà de ce nombre de jours de retard, l'accès est coupé automatiquement. */
 export const RETARD_BLOCAGE_JOURS = 30;
 
-/** Délai de règlement d'une facture émise, en jours. */
 export const DELAI_REGLEMENT_JOURS = 30;
 
-/**
- * Formules d'adhésion, recopiées de la fiche d'inscription de la chambre.
- *
- * Elles remplacent une cotisation unique de 450 000 Ar, marquée « à confirmer »,
- * qui ne correspondait à aucune d'elles. Le montant dépend du pays et du profil ;
- * deux formules se règlent en dollars canadiens, ce qui interdit de continuer à
- * tout compter en Ariary.
- */
 export type FormuleId =
   | "mg_consultant"
   | "mg_entreprise"
@@ -48,11 +19,8 @@ export type FormuleId =
 export type Devise = "MGA" | "CAD";
 
 export interface Formule {
-  /** Premier terme du libellé : le pays, ou « Sur mesure ». */
   pays: string;
-  /** Profil de l'adhérent. */
   profil: string;
-  /** Cotisation annuelle, en unités entières de la devise. */
   montant: number;
   devise: Devise;
 }
@@ -90,61 +58,29 @@ export const FORMULES: Record<FormuleId, Formule> = {
   },
 };
 
-/**
- * Ordre d'affichage : celui de la fiche d'inscription.
- *
- * Dérivé des clés de `FORMULES` plutôt que recopié : une formule ajoutée à la
- * grille apparaît d'office dans les formulaires, sans liste parallèle à tenir.
- */
 export const ORDRE_FORMULES = Object.keys(FORMULES) as FormuleId[];
 
-/**
- * « Madagascar — Entreprise », ou l'aveu qu'aucune formule n'est choisie.
- *
- * Une demande d'adhésion arrive sans formule : le candidat la choisit en
- * complétant son dossier. Tant qu'il ne l'a pas fait, la chambre n'attend
- * aucun montant de lui, et l'écrire vaut mieux que d'en inventer un.
- */
 export function libelleFormule(id: FormuleId | null): string {
   if (!id) return "Formule à choisir";
   const f = FORMULES[id];
   return `${f.pays} — ${f.profil}`;
 }
 
-/**
- * Montant dans sa devise, écrit comme sur la fiche de la chambre :
- * « 250 000 Ar », « 100 $ ».
- */
 export function fmtMontant(montant: number, devise: Devise): string {
   const nombre = montant.toLocaleString("fr-FR");
   return devise === "CAD" ? `${nombre} $` : `${nombre} Ar`;
 }
 
-/** Cotisation annuelle d'une formule, mise en forme. « À définir » sans formule. */
 export function fmtCotisation(id: FormuleId | null): string {
   if (!id) return "à définir";
   const f = FORMULES[id];
   return fmtMontant(f.montant, f.devise);
 }
 
-/**
- * Cotisation annuelle telle qu'on l'annonce : « 500 000 Ar / an ».
- *
- * Sans formule, il n'y a pas de montant à annoncer — et surtout pas un « / an »
- * accolé à « à définir ».
- */
 export function cotisationAnnuelle(id: FormuleId | null): string {
   return id ? `${fmtCotisation(id)} / an` : "Cotisation à définir";
 }
 
-/**
- * Pages accessibles même quand l'accès est restreint.
- *
- * Un membre bloqué doit pouvoir régulariser sa situation et joindre l'équipe :
- * sa fiche, ses cotisations, et la page de contact — c'est précisément lui qui
- * en a le plus besoin. Une seule liste, lue par `proxy.ts` pour le verrou et
- * par le menu pour les cadenas : deux copies finiraient par diverger.
- */
 export const PAGES_TOUJOURS_OUVERTES = [
   "/membre/profil",
   "/membre/cotisations",
@@ -152,46 +88,27 @@ export const PAGES_TOUJOURS_OUVERTES = [
   "/membre/aide",
 ];
 
-/** Statuts pour lesquels l'adhésion n'est pas encore effective. */
 export const ADHESION_PENDING: MemberStatus[] = ["candidature", "en_attente"];
 
-/**
- * Les statuts qui ne paraissent nulle part côté membre : ni dans l'annuaire,
- * ni dans les chiffres publics, ni dans une liste de choix.
- *
- * Une demande à l'examen n'est pas encore une adhérente ; une demande
- * refusée ne l'a jamais été. Les deux gardent leur dossier au back-office —
- * et rien de plus.
- */
 export const HORS_ANNUAIRE: MemberStatus[] = ["candidature", "refusee"];
 
-/** Nombre de jours écoulés depuis la bascule en retard. 0 si le membre est à jour. */
 export function joursDeRetard(m: Member | null | undefined): number {
   if (!m?.retardDepuis) return 0;
   const diff = today().getTime() - parseISO(m.retardDepuis).getTime();
   return Math.max(0, Math.floor(diff / 86_400_000));
 }
 
-/** Vrai si le retard dépasse le seuil de blocage automatique. */
 export function retardBloque(m: Member | null | undefined): boolean {
   return (
     !!m && m.statut === "en_retard" && joursDeRetard(m) > RETARD_BLOCAGE_JOURS
   );
 }
 
-/**
- * Vrai si le membre est restreint à son seul profil.
- *
- * Attention à la nuance : un membre en retard de moins de 30 jours conserve
- * l'intégralité de ses accès, il est seulement averti. On prévient avant de
- * couper.
- */
 export function isAccessLocked(m: Member | null | undefined): boolean {
   if (!m) return false;
   return ADHESION_PENDING.includes(m.statut) || retardBloque(m);
 }
 
-/** Raison du verrouillage, pour choisir le bandeau à afficher. */
 export type LockReason = "adhesion_en_attente" | "retard_bloquant" | null;
 
 export function lockReason(m: Member | null | undefined): LockReason {
@@ -201,7 +118,6 @@ export function lockReason(m: Member | null | undefined): LockReason {
   return null;
 }
 
-/** Vrai si le membre est en retard mais pas encore bloqué : période d'avertissement. */
 export function isOverdueWarning(m: Member | null | undefined): boolean {
   return !!m && m.statut === "en_retard" && !retardBloque(m);
 }

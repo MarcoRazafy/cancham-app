@@ -24,22 +24,8 @@ import {
   type FormatVideo,
 } from "@/lib/video-presentation";
 
-/**
- * Les vidéos de présentation des fiches, sur le disque.
- *
- * Une vidéo arrive par morceaux (voir `lib/video-presentation.ts`). Tant
- * qu'elle n'est pas entière, elle attend dans un dossier à part, sous un
- * identifiant d'envoi que seule la personne qui l'a ouvert peut alimenter.
- * Entière et vérifiée, elle prend son nom définitif dans `videos/`, d'où la
- * route `/api/videos/[fichier]` la sert.
- *
- * Rien n'est jamais chargé en entier en mémoire : un morceau fait huit
- * mégaoctets au plus, et c'est tout ce que le serveur tient à la fois.
- */
-
 const DOSSIER = dossierStockage("videos");
 const EN_COURS = dossierStockage("videos-en-cours");
-/** Un envoi abandonné part au ménage au bout d'une journée. */
 const DUREE_DE_VIE = 24 * 60 * 60 * 1000;
 const IDENTIFIANT =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -48,12 +34,10 @@ interface Envoi {
   userId: string;
   memberId: string;
   format: FormatVideo;
-  /** Le poids annoncé à l'ouverture : l'envoi n'ira pas au-delà. */
   taille: number;
   creeLe: number;
 }
 
-/** Un refus à dire tel quel à la personne, avec le code HTTP qui convient. */
 export class VideoRefusee extends Error {
   constructor(
     message: string,
@@ -63,11 +47,6 @@ export class VideoRefusee extends Error {
   }
 }
 
-/**
- * Le morceau ne commence pas là où le fichier s'arrête : la réponse d'un
- * envoi précédent s'est perdue, ou deux envois se sont croisés. On dit où
- * l'on en est, et le navigateur reprend de là.
- */
 export class Decalage extends Error {
   constructor(readonly recu: number) {
     super("Le morceau ne commence pas où le fichier s’arrête.");
@@ -78,8 +57,6 @@ const partie = (id: string) => path.join(EN_COURS, `${id}.part`);
 const fiche = (id: string) => path.join(EN_COURS, `${id}.json`);
 
 async function lireEnvoi(id: string, userId: string): Promise<Envoi> {
-  // L'identifiant vient de l'adresse : il n'atteint le disque que s'il a la
-  // forme de ceux qu'on fabrique.
   if (!IDENTIFIANT.test(id)) throw new VideoRefusee("Envoi introuvable.", 404);
   let envoi: Envoi;
   try {
@@ -90,7 +67,6 @@ async function lireEnvoi(id: string, userId: string): Promise<Envoi> {
       404,
     );
   }
-  // L'envoi d'un autre n'existe pas pour soi.
   if (envoi.userId !== userId) {
     throw new VideoRefusee("Envoi introuvable.", 404);
   }
@@ -102,11 +78,6 @@ async function effacer(id: string) {
   await rm(fiche(id), { force: true });
 }
 
-/**
- * Les envois abandonnés s'en vont, ainsi que ceux que la même personne
- * avait laissés en plan pour la même fiche : on n'empile pas des gigaoctets
- * à moitié envoyés.
- */
 async function menage(userId: string, memberId: string) {
   let noms: string[];
   try {
@@ -123,16 +94,11 @@ async function menage(userId: string, memberId: string) {
       const remplace = envoi.userId === userId && envoi.memberId === memberId;
       if (perime || remplace) await effacer(id);
     } catch {
-      // Une fiche illisible ne sert plus à rien.
       await effacer(id);
     }
   }
 }
 
-/**
- * Ouvre l'envoi d'une vidéo : le format et le poids sont contrôlés avant
- * qu'un seul octet n'arrive.
- */
 export async function ouvrirEnvoi(demande: {
   userId: string;
   memberId: string;
@@ -169,7 +135,6 @@ export async function ouvrirEnvoi(demande: {
   return id;
 }
 
-/** Un morceau lu en entier, sans jamais dépasser `max` octets en mémoire. */
 async function lireBorne(
   corps: ReadableStream<Uint8Array>,
   max: number,
@@ -190,10 +155,6 @@ async function lireBorne(
   return Buffer.concat(blocs, taille);
 }
 
-/**
- * Deux morceaux du même envoi ne s'écrivent jamais en même temps : chacun
- * attend la fin du précédent.
- */
 const files = new Map<string, Promise<unknown>>();
 
 function chacunSonTour<T>(id: string, tache: () => Promise<T>): Promise<T> {
@@ -206,13 +167,6 @@ function chacunSonTour<T>(id: string, tache: () => Promise<T>): Promise<T> {
   return suite;
 }
 
-/**
- * Ajoute un morceau au bout de la vidéo en cours d'envoi, et rend le nombre
- * d'octets reçus en tout.
- *
- * Le morceau doit commencer exactement où le fichier s'arrête, et ne jamais
- * porter l'envoi au-delà du poids annoncé — lui-même borné à 1 Go.
- */
 export function recevoirMorceau(
   id: string,
   userId: string,
@@ -235,19 +189,11 @@ export function recevoirMorceau(
   });
 }
 
-/**
- * Où en est un envoi : le nombre d'octets arrivés. Le navigateur le demande
- * après une coupure, pour reprendre exactement là.
- */
 export async function etatEnvoi(id: string, userId: string): Promise<number> {
   await lireEnvoi(id, userId);
   return (await stat(partie(id))).size;
 }
 
-/**
- * Clôt l'envoi : la vidéo est entière, son début est bien celui d'une vidéo,
- * et elle prend son nom définitif. Rend la fiche concernée et ce nom.
- */
 export function terminerEnvoi(
   id: string,
   userId: string,
@@ -289,18 +235,15 @@ export function terminerEnvoi(
   });
 }
 
-/** Abandonne un envoi en cours : ce qui était arrivé est effacé. */
 export async function abandonnerEnvoi(id: string, userId: string) {
   await lireEnvoi(id, userId);
   await chacunSonTour(id, () => effacer(id));
 }
 
-/** Le chemin d'une vidéo sur le disque, ou `null` pour un nom qui n'en est pas un. */
 export function cheminVideo(fichier: string): string | null {
   return estNomVideo(fichier) ? path.join(DOSSIER, fichier) : null;
 }
 
-/** Efface une vidéo remplacée ou retirée. Sans effet si elle n'existe plus. */
 export async function supprimerVideo(fichier: string | null | undefined) {
   const chemin = fichier ? cheminVideo(fichier) : null;
   if (chemin) await rm(chemin, { force: true });

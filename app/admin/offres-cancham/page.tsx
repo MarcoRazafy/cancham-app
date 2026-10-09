@@ -21,12 +21,10 @@ export default async function AdminServices() {
   const ouverts = new Set(
     types.filter((t) => t.plages.length).map((t) => t.id),
   );
-  // Le lien d'un service mène-t-il à un rendez-vous qui n'est plus ouvert ?
   const rendezvousFerme = (lien: string) => {
     const type = typeDuLienRendezvous(lien);
     return type !== null && !ouverts.has(type);
   };
-  // Les rendez-vous ouverts, proposés dans le champ « Lien » d'un service.
   const rendezvous = await Promise.all(
     types
       .filter((t) => t.plages.length)
@@ -52,8 +50,6 @@ export default async function AdminServices() {
                 <div className="flex items-center gap-1.5 w-full flex-wrap">
                   {s.lien ? (
                     rendezvousFerme(s.lien) ? (
-                      // L'équipe doit le savoir : sinon elle croit le
-                      // service relié à un rendez-vous.
                       <span className="mb-1 w-full text-[12px] leading-snug text-warn">
                         Rendez-vous masqué ou supprimé : le bouton écrit de
                         nouveau à l’équipe.

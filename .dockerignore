@@ -1,5 +1,3 @@
-# Ce qui n'entre pas dans l'image : dépendances et compilations locales
-# (reconstruites dans l'image), secrets, données d'exécution.
 node_modules
 .next
 lib/generated

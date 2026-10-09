@@ -20,14 +20,6 @@ import {
 } from "@/lib/actions/agenda";
 import type { ElementAgenda } from "@/lib/agenda";
 
-/**
- * Rappels personnels : ajout, modification, case « fait », suppression.
- *
- * Tout passe par des actions serveur qui renvoient sur l'agenda tel qu'il
- * était affiché — `retour` porte la vue, la date et les filtres.
- */
-
-/** Bouton « Nouveau rappel », prérempli sur un jour. */
 export function NouveauRappel({
   jour,
   retour,
@@ -38,9 +30,7 @@ export function NouveauRappel({
   jour: string;
   retour: string;
   libelle?: string;
-  /** Lien texte plutôt que bouton plein, pour le détail d'un jour. */
   discret?: boolean;
-  /** Appelé une fois l'enregistrement terminé : une liste chargée côté client se relit. */
   apresEnvoi?: () => void;
 }) {
   return (
@@ -72,7 +62,6 @@ export function NouveauRappel({
   );
 }
 
-/** Case « fait » et bouton de modification, sur la carte d'un rappel. */
 export function ActionsRappel({
   element,
   retour,
@@ -121,10 +110,6 @@ export function ActionsRappel({
   );
 }
 
-/**
- * Bloc d'un rappel dans la grille de la semaine : un clic ouvre sa
- * modification, puisqu'un rappel n'a pas de page à lui.
- */
 export function BlocRappel({
   element,
   retour,

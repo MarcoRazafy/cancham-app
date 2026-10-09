@@ -5,14 +5,6 @@ import { Paiements } from "@/components/public/traversee/Paiements";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT, retard } from "@/lib/traversee";
 
-/**
- * Le pass, dessiné comme un vrai billet : talon rouge, ligne perforée, puis
- * ce qu'il comprend et les logos des moyens de paiement en carrousel. À côté, deux encarts : la
- * jauge de la salle, et la réservation d'équipe.
- *
- * `billetterie` : où réserver — la fiche de l'événement sur la plateforme.
- * `prixPass` : le tarif public de cette fiche.
- */
 const INCLUS = [
   <>
     <b>Expositions</b> toute la journée

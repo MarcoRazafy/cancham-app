@@ -7,24 +7,8 @@ import { prisma } from "@/lib/db";
 import { rattacherEquipe } from "@/lib/fil-equipe";
 import { courrielReponseVisiteur } from "@/lib/modeles-courriels";
 
-/**
- * Assistance ouverte aux visiteurs de la vitrine, sans compte.
- *
- * Une personne qui découvre la chambre doit pouvoir poser sa question là où
- * elle se trouve, sans adhérer d'abord. Elle laisse son nom, son adresse et
- * son téléphone : sans cela, une réponse n'aurait nulle part où aller, et
- * l'équipe recevrait des messages anonymes auxquels elle ne peut rien.
- *
- * Le fil est celui de la messagerie, comme pour un membre — l'équipe n'a pas
- * deux boîtes à surveiller. Ce qui change : il n'y a pas d'utilisateur
- * derrière, donc pas de session. La clé écrite dans le cookie en tient lieu :
- * elle seule rouvre le fil, sur ce navigateur.
- */
-
-/** Cookie qui porte la clé du fil. Sans lui, la conversation est perdue. */
 export const COOKIE_VISITEUR = "cancham_assistance";
 
-/** Trois mois : le temps qu'une question trouve sa réponse, et au-delà. */
 const DUREE_COOKIE = 60 * 60 * 24 * 90;
 
 export interface Visiteur {
@@ -36,7 +20,6 @@ export interface Visiteur {
 export interface MessageVisiteur {
   id: string;
   de: string;
-  /** Réponse de la chambre. Faux : message du visiteur lui-même. */
   equipe: boolean;
   texte: string;
   envoyeLe: string;
@@ -48,7 +31,6 @@ export interface FilVisiteur {
   messages: MessageVisiteur[];
 }
 
-/** Ce que la base rend d'un `Json` : on ne le croit qu'après vérification. */
 export function visiteurDuFil(json: unknown): Visiteur | null {
   if (!json || typeof json !== "object") return null;
   const v = json as Record<string, unknown>;
@@ -64,7 +46,6 @@ async function cleCourante(): Promise<string | null> {
   return (await cookies()).get(COOKIE_VISITEUR)?.value ?? null;
 }
 
-/** Le fil de ce navigateur, s'il en a un. */
 export async function filVisiteur(): Promise<{
   id: string;
   visiteur: Visiteur;
@@ -79,7 +60,6 @@ export async function filVisiteur(): Promise<{
   return fil && visiteur ? { id: fil.id, visiteur } : null;
 }
 
-/** Nombre de messages relus par la bulle : la fin de la conversation. */
 const DERNIERS = 50;
 
 export async function conversationVisiteur(): Promise<FilVisiteur | null> {
@@ -104,12 +84,7 @@ export async function conversationVisiteur(): Promise<FilVisiteur | null> {
     visiteur: fil.visiteur,
     messages: lignes.reverse().map((m) => ({
       id: m.id,
-      // Le visiteur a la chambre en face de lui, pas la personne de
-      // permanence — comme un membre dans son assistance. L'équipe, elle,
-      // voit qui a répondu.
       de: m.userId ? "Équipe CanCham" : m.auteur,
-      // Dans un fil de visiteur, seule l'équipe a un compte : le message qui
-      // porte un utilisateur vient donc de la chambre.
       equipe: m.userId !== null,
       texte: m.supprimeLe ? "" : m.texte,
       envoyeLe: m.sentAt.toISOString(),
@@ -118,12 +93,6 @@ export async function conversationVisiteur(): Promise<FilVisiteur | null> {
   };
 }
 
-/**
- * Ouvre le fil d'un visiteur et pose sa clé dans le cookie.
- *
- * Toute l'équipe y est rattachée : la question arrive à la chambre, pas à la
- * personne de permanence.
- */
 export async function ouvrirFilVisiteur(v: Visiteur): Promise<string> {
   const cle = randomBytes(24).toString("base64url");
   const equipe = await prisma.user.findMany({
@@ -141,7 +110,6 @@ export async function ouvrirFilVisiteur(v: Visiteur): Promise<string> {
     },
     select: { id: true },
   });
-  // Un compte d'équipe ouvert depuis rejoint le fil.
   await rattacherEquipe(fil.id);
 
   (await cookies()).set(COOKIE_VISITEUR, cle, {
@@ -154,7 +122,6 @@ export async function ouvrirFilVisiteur(v: Visiteur): Promise<string> {
   return fil.id;
 }
 
-/** Écrit un message du visiteur dans son fil. */
 export async function ecrireDuVisiteur(
   threadId: string,
   nom: string,
@@ -165,13 +132,6 @@ export async function ecrireDuVisiteur(
   });
 }
 
-/**
- * Prévient le visiteur qu'on lui a répondu.
- *
- * Sans compte, il n'a ni notification ni messagerie où retrouver la réponse :
- * son adresse est tout ce que la chambre a pour le joindre. Sans effet sur un
- * fil de membre, qui, lui, voit la réponse dans la plateforme.
- */
 export async function prevenirVisiteur(
   threadId: string,
   reponse: string,

@@ -24,25 +24,11 @@ import {
   rendreSelection,
 } from "./texte-riche-dom";
 
-/**
- * La zone de texte d'un bloc, et sa barre de mise en forme : gras, italique,
- * souligné, taille, couleur, lien, listes, alignement.
- *
- * Le navigateur tient la saisie ; à chaque frappe, on relit la zone et on en
- * remonte la description (voir `texte-riche-dom.ts`). La barre n'apparaît
- * que sur le bloc où l'on écrit, et reste en vue quand le texte est long.
- *
- * Les boutons ne prennent pas le curseur : la sélection reste dans le texte.
- * Les champs qui le prennent forcément — l'adresse d'un lien, la couleur
- * libre — retrouvent la sélection qu'on avait avant de les ouvrir.
- */
-
 const BOUTON =
   "flex h-8 min-w-8 items-center justify-center rounded-[var(--radius-s)] px-1.5 text-muted hover:bg-surface-3 hover:text-ink";
 const ENFONCE =
   "bg-accent-soft text-accent hover:bg-accent-soft hover:text-accent";
 
-/** Un bouton de la barre. Il ne prend pas le curseur au texte. */
 function Outil({
   libelle,
   enfonce = false,
@@ -60,7 +46,6 @@ function Outil({
       title={libelle}
       aria-label={libelle}
       aria-pressed={enfonce}
-      // Le curseur reste dans le texte : c'est sa sélection qu'on met en forme.
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className={`${BOUTON} ${enfonce ? ENFONCE : ""}`}
@@ -84,15 +69,12 @@ export function TexteRiche({
   onChange,
   actif,
 }: {
-  /** Le texte de départ. Ensuite, c'est la zone de saisie qui fait foi. */
   lignes: Ligne[];
   onChange: (lignes: Ligne[]) => void;
-  /** Le bloc où l'on travaille : lui seul montre sa barre. */
   actif: boolean;
 }) {
   const zone = useRef<HTMLDivElement>(null);
   const depart = useRef(lignes);
-  /** La dernière sélection faite dans la zone. */
   const memoire = useRef<Range | null>(null);
   const [etat, setEtat] = useState(NEUTRE);
   const [vide, setVide] = useState(() => !lignes.length);
@@ -104,7 +86,6 @@ export function TexteRiche({
     if (zone.current) poserLignes(zone.current, depart.current);
   }, []);
 
-  // L'état des boutons suit le curseur, et la sélection est gardée en mémoire.
   useEffect(() => {
     const suivre = () => {
       const selection = document.getSelection();
@@ -139,7 +120,6 @@ export function TexteRiche({
     onChange(lignesDepuis(z));
   };
 
-  /** Rend le curseur à la zone, là où il était. */
   const retrouver = () => {
     const z = zone.current;
     if (!z) return;
@@ -155,14 +135,8 @@ export function TexteRiche({
     const z = zone.current;
     if (!z) return;
     retrouver();
-    // Des balises simples plutôt que des styles, et des paragraphes en <div>
-    // — ceux que le navigateur sait changer en liste.
     document.execCommand("styleWithCSS", false, "false");
     document.execCommand("defaultParagraphSeparator", false, "div");
-    // En faisant une liste, le navigateur renvoie le curseur au début de la
-    // ligne : on le remet où il était. Seulement pour les listes — ailleurs,
-    // reposer la sélection ferait oublier le gras ou la couleur qu'on vient
-    // de demander pour la suite de la frappe.
     const gardee = nom.startsWith("insert") ? garderSelection(z) : null;
     document.execCommand(nom, false, valeur);
     if (gardee) rendreSelection(z, gardee);
@@ -283,13 +257,9 @@ export function TexteRiche({
             </Outil>
           </div>
 
-          {/* Les couleurs restent sous les yeux : rangées derrière un
-              bouton, on ne les trouvait pas. */}
           <ChoixCouleur
             libelle="Couleur du texte"
             onChoisir={(couleur) => {
-              // « Par défaut » : la couleur du texte courant, dont la
-              // relecture ne garde rien.
               const base = zone.current
                 ? enHex(getComputedStyle(zone.current).color)
                 : null;
@@ -368,13 +338,10 @@ export function TexteRiche({
         onInput={relire}
         onBlur={relire}
         onPaste={(e) => {
-          // Le texte seul : la mise en forme d'ailleurs ne suit pas.
           e.preventDefault();
           const texte = e.clipboardData.getData("text/plain");
           if (texte) document.execCommand("insertText", false, texte);
         }}
-        // Rien ne se dépose dans le texte : ni image, ni mise en forme venue
-        // d'ailleurs. Le dépôt d'un bloc, lui, est pris par la page.
         onDrop={(e) => e.preventDefault()}
         className="texte-riche champ-fondu relative min-h-[1.7em]"
       />

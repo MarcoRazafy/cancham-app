@@ -8,7 +8,6 @@ import { parseISO } from "@/lib/format";
 import { visuelEvenement } from "@/lib/images-publiques";
 import type { CanchamEvent } from "@/lib/types";
 
-/** Catégorie déduite du titre, à défaut d'un champ dédié dans le modèle. */
 function categorie(e: CanchamEvent): string {
   const t = e.titre.toLowerCase();
   if (t.includes("5 à 7")) return "Réseautage";
@@ -26,7 +25,6 @@ export function CarteEvenement({
 }: {
   evenement: CanchamEvent;
   index: number;
-  /** Pour l'entrée au défilement : la classe `reveler` et son retard. */
   className?: string;
   style?: CSSProperties;
 }) {
@@ -37,7 +35,6 @@ export function CarteEvenement({
     .replace(".", "")
     .toUpperCase();
   const horaire = plageHoraire(evenement.debut, evenement.fin);
-  // La photo enregistrée en base prime sur le visuel générique.
   const visuel = evenement.photo
     ? { url: evenement.photo, alt: "" }
     : visuelEvenement(evenement.id, index);
@@ -45,8 +42,6 @@ export function CarteEvenement({
   return (
     <Link
       href={`/evenements/${evenement.id}`}
-      // Trois cartes pleines sur ordinateur, deux sur tablette : aucune ne se
-      // coupe au bord. Sur téléphone, la suivante dépasse, pour inviter à glisser.
       className={`group snap-start shrink-0 w-[84%] sm:w-[320px] md:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] flex flex-col no-underline rounded-xl overflow-hidden bg-surface border border-line shadow-[var(--shadow)] transition-[border-color,box-shadow] hover:border-faint hover:shadow-[0_18px_40px_-22px_rgb(15_29_44/0.45)] ${className}`}
       style={style}
     >

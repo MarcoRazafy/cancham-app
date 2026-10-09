@@ -8,21 +8,12 @@ import { getCurrentUser } from "@/lib/session";
 import { ADHESION_PENDING } from "@/lib/membership";
 import { renouvellementCotisation } from "@/lib/agenda";
 
-/**
- * Certificat d'adhésion.
- *
- * Il n'y a pas de génération de PDF : la page est conçue pour l'impression, et
- * le navigateur se charge de l'export. C'est suffisant, gratuit, et ça évite
- * d'embarquer un moteur de rendu côté serveur.
- */
 export default async function CertificatPage() {
   const user = await getCurrentUser("membre");
   const m = user.memberId ? await getMember(user.memberId) : null;
   if (!m) notFound();
   if (ADHESION_PENDING.includes(m.statut)) notFound();
 
-  // Le certificat court jusqu'au prochain renouvellement, celui qu'on annonce
-  // partout ailleurs : un an après le dernier règlement.
   const factures = await getInvoices(m.id);
   const fin = renouvellementCotisation({
     factures,
@@ -39,12 +30,6 @@ export default async function CertificatPage() {
         <PrintButton />
       </div>
 
-      {/*
-        Le certificat s'imprime seul, en paysage et sans marge de page : le
-        navigateur n'a plus où écrire la date, le titre de l'onglet et
-        l'adresse. La règle vit ici, pas dans la feuille globale — elle ne
-        concerne que cette page.
-      */}
       <style>
         {"@media print { @page { size: A4 landscape; margin: 0 } }"}
       </style>

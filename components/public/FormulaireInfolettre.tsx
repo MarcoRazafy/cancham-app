@@ -4,14 +4,6 @@ import { useState, useTransition } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { inscrireInfolettre } from "@/lib/actions/infolettre";
 
-/**
- * Le formulaire de la lettre d'information.
- *
- * Prénom et adresse, comme sur la page d'inscription de la chambre, et le
- * même mot de remerciement. L'inscription est enregistrée par la plateforme :
- * l'équipe la retrouve dans son journal d'activité.
- */
-
 const CHAMP =
   "h-13 rounded-md bg-white px-5 text-[15px] text-[var(--marque-nuit)] outline-none placeholder:text-[#8797a6] focus:ring-2 focus:ring-white/70";
 

@@ -15,15 +15,6 @@ import { Card, Saillant, ViewHead } from "@/components/ui";
 import { AIDE_CONTACT, THEMES } from "@/lib/aide";
 import { chiffres } from "@/lib/coordonnees";
 
-/**
- * Centre d'aide.
- *
- * La première porte : le membre cherche sa réponse, et seulement s'il ne la
- * trouve pas, il écrit à l'équipe — le lien est au pied de la page. Ouvert
- * même quand l'accès est restreint : « pourquoi mon accès est-il restreint ? »
- * est justement la question d'un membre bloqué.
- */
-/** Les pages où l'on règle soi-même ce que la plupart des questions demandent. */
 const ACCES = [
   {
     href: "/membre/profil",
@@ -60,11 +51,6 @@ const ACCES = [
 export default function AidePage() {
   return (
     <>
-      {/*
-        Le titre et les questions prennent la largeur ; à côté, dès le haut de
-        la page, une colonne qui suit le défilement : l'équipe à joindre et
-        les pages où l'on agit. Sous 1280 px, elle passe sous les questions.
-      */}
       <div className="grid gap-6 items-start xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0">
           <ViewHead

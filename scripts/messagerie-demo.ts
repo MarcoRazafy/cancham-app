@@ -1,15 +1,3 @@
-/**
- * Dépose des pièces jointes de démonstration dans la messagerie.
- *
- *   npm run messagerie:demo
- *
- * À relancer après `npm run db:seed`, qui recrée les messages. Les fichiers
- * passent par `recevoirPiece`, la même fonction qu'un envoi réel : contrôle
- * du contenu, redimensionnement des images, rangement dans le stockage privé.
- *
- * Quatre pièces, de chaque type : un PDF et deux photos de Highlands Artisanat
- * dans son fil, une vidéo de l'équipe CanCham dans le sien.
- */
 import { execFile } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,20 +25,16 @@ td,th{padding:5pt 7pt;border-bottom:.5pt solid #c9d1d9;text-align:left}th{backgr
 <p style="color:#6b7785;font-size:8.5pt;margin-top:24pt">Document de démonstration de la plateforme CanCham Connect.</p>
 </body></html>`;
 
-/** Un `File` à partir d'octets, comme l'enverrait un navigateur. */
 const fichier = (octets: Buffer, nom: string, type: string) =>
   new File([new Uint8Array(octets)], nom, { type });
 
 async function main() {
-  // On repart d'un stockage vide : un nouveau seed a supprimé les anciennes
-  // lignes, leurs fichiers seraient orphelins.
   await rm(RACINE_MESSAGERIE, { recursive: true, force: true });
   await prisma.pieceJointe.deleteMany();
 
   const tmp = path.join(process.cwd(), "stockage", ".demo-messagerie");
   await mkdir(tmp, { recursive: true });
 
-  // --- Le catalogue, rédigé en HTML puis converti en PDF ---
   await writeFile(path.join(tmp, "catalogue.html"), catalogue, "utf-8");
   await executer(
     "soffice",
@@ -81,13 +65,11 @@ async function main() {
   const photo = (n: string) =>
     readFile(path.join(process.cwd(), "public", "photos", n));
 
-  // --- Fil avec Highlands Artisanat ---
   const t1 = await prisma.messageThread.findUniqueOrThrow({
     where: { id: "t1" },
     include: { messages: { orderBy: { sentAt: "asc" } } },
   });
   const [premier, second] = t1.messages;
-  // Glissé entre les deux premiers messages, pour garder le fil vraisemblable.
   const entre = new Date(
     (premier.sentAt.getTime() + second.sentAt.getTime()) / 2,
   );
@@ -128,13 +110,11 @@ async function main() {
     },
   });
 
-  // --- Fil avec l'équipe CanCham ---
   const t2 = await prisma.messageThread.findUniqueOrThrow({
     where: { id: "t2" },
     include: { messages: { orderBy: { sentAt: "asc" } } },
   });
   const avantDernier = t2.messages.at(-1)!;
-  // Posté par la personne de l'équipe qui a ouvert l'échange.
   const premierT2 = t2.messages[0];
   const replay = await recevoirPiece(
     fichier(video, "extrait-atelier-mobilite.mp4", "video/mp4"),

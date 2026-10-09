@@ -4,14 +4,6 @@ import { prisma } from "@/lib/db";
 import { after } from "next/server";
 import { apercu, notifierEquipe } from "@/lib/push";
 
-/**
- * Fil d'assistance d'un membre avec l'équipe CanCham : celui qu'il a déjà, ou
- * un nouveau.
- *
- * Toute l'équipe y participe — la demande ne dépend pas de la personne de
- * permanence —, et le membre y voit la chambre plutôt qu'un interlocuteur.
- * Page de contact et réservation de service y écrivent au même endroit.
- */
 export async function filEquipe(userId: string): Promise<string> {
   const existant = await prisma.messageThread.findFirst({
     where: { equipe: true, participants: { some: { userId } } },
@@ -19,8 +11,6 @@ export async function filEquipe(userId: string): Promise<string> {
     select: { id: true },
   });
   if (existant) {
-    // Les comptes d'équipe ouverts depuis rejoignent la conversation : une
-    // demande arrive à toute l'équipe, pas à celle du jour de sa création.
     await rattacherEquipe(existant.id);
     return existant.id;
   }
@@ -46,13 +36,6 @@ export async function filEquipe(userId: string): Promise<string> {
   return fil.id;
 }
 
-/**
- * Rattache toute l'équipe aux fils d'assistance — un seul, ou tous.
- *
- * Un compte d'équipe ouvert après la création d'un fil n'en serait pas, et
- * la demande du membre lui échapperait. Appelée quand un membre écrit, et à
- * l'ouverture d'un compte d'équipe.
- */
 export async function rattacherEquipe(threadId?: string): Promise<void> {
   const [equipe, fils] = await Promise.all([
     prisma.user.findMany({ where: { role: "admin" }, select: { id: true } }),
@@ -75,10 +58,6 @@ export async function rattacherEquipe(threadId?: string): Promise<void> {
   }
 }
 
-/**
- * Écrit dans le fil de l'équipe au nom du membre, et marque le fil lu de son
- * côté : c'est lui qui vient d'écrire.
- */
 export async function ecrireAEquipe(
   user: { id: string; nom: string },
   texte: string,
@@ -99,7 +78,6 @@ export async function ecrireAEquipe(
     data: { luLe: maintenant },
   });
 
-  // L'équipe le sait sur son téléphone : une demande attend.
   after(() =>
     notifierEquipe({
       titre: `Message de ${user.nom}`,

@@ -27,22 +27,17 @@ import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
 import type { EventFormat } from "@/lib/types";
-import { notifierEquipe, notifierMembre, notifierTousLesMembres } from "@/lib/push";
+import {
+  notifierEquipe,
+  notifierMembre,
+  notifierTousLesMembres,
+} from "@/lib/push";
 
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const revalideTout = () => revalidatePath("/", "layout");
 
-/** Lettres et chiffres sans ambiguïté à la lecture : ni O/0, ni I/1. */
 const ALPHABET_CODE = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
-/**
- * Code d'accès d'une inscription, présenté à l'entrée : « CC-VOPA-K7Q2PX ».
- *
- * La fin de l'identifiant de l'événement, puis six signes tirés au sort —
- * quatre chiffres ne suffisaient pas : au-delà d'une centaine d'inscrits,
- * deux inscriptions tiraient souvent le même, et la seconde échouait. Un
- * code déjà pris est retiré.
- */
 async function codeAcces(eventId: string): Promise<string> {
   for (;;) {
     const tirage = Array.from(
@@ -50,8 +45,6 @@ async function codeAcces(eventId: string): Promise<string> {
       () => ALPHABET_CODE[randomInt(ALPHABET_CODE.length)],
     ).join("");
     const code = `CC-${eventId.slice(-4).toUpperCase()}-${tirage}`;
-    // Libre chez les membres comme parmi les inscriptions publiques, qui
-    // n'ont que leurs lignes d'accueil.
     const [inscription, ligne] = await Promise.all([
       prisma.registration.findUnique({ where: { code }, select: { id: true } }),
       prisma.attendee.findFirst({
@@ -63,12 +56,10 @@ async function codeAcces(eventId: string): Promise<string> {
   }
 }
 
-/** Représentants inscrits par un membre, au plus. */
 const REPRESENTANTS_MAX = 10;
 
 const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Téléphone et e-mail d'une inscription, vérifiés ; sinon retour au formulaire. */
 function coordonneesSaisies(
   formData: FormData,
   retour: string,
@@ -89,16 +80,6 @@ function coordonneesSaisies(
   return { email, telephone };
 }
 
-/* ============================ Côté membre ============================ */
-
-/**
- * Inscription d'un membre à un événement, avec un ou plusieurs
- * représentants choisis parmi ses contacts.
- *
- * Une inscription pour l'entreprise, une ligne d'accueil — et un QR code —
- * par représentant, et la facture si l'événement est payant. Tout part
- * ensemble ou rien ne part.
- */
 export async function registerForEvent(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const fiche = `/membre/evenements/${eventId}`;
@@ -129,8 +110,6 @@ export async function registerForEvent(formData: FormData) {
 
   const { email, telephone } = coordonneesSaisies(formData, fiche);
 
-  // Les représentants viennent des contacts de l'entreprise, et d'elle
-  // seule : un identifiant d'ailleurs, glissé dans le formulaire, est ignoré.
   const choisis = [...new Set(formData.getAll("representant").map(String))];
   const representants = await prisma.user.findMany({
     where: { id: { in: choisis }, memberId: user.memberId },
@@ -160,23 +139,17 @@ export async function registerForEvent(formData: FormData) {
   const code = await codeAcces(eventId);
   const n = representants.length;
 
-  // Le tableau doit être annoté : sinon son type est figé par ses premiers
-  // éléments et la facture ne peut plus y entrer.
   const ecritures: Prisma.PrismaPromise<unknown>[] = [
     prisma.registration.create({
       data: { eventId, memberId: user.memberId, code },
     }),
-    // Une ligne d'accueil par représentant, chacune avec son code : c'est
-    // lui que le scanner lira.
     prisma.attendee.createMany({
       data: representants.map((r, i) => ({
         eventId,
         nom: r.nom,
         entreprise: membre.nom,
-        // Les coordonnées données à l'inscription : celles où la joindre.
         email,
         telephone,
-        // Payant : l'équipe valide le règlement avant que le billet ne parte.
         statut: event.payant ? ("a_valider" as const) : ("confirme" as const),
         code: codeRepresentant(code, i),
       })),
@@ -194,8 +167,6 @@ export async function registerForEvent(formData: FormData) {
           montant: event.prix * n,
           statut: "envoyee",
           memberId: user.memberId,
-          // La facture connaît l'événement : réglée, elle fera partir les
-          // billets d'elle-même.
           eventId,
         },
         select: { id: true },
@@ -204,8 +175,6 @@ export async function registerForEvent(formData: FormData) {
   }
 
   const ecrit = await prisma.$transaction(ecritures);
-  // La facture est la dernière écriture de la transaction, quand il y en a
-  // une : le tableau est typé `unknown` pour pouvoir les porter toutes.
   const facture = event.payant
     ? (ecrit[ecrit.length - 1] as { id: string })
     : null;
@@ -230,13 +199,6 @@ export async function registerForEvent(formData: FormData) {
 
   revalideTout();
 
-  /*
-    Payant : l'inscription est prise, et le membre passe au paiement — on
-    revient sur la fiche de l'événement, où la fenêtre du choix du moyen
-    s'ouvre d'elle-même.
-    Sans moyen configuré, rien à proposer : on revient sur l'événement et la
-    facture se règle auprès de l'équipe.
-  */
   if (facture && (await modesProposes()).length) {
     redirectWithFlash(
       `${fiche}?regler=${facture.id}`,
@@ -252,25 +214,12 @@ export async function registerForEvent(formData: FormData) {
   );
 }
 
-/* ============================ Côté public ============================ */
-
-/** Inscriptions publiques depuis une même origine, en une heure. */
 const INSCRIPTIONS_PUBLIQUES_PAR_HEURE = 10;
 
-/**
- * Inscription à un événement depuis la vitrine, sans compte.
- *
- * L'entreprise et les représentants se saisissent à la main, avec les
- * coordonnées où les joindre. Chaque représentant reçoit sa ligne d'accueil
- * et son code — le scanner les pointe comme ceux des membres —, et un e-mail
- * de confirmation mène à la page des billets. Sans membre, pas de facture :
- * un événement payant se règle auprès de l'équipe, que le journal prévient.
- */
 export async function inscriptionPublique(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const fiche = `/evenements/${eventId}`;
 
-  // Une même origine n'inscrit pas des foules à la chaîne.
   const attente = tentative(
     `inscription-publique:${await origineAppelante()}`,
     INSCRIPTIONS_PUBLIQUES_PAR_HEURE,
@@ -332,8 +281,6 @@ export async function inscriptionPublique(formData: FormData) {
     );
   }
 
-  // Une même adresse ne s'inscrit qu'une fois : un second envoi du
-  // formulaire ne doublerait pas les places.
   const deja = await prisma.attendee.findFirst({
     where: {
       eventId,
@@ -351,7 +298,6 @@ export async function inscriptionPublique(formData: FormData) {
 
   const code = await codeAcces(eventId);
   const n = noms.length;
-  // Le tarif public, pas celui des membres.
   const aRegler = event.prixPublic > 0 ? fmtMoney(event.prixPublic * n) : null;
   await prisma.$transaction([
     prisma.attendee.createMany({
@@ -361,7 +307,6 @@ export async function inscriptionPublique(formData: FormData) {
         entreprise,
         email,
         telephone,
-        // Payant : l'équipe valide le règlement avant que le billet ne parte.
         statut: aRegler ? ("a_valider" as const) : ("confirme" as const),
         code: codeRepresentant(code, i),
       })),
@@ -419,9 +364,6 @@ export async function cancelRegistration(formData: FormData) {
   await prisma.registration.deleteMany({
     where: { eventId, memberId: user.memberId },
   });
-  // On retire aussi la personne de la liste d'accueil : la ligne qui porte
-  // le code de l'inscription, ou, pour une inscription plus ancienne que ce
-  // lien, celle de l'entreprise encore en attente.
   await prisma.attendee.deleteMany({
     where: {
       eventId,
@@ -436,21 +378,12 @@ export async function cancelRegistration(formData: FormData) {
   redirectWithFlash(`/membre/evenements/${eventId}`, "Inscription annulée");
 }
 
-/* ============================ Côté admin ============================ */
-
-/** La personne de l'équipe qui agit, nommée dans le journal. */
 async function acteurEquipe(): Promise<string> {
   return (await getCurrentUser("admin")).nom;
 }
 
 const pageEvenement = (id: string) => `/admin/evenements/${id}`;
 
-/**
- * La liste d'accueil telle qu'on l'a quittée : onglet, recherche, taille et
- * numéro de page. Pointer une arrivée ne doit ni refermer la liste ni
- * renvoyer en première page. Seule une adresse de cet événement est
- * acceptée ; à défaut, la liste s'ouvre sur l'onglet demandé.
- */
 function retourListe(fd: FormData, eventId: string, onglet?: string): string {
   const base = pageEvenement(eventId);
   const r = texte(fd, "retour");
@@ -460,13 +393,6 @@ function retourListe(fd: FormData, eventId: string, onglet?: string): string {
   return `${base}?${q}`;
 }
 
-/**
- * Création ou modification d'un événement, programme compris.
- *
- * Le programme est réécrit en entier à chaque enregistrement : ses étapes
- * n'ont pas d'identité propre, seulement un ordre, et les retrouver une à
- * une pour les comparer n'apporterait rien.
- */
 export async function saveEvent(formData: FormData) {
   await exigerEquipe();
   const id = texte(formData, "eventId");
@@ -479,8 +405,6 @@ export async function saveEvent(formData: FormData) {
   const cap = Math.round(Number(formData.get("cap")));
   const payant = texte(formData, "type") === "payant";
   const prix = payant ? Math.round(Number(formData.get("prix"))) : 0;
-  // Sans choix explicite, l'événement paraît aussi sur la page publique :
-  // c'était la règle avant que la diffusion se choisisse.
   const estPublic = texte(formData, "diffusion") !== "plateforme";
   const payantPublic = estPublic && texte(formData, "typePublic") === "payant";
   const prixPublic = payantPublic
@@ -585,7 +509,6 @@ export async function saveEvent(formData: FormData) {
     },
   });
 
-  // Un nouvel événement : tous les membres l'apprennent sur leur appareil.
   if (!id) {
     after(() =>
       notifierTousLesMembres({
@@ -628,14 +551,6 @@ export async function deleteEvent(formData: FormData) {
   redirectWithFlash("/admin/evenements", `« ${e.titre} » supprimé`);
 }
 
-/**
- * Validation d'une inscription payante par l'équipe.
- *
- * C'est le moment où le règlement est constaté : toute l'inscription passe
- * « inscrite » — une entreprise ne valide pas ses représentants un par un —
- * et les billets partent enfin, un QR code par participant, à l'adresse
- * donnée à l'inscription.
- */
 export async function validerInscription(formData: FormData) {
   await exigerEquipe();
   const attendeeId = texte(formData, "attendeeId");
@@ -656,7 +571,6 @@ export async function validerInscription(formData: FormData) {
     );
   }
 
-  // Les lignes d'une même inscription partagent la racine de leur code.
   const racine = ligne.code ? codeInscription(ligne.code) : null;
   const groupe = racine
     ? await prisma.attendee.findMany({
@@ -682,8 +596,6 @@ export async function validerInscription(formData: FormData) {
     }),
   ]);
 
-  // Un membre retrouve ses billets sur la fiche de l'événement ; une
-  // inscription publique, sur la page de ses billets.
   const inscriptionMembre = racine
     ? await prisma.registration.findUnique({
         where: { code: racine },
@@ -721,7 +633,6 @@ export async function validerInscription(formData: FormData) {
   );
 }
 
-/** Pointage à l'accueil : bascule présent / absent. */
 export async function toggleAttendance(formData: FormData) {
   await exigerEquipe();
   const attendeeId = texte(formData, "attendeeId");
@@ -732,8 +643,6 @@ export async function toggleAttendance(formData: FormData) {
     redirectWithErreur(retour, "Participant introuvable.");
   }
 
-  // « Présent » et « Absent » disent ce qu'ils font ; sans précision, le
-  // pointage bascule, comme avant.
   const demande = texte(formData, "statut");
   const statut =
     demande === "present" || demande === "absent"
@@ -755,23 +664,14 @@ export async function toggleAttendance(formData: FormData) {
   );
 }
 
-/** Ce que le scanner affiche après la lecture d'un code. */
-/**
- * Une arrivée à l'accueil, telle que le scanner l'annonce et la garde dans
- * son historique : qui, pour quelle entreprise, à quelle heure — et de quoi
- * vérifier l'inscription d'un coup d'œil.
- */
 export interface ArriveeAccueil {
-  /** La ligne d'accueil. */
   id: string;
   representant: string;
   entreprise: string;
   email: string;
   telephone: string | null;
   code: string | null;
-  /** Heure du pointage, ISO. */
   presentLe: string | null;
-  /** Le membre inscrit. `null` pour une personne ajoutée par l'équipe. */
   membre: {
     id: string;
     nom: string;
@@ -782,7 +682,6 @@ export interface ArriveeAccueil {
     secteur: string;
     ville: string;
   } | null;
-  /** Tous les représentants de la même inscription, celui-ci compris. */
   inscrits: {
     id: string;
     nom: string;
@@ -794,7 +693,6 @@ export type ResultatScan =
   | { etat: "present" | "deja"; code: string; arrivee: ArriveeAccueil }
   | { etat: "erreur"; code: string; message: string };
 
-/** Les lignes d'accueil, complétées de leur membre et de leurs collègues. */
 async function decrireArrivees(
   eventId: string,
   lignes: {
@@ -861,11 +759,6 @@ async function decrireArrivees(
   });
 }
 
-/**
- * L'historique du scanner : les personnes pointées présentes, la dernière
- * arrivée en tête. Il survit à la fermeture du scanner, puisqu'il se lit dans
- * la liste d'accueil.
- */
 export async function historiqueAccueil(
   eventId: string,
 ): Promise<ArriveeAccueil[]> {
@@ -886,21 +779,12 @@ export async function historiqueAccueil(
   return decrireArrivees(eventId, lignes);
 }
 
-/**
- * Pointage par QR code, depuis le scanner de la page de l'événement.
- *
- * Le QR code d'un membre porte son code d'accueil (CC-E1-4040) : la ligne
- * d'accueil qui le porte passe « présente ». Pas de redirection — le scanner
- * reste ouvert pour la personne suivante — et un résultat à afficher : qui
- * vient d'arriver, qui était déjà là, ou pourquoi le code est refusé.
- */
 export async function pointerParCode(
   eventId: string,
   lu: string,
 ): Promise<ResultatScan> {
   await getCurrentUser("admin");
 
-  // Le code seul, même lu au milieu d'un texte plus long.
   const code = extraireCode(lu);
   if (!code) return { etat: "erreur", code, message: "Aucun code lu." };
 
@@ -923,8 +807,6 @@ export async function pointerParCode(
   let ligne = await prisma.attendee.findUnique({ where: { code } });
 
   if (!ligne) {
-    // Code d'une inscription dont la ligne d'accueil n'a pas encore été
-    // rattachée — ou a été retirée : on la retrouve, ou on la recrée.
     const inscription = await prisma.registration.findUnique({
       where: { code },
       select: {
@@ -1012,7 +894,6 @@ export async function pointerParCode(
   return { etat: "present", code, arrivee };
 }
 
-/** Inscription manuelle à l'accueil, y compris pour une arrivée sans inscription. */
 export async function addAttendee(formData: FormData) {
   await exigerEquipe();
   const eventId = texte(formData, "eventId");
@@ -1045,7 +926,6 @@ export async function addAttendee(formData: FormData) {
   );
 }
 
-/** Retrait d'une personne de la liste, inscrite par erreur ou désistée. */
 export async function retirerParticipant(formData: FormData) {
   await exigerEquipe();
   const attendeeId = texte(formData, "attendeeId");

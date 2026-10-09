@@ -2,13 +2,6 @@
 
 import { useEffect } from "react";
 
-/**
- * Dernier filet : la coquille elle-même n'a pas pu se construire.
- *
- * Cette page remplace le document entier — ni styles, ni polices, ni
- * composants de l'application ne sont garantis. Elle se suffit donc à
- * elle-même, en styles en ligne.
- */
 export default function ErreurGlobale({
   error,
   retry,
@@ -37,10 +30,6 @@ export default function ErreurGlobale({
       >
         <title>Incident — CanCham Connect</title>
         <main style={{ maxWidth: 480, textAlign: "center" }}>
-          {/*
-            Une balise `img` ordinaire : à ce stade, rien de l'application
-            n'est garanti, mais un fichier du dossier public reste servi.
-          */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/marque/illustration-incident.png"

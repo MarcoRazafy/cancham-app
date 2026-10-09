@@ -1,12 +1,3 @@
-/**
- * Dépose quelques rappels de démonstration dans l'agenda, sans rien effacer.
- *
- *   npm run agenda:demo
- *
- * Pour une base déjà chargée avant l'arrivée de l'agenda. Les rappels vont au
- * premier utilisateur membre — celui de la démonstration —, autour de la date
- * du jour. Le script ne fait rien si cette personne a déjà des rappels.
- */
 import { prisma } from "../lib/db";
 import { ajouterJours } from "../lib/agenda";
 import { aujourdhuiISO, jourBase } from "../lib/format";

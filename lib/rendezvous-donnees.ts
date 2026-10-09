@@ -11,20 +11,12 @@ import {
   type Plage,
 } from "@/lib/rendezvous";
 
-/**
- * Ce que la base sait des rendez-vous : les types proposés, les plages de
- * l'équipe, les créneaux qu'il en reste, et les rendez-vous eux-mêmes.
- *
- * Le calcul, lui, vit dans `lib/rendezvous.ts`, sans base : il se teste seul.
- */
-
 export interface TypeRendezvous {
   id: string;
   titre: string;
   detail: string | null;
   duree: number;
   actif: boolean;
-  /** Les heures d'accueil ouvertes pour ce type, dans l'ordre de la semaine. */
   plages: (Plage & { id: string })[];
 }
 
@@ -35,7 +27,6 @@ export interface RendezvousPris {
   fin: string;
   motif: string | null;
   type: { id: string; titre: string; duree: number };
-  /** Qui l'a pris : pour l'équipe. */
   personne: { nom: string; email: string; tel: string | null };
   entreprise: string | null;
   annule: boolean;
@@ -81,12 +72,6 @@ function versRendezvous(r: {
   };
 }
 
-/**
- * Les types proposés aux membres, dans l'ordre choisi par l'équipe, avec
- * leurs heures d'accueil : c'est le couple qui donne des créneaux.
- *
- * `tous` inclut les types masqués — la vue de l'équipe.
- */
 export async function getTypesRendezvous(
   tous = false,
 ): Promise<TypeRendezvous[]> {
@@ -107,7 +92,6 @@ export async function getTypesRendezvous(
   });
 }
 
-/** Les heures d'accueil d'un type. */
 export async function getPlages(
   typeId: string,
 ): Promise<(Plage & { id: string })[]> {
@@ -118,7 +102,6 @@ export async function getPlages(
   });
 }
 
-/** Les rendez-vous qui tiennent encore, sur une période. */
 async function occupes(du: string, au: string): Promise<Map<string, Occupe[]>> {
   const pris = await prisma.rendezvous.findMany({
     where: {
@@ -143,16 +126,9 @@ export interface JourProposable {
   creneaux: string[];
 }
 
-/**
- * Les jours et les créneaux qu'on peut encore proposer pour un type donné.
- *
- * Les jours sans créneau libre disparaissent : mieux vaut ne pas les montrer
- * que d'ouvrir une journée vide.
- */
 export async function getCreneaux(type: {
   id: string;
   duree: number;
-  /** Déjà chargées par l'appelant, le plus souvent. */
   plages?: Plage[];
 }): Promise<JourProposable[]> {
   const plages = type.plages ?? (await getPlages(type.id));
@@ -178,7 +154,6 @@ export async function getCreneaux(type: {
     .filter((j) => j.creneaux.length > 0);
 }
 
-/** Les rendez-vous d'un membre : les prochains d'abord. */
 export async function getMesRendezvous(
   userId: string,
 ): Promise<RendezvousPris[]> {
@@ -194,7 +169,6 @@ export async function getMesRendezvous(
   return lignes.map(versRendezvous);
 }
 
-/** Tous les rendez-vous à venir, pour l'équipe. */
 export async function getRendezvousEquipe(): Promise<RendezvousPris[]> {
   const lignes = await prisma.rendezvous.findMany({
     where: {
@@ -207,7 +181,6 @@ export async function getRendezvousEquipe(): Promise<RendezvousPris[]> {
   return lignes.map(versRendezvous);
 }
 
-/** Les rendez-vous d'une période, pour l'agenda. */
 export async function getRendezvousAgenda(
   du: string,
   au: string,

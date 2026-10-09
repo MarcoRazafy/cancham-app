@@ -1,16 +1,5 @@
 import Image from "next/image";
 
-/**
- * Les moyens de paiement du pass, en carrousel.
- *
- * Les logos défilent vers la gauche en continu et s'arrêtent dès que la
- * souris les survole, ou qu'un lecteur d'écran y prend le focus. La piste
- * porte deux fois la liste : à mi-course, elle est revenue à son point de
- * départ, et la boucle ne se voit pas. Qui a demandé moins d'animations voit
- * les logos alignés, immobiles.
- *
- * Les visuels viennent de la maquette de paiement fournie par la chambre.
- */
 const MOYENS = [
   { nom: "MVola", src: "/traversee/paiement/mvola.jpg" },
   { nom: "Orange Money", src: "/traversee/paiement/orange-money.jpg" },

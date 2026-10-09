@@ -1,13 +1,5 @@
 import type { ReactNode } from "react";
 
-/**
- * Écran d'une page introuvable ou d'un incident.
- *
- * Il dit ce qui s'est passé, sans jargon, et propose toujours une sortie :
- * réessayer, ou revenir à l'accueil de son espace. Rendu dans la coquille
- * de l'espace quand elle tient debout — le menu reste là —, en plein écran
- * sinon.
- */
 export function Incident({
   icone,
   illustration,
@@ -17,9 +9,7 @@ export function Incident({
   actions,
   pleinEcran = false,
 }: {
-  /** Pastille ronde, quand la page n'a pas d'illustration. */
   icone?: ReactNode;
-  /** Visuel qui remplace la pastille : il occupe la place, et le dit mieux. */
   illustration?: ReactNode;
   surtitre: string;
   titre: string;

@@ -56,19 +56,11 @@ export default async function EvenementDetailPage({
     getEvents(),
     user.memberId ? getMember(user.memberId) : null,
     user.memberId ? getContacts(user.memberId) : [],
-    // Le choix du moyen n'a de sens que pour un événement payant.
     e.payant ? modesProposes() : [],
   ]);
 
-  // L'inscription et le billet portent le nom de l'entreprise.
   const entreprise = membre?.nom ?? null;
 
-  /*
-    Retour d'une inscription payante : la facture tout juste émise, pour
-    ouvrir d'office la fenêtre du choix du moyen. Seulement si elle est bien
-    à ce membre et encore due — un identifiant glissé dans l'adresse
-    n'ouvre rien.
-  */
   const aRegler =
     regler && user.memberId && e.payant
       ? await prisma.invoice.findFirst({
@@ -87,7 +79,6 @@ export default async function EvenementDetailPage({
   const restantes = e.cap - e.inscrits;
   const remplissage = Math.min(100, Math.round((e.inscrits / e.cap) * 100));
 
-  // Les trois prochains rendez-vous, celui-ci mis à part.
   const autres = tous
     .filter((a) => a.id !== e.id && !isPast(a.date))
     .slice(0, 3);
@@ -113,7 +104,6 @@ export default async function EvenementDetailPage({
         </BtnLink>
       </div>
 
-      {/* ==================== Bandeau ==================== */}
       <div className="relative rounded-[var(--radius-l)] overflow-hidden mb-4">
         <Agrandir
           src={e.photo}
@@ -132,7 +122,6 @@ export default async function EvenementDetailPage({
             />
           </Partage>
         </Agrandir>
-        {/* Le dégradé garantit la lisibilité du titre quelle que soit la photo. */}
         <div className="absolute inset-0 bg-linear-to-t from-[#0f1d2c]/90 via-[#0f1d2c]/35 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 p-6 flex flex-col gap-2">
           <div className="flex gap-2 flex-wrap">
@@ -165,7 +154,6 @@ export default async function EvenementDetailPage({
       </div>
 
       <div className="grid gap-4 items-start lg:grid-cols-3">
-        {/* ==================== Colonne principale ==================== */}
         <div className="flex flex-col gap-4 lg:col-span-2">
           <Card className="carte-filet filet-fixe filet-degrade p-[22px]">
             <Kicker>À propos</Kicker>
@@ -187,7 +175,6 @@ export default async function EvenementDetailPage({
               <ol className="list-none m-0 p-0 flex flex-col">
                 {e.programme.map((etape, i) => (
                   <li key={i} className="flex gap-4">
-                    {/* Colonne de gauche : l'heure, puis le filet qui relie les étapes. */}
                     <div className="flex flex-col items-center shrink-0 w-[68px]">
                       <span className="font-[family-name:var(--font-mono)] text-[12.4px] font-bold text-accent-strong whitespace-nowrap">
                         {etape.heure}
@@ -225,7 +212,6 @@ export default async function EvenementDetailPage({
           ) : null}
         </div>
 
-        {/* ==================== Colonne latérale ==================== */}
         <div className="flex flex-col gap-4 lg:sticky lg:top-4">
           <Card className="p-[22px]">
             <div className="flex flex-col gap-1.5 mb-3.5">
@@ -245,11 +231,6 @@ export default async function EvenementDetailPage({
                 Cet événement a déjà eu lieu le {fmtDate(e.date)}.
               </div>
             ) : reg?.aValider ? (
-              /*
-                Événement payant : tant que l'équipe n'a pas constaté le
-                règlement, il n'y a pas de QR code à montrer — ni ici, ni dans
-                la boîte aux lettres. Le dire vaut mieux que laisser chercher.
-              */
               <>
                 <Banner
                   tone="warn"
@@ -281,7 +262,6 @@ export default async function EvenementDetailPage({
                 <div className="mt-3.5">
                   <CancelRegistrationButton eventId={e.id} />
                 </div>
-                {/* Un QR code par représentant : l'accueil pointe chacun. */}
                 {(reg.representants ?? [{ nom: "", code: reg.code }]).map(
                   (r) => (
                     <div key={r.code}>
@@ -311,7 +291,6 @@ export default async function EvenementDetailPage({
             ) : (
               <>
                 <Stat k="Places restantes" v={restantes} />
-                {/* La jauge dit d'un coup d'œil s'il est urgent de s'inscrire. */}
                 <div className="mt-3">
                   <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden">
                     <div
@@ -390,7 +369,6 @@ export default async function EvenementDetailPage({
         </div>
       </div>
 
-      {/* ==================== Autres rendez-vous ==================== */}
       {autres.length > 0 ? (
         <section className="mt-7">
           <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
@@ -422,7 +400,6 @@ export default async function EvenementDetailPage({
   );
 }
 
-/** Une ligne du bloc « Infos pratiques ». */
 function Pratique({
   icone,
   cle,

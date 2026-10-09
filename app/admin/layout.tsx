@@ -17,7 +17,6 @@ export default async function AdminLayout({
     getNotifications("admin", null, user.id),
   ]);
 
-  // Ce qui demande une action de l'équipe : tout ce qui n'est pas à jour.
   const aTraiter = stats.total - stats.aJour;
 
   return (

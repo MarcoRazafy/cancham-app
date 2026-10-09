@@ -2,13 +2,7 @@
 
 import { Printer } from "lucide-react";
 
-/** Déclenche l'impression, donc l'export PDF du navigateur. */
-export function PrintButton({
-  contour = false,
-}: {
-  /** Bouton secondaire, quand une autre action occupe la place principale. */
-  contour?: boolean;
-}) {
+export function PrintButton({ contour = false }: { contour?: boolean }) {
   return (
     <button
       onClick={() => window.print()}

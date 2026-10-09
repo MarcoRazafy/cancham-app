@@ -29,25 +29,6 @@ import {
 const BOUTON =
   "inline-flex cursor-pointer items-center gap-[7px] rounded-[var(--radius-s)] border border-line bg-transparent px-[11px] py-1.5 text-[12.4px] font-semibold text-ink hover:bg-surface-2";
 
-/**
- * La présentation d'une fiche, avec sa vidéo à droite quand elle en a une.
- *
- * Sans vidéo, rien ne change pour qui consulte la fiche : la place reste
- * vide, sans encadré ni mention. Seuls le membre, sur sa propre fiche, et
- * l'équipe y trouvent de quoi en ajouter une (`gestion`).
- *
- * Sur grand écran, la vidéo flotte à droite : le nom, le texte, puis les
- * rubriques qui suivent coulent à sa gauche et reprennent toute la largeur
- * une fois qu'elle est passée. Posée dans une colonne, elle imposait sa
- * hauteur à la présentation — et laissait un grand vide sous un texte
- * court. Le conteneur de la fiche doit donc être en `flow-root`, pour
- * qu'elle n'en déborde pas.
- *
- * Sur un écran plus étroit, il n'y a pas la place de deux colonnes : elle
- * vient sous le texte. Dans la page, elle est pourtant écrite avant lui —
- * un élément flottant n'écarte que ce qui le suit ; c'est `order` qui la
- * redescend.
- */
 export function PresentationAvecVideo({
   memberId,
   nom,
@@ -56,13 +37,8 @@ export function PresentationAvecVideo({
   children,
 }: {
   memberId: string;
-  /** Le nom de l'entreprise, pour dire de qui est la vidéo. */
   nom: string;
   fichier?: string | null;
-  /**
-   * La page d'où l'on gère la vidéo — celle où revenir après un retrait.
-   * Absente : la fiche est en simple consultation.
-   */
   gestion?: string;
   children: ReactNode;
 }) {
@@ -72,12 +48,8 @@ export function PresentationAvecVideo({
       <div
         className={`order-2 xl:float-right xl:ml-8 ${
           fichier
-            ? // Un peu plus bas que le nom, et un peu en retrait du bord
-              // droit de la carte.
-              "mt-5 xl:mb-4 xl:mr-6 xl:mt-10 xl:w-[416px] 2xl:mr-[calc((100%-1112px)*0.3)] 2xl:w-[440px]"
-            : // Sans vidéo, il n'y a qu'un bouton pour en ajouter une : il
-              // reste discret, en haut à droite.
-              "mt-4 xl:mb-3 xl:mt-0 xl:w-[280px]"
+            ? "mt-5 xl:mb-4 xl:mr-6 xl:mt-10 xl:w-[416px] 2xl:mr-[calc((100%-1112px)*0.3)] 2xl:w-[440px]"
+            : "mt-4 xl:mb-3 xl:mt-0 xl:w-[280px]"
         }`}
       >
         <VideoPresentation
@@ -101,19 +73,9 @@ interface Envoi {
 
 interface Session {
   arret: AbortController | null;
-  /** Connu une fois l'envoi ouvert ; vidé quand la vidéo est posée. */
   id: string | null;
 }
 
-/**
- * La vidéo de présentation d'une fiche : elle se lit sur place, et passe en
- * plein écran si on le demande ; pour qui gère la fiche, de quoi l'ajouter,
- * la remplacer ou la retirer.
- *
- * L'envoi se fait par morceaux (voir `lib/video-presentation.ts`) : la barre
- * avance au fil des octets, un morceau perdu se renvoie seul, et une coupure
- * reprend où elle s'est arrêtée.
- */
 export function VideoPresentation({
   memberId,
   nom,
@@ -125,17 +87,14 @@ export function VideoPresentation({
   nom: string;
   fichier?: string | null;
   gestion?: string;
-  /** La largeur que la vidéo peut prendre, là où on la pose. */
   className?: string;
 }) {
   const router = useRouter();
   const [envoi, setEnvoi] = useState<Envoi | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const choix = useRef<HTMLInputElement>(null);
-  /** L'envoi en cours : de quoi l'arrêter, et son identifiant côté serveur. */
   const enCours = useRef<Session>({ arret: null, id: null });
 
-  // Quitter la page couperait l'envoi : le navigateur demande confirmation.
   useEffect(() => {
     if (!envoi) return;
     const retenir = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -143,9 +102,7 @@ export function VideoPresentation({
     return () => window.removeEventListener("beforeunload", retenir);
   }, [envoi]);
 
-  // La fiche quittée, l'envoi s'arrête et ce qui était arrivé est effacé.
   useEffect(() => {
-    // Le même objet du début à la fin : seuls ses champs changent.
     const session = enCours.current;
     return () => {
       session.arret?.abort();
@@ -185,7 +142,6 @@ export function VideoPresentation({
       await envoyer(video, memberId, session, arret.signal, (envoye) =>
         setEnvoi((v) => (v ? { ...v, envoye } : v)),
       );
-      // La fiche se recharge avec sa vidéo.
       router.refresh();
     } catch (cause) {
       if (session.id) void abandonner(session.id);
@@ -305,31 +261,18 @@ export function VideoPresentation({
   );
 }
 
-/**
- * La vidéo de la fiche, lue sur place.
- *
- * Au repos, sa première image sert d'affiche, sous un bouton de lecture. Un
- * clic la lance là où elle est, avec les commandes du navigateur — sans
- * prendre tout l'écran : on reste sur la fiche. Le plein écran se demande,
- * par le bouton posé dans le coin ; on en sort par Échap ou par les
- * commandes du lecteur.
- */
 function Lecteur({ fichier, nom }: { fichier: string; nom: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const [lancee, setLancee] = useState(false);
 
   const lire = () => {
     setLancee(true);
-    // Un refus du navigateur n'est pas une panne : les commandes sont là.
     void video.current?.play().catch(() => {});
   };
 
   const pleinEcran = () => {
     const v = video.current as VideoPleinEcran | null;
     if (!v) return;
-    // Dans le geste même du clic : un navigateur n'accorde le plein écran
-    // qu'à une action de la personne. L'iPhone n'a que le sien, propre à la
-    // vidéo.
     sansBruit(() =>
       v.requestFullscreen ? v.requestFullscreen() : v.webkitEnterFullscreen?.(),
     );
@@ -338,11 +281,6 @@ function Lecteur({ fichier, nom }: { fichier: string; nom: string }) {
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-m)] bg-[#0f1d2c]">
-      {/*
-        `#t=0.1` fait venir la première image aussi sur iPhone, qui sinon
-        laisse le cadre noir ; `metadata` ne télécharge que de quoi la
-        montrer, le reste vient à la lecture.
-      */}
       <video
         ref={video}
         key={fichier}
@@ -384,25 +322,17 @@ function Lecteur({ fichier, nom }: { fichier: string; nom: string }) {
   );
 }
 
-/** Le plein écran propre à la vidéo, sur iPhone : le seul qu'il connaisse. */
 type VideoPleinEcran = HTMLVideoElement & {
   webkitEnterFullscreen?: () => void;
 };
 
-/**
- * Demande le plein écran sans que le refus fasse de bruit : selon le
- * navigateur, l'appel rend une promesse, rien du tout, ou lève.
- */
 function sansBruit(demande: () => Promise<void> | void | undefined) {
   try {
     const suite = demande();
     if (suite instanceof Promise) suite.catch(() => {});
-  } catch {
-    // Pas de plein écran ici : la vidéo se lit sur place.
-  }
+  } catch {}
 }
 
-/** Le retrait de la vidéo, après confirmation. */
 function RetirerVideo({
   memberId,
   retour,
@@ -445,21 +375,10 @@ function RetirerVideo({
   );
 }
 
-/* ============================ L'envoi ============================ */
-
-/** Un refus à montrer tel quel : il dit quoi faire. */
 class Refus extends Error {}
 
-/** Combien de fois de suite on retente un morceau avant de renoncer. */
 const ESSAIS = 6;
 
-/**
- * Envoie la vidéo : vérification, ouverture, morceaux, clôture.
- *
- * Lève `Refus` pour ce que la personne doit savoir, une autre erreur pour
- * une panne. Un arrêt demandé lève aussi : à l'appelant de regarder le
- * signal.
- */
 async function envoyer(
   video: File,
   memberId: string,
@@ -511,13 +430,10 @@ async function envoyer(
       );
     }
     if (r.recu !== undefined) {
-      // Le serveur dit où il en est : on repart de là, sans attendre.
       position = r.recu;
       suivre(position);
       continue;
     }
-    // Une coupure : on attend un peu, de plus en plus, puis on demande au
-    // serveur où il en est avant de reprendre.
     await attendre(Math.min(30_000, 1000 * 2 ** echecs), signal);
     position = (await etat(id, signal)) ?? position;
     suivre(position);
@@ -528,7 +444,6 @@ async function envoyer(
     signal,
   });
   if (!cloture.ok) throw new Refus(await messageDe(cloture));
-  // La vidéo est posée : il n'y a plus rien à abandonner.
   session.id = null;
 }
 
@@ -538,7 +453,6 @@ type Morceau =
   | { ok: false; recu?: undefined; definitif: true; erreur: string }
   | { ok: false; recu?: undefined; definitif: false };
 
-/** Un morceau, avec le suivi des octets partis. Ne lève que sur un arrêt. */
 function envoyerMorceau(
   id: string,
   position: number,
@@ -560,9 +474,7 @@ function envoyerMorceau(
       let corps: { recu?: unknown; erreur?: unknown } = {};
       try {
         corps = JSON.parse(requete.responseText);
-      } catch {
-        // Une réponse qui n'est pas la nôtre : un intermédiaire, une panne.
-      }
+      } catch {}
       const recu = typeof corps.recu === "number" ? corps.recu : undefined;
       if (requete.status === 200 && recu !== undefined) {
         finir({ ok: true, recu });
@@ -590,13 +502,11 @@ function envoyerMorceau(
 
     requete.open("PUT", `/api/fiche/video/${id}?position=${position}`);
     requete.setRequestHeader("Content-Type", "application/octet-stream");
-    // Un morceau qui n'avance plus du tout finit par être repris.
     requete.timeout = 5 * 60 * 1000;
     requete.send(morceau);
   });
 }
 
-/** Où en est le serveur, après une coupure. `null` s'il ne répond pas. */
 async function etat(id: string, signal: AbortSignal): Promise<number | null> {
   try {
     const r = await fetch(`/api/fiche/video/${id}`, { signal });
@@ -612,25 +522,20 @@ async function etat(id: string, signal: AbortSignal): Promise<number | null> {
   }
 }
 
-/** Efface, côté serveur, ce qui était arrivé d'un envoi qu'on abandonne. */
 async function abandonner(id: string) {
   try {
     await fetch(`/api/fiche/video/${id}`, {
       method: "DELETE",
       keepalive: true,
     });
-  } catch {
-    // Le ménage du serveur s'en chargera.
-  }
+  } catch {}
 }
 
 async function messageDe(reponse: Response): Promise<string> {
   try {
     const { erreur } = (await reponse.json()) as { erreur?: unknown };
     if (typeof erreur === "string" && erreur) return erreur;
-  } catch {
-    // Pas de message : on en donne un.
-  }
+  } catch {}
   return reponse.status === 401
     ? "Votre session a expiré : reconnectez-vous, puis relancez l’envoi."
     : "L’envoi a été refusé.";
@@ -650,15 +555,6 @@ function attendre(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
-/**
- * Le navigateur sait-il lire cette vidéo ?
- *
- * Mieux vaut le savoir avant d'envoyer un gigaoctet : un fichier d'iPhone
- * en HEVC, par exemple, porte le bon nom et ne se lit pas partout. On charge
- * ses seules métadonnées, sur place. Dans le doute — un navigateur qui ne
- * répond pas —, on laisse passer : le serveur contrôle de son côté que le
- * fichier est bien une vidéo.
- */
 function lisible(video: File): Promise<boolean> {
   return new Promise((ok) => {
     const essai = document.createElement("video");

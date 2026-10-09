@@ -8,16 +8,8 @@ import {
 } from "@/lib/membership";
 import type { Member } from "@/lib/types";
 
-/**
- * Où en est un membre, et ce que l'équipe doit faire.
- *
- * Un statut seul ne dit pas l'urgence : deux membres « en retard » ne se
- * traitent pas pareil à 5 jours et à 45. La situation l'écrit en clair et
- * nomme l'action attendue.
- */
 export interface Situation {
   detail: string;
-  /** Verbe de l'action attendue, ou `null` si rien n'est à faire. */
   action: string | null;
   urgent: boolean;
 }

@@ -3,28 +3,14 @@
 import { Palette } from "lucide-react";
 import { PALETTE_TEXTE } from "@/lib/blocs";
 
-/**
- * La ligne des couleurs de l'éditeur de page : la palette de la charte, une
- * couleur libre, et le retour à la couleur par défaut.
- *
- * La même pour un bloc de texte, où elle colore la sélection, et pour un
- * titre, qu'elle colore en entier. Les pastilles ne prennent pas le
- * curseur : on continue d'écrire là où l'on était.
- */
 export function ChoixCouleur({
   libelle,
   actuelle,
   onChoisir,
   className = "",
 }: {
-  /** Ce que la ligne colore : « Couleur du texte », « Couleur du titre ». */
   libelle: string;
-  /**
-   * La couleur en place, pour la marquer. À laisser de côté quand elle
-   * dépend de ce qui est sélectionné.
-   */
   actuelle?: string | null;
-  /** `null` : revenir à la couleur par défaut. */
   onChoisir: (couleur: string | null) => void;
   className?: string;
 }) {
@@ -65,9 +51,6 @@ export function ChoixCouleur({
           type="color"
           aria-label="Autre couleur"
           defaultValue={actuelle ?? "#ad0707"}
-          // L'événement natif `change` : une fois la couleur arrêtée, pas à
-          // chaque mouvement dans le nuancier — reprendre le curseur à ce
-          // moment-là fermerait le nuancier.
           ref={(el) => {
             if (el) el.onchange = () => onChoisir(el.value);
           }}

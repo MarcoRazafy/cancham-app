@@ -2,15 +2,6 @@ import { readFileSync } from "node:fs";
 import { createContext, runInContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
-/**
- * Le service worker de l'application, côté notifications : ce qu'il affiche
- * quand une notification arrive, ce qu'il ouvre au clic, et ce qu'il fait
- * quand le navigateur change l'adresse de l'abonnement.
- *
- * Le fichier est exécuté tel quel dans un bac à sable qui imite le strict
- * nécessaire de l'environnement d'un service worker.
- */
-
 type Ecouteur = (evenement: Record<string, unknown>) => void;
 
 function charger() {
@@ -53,10 +44,16 @@ function charger() {
     console,
   });
   runInContext(readFileSync("public/sw.js", "utf8"), contexte);
-  return { ecouteurs, showNotification, subscribe, openWindow, fetchMock, fenetres };
+  return {
+    ecouteurs,
+    showNotification,
+    subscribe,
+    openWindow,
+    fetchMock,
+    fenetres,
+  };
 }
 
-/** Un événement dont on peut attendre ce que le service worker a lancé. */
 function evenement(champs: Record<string, unknown>) {
   let attente: Promise<unknown> = Promise.resolve();
   return {
@@ -151,7 +148,9 @@ describe("service worker — notifications", () => {
       userVisibleOnly: true,
       applicationServerKey: cle,
     });
-    const [url, options] = (sw.fetchMock.mock.calls as unknown as [string, RequestInit][])[0];
+    const [url, options] = (
+      sw.fetchMock.mock.calls as unknown as [string, RequestInit][]
+    )[0];
     expect(url).toBe("/api/push/abonnement");
     expect(options.method).toBe("POST");
     expect(JSON.parse(String(options.body))).toEqual({

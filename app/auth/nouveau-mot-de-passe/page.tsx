@@ -11,10 +11,6 @@ import { MOT_DE_PASSE_MIN } from "@/lib/auth";
 import { definirMotDePasse } from "@/lib/actions/motdepasse";
 import { jetonValide } from "@/lib/jetons";
 
-/**
- * Choix d'un mot de passe, depuis le lien reçu par e-mail : après un oubli,
- * ou pour activer un accès ouvert par l'équipe ou par un collègue.
- */
 export default async function NouveauMotDePassePage({
   searchParams,
 }: {
@@ -84,8 +80,6 @@ export default async function NouveauMotDePassePage({
 
           <form action={definirMotDePasse} className="flex flex-col gap-4">
             <input type="hidden" name="jeton" value={brut} />
-            {/* Pour que le gestionnaire de mots de passe sache à quel
-                compte rattacher le nouveau. */}
             <input
               type="email"
               name="identifiant"

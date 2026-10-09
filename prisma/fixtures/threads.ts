@@ -1,19 +1,10 @@
-/**
- * Fils de discussion de démonstration.
- *
- * Les auteurs et les participants sont des identifiants d'utilisateurs : un
- * fil n'est visible que par ses participants. Les horodatages sont calculés au
- * chargement, du plus ancien au plus récent.
- */
 export const THREADS: {
   id: string;
   type: "individuel" | "groupe";
-  /** Nom d'un groupe ou de l'assistance. Un échange individuel n'en a pas. */
   nom?: string;
   avatar?: string;
   equipe?: boolean;
   participants: string[];
-  /** Messages des autres que le membre de démonstration n'a pas encore lus. */
   nonLus: number;
   messages: { id: string; de: string; texte: string }[];
 }[] = [

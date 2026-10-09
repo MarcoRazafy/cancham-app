@@ -8,40 +8,11 @@ import { versRelais } from "@/lib/retour-paiement";
 import { baseSite } from "@/lib/site";
 import { ouvrirPaiement, type ModePaiement } from "@/lib/vanillapay";
 
-/**
- * L'ouverture d'un paiement chez le prestataire, pour un règlement donné.
- *
- * Partagée par tout ce qui envoie un membre payer en ligne : la tuile
- * « Carte bancaire », qui y mène directement, l'écran de la carte, et le
- * paiement direct des portefeuilles. Qui appelle a déjà vérifié à qui est
- * le règlement, et qu'il peut se payer ainsi.
- */
-
-/**
- * L'adresse de la plateforme telle que le prestataire la connaît.
- *
- * Il n'accepte de notifier et de ramener le payeur qu'à des adresses qui
- * commencent par l'« URL de base » déclarée dans son espace marchand. C'est
- * donc l'adresse unique du site qu'il faut lui donner : le domaine principal
- * quand il est posé (`DOMAINE_PRINCIPAL`), sinon `APP_URL`. Lui donner
- * `app.cancham.mg` quand le site vit sur `cancham.mg`, et le retour ne se
- * fait pas.
- */
 function basePrestataire(): string {
   const domaine = process.env.DOMAINE_PRINCIPAL?.trim().toLowerCase();
   return domaine ? `https://${domaine}` : baseSite();
 }
 
-/**
- * Où ramener le membre après le paiement.
- *
- * En production, l'adresse publique de la plateforme. En développement,
- * celle d'où il vient : `APP_URL` peut y désigner la plateforme en ligne, et
- * l'y ramener le sortirait de sa base locale. La notification, elle, vise
- * toujours l'adresse publique — le prestataire ne peut joindre que
- * celle-là ; sur un poste de développement, c'est donc la page de retour
- * qui demande l'état du paiement.
- */
 async function baseRetour(): Promise<string> {
   if (process.env.NODE_ENV === "production") return basePrestataire();
   const h = await headers();
@@ -53,24 +24,10 @@ async function baseRetour(): Promise<string> {
   return `${protocole}://${hote}`;
 }
 
-/**
- * Ouvre le paiement et rend l'adresse où envoyer le membre, ou la raison du
- * refus — dans ce cas le règlement reste ouvert, et il peut réessayer.
- *
- * Chaque tentative prend une référence neuve : le prestataire refuse de
- * rouvrir une référence déjà envoyée, et c'est elle, et elle seule, qui
- * relie sa notification au bon règlement. On garde aussi la référence de la
- * transaction chez lui, lue sur le lien : c'est elle qu'on lui présente pour
- * demander où en est le paiement, si sa notification ne nous parvient pas.
- */
 export async function ouvrirChezLePrestataire(
   p: { id: string; montant: number; numeroFacture: string | null },
   mode: ModePaiement,
   detail?: Prisma.InputJsonValue,
-  /**
-   * Où ramener le payeur, en chemin relatif, une fois la référence connue.
-   * À défaut, la page de retour de l'espace membre.
-   */
   cheminRetour: (reference: string) => string = (reference) =>
     `/membre/cotisations/retour?ref=${encodeURIComponent(reference)}`,
 ): Promise<{ url: string } | { raison: string }> {
@@ -90,8 +47,6 @@ export async function ouvrirChezLePrestataire(
     panier: p.numeroFacture ?? reference,
     mode,
     notifUrl: `${basePrestataire()}/api/paiements/vanillapay`,
-    // Par le relais : une seule adresse de retour, qui ramène toujours sur
-    // la plateforme, puis à la page voulue.
     redirectUrl: `${await baseRetour()}${versRelais(cheminRetour(reference))}`,
   });
   if ("raison" in ouverture) return ouverture;

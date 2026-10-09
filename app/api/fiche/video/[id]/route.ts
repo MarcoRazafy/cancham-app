@@ -11,14 +11,6 @@ import {
 } from "@/lib/videos";
 import { dIci, refus, reponseDErreur } from "../commun";
 
-/**
- * La vie d'un envoi de vidéo, une fois ouvert.
- *
- * `PUT` ajoute un morceau, `GET` dit combien d'octets sont arrivés — pour
- * reprendre après une coupure —, `POST` clôt l'envoi et pose la vidéo sur la
- * fiche, `DELETE` l'abandonne. Seule la personne qui a ouvert l'envoi peut y
- * toucher : pour toute autre, il n'existe pas.
- */
 type Contexte = { params: Promise<{ id: string }> };
 
 async function quiEnvoie(requete: Request) {
@@ -74,8 +66,6 @@ export async function POST(requete: Request, { params }: Contexte) {
     return reponseDErreur(e);
   }
 
-  // Entre l'ouverture et la clôture, les droits ont pu changer : un membre
-  // n'écrit toujours que sur sa propre fiche.
   const fiche = await prisma.member.findUnique({
     where: { id: pose.memberId },
     select: { id: true, video: true },
@@ -89,12 +79,9 @@ export async function POST(requete: Request, { params }: Contexte) {
     where: { id: fiche.id },
     data: { video: pose.fichier },
   });
-  // L'ancienne vidéo ne sert plus : un gigaoctet oublié finirait par
-  // remplir le disque.
   if (fiche.video && fiche.video !== pose.fichier) {
     await supprimerVideo(fiche.video);
   }
-  // Une modification par l'équipe se trace : le membre n'en est pas l'auteur.
   if (user.role === "admin") {
     await prisma.auditLog.create({
       data: {

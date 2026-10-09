@@ -2,10 +2,6 @@ import type { Devise } from "@/lib/membership";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
 import { plat } from "@/lib/texte";
 
-/**
- * Filtres de la liste des factures, lus depuis l'adresse. Partagés par la
- * page et par l'export.
- */
 export interface FiltresFactures {
   statut: InvoiceStatus | "toutes";
   devise: Devise | null;
@@ -32,7 +28,6 @@ export function lireFiltresFactures(params: {
   };
 }
 
-/** Factures retenues par tout sauf le statut, pour compter les onglets. */
 export function filtrerFacturesHorsStatut(
   factures: Invoice[],
   f: FiltresFactures,

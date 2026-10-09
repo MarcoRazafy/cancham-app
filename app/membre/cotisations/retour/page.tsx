@@ -7,14 +7,6 @@ import { conclurePaiement } from "@/lib/paiements";
 import { getCurrentUser } from "@/lib/session";
 import { canalVanillaPay, interrogerStatut } from "@/lib/vanillapay";
 
-/**
- * Retour de la page de paiement.
- *
- * Elle ne règle rien par elle-même : c'est la notification signée qui fait
- * foi, et un membre pourrait fabriquer cette adresse. Elle sert à dire où
- * l'on en est — et, quand la notification n'est pas encore arrivée, à
- * demander l'état au prestataire depuis le serveur, ce qui est sûr.
- */
 export default async function RetourPaiementPage({
   searchParams,
 }: {
@@ -31,15 +23,11 @@ export default async function RetourPaiementPage({
         },
       })
     : null;
-  // Une référence qui n'est pas la sienne n'existe pas pour lui.
   const proprietaire = p?.invoice?.memberId ?? p?.memberId ?? null;
   if (!p || !user.memberId || proprietaire !== user.memberId) notFound();
 
-  // La notification a pu se perdre : on demande l'état, et on conclut avec
-  // la même porte que le webhook — donc sans double règlement possible.
   let statut = p.statut;
   if (statut === "en_cours") {
-    // La référence de la transaction chez eux, gardée à l'ouverture.
     const canal = canalVanillaPay(p.mode);
     const etat =
       canal && p.transaction
@@ -58,13 +46,16 @@ export default async function RetourPaiementPage({
   }
 
   const montant = fmtMontant(p.montant, p.devise);
-  // Une participation réglée a ses billets ; une cotisation, son certificat.
   const evenement = p.invoice?.eventId ?? null;
 
   return (
     <>
       <ViewHead
-        title={evenement ? "Paiement de la participation" : "Paiement de la cotisation"}
+        title={
+          evenement
+            ? "Paiement de la participation"
+            : "Paiement de la cotisation"
+        }
       />
 
       <Card className="p-6 max-w-[620px]">
@@ -94,9 +85,9 @@ export default async function RetourPaiementPage({
             icon={<Clock size={18} />}
             title="Paiement en cours"
           >
-            Le prestataire n’a pas encore confirmé. Cela prend parfois
-            quelques minutes : revenez sur cette page ou rechargez-la. La
-            facture sera marquée réglée d’elle-même dès la confirmation
+            Le prestataire n’a pas encore confirmé. Cela prend parfois quelques
+            minutes : revenez sur cette page ou rechargez-la. La facture sera
+            marquée réglée d’elle-même dès la confirmation
             {evenement ? ", et vos billets partiront au même moment" : ""}.
           </Banner>
         )}

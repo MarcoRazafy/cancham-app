@@ -18,21 +18,6 @@ import {
   getRessourceLisible,
 } from "@/lib/queries";
 
-/**
- * Lecture d'une ressource dans la plateforme, côté membre comme côté équipe.
- *
- * Le contrôle d'accès est fait ici pour l'affichage, et rejoué par chaque
- * route de contenu : la page seule ne protège rien, puisque les pages et la
- * vidéo se chargent par des requêtes séparées.
- *
- * En fin de lecture, le membre dit qu'il a terminé : c'est ce qui coche
- * l'étape dans son dossier et avance sa progression.
- *
- * Rangée dans un dossier, la ressource se lit à côté des étapes de ce
- * dossier : on sait où l'on en est, et l'on passe à la suivante sans
- * repasser par le dossier. La page tient alors en deux colonnes, centrées ;
- * seule, la ressource occupe une colonne de lecture, titre aligné sur elle.
- */
 export async function LectureRessourcePage({
   space,
   params,
@@ -41,19 +26,14 @@ export async function LectureRessourcePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  // Introuvable aussi pour qui n'a pas à la voir : une ressource rangée
-  // dans un dossier réservé n'a pas de page pour les autres.
   const r = await getRessourceLisible(id);
   if (!r) notFound();
 
   const acces = await verifierAcces(id);
   const video = r.fmt === "video";
-  // Une page composée dans la plateforme : des blocs, pas un fichier.
   const page = r.fmt === "page";
-  // On revient au dossier qui range la ressource, pas à la racine.
   const retour = `/${space}/ressources${r.dossierId ? `?dossier=${r.dossierId}` : ""}`;
 
-  // Les étapes du dossier qui la range, dans l'ordre que l'équipe a donné.
   const [fil, etapes] = r.dossierId
     ? await Promise.all([
         getFilDossier(r.dossierId),
@@ -65,7 +45,6 @@ export async function LectureRessourcePage({
   const precedente = rang > 0 ? etapes[rang - 1] : null;
   const suivante =
     rang >= 0 && rang < etapes.length - 1 ? etapes[rang + 1] : null;
-  // Une seule ressource dans le dossier : pas de parcours à montrer.
   const parcours = dossier && rang >= 0 && etapes.length > 1 ? dossier : null;
 
   return (
@@ -107,8 +86,6 @@ export async function LectureRessourcePage({
           {acces.ok ? (
             <LecteurProtege>
               {page ? (
-                // Une page composée se lit sous la même protection qu'un
-                // document : son texte ne se sélectionne pas, ne se copie pas.
                 <PageRessource id={id} titre={r.titre} blocs={r.blocs} />
               ) : video ? (
                 <VideoProtegee id={id} titre={r.titre} />
@@ -133,7 +110,6 @@ export async function LectureRessourcePage({
             </Card>
           )}
 
-          {/* ---------- Fin de la ressource ---------- */}
           {acces.ok && space === "membre" ? (
             <Card className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 p-5">
               {r.terminee ? (
@@ -169,7 +145,6 @@ export async function LectureRessourcePage({
             </Card>
           ) : null}
 
-          {/* ---------- D'une étape à l'autre ---------- */}
           {parcours && (precedente || suivante) ? (
             <nav
               aria-label="Étapes voisines"

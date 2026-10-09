@@ -6,11 +6,6 @@ import {
   versRelais,
 } from "@/lib/retour-paiement";
 
-/**
- * Le relais du retour de paiement redirige d'après un paramètre de
- * l'adresse : il ne doit mener qu'aux pages de retour de la plateforme.
- */
-
 describe("adresse du relais", () => {
   it("porte la page voulue, protégée", () => {
     const url = versRelais("/membre/cotisations/retour?ref=CC-2026-ABC123");

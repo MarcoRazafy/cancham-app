@@ -6,9 +6,7 @@ import { statusLabel } from "@/lib/format";
 import { fmtCotisation, joursDeRetard, libelleFormule } from "@/lib/membership";
 import { getMembers } from "@/lib/queries";
 
-/** Liste des membres au format tableur, avec les filtres de la page. */
 export async function GET(requete: Request) {
-  // Le proxy garde déjà /admin ; l'export le redit pour lui-même.
   await exigerEquipe();
   const params = Object.fromEntries(new URL(requete.url).searchParams);
   const membres = filtrerMembres(await getMembers(), lireFiltres(params));

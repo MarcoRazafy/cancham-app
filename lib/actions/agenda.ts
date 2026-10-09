@@ -7,36 +7,22 @@ import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
 
-/**
- * Rappels personnels de l'agenda.
- *
- * Ce sont des pense-bêtes d'une personne : ils ne passent pas au journal
- * d'activité, qui trace les opérations de l'équipe, et seul leur auteur peut
- * les modifier.
- */
-
 const texte = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 const TITRE_MAX = 120;
 const NOTE_MAX = 500;
 
-/**
- * Page de retour : celle où le rappel a été saisi — l'agenda, ou toute autre
- * page qui propose d'en ajouter. Jamais une adresse tierce.
- */
 function retour(fd: FormData): string {
   const r = texte(fd, "retour");
   return /^\/(membre|admin)([/?]|$)/.test(r) ? r : "/membre/agenda";
 }
 
-/** L'espace, et donc la personne connectée, se lisent dans la page de retour. */
 const utilisateur = (page: string) => getCurrentUser(espaceDe(page));
 
 const revalider = (page: string) => {
   revalidatePath(`/${espaceDe(page)}`, "layout");
 };
 
-/** Champs d'un rappel, validés. Redirige avec le motif en cas d'erreur. */
 function lireRappel(fd: FormData, page: string) {
   const titre = texte(fd, "titre");
   const note = texte(fd, "note");
@@ -64,7 +50,6 @@ function lireRappel(fd: FormData, page: string) {
   };
 }
 
-/** Le rappel, s'il appartient à la personne connectée. */
 async function rappelDe(fd: FormData, page: string) {
   const user = await utilisateur(page);
   const r = await prisma.rappel.findUnique({
@@ -97,7 +82,6 @@ export async function modifierRappel(formData: FormData) {
   redirectWithFlash(page, "Rappel mis à jour");
 }
 
-/** Coché ou décoché, sur place : pas de message pour un geste aussi simple. */
 export async function basculerRappelFait(formData: FormData) {
   const page = retour(formData);
   const r = await rappelDe(formData, page);

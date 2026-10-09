@@ -30,18 +30,6 @@ import { getCurrentUser } from "@/lib/session";
 import type { Member, User as Utilisateur } from "@/lib/types";
 import { EntreeFichier } from "@/components/EnvoisSuivis";
 
-/**
- * Accueil d'un nouvel inscrit : la présentation, une étape à la fois, à la
- * manière d'Upwork.
- *
- * Page blanche plein écran : une fine barre de progression en haut, un
- * grand titre centré, le formulaire au milieu, et une barre d'actions fixée
- * en bas — « Précédent » à gauche, « Ignorer » et « Suivant » à droite.
- * Chaque étape se valide ou se passe ; « Terminer plus tard » mène à
- * l'espace, où un bandeau propose d'y revenir. Les champs reprennent ce qui
- * est déjà enregistré : revenir sur une étape, c'est la corriger.
- */
-
 const TEXTES: Record<EtapeAccueil, { titre: string; intro: string }> = {
   vous: {
     titre: "Faisons connaissance",
@@ -83,7 +71,6 @@ export default async function BienvenuePage({
   const user = await getCurrentUser("membre");
   const membre = user.memberId ? await getMember(user.memberId) : null;
   if (!membre) notFound();
-  // La suite de la fiche vient après la validation de la candidature.
   if (membre.statut === "candidature") redirect("/auth?attente=1");
 
   const numero = numeroEtape((await searchParams).etape);
@@ -92,8 +79,6 @@ export default async function BienvenuePage({
   const derniere = numero === NOMBRE_ETAPES;
 
   return (
-    // La clé remonte le formulaire à chaque étape : les champs repartent des
-    // valeurs enregistrées, pas de celles de l'étape précédente.
     <form
       key={etape}
       action={enregistrerEtape}
@@ -101,7 +86,6 @@ export default async function BienvenuePage({
     >
       <input type="hidden" name="etape" value={numero} />
 
-      {/* ---------- En-tête ---------- */}
       <header className="flex items-center justify-between gap-4 px-5 sm:px-8 h-[72px] shrink-0">
         <LogoOfficiel className="w-[150px] sm:w-[200px] h-auto" priority />
         <Link
@@ -144,7 +128,6 @@ export default async function BienvenuePage({
         </div>
       </main>
 
-      {/* ---------- Barre d'actions ---------- */}
       <footer className="fixed inset-x-0 bottom-0 z-20 bg-white border-t border-line">
         <div className="flex items-center gap-3 px-5 sm:px-8 h-[76px]">
           {numero > 1 ? (
@@ -184,9 +167,6 @@ export default async function BienvenuePage({
   );
 }
 
-/* ============================ Progression ============================ */
-
-/** Une fine barre, remplie à mesure des étapes, comme chez Upwork. */
 function Progression({ numero }: { numero: number }) {
   return (
     <div
@@ -205,11 +185,7 @@ function Progression({ numero }: { numero: number }) {
   );
 }
 
-/* ============================ Étapes ============================ */
-
 function EtapeVous({ user }: { user: Utilisateur }) {
-  // Le nom tiré de l'adresse à l'inscription n'est qu'un prête-nom : les
-  // champs partent vides tant que la personne n'a pas donné le sien.
   const provisoire = user.nom === nomDepuisCourriel(user.email);
   const [prenom, ...reste] = provisoire ? [""] : user.nom.split(" ");
   return (
@@ -371,10 +347,6 @@ function EtapeFormule({ membre }: { membre: Member }) {
         <legend className="block text-[13px] font-semibold text-ink mb-2">
           Formule d’adhésion
         </legend>
-        {/*
-          Une formule est obligatoire ici : c'est l'étape où le membre
-          confirme la sienne, et rien n'est facturé tant qu'elle manque.
-        */}
         <ChoixFormules actuelle={membre.formule} />
       </fieldset>
       <ChampAuth
@@ -536,7 +508,6 @@ function EtapeProduits({ membre }: { membre: Member }) {
           />
         </ChampAuth>
       </div>
-      {/* Enregistre l'offre et revient ici pour la suivante. */}
       <button
         type="submit"
         name="encore"

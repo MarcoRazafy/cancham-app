@@ -1,18 +1,5 @@
-/**
- * Fichiers CSV pour tableur.
- *
- * Réglés pour Excel en français, l'outil de l'équipe : point-virgule comme
- * séparateur (la virgule y est le séparateur décimal), BOM UTF-8 pour que les
- * accents s'affichent, fins de ligne CRLF.
- */
-
 type Cellule = string | number | null | undefined;
 
-/**
- * Une cellule qui commence par `=`, `+`, `-` ou `@` serait exécutée comme une
- * formule à l'ouverture : un nom d'entreprise saisi sur le formulaire public
- * suffirait à piéger le fichier. On la désamorce d'une apostrophe.
- */
 function cellule(v: Cellule): string {
   if (v === null || v === undefined) return "";
   let s = String(v);
@@ -26,7 +13,6 @@ export function versCsv(entetes: string[], lignes: Cellule[][]): string {
   );
 }
 
-/** Réponse de téléchargement, nommée et datée. */
 export function reponseCsv(nom: string, contenu: string): Response {
   const date = new Date().toISOString().slice(0, 10);
   return new Response(contenu, {

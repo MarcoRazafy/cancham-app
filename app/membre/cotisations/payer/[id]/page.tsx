@@ -28,17 +28,6 @@ import {
   vanillaPayActif,
 } from "@/lib/vanillapay";
 
-/**
- * Le tunnel d'un règlement : où envoyer l'argent, et la référence à recopier.
- *
- * On y revient autant qu'on veut — « je le ferai plus tard » ne perd rien,
- * la référence est celle du règlement ouvert.
- *
- * Chaque moyen a son écran, repris de sa maquette : les portefeuilles aux
- * couleurs de l'opérateur, la carte, le virement et son RIB, le dépôt et son
- * bordereau, les espèces et leur bon de remise. Seules les plateformes
- * tierces gardent l'écran commun.
- */
 export default async function PageReglement({
   params,
   searchParams,
@@ -63,13 +52,10 @@ export default async function PageReglement({
   const objet = p.invoice
     ? `${p.invoice.objet} · facture ${p.invoice.numero}`
     : "Règlement";
-  // Revenir en arrière, c'est rouvrir le choix du moyen pour cette facture.
   const retour = p.invoiceId
     ? `/membre/cotisations?regler=${p.invoiceId}`
     : "/membre/cotisations";
 
-  // Ce que le membre a déjà saisi pour ce règlement : un rendez-vous, un
-  // numéro, le nom du titulaire.
   const detail = (
     p.detail && typeof p.detail === "object" && !Array.isArray(p.detail)
       ? p.detail
@@ -117,8 +103,6 @@ export default async function PageReglement({
   }
 
   if (estPortefeuilleConnu(p.mode)) {
-    // Le numéro du membre, posé à l'étape 1 et gardé dans le détail du
-    // règlement : revenir sur la page ne le fait pas resaisir.
     const telephone =
       typeof detail.telephone === "string" ? detail.telephone : null;
 
@@ -136,9 +120,6 @@ export default async function PageReglement({
         statut={p.statut}
         modifier={numero === "modifier"}
         retour={retour}
-        // Le mobile money activé sur le compte marchand, en Ariary, et
-        // au-dessus du plancher du prestataire : sinon le membre fait
-        // l'envoi lui-même.
         raccorde={
           mobileMoneyEnLigne() &&
           p.devise === "MGA" &&

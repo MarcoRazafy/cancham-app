@@ -4,16 +4,6 @@ import { useId, useState, type ComponentProps, type ReactNode } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { CHAMP_AUTH } from "@/components/public/style-champs";
 
-/**
- * Champs des écrans d'identification.
- *
- * Le champ où l'on écrit se teinte d'un vert pâle, avec un filet vert à
- * gauche, et son icône prend la couleur de la charte : le regard sait tout de
- * suite où il écrit. Un seul repère, donc pas de contour rouge par-dessus. Le
- * mot de passe se montre d'un clic — sur un téléphone, ressaisir à l'aveugle
- * est la première cause d'abandon.
- */
-
 const CADRE = CHAMP_AUTH;
 
 export function ChampAuth({
@@ -47,7 +37,6 @@ export function ChampAuth({
   );
 }
 
-/** Champ ordinaire, avec ou sans icône. */
 export function Saisie({
   avecIcone = false,
   className = "",
@@ -61,7 +50,6 @@ export function Saisie({
   );
 }
 
-/** Mot de passe, avec l'œil qui le dévoile. */
 export function ChampMotDePasse({
   label,
   hint,

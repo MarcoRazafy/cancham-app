@@ -2,11 +2,6 @@
 
 import { Printer } from "lucide-react";
 
-/**
- * Imprimer le bordereau ou le bon : la coquille de l'espace membre et le
- * reste de l'écran portent `print:hidden`, seul le document part à
- * l'imprimante.
- */
 export function BoutonImprimer({
   children,
   className = "",

@@ -1,11 +1,6 @@
 import Image from "next/image";
 import { LIENS, retard } from "@/lib/traversee";
 
-/**
- * Partenaires et exposants. Les emplacements sont réservés : noms, sigles et
- * visuels d'attente, à remplacer par les logos et images des partenaires
- * signés. Deux offres en bas : exposer, ou associer sa marque aux 10 ans.
- */
 const SPONSORS = [
   {
     niveau: "Sponsor officiel",

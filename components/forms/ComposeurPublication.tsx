@@ -37,43 +37,25 @@ type Photo =
   | { cle: string; type: "nouvelle"; fichier: File; apercu: string };
 type PhotoNouvelle = Extract<Photo, { type: "nouvelle" }>;
 
-/** Ce que la barre et la fenêtre proposent d'écrire. */
 const INVITE =
   "Partagez vos besoins ou ce que vous souhaitez partager à la communauté";
 
-/** On ne dit combien de caractères il reste qu'à l'approche de la limite. */
 const RESTE_ANNONCE = 500;
 
 const BTN_ICONE =
   "w-9 h-9 rounded-[var(--radius-s)] border border-line bg-surface flex items-center justify-center cursor-pointer text-muted";
 
-/** Une publication déjà parue, que son auteur reprend. */
 export interface PublicationAModifier {
   id: string;
   texte: string;
   images: string[];
 }
 
-/**
- * Publier dans le fil, comme on le fait partout : une barre d'invite en
- * tête du fil, qui ouvre une fenêtre. Un texte, des photos, un bouton —
- * rien d'autre à remplir. La publication paraît dans le fil des membres,
- * et là seulement : la page publique reste à la chambre.
- *
- * Avec `publication`, la même fenêtre sert à reprendre ce qu'on a publié :
- * le déclencheur est alors un crayon, posé sur la publication.
- *
- * Le brouillon vit ici, au-dessus de la fenêtre : la refermer par mégarde ne
- * perd ni le texte ni les photos, qui continuent de partir. Une erreur du
- * serveur s'affiche dans la fenêtre, sans rien effacer ; une publication
- * réussie la referme, et le fil se met à jour dessous.
- */
 export function ComposeurPublication({
   avatar,
   entreprise,
   publication,
 }: {
-  /** Le logo de l'entreprise, rendu côté serveur : il signe la publication. */
   avatar: ReactNode;
   entreprise: string;
   publication?: PublicationAModifier;
@@ -90,15 +72,10 @@ export function ComposeurPublication({
   const [avis, setAvis] = useState<string | null>(null);
   const zone = useRef<HTMLTextAreaElement>(null);
   const choix = useRef<HTMLInputElement>(null);
-  /** La barre a demandé d'ouvrir directement le choix des photos. */
   const versPhotos = useRef(false);
-  /** Numérote les photos : deux fois le même fichier restent deux photos. */
   const rang = useRef(0);
-  /** L'erreur du serveur que la saisie a rendue caduque. */
   const [caduque, setCaduque] = useState<EtatPublication | null>(null);
 
-  // Mémorisées : chaque nouvelle photo part dès qu'elle entre dans la liste,
-  // et s'interrompt si elle en sort.
   const nouvelles = useMemo(
     () => photos.filter((p): p is PhotoNouvelle => p.type === "nouvelle"),
     [photos],
@@ -106,13 +83,10 @@ export function ComposeurPublication({
   const fichiers = useMemo(() => nouvelles.map((p) => p.fichier), [nouvelles]);
   const { etats, jetons } = useEnvois(fichiers);
   const poids = fichiers.reduce((n, f) => n + f.size, 0);
-  // Où ranger chaque photo : celles qu'on garde par leur adresse, les
-  // nouvelles par leur rang dans le champ fichier.
   const ordre = photos.map((p) =>
     p.type === "existante" ? `e:${p.url}` : `n:${nouvelles.indexOf(p)}`,
   );
 
-  /** Retire les photos qui attendaient l'envoi ; celles déjà parues restent. */
   const viderNouvelles = () => {
     nouvelles.forEach((p) => URL.revokeObjectURL(p.apercu));
     setPhotos((l) => l.filter((p) => p.type === "existante"));
@@ -124,10 +98,6 @@ export function ComposeurPublication({
       formData: FormData,
     ): Promise<EtatPublication> => {
       setAvis(null);
-      // Tant que tous les envois d'avance ne sont pas arrivés, les photos
-      // partent avec le formulaire — prises ici, dans l'état, et non dans le
-      // champ caché : React le vide après chaque tentative, et un second
-      // essai aurait publié le texte sans elles.
       if (!jetons) {
         formData.delete("images");
         fichiers.forEach((f) => formData.append("images", f));
@@ -139,8 +109,6 @@ export function ComposeurPublication({
           formData,
         );
       } catch (e) {
-        // Une redirection de Next — session expirée, par exemple — suit son
-        // cours ; le reste est une panne de réseau.
         unstable_rethrow(e);
         return {
           etape: "erreur",
@@ -153,8 +121,6 @@ export function ComposeurPublication({
         setAvis(null);
         setOuvert(false);
         if (publication) {
-          // La page se recharge avec la publication modifiée : la fenêtre
-          // repartira de là à sa prochaine ouverture.
           annoncer("Publication modifiée");
         } else {
           setTexte("");
@@ -162,7 +128,6 @@ export function ComposeurPublication({
           annoncer("Publication partagée dans le fil");
         }
       } else if (r.etape === "erreur" && r.photosPerdues) {
-        // Les envois faits d'avance ont été consommés par la tentative.
         viderNouvelles();
       }
       return r;
@@ -170,8 +135,6 @@ export function ComposeurPublication({
     PUBLICATION_VIERGE,
   );
 
-  // À l'ouverture : la zone prend la hauteur du brouillon et le curseur —
-  // après `showModal`, qui donnerait sinon le focus à la croix.
   useEffect(() => {
     if (!ouvert) return;
     ajuster(zone.current);
@@ -224,7 +187,6 @@ export function ComposeurPublication({
   const message = tropLourd
     ? `Les photos dépassent ${PLAFOND_FICHIER_MO} Mo à elles toutes : envoyez-en moins à la fois.`
     : (erreur ?? avis);
-  // Un texte déjà plus long que la limite garde sa longueur pour borne.
   const longueurMax = Math.max(
     LONGUEUR_PUBLICATION,
     publication?.texte.length ?? 0,
@@ -251,8 +213,6 @@ export function ComposeurPublication({
             type="button"
             aria-haspopup="dialog"
             onClick={() => setOuvert(true)}
-            // L'invite tient sur deux lignes au besoin : dans une colonne
-            // étroite, une seule la tronquait au milieu de la phrase.
             className={`min-h-11 min-w-0 flex-1 cursor-pointer rounded-[22px] border-0 bg-surface-2 px-4 py-2 text-left text-[14px] leading-snug transition-colors hover:bg-surface-3 ${
               texte.trim() ? "text-ink" : "text-muted"
             }`}
@@ -317,8 +277,6 @@ export function ComposeurPublication({
               rows={3}
               placeholder={INVITE}
               aria-label="Votre publication"
-              // Un mot court s'écrit en grand, comme une annonce ; un texte
-              // long ou des photos ramènent la taille de lecture.
               className={`block min-h-[96px] w-full resize-none border-0 bg-transparent p-0 leading-snug text-ink outline-none placeholder:text-faint ${
                 texte.length > 110 || photos.length
                   ? "text-[15px]"
@@ -410,8 +368,6 @@ export function ComposeurPublication({
             <button
               type="submit"
               disabled={bloque}
-              // La charte donne un sablier à tout bouton désactivé : ici,
-              // il l'est aussi quand il n'y a simplement rien à publier.
               style={bloque && !envoi ? { cursor: "not-allowed" } : undefined}
               className="btn-action w-full"
             >
@@ -437,12 +393,6 @@ export function ComposeurPublication({
   );
 }
 
-/**
- * Ce que le formulaire envoie pour les photos : leurs jetons une fois
- * toutes arrivées, sinon les fichiers eux-mêmes — une publication validée
- * avant la fin des envois part quand même, les photos dans le formulaire.
- * `ordre` dit au serveur où ranger chacune, gardée ou nouvelle.
- */
 function ChampsPhotos({
   ordre,
   fichiers,
@@ -454,7 +404,6 @@ function ChampsPhotos({
 }) {
   const champ = useRef<HTMLInputElement>(null);
 
-  // Un `FileList` ne se modifie pas : on le reconstruit à chaque changement.
   useEffect(() => {
     if (!champ.current) return;
     const dt = new DataTransfer();
@@ -479,7 +428,6 @@ function ChampsPhotos({
   );
 }
 
-/** Le membre retire sa propre publication, après confirmation. */
 export function SupprimerMaPublication({
   newsId,
   commentaires,
@@ -528,12 +476,8 @@ export function SupprimerMaPublication({
   );
 }
 
-/** La zone de texte grandit avec ce qu'on y écrit. */
 function ajuster(el: HTMLTextAreaElement | null) {
   if (!el) return;
-  // Repasser par `auto` raccourcit un instant la zone : dans une fenêtre qui
-  // défile, la position sautait à chaque frappe sur un long texte. On la
-  // relève avant, on la remet après.
   const defilements: [HTMLElement, number][] = [];
   for (let p = el.parentElement; p; p = p.parentElement) {
     if (p.scrollTop) defilements.push([p, p.scrollTop]);
@@ -543,11 +487,6 @@ function ajuster(el: HTMLTextAreaElement | null) {
   for (const [p, haut] of defilements) p.scrollTop = haut;
 }
 
-/**
- * Confirme par le message de la page, celui de toutes les actions : il se
- * lit dans l'adresse. `replaceState` la réécrit sans navigation, et Next
- * suit.
- */
 function annoncer(message: string) {
   const url = new URL(window.location.href);
   url.searchParams.set("msg", message);

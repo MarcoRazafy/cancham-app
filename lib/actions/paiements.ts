@@ -37,23 +37,6 @@ const texte = (fd: FormData, k: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-/**
- * Le paiement par carte : le membre valide l'écran, et part chez le
- * prestataire saisir sa carte.
- *
- * Une action serveur est une adresse publique : on vérifie donc que le
- * règlement appartient bien à qui paie, qu'il est en carte, pas déjà
- * encaissé, et en Ariary — Vanilla Pay n'encaisse pas le dollar canadien.
- *
- * Le nom du titulaire est gardé avec le règlement : c'est ce que l'équipe
- * regarde le jour où un paiement est contesté. Le numéro de la carte, lui,
- * ne passe jamais par ici — il se saisit chez le prestataire.
- *
- * D'ordinaire, le membre n'arrive pas ici : la tuile « Carte bancaire »
- * l'envoie droit chez le prestataire. Cet écran sert quand l'ouverture a été
- * refusée — un montant sous leur plancher, une panne —, ou quand il revient
- * sur un règlement resté ouvert.
- */
 export async function payerParCarte(formData: FormData) {
   const user = await getCurrentUser("membre");
   const id = texte(formData, "reglementId");
@@ -64,8 +47,6 @@ export async function payerParCarte(formData: FormData) {
       invoice: { select: { numero: true, objet: true, statut: true } },
     },
   });
-  // Même message pour « introuvable » et « pas à vous » : répondre
-  // différemment dirait à un curieux quels règlements existent.
   if (!p || !user.memberId || p.memberId !== user.memberId) {
     redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
   }
@@ -82,14 +63,11 @@ export async function payerParCarte(formData: FormData) {
     redirectWithErreur(page, "Indiquez le nom du titulaire de la carte.");
   }
 
-  // Le nom saisi est gardé même si rien ne part : le membre n'aura pas à le
-  // refaire.
   await prisma.paiement.update({
     where: { id: p.id },
     data: { detail: { titulaire } },
   });
 
-  // Sans les clés du prestataire, rien ne part.
   if (!vanillaPayActif()) {
     redirectWithErreur(
       page,
@@ -105,26 +83,11 @@ export async function payerParCarte(formData: FormData) {
     "international",
     { titulaire },
   );
-  // Le règlement reste ouvert : le membre peut réessayer sans tout ressaisir.
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
 
-  // Sortie du site : la carte se saisit chez eux, jamais chez nous.
   redirect(ouverture.url);
 }
 
-/**
- * Le paiement par portefeuille mobile depuis la plateforme : le membre
- * valide, part chez le prestataire, et son téléphone reçoit la demande de
- * confirmation de l'opérateur. Le code secret ne se saisit que là — jamais
- * chez nous, ni chez le prestataire : sur le téléphone, auprès de
- * l'opérateur. Le débit fait, la notification signée règle la facture, et
- * les billets partent s'il s'agit d'une participation.
- *
- * Mêmes garde-fous que la carte : le règlement doit être à qui paie, en
- * portefeuille, pas déjà encaissé, et en Ariary. Un règlement annoncé à la
- * main peut aussi se payer ici : il repasse « en cours », avec une référence
- * neuve.
- */
 export async function payerParPortefeuille(formData: FormData) {
   const user = await getCurrentUser("membre");
   const id = texte(formData, "reglementId");
@@ -170,23 +133,11 @@ export async function payerParPortefeuille(formData: FormData) {
   redirect(ouverture.url);
 }
 
-/** Ouvertures de paiement depuis une même origine, en une heure. */
 const PAIEMENTS_PUBLICS_PAR_HEURE = 10;
 
-/**
- * L'inscription publique qu'un formulaire vient régler, contrôlée.
- *
- * Pas de compte, donc pas de session à vérifier : c'est le code de
- * l'inscription — celui du lien reçu par e-mail — qui fait foi, comme pour
- * la page des billets. On ne règle que des lignes encore en attente, au
- * tarif public du jour, et jamais une inscription de membre : celle-là a sa
- * facture, qui se règle dans l'espace membre.
- */
 async function inscriptionAPayer(formData: FormData) {
   const eventId = texte(formData, "eventId");
   const code = codeInscription(extraireCode(texte(formData, "code")));
-  // Un code tronqué désignerait toutes les inscriptions de l'événement : il
-  // doit avoir sa forme entière avant qu'on cherche quoi que ce soit.
   if (!eventId || !estCodeInscription(code)) {
     redirectWithErreur(
       eventId ? `/evenements/${encodeURIComponent(eventId)}` : "/",
@@ -235,21 +186,6 @@ async function inscriptionAPayer(formData: FormData) {
   };
 }
 
-/**
- * Le règlement d'une inscription publique, dans le moyen choisi.
- *
- * Revenir sans payer puis recommencer dans le même moyen reprend le même
- * règlement, au montant du jour — on n'en empile pas dix. Changer de moyen
- * en ouvre un autre, avec sa propre référence, et clôt l'ancien : une
- * référence déjà donnée — recopiée sur un virement, ou envoyée au
- * prestataire — ne change jamais de sens après coup.
- *
- * Un paiement déjà annoncé ne se défait pas d'ici : l'équipe le traite.
- * `null` dans ce cas, à l'appelant de le dire.
- *
- * Il n'a ni facture ni membre ; c'est le code de l'inscription, gardé dans
- * son détail, qui le relie aux billets.
- */
 async function reglementPublic(
   eventId: string,
   code: string,
@@ -288,13 +224,6 @@ async function reglementPublic(
 const DEJA_ANNONCE =
   "Votre paiement est déjà annoncé : l’équipe le traite. Écrivez-lui pour changer de moyen.";
 
-/**
- * Le visiteur choisit comment régler son inscription.
- *
- * La carte mène chez le prestataire. Les autres moyens se passent hors
- * ligne : on ouvre le règlement, et la page des billets affiche où envoyer
- * l'argent et la référence à rappeler.
- */
 export async function choisirPaiementPublic(formData: FormData) {
   const mode = texte(formData, "mode");
   if (mode === "carte") return payerInscriptionPublique(formData);
@@ -319,13 +248,6 @@ export async function choisirPaiementPublic(formData: FormData) {
   redirect(page);
 }
 
-/**
- * Le visiteur annonce avoir payé hors ligne.
- *
- * Rien n'est encaissé pour autant : l'inscription attend que l'équipe
- * constate l'arrivée de l'argent. Elle en est prévenue, et confirme depuis
- * « Règlements annoncés » — les billets partent alors par e-mail.
- */
 export async function annoncerPaiementPublic(formData: FormData) {
   const { eventId, code, page, event, lignes, montant } =
     await inscriptionAPayer(formData);
@@ -344,9 +266,6 @@ export async function annoncerPaiementPublic(formData: FormData) {
       statut: "annonce",
       annonceLe: new Date(),
       refBancaire: texte(formData, "refBancaire").slice(0, 80) || null,
-      // Le montant du jour, celui que la page vient d'afficher : un
-      // participant retiré depuis le choix du moyen ne doit pas laisser
-      // l'équipe comparer l'argent reçu à un chiffre périmé.
       montant,
     },
   });
@@ -359,7 +278,6 @@ export async function annoncerPaiementPublic(formData: FormData) {
       detail: `${lignes[0].nom} · ${fmtMontant(montant, p.devise)} par ${MODES[p.mode].titre.toLowerCase()} · réf. ${p.reference} · « ${event.titre} »`,
     },
   });
-  // L'équipe le sait sur son téléphone : un règlement attend sa confirmation.
   after(() =>
     notifierEquipe({
       titre: "Règlement annoncé — inscription publique",
@@ -375,13 +293,6 @@ export async function annoncerPaiementPublic(formData: FormData) {
   );
 }
 
-/**
- * Le paiement par carte d'une inscription faite depuis le site public.
- *
- * Le règlement n'a ni facture ni membre ; il garde le code de l'inscription
- * et l'événement. C'est ce qui permet, le paiement confirmé, de valider
- * l'inscription et d'envoyer les billets.
- */
 export async function payerInscriptionPublique(formData: FormData) {
   const { eventId, code, page, lignes, montant } =
     await inscriptionAPayer(formData);

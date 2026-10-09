@@ -2,13 +2,6 @@ import { readFile } from "node:fs/promises";
 import { ENTETES_PROTEGES, verifierAcces } from "@/lib/acces-ressources";
 import { cheminPage, existe } from "@/lib/stockage-ressources";
 
-/**
- * Une page de document, rendue en image.
- *
- * L'accès est vérifié à chaque page : sans lui, il suffirait de l'adresse
- * pour lire un document payant. L'image part telle qu'elle a été rendue au
- * dépôt, sans filigrane.
- */
 export async function GET(
   _requete: Request,
   { params }: { params: Promise<{ id: string; n: string }> },

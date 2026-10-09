@@ -15,15 +15,6 @@ import {
   type FilVisiteur,
 } from "@/lib/support-visiteur";
 
-/**
- * L'assistance depuis la vitrine, pour qui n'a pas de compte.
- *
- * Tout passe par ici : c'est un point d'entrée public, donc tout y est
- * vérifié et compté. Le premier message demande de quoi répondre — nom,
- * adresse, téléphone ; les suivants reprennent le fil du navigateur.
- */
-
-/** Messages qu'une même origine peut envoyer en une heure. */
 const MESSAGES_PAR_HEURE = 20;
 
 const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,7 +56,6 @@ export async function envoyerAuSupportPublic(saisie: {
 
   const existant = await filVisiteur();
 
-  // Fil déjà ouvert : l'identité est celle qu'il porte, on ne la redemande pas.
   if (existant) {
     await ecrireDuVisiteur(existant.id, existant.visiteur.nom, texte);
     revalidatePath("/", "layout");
@@ -107,7 +97,6 @@ export async function envoyerAuSupportPublic(saisie: {
     },
   });
 
-  // L'équipe n'est pas forcément devant le back-office : on la prévient.
   const lien = await urlPublique(`/admin/messagerie?t=${threadId}`);
   after(() =>
     envoyerCourriel(

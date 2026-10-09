@@ -7,12 +7,6 @@ import {
   typeDuLienRendezvous,
 } from "@/lib/liens";
 
-/**
- * Le lien d'un service vient d'un champ libre : il ne doit ranger qu'un
- * chemin de la plateforme ou une adresse web, jamais de quoi exécuter du
- * code chez le membre qui clique.
- */
-
 const ICI = ["https://app.cancham.mg", "http://localhost:3000/"];
 
 describe("lien d'un rendez-vous", () => {

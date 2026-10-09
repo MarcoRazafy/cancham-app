@@ -1,9 +1,5 @@
 import type { CanchamService, Offer } from "../../lib/types";
 
-/**
- * Promotions publiées PAR les membres, à destination des autres membres.
- * Mises en avant sur le fil d'actualité.
- */
 export const OFFERS: Offer[] = [
   {
     id: "o1",
@@ -49,13 +45,6 @@ export const OFFERS: Offer[] = [
   },
 ];
 
-/**
- * Services proposés PAR la chambre à ses membres, gratuits ou payants.
- *
- * À ne pas confondre avec `OFFERS` : ici c'est CanCham qui vend ou offre,
- * là ce sont les membres qui se font des promotions entre eux. La distinction
- * vient du prototype et structure deux pages différentes.
- */
 export const SERVICES: CanchamService[] = [
   {
     id: "s1",

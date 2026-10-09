@@ -38,7 +38,6 @@ export interface MessageRecherche {
 
 export interface InfoConversation {
   type: "individuel" | "groupe";
-  /** Personne en face, pour un échange individuel avec un membre. */
   contact: {
     nom: string;
     fonction: string;
@@ -46,27 +45,14 @@ export interface InfoConversation {
     tel: string | null;
     photo: string | null;
   } | null;
-  /** Entreprise en face, et où la trouver dans l'annuaire. */
   entreprise: {
     nom: string;
     lienProfil: string;
     siteweb: string | null;
   } | null;
-  /** Coordonnées de la chambre, quand on parle à l'équipe CanCham. */
   equipe: { telephone: string; email: string } | null;
 }
 
-/**
- * En-tête d'une conversation et son panneau d'information.
- *
- * Un clic sur le portrait ou le nom mène au profil de l'entreprise. Le bouton
- * « i » ouvre un panneau : la personne, son entreprise, ses coordonnées — ou,
- * pour un groupe, ses participants —, la recherche dans la conversation et les
- * fichiers échangés.
- *
- * Le parent doit être positionné (`relative`) : le panneau vient se poser sur
- * la droite de la conversation.
- */
 export function EnTeteConversation({
   retour,
   threadId,
@@ -81,7 +67,6 @@ export function EnTeteConversation({
   ajoutables,
   messages,
 }: {
-  /** Retour à la liste des conversations, sur téléphone. */
   retour: string;
   threadId: string;
   space: Space;
@@ -92,7 +77,6 @@ export function EnTeteConversation({
   init: string;
   info: InfoConversation;
   participants: Personne[];
-  /** Personnes qu'on peut encore ajouter, pour un groupe. */
   ajoutables: ElementACocher[];
   messages: MessageRecherche[];
 }) {
@@ -121,14 +105,12 @@ export function EnTeteConversation({
     [messages],
   );
 
-  /** Amène un message à l'écran et le fait briller un instant. */
   const allerA = (id: string) => {
     const el = document.getElementById(`msg-${id}`);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     el.classList.add("message-repere");
     setTimeout(() => el.classList.remove("message-repere"), 1800);
-    // Sur un petit écran, le panneau couvre la conversation : on le referme.
     if (window.matchMedia("(max-width: 767px)").matches) setOuvert(false);
   };
 
@@ -213,7 +195,6 @@ export function EnTeteConversation({
           </div>
 
           <div className="overflow-y-auto flex-1 min-h-0 px-4 py-4 flex flex-col gap-5">
-            {/* ---------- Identité ---------- */}
             <div className="flex flex-col items-center text-center">
               <Pastille
                 src={info.contact?.photo ?? avatar}
@@ -234,7 +215,6 @@ export function EnTeteConversation({
               </div>
             </div>
 
-            {/* ---------- Coordonnées ---------- */}
             {info.entreprise || info.contact || info.equipe ? (
               <ul className="list-none m-0 p-0 flex flex-col gap-2.5 text-[13px]">
                 {info.entreprise ? (
@@ -291,7 +271,6 @@ export function EnTeteConversation({
               </Link>
             ) : null}
 
-            {/* ---------- Participants d'un groupe ---------- */}
             {info.type === "groupe" ? (
               <div>
                 <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-faint mb-2">
@@ -339,7 +318,6 @@ export function EnTeteConversation({
               </div>
             ) : null}
 
-            {/* ---------- Recherche dans la conversation ---------- */}
             <div>
               <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-faint mb-2">
                 Rechercher dans la conversation
@@ -391,7 +369,6 @@ export function EnTeteConversation({
               ) : null}
             </div>
 
-            {/* ---------- Fichiers partagés ---------- */}
             {fichiers.length ? (
               <div>
                 <div className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-faint mb-2">
@@ -458,13 +435,10 @@ function Ligne({
   );
 }
 
-/** Met en évidence le terme cherché, sans tenir compte des accents. */
 function Surligne({ texte, terme }: { texte: string; terme: string }) {
   const t = normaliser(terme);
   const i = t ? normaliser(texte).indexOf(t) : -1;
   if (i < 0) return <>{texte}</>;
-  // La normalisation conserve la longueur pour les lettres accentuées usuelles
-  // du français : les index du texte normalisé valent pour le texte d'origine.
   return (
     <>
       {texte.slice(0, i)}

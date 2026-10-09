@@ -3,25 +3,13 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 
-/**
- * Code d'accueil d'une inscription : le QR code, le code en clair, et de quoi
- * l'enregistrer.
- *
- * Le téléchargement produit un billet en PNG — l'événement, le QR code, le
- * code et le participant — à garder dans sa galerie de photos : on le
- * présente à l'accueil sans connexion, même là où le réseau manque.
- */
-
 interface Billet {
   titre: string;
-  /** Date et horaire, déjà mis en forme. */
   quand: string;
   lieu: string;
-  /** Nom du participant, et son entreprise. */
   participant: string;
 }
 
-/** Marge blanche autour du code, en modules : les lecteurs en ont besoin. */
 const MARGE_QR = 2;
 const ENCRE = "#0f1d2c";
 
@@ -46,9 +34,7 @@ export function CodeAccueil({
   modules: string;
   billet: Billet;
 }) {
-  const [etat, setEtat] = useState<"repos" | "preparation" | "erreur">(
-    "repos",
-  );
+  const [etat, setEtat] = useState<"repos" | "preparation" | "erreur">("repos");
   const cote = taille + 2 * MARGE_QR;
 
   const telecharger = async () => {
@@ -115,20 +101,16 @@ export function CodeAccueil({
   );
 }
 
-/* ============================ Billet en PNG ============================ */
-
 const LARGEUR = 1080;
 const BORD = 80;
 const COTE_QR = 600;
 
-/** Police réellement employée par un élément de la page : le billet lui ressemble. */
 const policeDe = (el: Element | null) =>
   getComputedStyle(el ?? document.body).fontFamily || "sans-serif";
 
 const MONO =
   'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
 
-/** Découpe un texte en lignes qui tiennent dans la largeur donnée. */
 function lignes(
   ctx: CanvasRenderingContext2D,
   texte: string,
@@ -172,8 +154,6 @@ async function dessinerBillet(
     participant: `600 30px ${sans}`,
     pied: `400 25px ${sans}`,
   };
-  // Une police déclarée mais pas encore employée par la page n'est pas
-  // chargée : le canevas prendrait la police de repli.
   await Promise.all(
     Object.values(polices).map((p) => document.fonts.load(p).catch(() => [])),
   );
@@ -186,7 +166,6 @@ async function dessinerBillet(
   const ctx = toile.getContext("2d");
   if (!ctx) throw new Error("Canevas indisponible");
 
-  // Mesure du titre d'abord : la hauteur du billet en dépend.
   ctx.font = polices.titre;
   const lignesTitre = lignes(ctx, billet.titre, LARGEUR - 2 * BORD, 3);
 
@@ -208,11 +187,9 @@ async function dessinerBillet(
   toile.width = LARGEUR;
   toile.height = hauteur;
 
-  // Fond.
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, LARGEUR, hauteur);
 
-  // Bandeau aux couleurs de la chambre, logo renversé.
   const fond = ctx.createLinearGradient(0, 0, LARGEUR, 0);
   fond.addColorStop(0, "#14293e");
   fond.addColorStop(1, "#0f1d2c");
@@ -229,7 +206,6 @@ async function dessinerBillet(
   ctx.fillStyle = filet;
   ctx.fillRect(0, HAUT_BANDEAU, LARGEUR, 12);
 
-  // Événement.
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
   ctx.fillStyle = "#ad0707";
@@ -245,7 +221,6 @@ async function dessinerBillet(
   ctx.fillText(billet.quand, BORD, yInfos + 30);
   ctx.fillText(billet.lieu, BORD, yInfos + 30 + 44);
 
-  // QR code, sur une carte pâle.
   const xCarte = (LARGEUR - COTE_QR) / 2 - 36;
   ctx.fillStyle = "#f3f5f9";
   ctx.beginPath();
@@ -264,8 +239,6 @@ async function dessinerBillet(
   for (let r = 0; r < taille; r++) {
     for (let c = 0; c < taille; c++) {
       if (modules[r * taille + c] === "1") {
-        // Arrondis au pixel, légèrement débordants : pas de filet blanc
-        // entre deux modules voisins.
         ctx.fillRect(
           Math.floor(x0 + c * pas),
           Math.floor(y0 + r * pas),
@@ -276,7 +249,6 @@ async function dessinerBillet(
     }
   }
 
-  // Code en clair, participant, consigne.
   ctx.textAlign = "center";
   ctx.fillStyle = ENCRE;
   ctx.font = polices.code;

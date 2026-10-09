@@ -42,7 +42,6 @@ import { modesProposes } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import { initialesDe, teinteDe } from "@/lib/avatars";
 
-/** Vue d'ensemble de l'espace membre. */
 export default async function VueDEnsemble() {
   const user = await getCurrentUser("membre");
   const membreOuNull = await getMember(user.memberId!);
@@ -84,7 +83,6 @@ export default async function VueDEnsemble() {
     ? inscriptions.some((r) => r.eventId === prochain.id)
     : false;
 
-  // Trois entreprises à découvrir, la sienne exclue.
   const aDecouvrir = annuaire.filter((m) => m.id !== me.id).slice(0, 3);
   const ressource = ressources[0];
   const service = services.find((s) => s.type === "payant") ?? services[0];
@@ -95,7 +93,6 @@ export default async function VueDEnsemble() {
 
   return (
     <>
-      {/* ==================== En-tête ==================== */}
       <div className="flex items-start justify-between gap-6 flex-wrap mb-6">
         <div>
           <span className="surtitre text-faint">
@@ -111,7 +108,6 @@ export default async function VueDEnsemble() {
         </Link>
       </div>
 
-      {/* ==================== Bandeau d'adhésion ==================== */}
       <BandeauAdhesion
         enAttente={enAttente}
         bloque={bloque}
@@ -119,7 +115,6 @@ export default async function VueDEnsemble() {
         jours={joursDeRetard(me)}
       />
 
-      {/* ==================== Offres & promotions membres ==================== */}
       <Card className="carte-filet filet-fixe filet-degrade p-6 mb-5">
         <div className="flex items-end justify-between gap-4 flex-wrap mb-4">
           <div>
@@ -151,7 +146,6 @@ export default async function VueDEnsemble() {
         )}
       </Card>
 
-      {/* ==================== Rendez-vous + annuaire ==================== */}
       <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
         <Card className="carte-filet filet-fixe filet-degrade p-0">
           <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-4">
@@ -181,9 +175,6 @@ export default async function VueDEnsemble() {
                 ) : null}
               </Link>
 
-              {/* Sur téléphone, la date et le titre tiennent une ligne, le tarif
-                  et le bouton la suivante : à trois blocs sur la même ligne, le
-                  titre se retrouvait à une lettre par ligne. */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 px-5 sm:px-6 py-5">
                 <div className="flex items-center gap-4 min-w-0 sm:contents">
                   <PastilleDate date={prochain.date} />
@@ -287,13 +278,11 @@ export default async function VueDEnsemble() {
         </Card>
       </div>
 
-      {/* ==================== Agenda de la semaine ==================== */}
       <CetteSemaine
         elements={semaine.filter((e) => !e.fait).slice(0, 5)}
         aujourdhui={aujourdhui}
       />
 
-      {/* ==================== Raccourcis ==================== */}
       <div className="grid gap-4 md:grid-cols-3">
         <Raccourci
           icone={<Mail size={24} />}
@@ -333,18 +322,6 @@ export default async function VueDEnsemble() {
   );
 }
 
-/* ============================ Blocs ============================ */
-
-/**
- * Bandeau d'adhésion — alertes seulement.
- *
- * Quand la cotisation est à jour, il n'y a rien à annoncer : le bandeau vert
- * occupait la meilleure place de l'écran pour dire qu'il ne se passe rien. Le
- * statut reste lisible sur « Mon entreprise » et « Cotisations & factures ».
- *
- * Les trois autres états restent : ils portent le modèle économique de la
- * chambre, un membre doit savoir que son accès se restreint et pourquoi.
- */
 function BandeauAdhesion({
   enAttente,
   bloque,
@@ -413,7 +390,6 @@ function BandeauAdhesion({
   );
 }
 
-/** Chaque teinte accorde la tuile d'icône et le filet de survol de la carte. */
 const TEINTES_COMPTEUR = {
   rouge: { tuile: "tuile-rouge", filet: "filet-rouge" },
   vert: { tuile: "tuile-verte", filet: "filet-vert" },

@@ -57,27 +57,8 @@ import { ChoixCouleur } from "./ChoixCouleur";
 import { VideoEnLien } from "./PageRessource";
 import { TexteRiche } from "./TexteRiche";
 
-/**
- * L'éditeur d'une page de ressource : on la compose bloc après bloc, comme
- * dans un éditeur de site.
- *
- * À gauche, les blocs disponibles — titre, texte, photo, vidéo — et les
- * réglages de la ressource. À droite, la page. Un bloc se glisse de la
- * colonne vers la page, à l'endroit voulu ; un clic l'ajoute à la fin. Dans
- * la page, chaque bloc se déplace par sa poignée, à la souris ou au clavier.
- * Une photo ou une vidéo glissée depuis l'ordinateur crée son bloc là où on
- * la lâche.
- *
- * Les photos et les vidéos partent dès qu'on les choisit, pour qu'on voie
- * l'envoi avancer ; l'enregistrement n'envoie plus que la description de la
- * page. Il se fait sans rechargement : un refus s'affiche ici, et rien de
- * ce qui est composé ne se perd.
- */
-
 interface Media {
-  /** Le fichier qu'on vient de choisir, pas encore enregistré. */
   local?: File;
-  /** Son aperçu, lu depuis l'ordinateur. */
   apercu?: string;
 }
 type EditeTitre = {
@@ -115,7 +96,6 @@ const NOM = Object.fromEntries(CATALOGUE.map((c) => [c.type, c.nom])) as Record<
   string
 >;
 
-/** La marque qui dit qu'on glisse l'un de nos blocs, et non un texte. */
 const MARQUE = "application/x-cancham-bloc";
 
 const versEdite = (b: Bloc, cle: string): Edite =>
@@ -142,7 +122,6 @@ const neuf = (type: TypeBloc, cle: string): Edite =>
         ? { cle, type, fichier: "", legende: "" }
         : { cle, type, source: "fichier", fichier: "", url: "" };
 
-/** Un bloc qu'on peut retirer sans rien perdre. */
 const estVide = (b: Edite) =>
   b.type === "titre"
     ? !b.texte.trim()
@@ -181,42 +160,33 @@ export function EditeurPage({
   dossiers,
   dossierParDefaut,
 }: {
-  /** La page à modifier. Absente : on en compose une nouvelle. */
   ressource?: RessourcePage;
-  /** Les dossiers de la bibliothèque, à plat, pour la liste déroulante. */
   dossiers: {
     id: string;
     nom: string;
     profondeur: number;
     restreint?: boolean;
   }[];
-  /** Le dossier ouvert quand on a cliqué « Nouvelle ressource ». */
   dossierParDefaut?: string;
 }) {
   const [blocs, setBlocs] = useState<Edite[]>(() =>
     (ressource?.blocs ?? []).map((b, i) => versEdite(b, `b${i}`)),
   );
   const compteur = useRef(0);
-  /** Le bloc où l'on travaille : lui seul montre ses commandes. */
   const [actif, setActif] = useState<string | null>(null);
   const [payant, setPayant] = useState(ressource?.type === "payant");
-  /** Ce qu'on glisse : un bloc neuf de la colonne, ou un bloc de la page. */
   const [glisse, setGlisse] = useState<
     { nouveau: TypeBloc } | { cle: string } | "fichier" | null
   >(null);
-  /** Où il se poserait : avant le bloc de ce rang. */
   const [cible, setCible] = useState<number | null>(null);
-  /** Le bloc dont on tient la poignée : lui seul est déplaçable. */
   const [saisie, setSaisie] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [modifie, setModifie] = useState(false);
   const [enCours, demarrer] = useTransition();
   const toile = useRef<HTMLDivElement>(null);
   const alerte = useRef<HTMLDivElement>(null);
-  /** Le bloc qu'on vient d'ajouter : on y mène le regard et le curseur. */
   const aMontrer = useRef<string | null>(null);
 
-  // Les fichiers choisis partent tout de suite ; un bloc retiré arrête le sien.
   const locaux = useMemo(
     () => blocs.flatMap((b) => ("local" in b && b.local ? [b.local] : [])),
     [blocs],
@@ -271,7 +241,6 @@ export function EditeurPage({
     changer((avant) => avant.filter((x) => x.cle !== b.cle));
   };
 
-  /** Une photo ou une vidéo venue de l'ordinateur, en bloc prêt à poser. */
   const blocDuFichier = (f: File): ((cle: string) => Edite) | string => {
     if (f.size > PLAFOND_FICHIER) {
       return `« ${f.name} » dépasse ${PLAFOND_FICHIER_MO} Mo.`;
@@ -301,8 +270,6 @@ export function EditeurPage({
     return `« ${f.name} » : seules les photos et les vidéos (MP4, WebM, MOV) se déposent dans la page.`;
   };
 
-  /* ---------- Glisser-déposer ---------- */
-
   const finir = () => {
     setGlisse(null);
     setCible(null);
@@ -316,7 +283,6 @@ export function EditeurPage({
     e.dataTransfer.dropEffect =
       glisse && typeof glisse === "object" && "cle" in glisse ? "move" : "copy";
     if (!glisse) setGlisse("fichier");
-    // Le rang visé : avant le premier bloc dont le milieu est sous la souris.
     const elements = Array.from(
       toile.current?.querySelectorAll<HTMLElement>(":scope > [data-bloc]") ??
         [],
@@ -343,7 +309,6 @@ export function EditeurPage({
         deplacer(glisse.cle, rang);
       }
     } else {
-      // Des fichiers venus de l'ordinateur : chacun devient un bloc.
       const refus: string[] = [];
       Array.from(e.dataTransfer.files).forEach((f, i) => {
         const bloc = blocDuFichier(f);
@@ -355,8 +320,6 @@ export function EditeurPage({
     finir();
   };
 
-  // Un fichier lâché à côté de la page ne doit pas remplacer l'éditeur par
-  // ce fichier — c'est ce que ferait le navigateur, et tout serait perdu.
   useEffect(() => {
     const retenir = (e: globalThis.DragEvent) => {
       if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
@@ -369,7 +332,6 @@ export function EditeurPage({
     };
   }, []);
 
-  // On ne quitte pas la page sans le savoir quand elle n'est pas enregistrée.
   useEffect(() => {
     if (!modifie || enCours) return;
     const prevenir = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -377,7 +339,6 @@ export function EditeurPage({
     return () => window.removeEventListener("beforeunload", prevenir);
   }, [modifie, enCours]);
 
-  // Le bloc qu'on vient d'ajouter vient à l'écran, curseur dedans.
   useEffect(() => {
     const cle = aMontrer.current;
     if (!cle) return;
@@ -395,8 +356,6 @@ export function EditeurPage({
     if (erreur) alerte.current?.scrollIntoView({ block: "nearest" });
   }, [erreur]);
 
-  /* ---------- Enregistrement ---------- */
-
   const envoyer = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const donnees = new FormData(e.currentTarget);
@@ -409,7 +368,6 @@ export function EditeurPage({
             return { type, texte, niveau, alignement, couleur };
           }
           if (b.type === "texte") return { type: b.type, lignes: b.lignes };
-          // Le fichier qu'on vient d'envoyer, sinon celui déjà rangé.
           const fichier = b.local ? (envoiDe(b.local)?.jeton ?? "") : b.fichier;
           return b.type === "photo"
             ? { type: "photo", fichier, legende: b.legende }
@@ -421,13 +379,10 @@ export function EditeurPage({
     );
     setErreur(null);
     demarrer(async () => {
-      // En cas de succès, l'action redirige : on ne revient ici que refusé.
       const reponse = await enregistrerPageRessource(donnees);
       if (!reponse?.erreur) return;
       setErreur(reponse.erreur);
       if (reponse.renvoyer) {
-        // Les fichiers envoyés d'avance ont été consommés par cet essai :
-        // ils repartent, pour que le prochain enregistrement les retrouve.
         setBlocs((avant) =>
           avant.map((b) =>
             "local" in b && b.local
@@ -451,7 +406,6 @@ export function EditeurPage({
     <form
       onSubmit={envoyer}
       onChange={() => setModifie(true)}
-      // « Entrée » dans un champ d'une ligne n'enregistre pas la page.
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
           e.preventDefault();
@@ -463,7 +417,6 @@ export function EditeurPage({
         <input type="hidden" name="resourceId" value={ressource.id} />
       ) : null}
 
-      {/* ==================== Colonne : enregistrer, blocs, réglages ==================== */}
       <div className="flex flex-col gap-4 lg:sticky lg:top-[84px] lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto lg:pr-1">
         <Card className="p-4">
           <button
@@ -509,7 +462,6 @@ export function EditeurPage({
                 onDragStart={(e) => {
                   setGlisse({ nouveau: type });
                   e.dataTransfer.effectAllowed = "copy";
-                  // Sans donnée, certains navigateurs ne lancent pas le glisser.
                   e.dataTransfer.setData(MARQUE, type);
                 }}
                 onDragEnd={finir}
@@ -594,7 +546,6 @@ export function EditeurPage({
         </Card>
       </div>
 
-      {/* ==================== La page ==================== */}
       <div className="min-w-0">
         {erreur ? (
           <div
@@ -659,8 +610,6 @@ export function EditeurPage({
                     data-bloc={b.cle}
                     draggable={saisie === b.cle}
                     onDragStart={(e) => {
-                      // Le glisser d'un texte sélectionné dans le bloc n'est
-                      // pas celui du bloc.
                       if (saisie !== b.cle) return;
                       setGlisse({ cle: b.cle });
                       e.dataTransfer.effectAllowed = "move";
@@ -675,7 +624,6 @@ export function EditeurPage({
                         : "border-transparent hover:border-line"
                     } ${tirage === b.cle ? "opacity-40" : ""}`}
                   >
-                    {/* ---------- Les commandes du bloc ---------- */}
                     <div
                       className={`absolute -top-3.5 right-3 z-10 flex items-center rounded-full border border-line bg-surface pl-0.5 pr-1 shadow-[0_4px_12px_-8px_rgb(15_29_44/0.5)] transition-opacity ${
                         ici
@@ -769,7 +717,6 @@ export function EditeurPage({
             ) : null}
           </div>
 
-          {/* ---------- Ajouter à la fin, sans glisser ---------- */}
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2 border-t border-dashed border-line pt-4">
             {CATALOGUE.map(({ type, nom, Icone }) => (
               <button
@@ -788,11 +735,6 @@ export function EditeurPage({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Briques                                                                    */
-/* -------------------------------------------------------------------------- */
-
-/** Le trait qui montre où le bloc se posera. Sa place est toujours réservée. */
 function Repere({ visible }: { visible: boolean }) {
   return (
     <div className="flex h-3.5 items-center" aria-hidden>
@@ -826,7 +768,6 @@ function Commande({
   );
 }
 
-/** Un champ d'une ligne qui s'agrandit avec son texte, sans barre de défilement. */
 function ChampAuto({
   className = "",
   ...attributs
@@ -838,7 +779,6 @@ function ChampAuto({
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
   };
-  // À chaque rendu : la taille du texte peut changer sans que la valeur change.
   useLayoutEffect(ajuster);
   return (
     <textarea
@@ -850,7 +790,6 @@ function ChampAuto({
         attributs.onInput?.(e);
       }}
       onKeyDown={(e) => {
-        // Un titre tient en un paragraphe.
         if (e.key === "Enter") e.preventDefault();
       }}
       className={`champ-fondu block w-full resize-none overflow-hidden border-0 bg-transparent p-0 text-ink placeholder:text-faint ${className}`}
@@ -936,7 +875,6 @@ function BlocTitre({
   );
 }
 
-/** Où choisir — ou lâcher — le fichier d'un bloc encore vide. */
 function ZoneDepot({
   accept,
   icone,
@@ -956,7 +894,6 @@ function ZoneDepot({
       onDragOver={(e) => {
         if (!e.dataTransfer.types.includes("Files")) return;
         e.preventDefault();
-        // Le fichier est pour ce bloc : la page n'en crée pas un autre.
         e.stopPropagation();
         setSurvol(true);
       }}
@@ -992,7 +929,6 @@ function ZoneDepot({
   );
 }
 
-/** L'envoi d'un fichier, sous son bloc : une barre, et le pourcentage. */
 function SuiviEnvoi({
   envoi,
   onReessayer,
@@ -1033,7 +969,6 @@ function SuiviEnvoi({
   );
 }
 
-/** Le même fichier, sous une autre identité : il repart de zéro. */
 const renvoyer = (f: File) => new File([f], f.name, { type: f.type });
 
 const BOUTON_MEDIA =
@@ -1083,7 +1018,6 @@ function BlocPhoto({
   return (
     <figure className="m-0">
       <div className="relative overflow-hidden rounded-[var(--radius-m)] bg-surface-2">
-        {/* Pas déplaçable : glisser la photo n'est pas glisser le bloc. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={vue}
@@ -1265,7 +1199,6 @@ function BlocVideo({
   );
 }
 
-/** La couverture de la carte, dans les réglages. */
 function ChampCouverture({ actuelle }: { actuelle: string | null }) {
   const [fichiers, setFichiers] = useState<File[]>([]);
   const [choisie, setChoisie] = useState<string | null>(null);

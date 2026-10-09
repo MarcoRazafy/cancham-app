@@ -10,12 +10,6 @@ import {
   type ElementAgenda,
 } from "@/lib/agenda";
 
-/**
- * Les prochains jours de l'agenda, sur la vue d'ensemble.
- *
- * Faute d'envoi de courriels, c'est ici — avec la cloche — qu'un rappel ou une
- * échéance se voit sans ouvrir l'agenda.
- */
 export function CetteSemaine({
   elements,
   aujourdhui,

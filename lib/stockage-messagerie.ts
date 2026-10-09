@@ -5,31 +5,16 @@ import sharp from "sharp";
 import { dossierStockage } from "@/lib/stockage";
 import { PLAFOND_FICHIER } from "@/lib/plafonds";
 
-/**
- * Pièces jointes de la messagerie : réception, contrôle et rangement.
- *
- * Les fichiers vont dans le stockage privé, jamais dans `public/` : une
- * conversation n'a pas à être lisible par qui devine une URL. Ils sont servis
- * par `/api/messagerie/pieces/[id]`, qui contrôle l'accès.
- *
- * Le type annoncé par le navigateur ne suffit pas — il se falsifie en
- * renommant un fichier. On lit donc les premiers octets : un PDF commence par
- * `%PDF-`, une vidéo MP4 ou MOV porte `ftyp` au quatrième octet, un WebM
- * commence par sa signature EBML, et une image doit pouvoir être décodée.
- */
-
 export const RACINE_MESSAGERIE = dossierStockage("messagerie");
 
 export type TypePiece = "image" | "video" | "pdf";
 
-/** Plafond par fichier : le même pour tous, celui de lib/plafonds.ts. */
 export const PLAFONDS: Record<TypePiece, number> = {
   image: PLAFOND_FICHIER,
   video: PLAFOND_FICHIER,
   pdf: PLAFOND_FICHIER,
 };
 
-/** Pièces par message, au plus. */
 export const PIECES_PAR_MESSAGE = 5;
 
 export class PieceRefusee extends Error {}
@@ -49,7 +34,6 @@ function typeDeclare(mime: string): TypePiece | null {
   return null;
 }
 
-/** Signature réelle du contenu, lue dans les premiers octets. */
 function signatureValide(type: TypePiece, octets: Buffer): boolean {
   if (type === "pdf")
     return octets.subarray(0, 5).toString("latin1") === "%PDF-";
@@ -60,13 +44,9 @@ function signatureValide(type: TypePiece, octets: Buffer): boolean {
       .equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]));
     return ftyp || webm;
   }
-  return true; // L'image est validée par son décodage, plus bas.
+  return true;
 }
 
-/**
- * Reçoit une pièce jointe. Renvoie `null` pour un champ vide ; lève
- * `PieceRefusee` avec un message lisible pour un fichier refusé.
- */
 export async function recevoirPiece(
   entree: FormDataEntryValue,
 ): Promise<PieceRecue | null> {
@@ -94,9 +74,6 @@ export async function recevoirPiece(
   const id = randomUUID();
 
   if (type === "image") {
-    // Redimensionnée et recompressée : une photo de téléphone de 5 Mo pèse
-    // quelques centaines de ko ensuite. `rotate()` applique l'orientation
-    // EXIF, et les métadonnées — coordonnées GPS comprises — disparaissent.
     let sortie: Buffer;
     try {
       sortie = await sharp(octets)
@@ -128,7 +105,6 @@ export async function recevoirPiece(
   return { nom: entree.name, type, fichier, taille: octets.length };
 }
 
-/** Chemin d'une pièce stockée. Le nom vient de la base, mais reste contrôlé. */
 export function cheminPiece(fichier: string): string {
   if (!/^[0-9a-f-]{36}\.(jpg|pdf|mp4|webm|mov)$/.test(fichier)) {
     throw new Error("Nom de pièce jointe invalide.");
@@ -136,12 +112,6 @@ export function cheminPiece(fichier: string): string {
   return path.join(RACINE_MESSAGERIE, fichier);
 }
 
-/**
- * Copie physique d'une pièce, pour un message transféré.
- *
- * Chaque message garde ses propres fichiers : supprimer l'original ne doit pas
- * vider la copie envoyée ailleurs, ni l'inverse.
- */
 export async function copierPiece(fichier: string): Promise<string> {
   const extension = fichier.split(".").pop();
   const copie = `${randomUUID()}.${extension}`;
@@ -149,12 +119,10 @@ export async function copierPiece(fichier: string): Promise<string> {
   return copie;
 }
 
-/** Efface le fichier d'une pièce. Un fichier déjà absent n'est pas une erreur. */
 export async function effacerPiece(fichier: string): Promise<void> {
   await rm(cheminPiece(fichier), { force: true });
 }
 
-/** Type MIME servi pour un nom de fichier stocké. */
 export function mimePiece(fichier: string): string {
   const ext = fichier.split(".").pop();
   return (

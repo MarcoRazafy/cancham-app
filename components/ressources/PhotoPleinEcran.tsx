@@ -3,19 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Maximize2, X } from "lucide-react";
 
-/**
- * Une photo d'une page de ressource : un clic l'ouvre en plein écran.
- *
- * Une capture d'écran, un tableau, un schéma ne se lisent pas à la largeur
- * de la colonne. La photo s'ouvre donc sur tout l'écran — le plein écran du
- * navigateur quand il l'accorde, toute la fenêtre sinon (un iPhone ne le
- * permet pas pour une image). Un clic, la croix ou Échap la referment.
- *
- * Une `<img>` ordinaire, pas `next/image` : son optimiseur mettrait la photo
- * en cache sous une adresse publique, hors du contrôle d'accès. La boîte est
- * un `<dialog>` natif, posé dans le lecteur protégé : le clic droit, le
- * glisser et la copie y restent neutralisés.
- */
 export function PhotoPleinEcran({
   src,
   legende,
@@ -24,12 +11,7 @@ export function PhotoPleinEcran({
   legende?: string;
 }) {
   const boite = useRef<HTMLDialogElement>(null);
-  /**
-   * Ce qui passe en plein écran : le contenu de la boîte, pas la boîte — le
-   * navigateur refuse le plein écran à un `<dialog>`.
-   */
   const scene = useRef<HTMLDivElement>(null);
-  /** On est passé en plein écran : en sortir referme la photo. */
   const plein = useRef(false);
   const [ouvert, setOuvert] = useState(false);
 
@@ -38,14 +20,11 @@ export function PhotoPleinEcran({
     if (!el) return;
     setOuvert(true);
     if (!el.open) el.showModal();
-    // Refusé ou absent : la photo occupe déjà toute la fenêtre.
     scene.current?.requestFullscreen?.().catch(() => {});
   };
   const fermer = () => boite.current?.close();
 
   useEffect(() => {
-    // Échap, en plein écran, ne fait que quitter le plein écran : la photo
-    // doit se refermer avec.
     const suivre = () => {
       if (document.fullscreenElement === scene.current) plein.current = true;
       else if (plein.current) {
@@ -73,7 +52,6 @@ export function PhotoPleinEcran({
           draggable={false}
           className="block h-auto w-full"
         />
-        {/* Au survol, un voile et une icône : la photo répond au clic. */}
         <span className="pointer-events-none absolute inset-0 bg-[#0f1d2c]/0 transition-colors group-hover/photo:bg-[#0f1d2c]/12" />
         <span className="pointer-events-none absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-[#0f1d2c]/70 text-white opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100">
           <Maximize2 size={15} />
@@ -95,8 +73,6 @@ export function PhotoPleinEcran({
           }
         }}
         onClick={fermer}
-        // `select-none` : une boîte de dialogue rend la sélection à ce
-        // qu'elle contient, lecteur protégé ou non.
         className="m-0 h-dvh max-h-none w-dvw max-w-none cursor-zoom-out select-none border-0 bg-black p-0 backdrop:bg-black"
       >
         <div

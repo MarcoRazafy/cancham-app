@@ -14,10 +14,6 @@ import {
 import { fmtMontant } from "@/lib/membership";
 import { enLettres } from "@/lib/reglements";
 
-/**
- * L'écriture manuscrite du bordereau : on le remplit pour le membre, mais
- * il doit ressembler à ce qu'il recopierait au guichet, stylo en main.
- */
 const manuscrite = Caveat({
   subsets: ["latin"],
   weight: ["500", "600"],
@@ -27,11 +23,6 @@ const manuscrite = Caveat({
 const VERT = "#2e5e3b";
 const ENCRE = "#27398c";
 
-/**
- * Le dépôt au guichet, d'après la maquette : une page vert d'eau, le montant
- * écrit à la main, puis le bordereau de versement déjà rempli — il n'y a
- * plus qu'à l'imprimer, ou à le recopier tel quel, et à le signer.
- */
 export function TunnelDepot(p: PropsReglement) {
   const etape = conclu(p.statut) ? 3 : p.etape === "2" ? 2 : 1;
   const somme = fmtMontant(p.montant, p.devise);
@@ -85,7 +76,6 @@ export function TunnelDepot(p: PropsReglement) {
             <p className="m-0 mb-1.5 mt-5 text-[14px] font-semibold text-ink">
               Montant en ariary
             </p>
-            {/* Le montant de la facture, comme écrit sur la ligne : il se lit, il ne se change pas. */}
             <output
               className={`${manuscrite.className} block border-b-2 border-[#2e5e3b] bg-white px-4 pb-1 pt-2 text-[42px] leading-none text-[#27398c]`}
             >
@@ -169,17 +159,11 @@ export function TunnelDepot(p: PropsReglement) {
   );
 }
 
-/** « 2026-09-28 » → « 28/09/2026 », comme on date un bordereau. */
 function dateBordereau(iso: string): string {
   const [a, m, j] = iso.split("-");
   return `${j}/${m}/${a}`;
 }
 
-/**
- * Le bordereau de versement, rempli à la main — ou presque. Un double rose
- * dépasse dessous, comme la liasse carbone du guichet ; il disparaît à
- * l'impression, où seul l'original compte.
- */
 function Bordereau({
   coordonnees: c,
   personne,

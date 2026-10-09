@@ -3,12 +3,6 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
-/**
- * Une coordonnée à recopier dans sa banque.
- *
- * Le bouton compte autant que la valeur : un IBAN retapé à la main se trompe
- * d'un caractère une fois sur dix, et le virement part alors ailleurs.
- */
 export function Copiable({
   libelle,
   valeur,
@@ -17,9 +11,7 @@ export function Copiable({
 }: {
   libelle: string;
   valeur: string;
-  /** En chasse fixe : pour ce qui se lit chiffre par chiffre. */
   mono?: boolean;
-  /** Mis en avant : la référence du motif, que tout le reste sert. */
   accent?: boolean;
 }) {
   const [copie, setCopie] = useState(false);
@@ -29,9 +21,7 @@ export function Copiable({
       await navigator.clipboard.writeText(valeur);
       setCopie(true);
       setTimeout(() => setCopie(false), 2000);
-    } catch {
-      // Presse-papier refusé — la valeur reste lisible et sélectionnable.
-    }
+    } catch {}
   };
 
   return (
@@ -74,10 +64,6 @@ export function Copiable({
   );
 }
 
-/**
- * Le bouton « Copier » seul, pour les mises en page qui ne sont pas une
- * ligne de coordonnées — le RIB dessiné comme une carte, le motif encadré.
- */
 export function BoutonCopier({
   valeur,
   libelle,
@@ -85,7 +71,6 @@ export function BoutonCopier({
   className = "",
 }: {
   valeur: string;
-  /** Ce qu'on copie, pour les lecteurs d'écran : « le RIB », « le motif ». */
   libelle: string;
   texte?: string;
   className?: string;
@@ -99,9 +84,7 @@ export function BoutonCopier({
           await navigator.clipboard.writeText(valeur);
           setCopie(true);
           setTimeout(() => setCopie(false), 2000);
-        } catch {
-          // Presse-papier refusé : la valeur reste lisible et sélectionnable.
-        }
+        } catch {}
       }}
       aria-label={`Copier ${libelle}`}
       className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border px-4 text-[14px] font-semibold transition-colors duration-200 ${className}`}

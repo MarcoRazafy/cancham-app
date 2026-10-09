@@ -9,21 +9,6 @@ import {
 } from "react";
 import { Check, LoaderCircle, TriangleAlert } from "lucide-react";
 
-/**
- * Les envois de fichiers, suivis au pourcentage.
- *
- * Un formulaire envoyé d'un bloc ne dit rien de sa progression : sur une
- * connexion lente, on ne sait pas si la photo part, ni combien il reste.
- * Chaque fichier part donc dès qu'on le choisit, vers `/api/televersements`,
- * qui répond par un jeton ; le formulaire renvoie ce jeton à la place du
- * fichier, et son enregistrement devient instantané.
- *
- * Rien ne se perd pour autant : tant que tous les jetons ne sont pas
- * arrivés, le champ garde son nom et ses fichiers — un formulaire validé
- * avant la fin, ou un envoi qui échoue, repart simplement comme avant, le
- * fichier dans le formulaire.
- */
-
 export interface Envoi {
   nom: string;
   image: boolean;
@@ -32,7 +17,6 @@ export interface Envoi {
   jeton: string | null;
   erreur: boolean;
   termine: boolean;
-  /** Terminé depuis un instant : l'indicateur commun ne le montre plus. */
   masque: boolean;
 }
 
@@ -52,7 +36,6 @@ const suivre = (rappel: () => void) => {
   };
 };
 
-/** Lance l'envoi d'un fichier — une seule fois, même demandé deux fois. */
 function envoyer(fichier: File): number {
   const connu = identifiants.get(fichier);
   if (connu !== undefined) return connu;
@@ -79,7 +62,6 @@ function envoyer(fichier: File): number {
     envoi.envoye = jeton ? envoi.taille : envoi.envoye;
     envoi.termine = true;
     prevenir();
-    // « Photo prête » reste un instant, puis la pastille s'efface.
     setTimeout(() => {
       envoi.masque = true;
       prevenir();
@@ -116,7 +98,6 @@ function envoyer(fichier: File): number {
   return id;
 }
 
-/** Arrête l'envoi d'un fichier retiré avant la fin. */
 function abandonner(fichier: File) {
   const id = identifiants.get(fichier);
   if (id === undefined) return;
@@ -129,11 +110,6 @@ export function pourcentage(e: Envoi): number {
   return e.taille ? Math.min(100, Math.round((e.envoye / e.taille) * 100)) : 0;
 }
 
-/**
- * Suit l'envoi d'une liste de fichiers : chacun part dès qu'il y figure, et
- * s'arrête s'il en sort avant la fin. `prets` vaut vrai quand tous ont leur
- * jeton — le champ peut alors les remplacer.
- */
 export function useEnvois(fichiers: File[]): {
   etats: (Envoi | null)[];
   jetons: string[] | null;
@@ -163,10 +139,6 @@ export function useEnvois(fichiers: File[]): {
   return { etats, jetons: fichiers.length ? jetons : null };
 }
 
-/**
- * Les jetons à la place des fichiers, une fois tous arrivés. À poser juste
- * à côté du champ fichier, dont on retire alors le nom.
- */
 export function JetonsEnvoyes({
   name,
   jetons,
@@ -179,13 +151,6 @@ export function JetonsEnvoyes({
   ));
 }
 
-/**
- * Un champ fichier dont les fichiers partent dès qu'on les choisit.
- *
- * S'utilise comme `<input type="file">` : mêmes attributs, même
- * `onChange`. Le pourcentage s'affiche dans l'indicateur commun, en bas de
- * l'écran.
- */
 export function EntreeFichier({
   name,
   onChange,
@@ -209,10 +174,6 @@ export function EntreeFichier({
   );
 }
 
-/**
- * L'indicateur commun : une pastille en bas de l'écran, tant qu'un envoi
- * est en cours, puis un instant pour dire qu'il est fini.
- */
 export function IndicateurEnvois() {
   useSyncExternalStore(
     suivre,

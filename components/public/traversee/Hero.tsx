@@ -8,24 +8,6 @@ import { LienAncre } from "@/components/public/LienAncre";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT, retard } from "@/lib/traversee";
 
-/**
- * Bannière d'accueil de la Traversée.
- *
- * Un diaporama des rencontres CanCham (DiaporamaHero), sous un voile bleu
- * nuit qui s'éclaircit vers la droite ; le titre en Montserrat gras, le
- * second temps en Montserrat italique, « Une nuit pour » en vert et « fêter dix
- * ans. » en rouge ; à droite, le badge « 10 ans » de la
- * chambre et le compte à rebours. En bas, le dégradé rouge vers vert de la
- * charte se déroule comme un pont : c'est le premier tracé de la ligne qui
- * traverse ensuite toute la page.
- *
- * Tout entre en cascade au chargement (`apparition`, voir globals.css) et
- * reste visible une fois joué. Les photos du fond s'enchaînent en fondu,
- * chacune avec un zoom avant.
- *
- * `billetterie` : où réserver — la fiche de l'événement sur la plateforme.
- * `prixPass` : le tarif public de cette fiche.
- */
 export function Hero({
   billetterie,
   prixPass,
@@ -118,7 +100,6 @@ export function Hero({
         </div>
       </div>
 
-      {/* Le pont : le dégradé de la charte se déroule de gauche à droite. */}
       <div
         className="pont apparition"
         style={{

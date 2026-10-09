@@ -12,22 +12,9 @@ import {
   type ModeReglement,
 } from "@/lib/modes-reglement";
 
-/**
- * Les moyens de règlement, côté serveur.
- *
- * La liste elle-même vit dans `lib/modes-reglement.ts`, sans dépendance au
- * serveur : les fenêtres de saisie en ont besoin dans le navigateur. Ici, ce
- * qui touche à la base ou au hasard.
- */
 export * from "@/lib/modes-reglement";
 export { estPortefeuilleConnu } from "@/lib/portefeuilles";
 
-/**
- * Les coordonnées de la chambre.
- *
- * Une seule ligne, créée à la première lecture : l'équipe n'a pas à penser à
- * l'initialiser avant de pouvoir remplir le formulaire.
- */
 export async function getCoordonneesPaiement(): Promise<Coordonnees> {
   const c = await prisma.coordonneesPaiement.findUnique({
     where: { id: "uniques" },
@@ -49,27 +36,12 @@ export async function getCoordonneesPaiement(): Promise<Coordonnees> {
   };
 }
 
-/**
- * Les moyens proposables en l'état : ceux dont la chambre a renseigné les
- * coordonnées, les portefeuilles, toujours offerts, et la carte une fois
- * Vanilla Pay branché. Une seule définition, pour que la fenêtre
- * d'inscription et la page des factures n'offrent jamais deux listes
- * différentes.
- */
 export async function modesProposes(): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
   const enLigne = vanillaPayActif();
   return ORDRE_MODES.filter((m) => modeDisponible(m, c, enLigne));
 }
 
-/**
- * Les moyens offerts à un visiteur qui règle une inscription publique.
- *
- * La même liste que celle des membres, à deux nuances près. La carte ne
- * s'offre qu'au-dessus du plancher du prestataire. Et un portefeuille mobile
- * ne s'offre que si la chambre en a publié le numéro : le visiteur fait
- * l'envoi lui-même, et n'a pas d'espace où revenir lire une explication.
- */
 export async function modesPublics(montant: number): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
   return ORDRE_MODES.filter((m) =>
@@ -81,23 +53,10 @@ export async function modesPublics(montant: number): Promise<ModeReglement[]> {
   );
 }
 
-/**
- * Les moyens offerts mais pas encore en service : la carte bancaire, tant
- * que les clés Vanilla Pay ne sont pas posées. La fenêtre du choix les
- * montre grisés, « Bientôt disponible », au lieu de les taire.
- */
 export function modesBientot(): ModeReglement[] {
   return vanillaPayActif() ? [] : ["carte"];
 }
 
-/**
- * La référence d'un règlement : `CC-2026-K7Q2PX`.
- *
- * C'est elle que le membre recopie dans le motif de son virement, et elle
- * seule qui permet de rattacher l'argent arrivé à qui l'a envoyé. Sans
- * chiffre parlant ni séquence : deux règlements du même jour ne doivent pas
- * se ressembler au point qu'on les confonde.
- */
 export function referenceReglement(annee = new Date().getFullYear()): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let suffixe = "";
@@ -105,7 +64,6 @@ export function referenceReglement(annee = new Date().getFullYear()): string {
   return `CC-${annee}-${suffixe}`;
 }
 
-/** Montant en toutes lettres, pour un bordereau de versement. */
 export function enLettres(n: number): string {
   const unites = [
     "zéro",

@@ -43,10 +43,6 @@ import {
 import { actionJournal, lienJournal, type FamilleJournal } from "@/lib/journal";
 import type { EntreeJournal } from "@/lib/queries-admin";
 
-/**
- * Une icône par opération : ce qui s'est passé se lit avant le libellé —
- * un membre ajouté, une facture réglée, une actualité retirée.
- */
 const ICONES: Record<string, LucideIcon> = {
   candidature_deposee: UserPlus,
   candidature_approuvee: UserCheck,
@@ -94,7 +90,6 @@ const ICONES: Record<string, LucideIcon> = {
   seed: Database,
 };
 
-/** À défaut d'icône propre, celle de la famille. */
 const ICONES_FAMILLE: Record<FamilleJournal, LucideIcon> = {
   adhesion: UserRound,
   finance: CreditCard,
@@ -102,18 +97,12 @@ const ICONES_FAMILLE: Record<FamilleJournal, LucideIcon> = {
   contenu: FileText,
 };
 
-/**
- * Tuiles pleines aux couleurs de la chambre, comme les compteurs et les
- * notifications : vert pour ce qui aboutit, rouge pour ce qui retire, bleu
- * nuit pour ce qui informe.
- */
 const TONS = {
   ok: "bg-success text-white",
   bad: "bg-accent text-white",
   info: "bg-[#14263a] text-white",
 } as const;
 
-/** « il y a 5 min », « il y a 3 h », « hier à 14:02 », « 12 sept. à 09:30 ». */
 export function ilYa(iso: string, maintenant = new Date()): string {
   const d = new Date(iso);
   const minutes = Math.round((maintenant.getTime() - d.getTime()) / 60_000);
@@ -132,7 +121,6 @@ export function ilYa(iso: string, maintenant = new Date()): string {
   return `${d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", ...(d.getFullYear() !== maintenant.getFullYear() ? { year: "numeric" } : {}) })} à ${heure}`;
 }
 
-/** Une opération du journal : ce qui s'est passé, sur quoi, par qui, quand. */
 export function LigneJournal({
   entree,
   compacte = false,

@@ -9,7 +9,6 @@ import { saveEvent } from "@/lib/actions/events";
 import type { CanchamEvent, EtapeProgramme } from "@/lib/types";
 
 interface Etape extends EtapeProgramme {
-  /** Clé stable pour React, le temps de l'édition. */
   cle: number;
 }
 
@@ -39,13 +38,8 @@ function Rubrique({
   );
 }
 
-/**
- * Formulaire complet d'un événement : ce que les membres verront sur sa
- * page — photo, horaires, public visé, programme étape par étape.
- */
 export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
   const [payant, setPayant] = useState(event?.payant ?? false);
-  // Un nouvel événement paraît aussi sur la page publique, comme jusqu'ici.
   const [publique, setPublique] = useState(event?.public ?? true);
   const [payantPublic, setPayantPublic] = useState(
     (event?.prixPublic ?? 0) > 0,

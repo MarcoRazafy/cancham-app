@@ -3,17 +3,6 @@ import { RELAIS_RETOUR } from "@/lib/retour-paiement";
 import { prisma } from "@/lib/db";
 import { simulateurActif } from "@/lib/vanillapay";
 
-/**
- * Simulateur Vanilla Pay — l'ouverture d'un paiement.
- *
- * Répond le lien de la page où « payer » : notre écran de simulation, qui
- * tient lieu de page du prestataire et de téléphone du membre. Comme le
- * vrai, le lien porte un `id` — ici, notre référence.
- *
- * Tout reste sur l'adresse d'où vient l'appel — le poste local —, même si
- * `APP_URL` désigne la plateforme en ligne : le simulateur ne doit jamais
- * envoyer quelqu'un vers la production.
- */
 const refus = (statut: number, motif: string) =>
   NextResponse.json(
     { CodeRetour: statut, DescRetour: motif, DetailRetour: "", Data: null },
@@ -46,9 +35,6 @@ export async function POST(requete: Request) {
   });
   if (!p) return refus(404, "Référence inconnue");
 
-  // La page de retour doit être l'une des nôtres — l'espace membre, ou les
-  // billets d'une inscription publique —, ramenée sur l'adresse locale : on
-  // ne renvoie nulle part ailleurs.
   const origine = new URL(requete.url).origin;
   let retourLocal: URL;
   try {
@@ -57,8 +43,6 @@ export async function POST(requete: Request) {
   } catch {
     return refus(400, "redirect_url illisible");
   }
-  // Le retour passe par le relais, qui ne mène qu'aux pages de retour de la
-  // plateforme ; les adresses directes d'avant restent acceptées.
   if (
     retourLocal.pathname !== RELAIS_RETOUR &&
     !/^\/(membre|evenements)\//.test(retourLocal.pathname)
