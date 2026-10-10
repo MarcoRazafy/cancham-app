@@ -184,6 +184,12 @@ export async function ouvrirPaiement(v: {
             "Le paiement mobile money en ligne n’est pas encore ouvert sur le compte de la chambre : faites l’envoi depuis votre téléphone, comme indiqué.",
         };
       }
+      if (detail && /international/i.test(detail)) {
+        return {
+          raison:
+            "Le paiement par carte n’est pas encore ouvert sur le compte de la chambre. En attendant, choisissez un autre moyen de paiement.",
+        };
+      }
       return {
         raison:
           detail && /montant/i.test(detail)
