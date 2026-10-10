@@ -1,21 +1,15 @@
 import type { Metadata } from "next";
 import { Montserrat, Open_Sans } from "next/font/google";
 import { connection } from "next/server";
-import { Ambiance } from "@/components/public/traversee/Ambiance";
-import { Application } from "@/components/public/traversee/Application";
 import { Billet } from "@/components/public/traversee/Billet";
 import { Defis } from "@/components/public/traversee/Defis";
-import { BarreFlottante, Final } from "@/components/public/traversee/Final";
+import { Final } from "@/components/public/traversee/Final";
 import { Hero } from "@/components/public/traversee/Hero";
-import { Mouvement } from "@/components/public/traversee/Mouvement";
-import { Partenaires } from "@/components/public/traversee/Partenaires";
-import { Pourquoi } from "@/components/public/traversee/Pourquoi";
-import { Preuves } from "@/components/public/traversee/Preuves";
+import { Interactions } from "@/components/public/traversee/Interactions";
+import { Plateforme } from "@/components/public/traversee/Plateforme";
 import { Programme } from "@/components/public/traversee/Programme";
-import { Questions } from "@/components/public/traversee/Questions";
-import { Solidarite } from "@/components/public/traversee/Solidarite";
 import { getProchainEvenementIntitule } from "@/lib/queries";
-import { EVENEMENT, lienBilletterie } from "@/lib/traversee";
+import { decompte, EVENEMENT, lienBilletterie } from "@/lib/traversee";
 import "./traversee.css";
 
 const montserrat = Montserrat({
@@ -35,15 +29,16 @@ const openSans = Open_Sans({
 });
 
 const DESCRIPTION =
-  "Vendredi 18 décembre 2026 à la CCI Ivato : expositions, Doing Business in Canada, 5 à 7 d’affaires et grand Gala des 10 ans de la Chambre de Commerce et de Coopération Canada-Madagascar. Un pass pour toute la journée.";
+  "Vendredi 18 décembre 2026, Hôtel Carlton Antananarivo : une journée d’affaires et le Gala des 10 ans de la CanCham. Expositions, panels d’experts, réseautage 5 à 7, deux défis à gagner.";
 
 export const metadata: Metadata = {
   title: "La Traversée — Gala des 10 ans",
   description: DESCRIPTION,
   alternates: { canonical: "/la-traversee" },
   openGraph: {
-    title: "La Traversée — Gala des 10 ans de la CanCham",
-    description: DESCRIPTION,
+    title: "La Traversée — Gala des 10 ans · CanCham",
+    description:
+      "Une journée pour voir plus grand. Une nuit pour fêter 10 ans. Vendredi 18 décembre 2026, Hôtel Carlton.",
     type: "website",
     images: ["/traversee/hero.jpg"],
   },
@@ -57,26 +52,19 @@ export default async function LaTraverseePage() {
     evenement && evenement.prixPublic > 0
       ? evenement.prixPublic
       : EVENEMENT.prixPass;
+  const compte = decompte();
 
   return (
     <main
       className={`vitrine-claire la-traversee w-full flex-1 ${montserrat.variable} ${openSans.variable}`}
     >
-      <div className="traversee" aria-hidden="true" />
-      <Hero billetterie={billetterie} prixPass={prixPass} />
-      <Preuves />
+      <Interactions />
+      <Hero prixPass={prixPass} decompte={compte} />
       <Programme />
-      <Pourquoi />
-      <Defis billetterie={billetterie} />
-      <Ambiance />
-      <Application />
+      <Defis />
+      <Plateforme decompte={compte} />
       <Billet billetterie={billetterie} prixPass={prixPass} />
-      <Solidarite />
-      <Partenaires />
-      <Questions />
-      <Final billetterie={billetterie} prixPass={prixPass} />
-      <BarreFlottante billetterie={billetterie} />
-      <Mouvement />
+      <Final prixPass={prixPass} decompte={compte} />
     </main>
   );
 }

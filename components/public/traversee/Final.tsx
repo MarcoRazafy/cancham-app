@@ -1,62 +1,40 @@
 import Image from "next/image";
-import Link from "next/link";
-import { CompteARebours } from "@/components/public/traversee/Mouvement";
+import { Compte } from "@/components/public/traversee/Compte";
+import { COORDONNEES } from "@/lib/coordonnees";
 import { fmtMoney } from "@/lib/format";
-import { EVENEMENT, retard } from "@/lib/traversee";
+import { EVENEMENT, type Decompte } from "@/lib/traversee";
 
 export function Final({
-  billetterie,
   prixPass,
+  decompte,
 }: {
-  billetterie: string;
   prixPass: number;
+  decompte: Decompte;
 }) {
   return (
-    <section className="final scene" aria-labelledby="titre-final">
-      <Image
-        src="/traversee/public.jpg"
-        alt=""
-        fill
-        sizes="100vw"
-        style={{ objectFit: "cover" }}
-      />
-      <div className="conteneur final-in">
-        <span className="surtitre reveler" style={{ color: "#fff" }}>
-          {EVENEMENT.dateLisible} · {EVENEMENT.lieuCourt} · places limitées
-        </span>
-        <h2 id="titre-final" className="reveler" style={retard(80)}>
-          Le 18 décembre, <span className="saillant">traversez avec nous.</span>
+    <section className="plein final nuit">
+      <Image src="/traversee/public.jpg" alt="" fill sizes="100vw" />
+      <div className="wrap">
+        <p className="ou">
+          {EVENEMENT.dateLisible} · {EVENEMENT.lieuCourt} · Places limitées
+        </p>
+        <h2>
+          Le 18 décembre, <em>traversez avec nous.</em>
         </h2>
-        <p className="reveler" style={retard(160)}>
-          Une journée pour faire affaire, une nuit pour célébrer dix ans de pont
+        <p className="rappel">
+          Une journée pour faire affaire, une nuit pour célébrer 10 ans de pont
           entre le Canada et Madagascar.
         </p>
-        <CompteARebours className="reveler" />
-        <Link
-          className="btn-action reveler"
-          style={retard(320)}
-          href={billetterie}
-        >
-          Réserver mon pass · {fmtMoney(prixPass)}{" "}
-          <span className="fleche" aria-hidden="true">
-            →
-          </span>
-        </Link>
+        <Compte decompte={decompte} />
+        <div className="actions">
+          <a className="btn btn-rouge" href="#billet">
+            Réserver mon billet · {fmtMoney(prixPass)} →
+          </a>
+        </div>
+        <p className="joindre">
+          {COORDONNEES.email} · {COORDONNEES.telephone}
+        </p>
       </div>
     </section>
-  );
-}
-
-export function BarreFlottante({ billetterie }: { billetterie: string }) {
-  return (
-    <div className="flottante" id="flottante" aria-hidden="true">
-      <div>
-        <b>{EVENEMENT.nom} · 18 décembre</b>
-        <span>Places limitées · un pass pour toute la journée</span>
-      </div>
-      <Link className="btn-action" href={billetterie} tabIndex={-1}>
-        Réserver
-      </Link>
-    </div>
   );
 }

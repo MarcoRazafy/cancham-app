@@ -1,28 +1,29 @@
+.marque .vitrine-claire.la-traversee img {
+  max-width: 100%;
+}
+.marque .vitrine-claire.la-traversee [hidden] {
+  display: none !important;
+}
 .marque .vitrine-claire.la-traversee {
-  --nuit: var(--marque-nuit);
-  --nuit-2: var(--marque-nuit-2);
-  --nuit-3: var(--marque-nuit-3);
-  --nuit-4: #24405f;
-  --rouge: var(--marque-rouge);
-  --rouge-fort: var(--accent-strong);
-  --rouge-pale: var(--accent-soft);
-  --vert: var(--marque-vert);
-  --vert-fort: var(--success-strong);
-  --vert-pale: var(--success-soft);
+  color-scheme: light;
+  --nuit: #0f1d2c;
+  --nuit-2: #16283c;
+  --nuit-3: #1d3450;
+  --bleu: #1b3a6b;
+  --rouge: #ad0707;
   --rouge-clair: #d81f3a;
-  --rouge-vif: #d81f3a;
-  --vert-clair: #2fae6a;
-  --vert-vif: #3fc98a;
+  --rouge-doux: #fbe4e7;
+  --vert: #007140;
+  --vert-clair: #3fc98a;
   --blanc: #ffffff;
-  --papier: var(--surface-2);
-  --papier-2: var(--surface-3);
-  --ligne: var(--border);
-  --texte: var(--text);
-  --texte-2: var(--text-muted);
-  --texte-3: var(--text-faint);
-  --or: #c9a24a;
-  --degrade: var(--marque-degrade);
-  --degrade-fond: linear-gradient(
+  --brume: #f4f6f9;
+  --trait: #e1e7ee;
+  --texte: #0f1d2c;
+  --doux: #4f6072;
+  --sur-nuit: rgba(255, 255, 255, 0.78);
+  --trait-nuit: rgba(255, 255, 255, 0.14);
+  --fil: linear-gradient(90deg, #ad0707, #007140);
+  --degrade: linear-gradient(
     135deg,
     #7a0a1c 0%,
     #ad0707 22%,
@@ -30,2465 +31,1765 @@
     #0f5028 82%,
     #007140 100%
   );
-  --ombre: var(--shadow);
-  --ombre-sombre:
-    0 1px 2px rgb(0 0 0 / 0.3), 0 18px 40px -24px rgb(0 0 0 / 0.7);
-  --r-s: var(--radius-s);
-  --r-m: var(--radius-m);
-  --r-l: var(--radius-l);
+  --bouton: linear-gradient(120deg, #d81f3a 0%, #ad0707 58%, #880511 100%);
+  --ombre:
+    0 1px 2px rgba(15, 29, 44, 0.06), 0 18px 40px -20px rgba(15, 29, 44, 0.3);
+  --elan: cubic-bezier(0.16, 1, 0.3, 1);
+  --barre: 0px;
   --titre: var(--font-montserrat), -apple-system, "Segoe UI", sans-serif;
-  --texte-police: var(--font-open-sans), -apple-system, "Segoe UI", sans-serif;
-  --courbe: cubic-bezier(0.22, 0.61, 0.36, 1);
-
-  font-family: var(--texte-police);
-  font-size: 16px;
-  line-height: 1.6;
+  --corps: var(--font-open-sans), -apple-system, "Segoe UI", sans-serif;
+  background: var(--blanc);
+  color: var(--texte);
+  font: 400 16px/1.6 var(--corps);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
 }
 .marque .vitrine-claire.la-traversee h1,
 .marque .vitrine-claire.la-traversee h2,
 .marque .vitrine-claire.la-traversee h3 {
   font-family: var(--titre);
-  font-weight: 700;
   margin: 0;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
   text-wrap: balance;
+  letter-spacing: -0.02em;
 }
-.marque .vitrine-claire.la-traversee .sombre :focus-visible {
-  outline-color: #fff;
+.marque .vitrine-claire.la-traversee p {
+  margin: 0;
 }
-.marque .vitrine-claire.la-traversee .tnum {
-  font-variant-numeric: tabular-nums;
+.marque .vitrine-claire.la-traversee img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-.marque .vitrine-claire.la-traversee [id] {
-  scroll-margin-top: 124px;
-}
-.marque .vitrine-claire.la-traversee .conteneur {
-  max-width: 1400px;
-  margin: 0 auto;
+.marque .vitrine-claire.la-traversee .wrap {
+  max-width: 1160px;
+  width: 100%;
+  margin-inline: auto;
   padding-inline: 20px;
 }
-@media (min-width: 768px) {
-  .marque .vitrine-claire.la-traversee .conteneur {
-    padding-inline: 40px;
-  }
-}
-
-.marque .vitrine-claire.la-traversee .surtitre {
-  font-family: var(--texte-police);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  display: inline-flex;
+.marque .vitrine-claire.la-traversee .plein {
+  min-height: calc(100vh - var(--barre));
+  min-height: calc(100svh - var(--barre));
+  display: flex;
   align-items: center;
-  gap: 10px;
+  padding-block: clamp(22px, 4.4vh, 56px);
+  scroll-margin-top: var(--barre);
 }
-.marque .vitrine-claire.la-traversee .surtitre::before {
-  content: "";
-  width: 22px;
-  height: 2px;
-  background: currentColor;
-  opacity: 0.8;
+.marque .vitrine-claire.la-traversee .brume {
+  background: var(--brume);
 }
-.marque .vitrine-claire.la-traversee .saillant {
-  font-family: var(--titre);
-  font-size: inherit;
+.marque .vitrine-claire.la-traversee .nuit {
+  background: var(--nuit);
+  color: var(--blanc);
+}
+.marque .vitrine-claire.la-traversee em.r,
+.marque .vitrine-claire.la-traversee em.v {
   font-style: italic;
-  font-weight: 600;
-  letter-spacing: -0.02em;
 }
-.marque .vitrine-claire.la-traversee .titre-section {
-  font-size: clamp(32px, 4.4vw, 56px);
-  line-height: 1.06;
+.marque .vitrine-claire.la-traversee em.r {
+  color: var(--rouge);
 }
-.marque .vitrine-claire.la-traversee .titre-bloc {
-  font-size: clamp(22px, 2.4vw, 28px);
-  line-height: 1.2;
-}
-.marque .vitrine-claire.la-traversee .chapeau {
-  font-size: clamp(16px, 1.3vw, 18px);
-  line-height: 1.65;
-  color: var(--texte-2);
-  max-width: 62ch;
-}
-.marque .vitrine-claire.la-traversee .sombre {
-  color: #fff;
-}
-.marque .vitrine-claire.la-traversee .sombre .chapeau {
-  color: rgb(255 255 255 / 0.74);
-}
-.marque .vitrine-claire.la-traversee .sombre .saillant {
-  color: var(--vert-vif);
-}
-.marque .vitrine-claire.la-traversee .clair .saillant {
+.marque .vitrine-claire.la-traversee em.v {
   color: var(--vert);
 }
-.marque .vitrine-claire.la-traversee .clair .saillant.rouge {
-  color: var(--rouge);
-}
-.marque .vitrine-claire.la-traversee .sombre .saillant.rouge,
-.marque .vitrine-claire.la-traversee .final .saillant.rouge {
+.marque .vitrine-claire.la-traversee .nuit em.r {
   color: var(--rouge-clair);
 }
-.marque .vitrine-claire.la-traversee .rouge {
-  color: var(--rouge);
+.marque .vitrine-claire.la-traversee .nuit em.v {
+  color: var(--vert-clair);
 }
-.marque .vitrine-claire.la-traversee .sombre .rouge {
-  color: var(--rouge-vif);
+.marque .vitrine-claire.la-traversee .sur {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font: 700 11px/1 var(--titre);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--doux);
 }
-
-.marque .vitrine-claire.la-traversee .btn-action,
-.marque .vitrine-claire.la-traversee .btn-contour {
-  font-family: var(--texte-police);
+.marque .vitrine-claire.la-traversee .sur::before {
+  content: "";
+  width: 40px;
+  height: 2px;
+  background: var(--fil);
 }
-.marque .vitrine-claire.la-traversee .btn-contour {
-  background: transparent;
-  border-color: rgb(255 255 255 / 0.55);
-  color: #fff;
+.marque .vitrine-claire.la-traversee .nuit .sur,
+.marque .vitrine-claire.la-traversee .defis .sur {
+  color: var(--sur-nuit);
 }
-.marque .vitrine-claire.la-traversee .btn-contour:hover {
-  background: rgb(255 255 255 / 0.1);
-  border-color: #fff;
-  transform: translateY(-1px);
+.marque .vitrine-claire.la-traversee .nuit .sur::before,
+.marque .vitrine-claire.la-traversee .defis .sur::before {
+  background: var(--blanc);
 }
-.marque .vitrine-claire.la-traversee .clair .btn-contour {
-  border-color: var(--nuit);
-  color: var(--nuit);
+.marque .vitrine-claire.la-traversee .h2 {
+  font-size: clamp(26px, min(4.4vw, 5.6vh), 48px);
+  font-weight: 800;
+  line-height: 1.06;
 }
-.marque .vitrine-claire.la-traversee .clair .btn-contour:hover {
-  background: var(--nuit);
-  color: #fff;
+.marque .vitrine-claire.la-traversee .entete {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 14px 56px;
+  align-items: end;
+  margin-bottom: clamp(18px, 3.4vh, 36px);
 }
-.marque .vitrine-claire.la-traversee .btn-blanc {
+.marque .vitrine-claire.la-traversee .entete .g {
+  display: grid;
+  gap: 14px;
+}
+.marque .vitrine-claire.la-traversee .entete p {
+  color: var(--doux);
+  font-size: 16.5px;
+}
+.marque .vitrine-claire.la-traversee .progres {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  z-index: 50;
+  background: linear-gradient(90deg, #d81f3a, #ffffff, #3fc98a);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+.marque .vitrine-claire.la-traversee .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 14px 26px;
-  border: 1px solid #fff;
-  border-radius: 5px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
+  min-height: 50px;
+  padding: 13px 26px;
+  border-radius: 8px;
+  font: 700 12.5px/1.2 var(--titre);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  white-space: nowrap;
   text-decoration: none;
-  cursor: pointer;
-  min-height: 48px;
-  background: #fff;
-  color: var(--vert-fort);
+  text-align: center;
   transition:
-    transform 0.15s var(--courbe),
-    box-shadow 0.15s ease,
-    background 0.15s;
+    transform 0.3s var(--elan),
+    box-shadow 0.3s,
+    background 0.3s,
+    border-color 0.3s;
 }
-.marque .vitrine-claire.la-traversee .btn-blanc:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px -14px rgb(0 0 0 / 0.5);
-  background: #f4f6f9;
+.marque .vitrine-claire.la-traversee .btn:focus-visible {
+  outline: 3px solid #7fb0ff;
+  outline-offset: 3px;
 }
-.marque .vitrine-claire.la-traversee .btn-blanc:active {
-  transform: translateY(0);
+.marque .vitrine-claire.la-traversee .btn-rouge {
+  background: var(--bouton);
+  color: var(--blanc);
+  box-shadow: 0 14px 28px -14px rgba(216, 31, 58, 0.9);
 }
-.marque .vitrine-claire.la-traversee .btn-action .fleche,
-.marque .vitrine-claire.la-traversee .btn-contour .fleche {
-  transition: transform 0.2s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .btn-action:hover .fleche,
-.marque .vitrine-claire.la-traversee .btn-contour:hover .fleche {
-  transform: translateX(4px);
-}
-
-.marque .vitrine-claire.la-traversee .traversee {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  z-index: 30;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    var(--rouge-clair) 0%,
-    var(--rouge) 30%,
-    rgb(255 255 255 / 0.35) 50%,
-    var(--vert) 70%,
-    var(--vert-vif) 100%
-  );
-  transform-origin: top;
-  transform: scaleY(var(--progression, 0));
-  opacity: 0.9;
-}
-.marque .vitrine-claire.la-traversee .traversee::after {
+.marque .vitrine-claire.la-traversee .btn-rouge::after {
   content: "";
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  transform: translate(0, 50%);
-  box-shadow: 0 0 0 4px rgb(255 255 255 / 0.25);
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.32) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: traversee-eclat 3.8s ease-in-out infinite;
 }
-@media (max-width: 767px) {
-  .marque .vitrine-claire.la-traversee .traversee {
-    display: none;
-  }
+.marque .vitrine-claire.la-traversee .btn-rouge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 36px -14px rgba(216, 31, 58, 1);
 }
-
+.marque .vitrine-claire.la-traversee .btn-trait {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--blanc);
+}
+.marque .vitrine-claire.la-traversee .btn-trait:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--blanc);
+  transform: translateY(-3px);
+}
+.marque .vitrine-claire.la-traversee .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
 .marque .vitrine-claire.la-traversee .hero {
   position: relative;
   overflow: hidden;
-  background: var(--nuit);
   isolation: isolate;
 }
-.marque .vitrine-claire.la-traversee .hero-photo {
+.marque .vitrine-claire.la-traversee .hero .fond {
   position: absolute;
-  inset: 0;
-  z-index: -2;
-}
-.marque .vitrine-claire.la-traversee .hero-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 40%;
-}
-.marque .vitrine-claire.la-traversee .diapo .diapo-img {
-  opacity: 0;
-  transition: opacity 2.2s ease-in-out;
-  transform: scale(1);
-}
-.marque .vitrine-claire.la-traversee .diapo .diapo-img.active {
-  opacity: 1;
-}
-.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img {
-  animation: traversee-diapo-zoom 14s ease-in-out infinite alternate;
-}
-.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(2) {
-  animation-delay: -7s;
-}
-.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(3) {
-  animation-delay: -3.5s;
-}
-.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(4) {
-  animation-delay: -10.5s;
-}
-.marque .vitrine-claire.la-traversee .diapo.anime .diapo-img:nth-child(5) {
-  animation-delay: -5s;
-}
-@keyframes traversee-diapo-zoom {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.08);
-  }
+  inset: -6% 0;
+  z-index: -3;
+  will-change: transform;
 }
 .marque .vitrine-claire.la-traversee .hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   background:
     linear-gradient(
       90deg,
-      rgb(15 29 44 / 0.96) 0%,
-      rgb(15 29 44 / 0.86) 38%,
-      rgb(15 29 44 / 0.55) 70%,
-      rgb(15 29 44 / 0.35) 100%
+      rgba(15, 29, 44, 0.96) 0%,
+      rgba(15, 29, 44, 0.86) 46%,
+      rgba(15, 29, 44, 0.5) 100%
     ),
-    linear-gradient(
-      180deg,
-      rgb(15 29 44 / 0.2) 0%,
-      rgb(15 29 44 / 0) 40%,
-      rgb(15 29 44 / 0.95) 100%
-    );
+    linear-gradient(0deg, rgba(15, 29, 44, 1) 0%, transparent 40%);
 }
-.marque .vitrine-claire.la-traversee .hero-grille {
+.marque .vitrine-claire.la-traversee .lueur-a,
+.marque .vitrine-claire.la-traversee .lueur-b {
   position: absolute;
-  inset: 0;
   z-index: -1;
-  background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.022) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.022) 1px, transparent 1px);
-  background-size: 112px 112px;
-  filter: blur(0.6px);
-  mask-image: linear-gradient(
-    180deg,
-    transparent,
-    #000 30%,
-    #000 70%,
-    transparent
-  );
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.5;
+  pointer-events: none;
 }
-.marque .vitrine-claire.la-traversee .hero-in {
+.marque .vitrine-claire.la-traversee .lueur-a {
+  width: 40vw;
+  height: 40vw;
+  left: -14vw;
+  top: -16vw;
+  background: #ad0707;
+  animation: traversee-derive 14s ease-in-out infinite alternate;
+}
+.marque .vitrine-claire.la-traversee .lueur-b {
+  width: 40vw;
+  height: 40vw;
+  right: -12vw;
+  bottom: -20vw;
+  background: #007140;
+  animation: traversee-derive 17s ease-in-out infinite alternate-reverse;
+}
+.marque .vitrine-claire.la-traversee .hero .wrap {
   position: relative;
   display: grid;
-  gap: 40px;
-  padding-block: 56px 48px;
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .hero-in {
-    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
-    align-items: end;
-    padding-block: 88px 64px;
-    gap: 48px;
-  }
+  gap: clamp(14px, 2.6vh, 26px);
 }
 .marque .vitrine-claire.la-traversee .hero h1 {
-  font-size: clamp(38px, 5.6vw, 80px);
-  line-height: 1;
-  letter-spacing: -0.03em;
+  font-size: clamp(32px, min(6vw, 8.4vh), 72px);
   font-weight: 800;
-  margin: 22px 0 24px;
-  max-width: 14ch;
+  line-height: 1.04;
 }
-.marque .vitrine-claire.la-traversee .hero h1 .l {
+.marque .vitrine-claire.la-traversee .hero h1 .ligne {
   display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
 }
-.marque .vitrine-claire.la-traversee .hero h1 .saillant {
-  font-size: 0.78em;
-  padding-right: 0.12em;
+.marque .vitrine-claire.la-traversee .hero h1 .ligne > * {
+  display: inline-block;
+  animation: traversee-monte 1s var(--elan) both;
 }
-.marque .vitrine-claire.la-traversee .hero h1 .saillant.vert {
-  color: var(--vert-vif);
+.marque .vitrine-claire.la-traversee .hero h1 .ligne:nth-child(2) > * {
+  animation-delay: 0.12s;
 }
-.marque .vitrine-claire.la-traversee .hero h1 .saillant.rouge {
-  color: var(--rouge-vif);
+.marque .vitrine-claire.la-traversee .hero h1 .ligne:nth-child(3) > * {
+  animation-delay: 0.26s;
 }
-.marque .vitrine-claire.la-traversee .hero .chapeau {
-  max-width: 56ch;
-  color: rgb(255 255 255 / 0.8);
+.marque .vitrine-claire.la-traversee .hero h1 em {
+  font-weight: 700;
 }
-.marque .vitrine-claire.la-traversee .hero-infos {
+.marque .vitrine-claire.la-traversee .hero .chapo {
+  font-size: clamp(15.5px, 1.7vw, 18px);
+  color: var(--sur-nuit);
+  max-width: 54ch;
+}
+.marque .vitrine-claire.la-traversee .hero .chapo strong {
+  color: var(--blanc);
+  font-weight: 600;
+}
+.marque .vitrine-claire.la-traversee .reperes {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 26px;
-  margin: 26px 0 30px;
-  font-weight: 600;
-  font-size: 15px;
+  gap: 8px 28px;
+  font: 600 14px/1.4 var(--titre);
 }
-.marque .vitrine-claire.la-traversee .hero-infos span {
+.marque .vitrine-claire.la-traversee .reperes span {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
 }
-.marque .vitrine-claire.la-traversee .hero-infos svg {
-  color: rgb(255 255 255 / 0.85);
-  flex-shrink: 0;
+.marque .vitrine-claire.la-traversee .reperes svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
 }
-.marque .vitrine-claire.la-traversee .hero-infos .places {
-  color: #ffd2d8;
-}
-.marque .vitrine-claire.la-traversee .hero-cta {
+.marque .vitrine-claire.la-traversee .bas {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
+  align-items: stretch;
+  justify-content: space-between;
 }
-.marque .vitrine-claire.la-traversee .hero-droite {
+.marque .vitrine-claire.la-traversee .gagner {
   display: flex;
-  flex-direction: column;
-  gap: 22px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(15, 29, 44, 0.6);
+  border: 1px solid var(--trait-nuit);
+  backdrop-filter: blur(10px);
 }
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .hero-droite {
-    align-items: flex-end;
-    text-align: right;
-  }
+.marque .vitrine-claire.la-traversee .gagner .etiq {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--bouton);
+  font: 700 11px/1 var(--titre);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
-.marque .vitrine-claire.la-traversee .badge-10 {
-  width: min(300px, 70%);
-  height: auto;
-  filter: drop-shadow(0 18px 30px rgb(0 0 0 / 0.45));
-  animation: traversee-levitation 7s ease-in-out infinite;
+.marque .vitrine-claire.la-traversee .gagner .etiq::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--blanc);
+  animation: traversee-pouls 1.8s ease-in-out infinite;
 }
-@keyframes traversee-levitation {
-  50% {
-    transform: translateY(-10px);
-  }
+.marque .vitrine-claire.la-traversee .gagner .lots {
+  position: relative;
+  height: 42px;
+  min-width: 250px;
+  flex: 1;
+}
+.marque .vitrine-claire.la-traversee .gagner .lots div {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  animation: traversee-alterne 8s infinite;
+}
+.marque .vitrine-claire.la-traversee .gagner .lots div:nth-child(2) {
+  animation-delay: -4s;
+}
+.marque .vitrine-claire.la-traversee .gagner strong {
+  font: 800 16px/1.2 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .gagner small {
+  font-size: 12.5px;
+  color: var(--sur-nuit);
+  line-height: 1.3;
+}
+.marque .vitrine-claire.la-traversee .gagner a {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--blanc);
+  text-decoration: none;
+  font: 700 12px/1 var(--titre);
+  white-space: nowrap;
+  transition: background 0.3s;
+}
+.marque .vitrine-claire.la-traversee .gagner a:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 .marque .vitrine-claire.la-traversee .compte {
-  display: inline-grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: 8px;
-  padding: 12px;
-  border-radius: var(--r-m);
-  background: rgb(255 255 255 / 0.06);
-  border: 1px solid rgb(255 255 255 / 0.14);
-  backdrop-filter: blur(8px);
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(15, 29, 44, 0.6);
+  border: 1px solid var(--trait-nuit);
+  backdrop-filter: blur(10px);
 }
 .marque .vitrine-claire.la-traversee .compte div {
-  min-width: 64px;
+  min-width: 68px;
+  padding: 9px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
   text-align: center;
-  padding: 8px 4px;
-  border-radius: var(--r-s);
-  background: rgb(15 29 44 / 0.55);
 }
 .marque .vitrine-claire.la-traversee .compte b {
   display: block;
-  font-family: var(--titre);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-size: clamp(28px, 3vw, 40px);
-  line-height: 1;
-  color: #fff;
-  transition:
-    transform 0.25s var(--courbe),
-    opacity 0.25s;
+  font: 800 clamp(22px, 3.2vw, 32px)/1 var(--titre);
+  font-variant-numeric: tabular-nums;
 }
-.marque .vitrine-claire.la-traversee .compte b.tic {
-  animation: traversee-tic 0.35s var(--courbe);
-}
-@keyframes traversee-tic {
-  0% {
-    transform: translateY(-8px);
-    opacity: 0;
-  }
-  100% {
-    transform: none;
-    opacity: 1;
-  }
-}
-.marque .vitrine-claire.la-traversee .compte span {
+.marque .vitrine-claire.la-traversee .compte small {
   display: block;
   margin-top: 6px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: rgb(255 255 255 / 0.6);
-  font-weight: 700;
+  font: 600 9.5px/1 var(--titre);
+  letter-spacing: 0.2em;
+  color: var(--sur-nuit);
 }
-.marque .vitrine-claire.la-traversee .compte-legende {
-  font-size: 13px;
-  color: rgb(255 255 255 / 0.6);
-}
-.marque .vitrine-claire.la-traversee .pont {
-  height: 3px;
-  background: var(--degrade);
-  transform-origin: left;
-}
-.marque .vitrine-claire.la-traversee .lots-barre {
+.marque .vitrine-claire.la-traversee .frise-h {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 30px;
-  padding: 8px 8px 8px 10px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.07);
-  border: 1px solid rgb(255 255 255 / 0.16);
-  backdrop-filter: blur(10px);
-  max-width: 680px;
-  overflow: hidden;
-  transition:
-    background 0.3s,
-    border-color 0.3s;
+  height: 14px;
+  margin-bottom: clamp(10px, 2vh, 20px);
 }
-.marque .vitrine-claire.la-traversee .lots-barre:hover {
-  background: rgb(255 255 255 / 0.1);
-  border-color: rgb(255 255 255 / 0.28);
-}
-.marque .vitrine-claire.la-traversee .lots-etiquette {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  padding: 9px 14px;
-  border-radius: 999px;
-  background-image: var(--bouton-rouge);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-.marque .vitrine-claire.la-traversee .lots-pouls {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 0 0 rgb(255 255 255 / 0.6);
-  animation: traversee-pulse 1.8s infinite;
-}
-.marque .vitrine-claire.la-traversee .lots-fenetre {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  height: 44px;
-}
-.marque .vitrine-claire.la-traversee .lots-item {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  transition:
-    transform 0.55s var(--courbe),
-    opacity 0.45s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .lots-item.attente {
-  transform: translateY(110%);
-  opacity: 0;
-}
-.marque .vitrine-claire.la-traversee .lots-item.actif {
-  transform: none;
-  opacity: 1;
-}
-.marque .vitrine-claire.la-traversee .lots-item.sorti {
-  transform: translateY(-110%);
-  opacity: 0;
-}
-.marque .vitrine-claire.la-traversee .lots-ico {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  background: rgb(255 255 255 / 0.1);
-}
-.marque .vitrine-claire.la-traversee .lots-ico {
-  color: rgb(255 255 255 / 0.85);
-}
-.marque .vitrine-claire.la-traversee .lots-texte {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  line-height: 1.2;
-}
-.marque .vitrine-claire.la-traversee .lots-texte b {
-  font-family: var(--titre);
-  font-weight: 800;
-  font-size: 16px;
-  color: #fff;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.marque .vitrine-claire.la-traversee .lots-texte small {
-  font-size: 12px;
-  color: rgb(255 255 255 / 0.68);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.marque .vitrine-claire.la-traversee .lots-points {
-  display: flex;
-  gap: 5px;
-  flex-shrink: 0;
-}
-.marque .vitrine-claire.la-traversee .lots-points button {
-  width: 6px;
-  height: 6px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.3);
-  cursor: pointer;
-  transition:
-    background 0.3s,
-    width 0.3s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .lots-points button.on {
-  width: 18px;
-  border-radius: 3px;
-  background: #fff;
-}
-.marque .vitrine-claire.la-traversee .lots-lien {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  padding: 9px 14px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 700;
-  text-decoration: none;
-  border: 1px solid rgb(255 255 255 / 0.22);
-  transition:
-    background 0.2s,
-    border-color 0.2s;
-}
-.marque .vitrine-claire.la-traversee .lots-lien:hover {
-  background: rgb(255 255 255 / 0.12);
-  border-color: #fff;
-}
-.marque .vitrine-claire.la-traversee .lots-lien svg {
-  transition: transform 0.25s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .lots-lien:hover svg {
-  transform: translateX(3px);
-}
-.marque .vitrine-claire.la-traversee .lots-reflet {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -40%;
-  width: 30%;
-  pointer-events: none;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    rgb(255 255 255 / 0.12),
-    transparent
-  );
-  transform: skewX(-18deg);
-  animation: traversee-lots-balayage 7s var(--courbe) infinite;
-}
-@keyframes traversee-lots-balayage {
-  0%,
-  70% {
-    left: -40%;
-  }
-  100% {
-    left: 130%;
-  }
-}
-.marque .vitrine-claire.la-traversee .lots-barre[data-pause] .lots-reflet {
-  animation-play-state: paused;
-}
-@media (max-width: 640px) {
-  .marque .vitrine-claire.la-traversee .lots-barre {
-    flex-wrap: wrap;
-    border-radius: var(--r-l);
-    padding: 10px;
-    gap: 10px;
-  }
-  .marque .vitrine-claire.la-traversee .lots-fenetre {
-    flex-basis: 100%;
-    order: 3;
-    height: 46px;
-  }
-  .marque .vitrine-claire.la-traversee .lots-points {
-    order: 2;
-    margin-left: auto;
-  }
-  .marque .vitrine-claire.la-traversee .lots-lien {
-    order: 4;
-    flex-basis: 100%;
-    justify-content: center;
-  }
-}
-
-.marque .vitrine-claire.la-traversee .preuves {
-  background: var(--degrade-fond);
-  color: #fff;
-}
-.marque .vitrine-claire.la-traversee .preuves-in {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  background: rgb(255 255 255 / 0.14);
-  border-radius: var(--r-m);
-  overflow: hidden;
-}
-@media (min-width: 768px) {
-  .marque .vitrine-claire.la-traversee .preuves-in {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-.marque .vitrine-claire.la-traversee .preuves-in div {
-  background: rgb(15 29 44 / 0.55);
-  padding: 26px 22px;
-  backdrop-filter: blur(4px);
-}
-.marque .vitrine-claire.la-traversee .preuves b {
-  display: block;
-  font-family: var(--titre);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  font-size: clamp(34px, 3.6vw, 52px);
-  line-height: 1;
-}
-.marque .vitrine-claire.la-traversee .preuves .lbl {
-  display: block;
-  margin-top: 6px;
-  font-size: 14px;
-  color: rgb(255 255 255 / 0.75);
-  line-height: 1.4;
-}
-
-.marque .vitrine-claire.la-traversee .section {
-  padding-block: 72px;
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .section {
-    padding-block: 104px;
-  }
-}
-.marque .vitrine-claire.la-traversee .clair {
-  background: var(--blanc);
-  color: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .clair.papier {
-  background: var(--papier);
-}
-.marque .vitrine-claire.la-traversee .sombre {
-  background: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .tete {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 760px;
-  margin-bottom: 44px;
-}
-.marque .vitrine-claire.la-traversee .tete .surtitre {
-  color: var(--rouge);
-}
-.marque .vitrine-claire.la-traversee .sombre .tete .surtitre {
-  color: var(--rouge-vif);
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .tete.ligne {
-    flex-direction: row;
-    align-items: flex-end;
-    justify-content: space-between;
-    max-width: none;
-  }
-  .marque .vitrine-claire.la-traversee .tete.ligne > div {
-    max-width: 620px;
-  }
-  .marque .vitrine-claire.la-traversee .tete.ligne .chapeau {
-    max-width: 44ch;
-    margin-bottom: 6px;
-  }
-}
-
-.marque .vitrine-claire.la-traversee .parcours {
-  position: relative;
-  display: grid;
-  gap: 22px;
-  padding-left: 34px;
-}
-.marque .vitrine-claire.la-traversee .parcours::before {
-  content: "";
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  bottom: 8px;
-  width: 2px;
-  background: linear-gradient(180deg, var(--rouge), var(--vert));
-  transform-origin: top;
-  border-radius: 2px;
-}
-.marque .vitrine-claire.la-traversee .scene[data-visible] .parcours::before {
-  animation: traversee-tracer-v 1.4s var(--courbe) both;
-}
-@keyframes traversee-tracer-v {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: none;
-  }
-}
-.marque .vitrine-claire.la-traversee .etape {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  border: 1px solid var(--ligne);
-  border-radius: var(--r-m);
-  box-shadow: var(--ombre);
-  transition:
-    transform 0.35s var(--courbe),
-    box-shadow 0.35s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .etape:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 24px 48px -28px rgb(15 29 44 / 0.45);
-}
-.marque .vitrine-claire.la-traversee .etape::before {
-  content: "";
-  position: absolute;
-  left: -30px;
-  top: 14px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid var(--rouge);
-  box-shadow: 0 0 0 5px var(--blanc);
-  transition:
-    transform 0.3s var(--courbe),
-    background 0.3s;
-  z-index: 2;
-}
-.marque .vitrine-claire.la-traversee .etape:nth-child(2)::before {
-  border-color: #6d2a2a;
-}
-.marque .vitrine-claire.la-traversee .etape:nth-child(3)::before {
-  border-color: #2a5a3a;
-}
-.marque .vitrine-claire.la-traversee .etape:nth-child(4)::before {
-  border-color: var(--vert);
-  background: var(--vert);
-}
-.marque .vitrine-claire.la-traversee .etape:hover::before {
-  transform: scale(1.5);
-}
-.marque .vitrine-claire.la-traversee .etape figure {
-  margin: 0;
-  position: relative;
-  aspect-ratio: 16/10;
-  max-width: 100%;
-  overflow: hidden;
-  background: var(--nuit);
-  border-radius: var(--r-m) var(--r-m) 0 0;
-}
-.marque .vitrine-claire.la-traversee .etape figure img {
-  transition: transform 1.2s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .etape:hover figure img {
-  transform: scale(1.06);
-}
-.marque .vitrine-claire.la-traversee .etape figcaption {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgb(15 29 44 / 0.75);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  backdrop-filter: blur(6px);
-}
-.marque .vitrine-claire.la-traversee .etape-corps {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px 20px 22px;
-  flex: 1;
-}
-.marque .vitrine-claire.la-traversee .etape time {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--rouge-pale);
-  color: var(--rouge);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.marque .vitrine-claire.la-traversee .etape h3 {
-  font-size: clamp(20px, 1.7vw, 23px);
-}
-.marque .vitrine-claire.la-traversee .etape p {
-  color: var(--texte-2);
-  font-size: 15px;
-  line-height: 1.55;
-}
-.marque .vitrine-claire.la-traversee .etape.phare {
-  background: var(--nuit);
-  color: #fff;
-  border-color: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .etape.phare .etape-corps {
-  position: relative;
-  overflow: hidden;
-  border-radius: 0 0 var(--r-m) var(--r-m);
-}
-.marque .vitrine-claire.la-traversee .etape.phare .etape-corps::after {
-  content: "";
-  position: absolute;
-  inset: auto -30% -30% auto;
-  width: 70%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgb(0 113 64 / 0.45), transparent 70%);
-  pointer-events: none;
-}
-.marque .vitrine-claire.la-traversee .etape.phare .etape-corps > * {
-  position: relative;
-  z-index: 1;
-}
-.marque .vitrine-claire.la-traversee .etape.phare time {
-  background: rgb(255 255 255 / 0.12);
-  color: var(--vert-vif);
-}
-.marque .vitrine-claire.la-traversee .etape.phare p {
-  color: rgb(255 255 255 / 0.8);
-}
-.marque .vitrine-claire.la-traversee .etape.phare .mention {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #fff;
-  background-image: var(--bouton-rouge);
-  padding: 6px 10px;
-  border-radius: 999px;
-}
-.marque .vitrine-claire.la-traversee .etape.phare ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 6px;
-}
-.marque .vitrine-claire.la-traversee .etape.phare li {
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.1);
-  border: 1px solid rgb(255 255 255 / 0.14);
-}
-@media (min-width: 768px) and (max-width: 1023px) {
-  .marque .vitrine-claire.la-traversee .parcours {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .parcours {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 22px;
-    padding-left: 0;
-    padding-top: 34px;
-    align-items: stretch;
-  }
-  .marque .vitrine-claire.la-traversee .parcours::before {
-    left: 8px;
-    right: 8px;
-    top: 8px;
-    bottom: auto;
-    height: 2px;
-    width: auto;
-    background: var(--degrade);
-    transform-origin: left;
-  }
-  .marque .vitrine-claire.la-traversee .scene[data-visible] .parcours::before {
-    animation-name: traversee-tracer-h;
-  }
-  @keyframes traversee-tracer-h {
-    from {
-      transform: scaleX(0);
-    }
-    to {
-      transform: none;
-    }
-  }
-  .marque .vitrine-claire.la-traversee .etape::before {
-    left: 0;
-    top: -32px;
-  }
-}
-
-.marque .vitrine-claire.la-traversee .bento {
-  display: grid;
-  gap: 14px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 768px) {
-  .marque .vitrine-claire.la-traversee .bento {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .marque .vitrine-claire.la-traversee .bento .grande {
-    grid-column: span 2;
-  }
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .bento {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-auto-rows: minmax(280px, auto);
-  }
-  .marque .vitrine-claire.la-traversee .bento .grande {
-    grid-column: span 2;
-  }
-}
-.marque .vitrine-claire.la-traversee .raison {
-  position: relative;
-  border-radius: var(--r-m);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 22px;
-  background: #fff;
-  border: 1px solid var(--ligne);
-  min-height: 220px;
-  transition:
-    transform 0.35s var(--courbe),
-    box-shadow 0.35s var(--courbe),
-    border-color 0.3s;
-}
-.marque .vitrine-claire.la-traversee .raison:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--ombre);
-  border-color: transparent;
-}
-.marque .vitrine-claire.la-traversee .raison .num {
-  position: absolute;
-  top: 14px;
-  right: 18px;
-  font-family: var(--titre);
-  font-weight: 800;
-  font-size: 46px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: rgb(15 29 44 / 0.07);
-  transition: color 0.3s;
-}
-.marque .vitrine-claire.la-traversee .raison:hover .num {
-  color: rgb(173 7 7 / 0.14);
-}
-.marque .vitrine-claire.la-traversee .raison h3 {
-  font-size: clamp(19px, 1.6vw, 22px);
-}
-.marque .vitrine-claire.la-traversee .raison p {
-  color: var(--texte-2);
-  font-size: 14.5px;
-  line-height: 1.55;
-}
-.marque .vitrine-claire.la-traversee .raison .ico {
-  width: 40px;
-  height: 40px;
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  background: var(--papier);
-  color: var(--nuit);
-  border: 1px solid var(--ligne);
-  margin-bottom: auto;
-  transition:
-    background 0.3s,
-    color 0.3s;
-}
-.marque .vitrine-claire.la-traversee .raison:hover .ico {
-  background: var(--nuit);
-  color: #fff;
-}
-.marque .vitrine-claire.la-traversee .raison.grande {
-  color: #fff;
-  border: 0;
-  min-height: 300px;
-  background: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .raison.grande img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 1.4s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .raison.grande:hover img {
-  transform: scale(1.06);
-}
-.marque .vitrine-claire.la-traversee .raison.grande::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgb(15 29 44 / 0.05) 20%,
-    rgb(15 29 44 / 0.92) 90%
-  );
-}
-.marque .vitrine-claire.la-traversee .raison.grande > *:not(img) {
-  position: relative;
-  z-index: 1;
-}
-.marque .vitrine-claire.la-traversee .raison.grande .num {
-  position: absolute;
-  z-index: 1;
-  color: rgb(255 255 255 / 0.22);
-}
-.marque .vitrine-claire.la-traversee .raison.grande:hover .num {
-  color: rgb(255 255 255 / 0.4);
-}
-.marque .vitrine-claire.la-traversee .raison.grande p {
-  color: rgb(255 255 255 / 0.82);
-}
-.marque .vitrine-claire.la-traversee .raison.grande h3 {
-  font-size: clamp(24px, 2.2vw, 32px);
-}
-
-.marque .vitrine-claire.la-traversee .defis {
-  background: var(--degrade-fond);
-  color: #fff;
-  position: relative;
-  overflow: hidden;
-}
-.marque .vitrine-claire.la-traversee .defis::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
-  background-size: 68px 68px;
-  pointer-events: none;
-}
-.marque .vitrine-claire.la-traversee .defis .conteneur {
-  position: relative;
-}
-.marque .vitrine-claire.la-traversee .defis .tete .surtitre {
-  color: #fff;
-}
-.marque .vitrine-claire.la-traversee .cartes-defis {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 768px) {
-  .marque .vitrine-claire.la-traversee .cartes-defis {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.marque .vitrine-claire.la-traversee .defi {
-  background: #fff;
-  color: var(--nuit);
-  border-radius: var(--r-m);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--ombre-sombre);
-  transition:
-    transform 0.4s var(--courbe),
-    box-shadow 0.4s var(--courbe);
-  position: relative;
-}
-.marque .vitrine-claire.la-traversee .defi:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 30px 60px -28px rgb(0 0 0 / 0.7);
-}
-.marque .vitrine-claire.la-traversee .defi-visuel {
-  position: relative;
-  aspect-ratio: 4/3;
-  max-width: 100%;
-  overflow: hidden;
-  background: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .defi-visuel img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.9s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .defi:hover .defi-visuel img {
-  transform: scale(1.06);
-}
-.marque .vitrine-claire.la-traversee .defi-num {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-family: var(--titre);
-  font-size: 20px;
-  color: #fff;
-  background-image: var(--bouton-rouge);
-  box-shadow: 0 8px 18px -8px rgb(0 0 0 / 0.6);
-}
-.marque .vitrine-claire.la-traversee .defi-quand {
-  position: absolute;
-  right: 14px;
-  top: 14px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.92);
-  color: var(--nuit);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.marque .vitrine-claire.la-traversee .defi-corps {
-  padding: 22px 22px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-}
-.marque .vitrine-claire.la-traversee .defi h3 {
-  font-size: 24px;
-}
-.marque .vitrine-claire.la-traversee .defi .lot {
-  font-family: var(--titre);
-  font-size: clamp(28px, 2.6vw, 34px);
-  color: var(--vert);
-  line-height: 1;
-}
-.marque .vitrine-claire.la-traversee .defi p {
-  color: var(--texte-2);
-  font-size: 15px;
-  line-height: 1.55;
-}
-.marque .vitrine-claire.la-traversee .defi .regle {
-  margin-top: auto;
-  padding-top: 14px;
-  border-top: 1px solid var(--ligne);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--nuit);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.marque .vitrine-claire.la-traversee .defi .regle svg {
-  color: var(--texte-2);
-  flex-shrink: 0;
-}
-.marque .vitrine-claire.la-traversee .defi::after {
+.marque .vitrine-claire.la-traversee .frise-h::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 4px;
-  background: var(--degrade);
+  top: 6px;
+  height: 2px;
+  background: var(--fil);
+  transform-origin: 0 50%;
+  transition: transform 2s var(--elan);
+}
+.marque .vitrine-claire.la-traversee.js .frise-h:not(.vu)::before {
   transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.6s var(--courbe);
 }
-.marque .vitrine-claire.la-traversee .defi:hover::after {
-  transform: none;
+.marque .vitrine-claire.la-traversee .frise-h i {
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--blanc);
+  border: 2px solid var(--rouge);
 }
-.marque .vitrine-claire.la-traversee .defis .note {
-  margin-top: 28px;
+.marque .vitrine-claire.la-traversee .frise-h i:nth-child(1) {
+  left: 0;
+}
+.marque .vitrine-claire.la-traversee .frise-h i:nth-child(2) {
+  left: calc(25% + 4px);
+}
+.marque .vitrine-claire.la-traversee .frise-h i:nth-child(3) {
+  left: calc(50% + 8px);
+  border-color: var(--bleu);
+}
+.marque .vitrine-claire.la-traversee .frise-h i:nth-child(4) {
+  left: calc(75% + 12px);
+  border-color: var(--vert);
+  background: var(--vert);
+}
+.marque .vitrine-claire.la-traversee .cartes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.marque .vitrine-claire.la-traversee .carte {
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.5s var(--elan),
+    box-shadow 0.5s;
+}
+.marque .vitrine-claire.la-traversee .carte:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--ombre);
+}
+.marque .vitrine-claire.la-traversee .carte .vue {
+  position: relative;
+  height: clamp(100px, 19vh, 180px);
+  overflow: hidden;
+  flex: none;
+}
+.marque .vitrine-claire.la-traversee .carte .vue img {
+  transition: transform 1.2s var(--elan);
+}
+.marque .vitrine-claire.la-traversee .carte:hover .vue img {
+  transform: scale(1.08);
+}
+.marque .vitrine-claire.la-traversee .carte .vue span {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  background: rgba(15, 29, 44, 0.85);
+  color: var(--blanc);
+  font: 700 10px/1 var(--titre);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .carte .txt {
+  padding: clamp(14px, 2.4vh, 22px) 20px;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  flex: 1;
+}
+.marque .vitrine-claire.la-traversee .carte .heure {
+  justify-self: start;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--rouge-doux);
+  color: var(--rouge);
+  font: 700 10.5px/1 var(--titre);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .carte h3 {
+  font-size: clamp(18px, 1.8vw, 21px);
+  font-weight: 800;
+  line-height: 1.15;
+}
+.marque .vitrine-claire.la-traversee .carte p {
+  color: var(--doux);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.marque .vitrine-claire.la-traversee .carte.phare {
+  background: var(--nuit);
+  color: var(--blanc);
+  border-color: var(--nuit);
+}
+.marque .vitrine-claire.la-traversee .carte.phare .vue span {
+  background: var(--bouton);
+}
+.marque .vitrine-claire.la-traversee .carte.phare .heure {
+  background: rgba(63, 201, 138, 0.16);
+  color: var(--vert-clair);
+}
+.marque .vitrine-claire.la-traversee .chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 28px;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-  color: rgb(255 255 255 / 0.78);
+  gap: 8px;
 }
-.marque .vitrine-claire.la-traversee .defis .note a {
-  color: #fff;
-  font-weight: 700;
+.marque .vitrine-claire.la-traversee .chips li {
+  padding: 8px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--trait-nuit);
+  background: rgba(255, 255, 255, 0.06);
+  font: 600 12.5px/1.2 var(--titre);
+  transition:
+    background 0.3s,
+    transform 0.3s var(--elan);
 }
-
-.marque .vitrine-claire.la-traversee .mosaique {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: 170px;
+.marque .vitrine-claire.la-traversee .chips li:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
 }
-.marque .vitrine-claire.la-traversee .mosaique figure {
-  margin: 0;
-  position: relative;
-  border-radius: var(--r-m);
-  overflow: hidden;
-  background: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .mosaique figure:first-child {
-  grid-column: span 2;
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .mosaique {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    grid-template-rows: repeat(3, 210px);
-    grid-auto-rows: 210px;
-  }
-  .marque .vitrine-claire.la-traversee .mosaique figure,
-  .marque .vitrine-claire.la-traversee .mosaique figure:first-child {
-    grid-area: var(--zone);
-  }
-}
-.marque .vitrine-claire.la-traversee .mosaique img {
-  transition: transform 1.1s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .mosaique figure::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 55%,
-    rgb(15 29 44 / 0.7) 100%
-  );
-  opacity: 0.9;
-  transition: opacity 0.4s;
-}
-.marque .vitrine-claire.la-traversee .mosaique figure:hover img {
-  transform: scale(1.07);
-}
-.marque .vitrine-claire.la-traversee .mosaique figure:hover::after {
-  opacity: 1;
-}
-.marque .vitrine-claire.la-traversee .mosaique figcaption {
-  position: absolute;
-  left: 14px;
-  bottom: 12px;
-  z-index: 1;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 8px rgb(0 0 0 / 0.4);
-  transition: transform 0.4s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .mosaique figure:hover figcaption {
-  transform: translateY(-4px);
-}
-.marque .vitrine-claire.la-traversee .legende {
+.marque .vitrine-claire.la-traversee .panels {
   margin-top: 14px;
-  font-size: 13px;
-  color: var(--texte-3);
+  border-radius: 14px;
+  padding: clamp(12px, 2.2vh, 20px) 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  align-items: center;
 }
-
-.marque .vitrine-claire.la-traversee .appli {
+.marque .vitrine-claire.la-traversee .panels h3 {
+  font-size: 17px;
+  font-weight: 800;
+}
+.marque .vitrine-claire.la-traversee .defis {
+  background: var(--degrade);
+  background-size: 160% 160%;
+  animation: traversee-glisse 14s ease-in-out infinite alternate;
+  color: var(--blanc);
+}
+.marque .vitrine-claire.la-traversee .defis .entete p {
+  color: var(--sur-nuit);
+}
+.marque .vitrine-claire.la-traversee .deux {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.marque .vitrine-claire.la-traversee .defis .actions {
+  margin-top: clamp(16px, 3vh, 30px);
+}
+.marque .vitrine-claire.la-traversee .defis .note {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13.5px;
+}
+.marque .vitrine-claire.la-traversee .plateforme {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
-.marque .vitrine-claire.la-traversee .appli::before {
+.marque .vitrine-claire.la-traversee .plateforme::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -1;
   background:
     radial-gradient(
-      700px 500px at 12% 60%,
-      rgb(0 113 64 / 0.32),
-      transparent 60%
+      45% 55% at 0% 100%,
+      rgba(0, 113, 64, 0.35),
+      transparent 65%
     ),
-    radial-gradient(700px 500px at 92% 10%, rgb(173 7 7 / 0.3), transparent 60%);
-  pointer-events: none;
+    radial-gradient(40% 50% at 100% 0%, rgba(173, 7, 7, 0.3), transparent 65%);
 }
-.marque .vitrine-claire.la-traversee .appli .conteneur {
-  position: relative;
+.marque .vitrine-claire.la-traversee .plateforme .wrap {
   display: grid;
-  gap: 48px;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 64px;
   align-items: center;
 }
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .appli .conteneur {
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 80px;
-  }
-}
-.marque .vitrine-claire.la-traversee .telephone-cadre {
-  width: 300px;
-  max-width: 100%;
-  margin: 0 auto;
-  animation: traversee-levitation 6s ease-in-out infinite;
-  perspective: 1200px;
-}
-.marque .vitrine-claire.la-traversee .telephone {
-  border-radius: 44px;
-  background: #0a1426;
-  padding: 12px;
-  box-shadow:
-    0 50px 80px -40px rgb(0 0 0 / 0.8),
-    inset 0 0 0 2px #26334d;
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transform-style: preserve-3d;
-  transition:
-    transform 0.6s var(--courbe),
-    box-shadow 0.6s var(--courbe);
-  will-change: transform;
-}
-.marque .vitrine-claire.la-traversee .telephone.suivi {
-  transition:
-    transform 0.08s linear,
-    box-shadow 0.6s var(--courbe);
-  box-shadow:
-    0 70px 90px -40px rgb(0 0 0 / 0.85),
-    inset 0 0 0 2px #35466a;
+.marque .vitrine-claire.la-traversee .tel {
+  border-radius: 32px;
+  padding: 11px;
+  background: #0a1420;
+  border: 1px solid var(--trait-nuit);
+  box-shadow: 0 50px 90px -30px rgba(0, 0, 0, 0.9);
+  animation: traversee-flotte 6s ease-in-out infinite alternate;
 }
 .marque .vitrine-claire.la-traversee .ecran {
+  border-radius: 22px;
+  background: var(--brume);
+  color: var(--texte);
+  overflow: hidden;
+  display: grid;
+}
+.marque .vitrine-claire.la-traversee .ecran .bandeau-tel {
+  padding: 10px 14px;
+  background: var(--bouton);
+  color: var(--blanc);
+  font: 700 10px/1 var(--titre);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.marque .vitrine-claire.la-traversee .ecran .dedans {
+  padding: 14px 12px;
+  display: grid;
+  gap: 10px;
+}
+.marque .vitrine-claire.la-traversee .ecran h3 {
+  font-size: 14px;
+  font-weight: 800;
+}
+.marque .vitrine-claire.la-traversee .mini {
+  display: grid;
+  grid-template-columns: clamp(48px, 8vh, 66px) minmax(0, 1fr);
+  gap: 11px;
+  padding: 9px;
+  border-radius: 12px;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  align-items: center;
+}
+.marque .vitrine-claire.la-traversee .mini .v {
+  aspect-ratio: 1/1;
+  border-radius: 8px;
+  overflow: hidden;
   position: relative;
 }
-.marque .vitrine-claire.la-traversee .ecran::after {
+.marque .vitrine-claire.la-traversee .mini strong {
+  display: block;
+  font: 800 12.5px/1.2 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .mini b {
+  display: block;
+  font: 800 13.5px/1.3 var(--titre);
+  color: var(--vert);
+  margin-bottom: 5px;
+}
+.marque .vitrine-claire.la-traversee .mini span {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: var(--bouton);
+  color: var(--blanc);
+  font: 700 8.5px/1 var(--titre);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .onglets {
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-top: 1px solid var(--trait);
+  background: var(--blanc);
+  font: 600 10px/1 var(--titre);
+  color: var(--doux);
+}
+.marque .vitrine-claire.la-traversee .onglets b {
+  color: var(--rouge);
+}
+.marque .vitrine-claire.la-traversee .plateforme .h2 {
+  margin-block: 16px 12px;
+}
+.marque .vitrine-claire.la-traversee .plateforme .intro {
+  color: var(--sur-nuit);
+  font-size: 16.5px;
+  max-width: 52ch;
+  margin-bottom: clamp(16px, 3vh, 28px);
+}
+.marque .vitrine-claire.la-traversee .atouts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.marque .vitrine-claire.la-traversee .atouts div {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(14px, 2.4vh, 22px) 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--trait-nuit);
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 3px 14px;
+  align-content: start;
+  transition:
+    transform 0.4s var(--elan),
+    border-color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .atouts div::after {
   content: "";
   position: absolute;
   inset: 0;
-  pointer-events: none;
   background: radial-gradient(
-    260px 260px at var(--gx, 50%) var(--gy, 30%),
-    rgb(255 255 255 / 0.16),
+    240px circle at var(--x, 50%) var(--y, 50%),
+    rgba(255, 255, 255, 0.12),
     transparent 70%
   );
   opacity: 0;
   transition: opacity 0.4s;
+  pointer-events: none;
 }
-.marque .vitrine-claire.la-traversee .telephone.suivi .ecran::after {
+.marque .vitrine-claire.la-traversee .atouts div:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.marque .vitrine-claire.la-traversee .atouts div:hover::after {
   opacity: 1;
 }
-@media (hover: none) {
-  .marque .vitrine-claire.la-traversee .telephone {
-    transform: none;
-  }
-}
-.marque .vitrine-claire.la-traversee .ecran {
-  border-radius: 34px;
-  overflow: hidden;
-  background: var(--papier);
-  height: 600px;
-  display: flex;
-  flex-direction: column;
-}
-.marque .vitrine-claire.la-traversee .e-haut {
-  background: var(--nuit);
-  color: #fff;
-  padding: 14px 14px 10px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.marque .vitrine-claire.la-traversee .e-haut img {
-  width: 110px;
-  height: auto;
-}
-.marque .vitrine-claire.la-traversee .e-cd {
-  background-image: var(--bouton-rouge);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 7px 14px;
-  letter-spacing: 0.04em;
-}
-.marque .vitrine-claire.la-traversee .e-corps {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  background: var(--nuit);
-  flex: 1;
-}
-.marque .vitrine-claire.la-traversee .e-corps h4 {
-  margin: 0;
-  color: #fff;
-  font-family: var(--titre);
-  font-size: 17px;
-  font-weight: 400;
-  line-height: 1.2;
-}
-.marque .vitrine-claire.la-traversee .e-carte {
-  background: #fff;
-  border-radius: 12px;
-  display: flex;
-  overflow: hidden;
-  min-height: 92px;
-}
-.marque .vitrine-claire.la-traversee .e-carte .e-img {
-  position: relative;
-  width: 84px;
-  flex-shrink: 0;
-}
-.marque .vitrine-claire.la-traversee .e-carte img {
-  object-fit: cover;
-}
-.marque .vitrine-claire.la-traversee .e-carte div {
-  padding: 9px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 11px;
-  color: var(--texte-2);
-}
-.marque .vitrine-claire.la-traversee .e-carte b {
-  font-family: var(--titre);
-  font-weight: 700;
-  color: var(--nuit);
-  font-size: 14px;
-}
-.marque .vitrine-claire.la-traversee .e-carte strong {
-  font-family: var(--titre);
-  font-weight: 700;
-  color: var(--vert);
-  font-size: 16px;
-}
-.marque .vitrine-claire.la-traversee .e-carte .go {
-  margin-top: 4px;
-  background-image: var(--bouton-rouge);
-  color: #fff;
-  border-radius: 4px;
-  font-weight: 700;
-  padding: 4px 8px;
-  align-self: flex-start;
-  font-size: 9.5px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.marque .vitrine-claire.la-traversee .e-onglets {
-  background: #fff;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  padding: 10px 4px 14px;
-  font-size: 9px;
-  text-align: center;
-  color: var(--texte-2);
-  font-weight: 700;
-}
-.marque .vitrine-claire.la-traversee .e-onglets span:first-child {
-  color: var(--rouge);
-}
-.marque .vitrine-claire.la-traversee .fonctions {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 640px) {
-  .marque .vitrine-claire.la-traversee .fonctions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-.marque .vitrine-claire.la-traversee .fonction {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  padding: 18px;
-  border-radius: var(--r-m);
-  border: 1px solid rgb(255 255 255 / 0.12);
-  background: rgb(255 255 255 / 0.05);
-  transition:
-    border-color 0.3s,
-    transform 0.3s var(--courbe),
-    background 0.3s;
-}
-.marque .vitrine-claire.la-traversee .fonction:hover {
-  border-color: rgb(255 255 255 / 0.3);
-  transform: translateX(4px);
-  background: rgb(255 255 255 / 0.08);
-}
-.marque .vitrine-claire.la-traversee .fonction::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--degrade);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.5s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .fonction:hover::after {
-  transform: none;
-}
-.marque .vitrine-claire.la-traversee .fonction-num {
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+.marque .vitrine-claire.la-traversee .atouts i {
+  grid-row: span 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--trait-nuit);
   display: grid;
   place-items: center;
-  border-radius: var(--r-s);
-  background: rgb(255 255 255 / 0.08);
-  border: 1px solid rgb(255 255 255 / 0.14);
-  font-family: var(--titre);
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: -0.02em;
-  color: rgb(255 255 255 / 0.9);
-  transition:
-    background 0.3s,
-    color 0.3s,
-    transform 0.3s var(--courbe);
+  font: 700 12px/1 var(--titre);
+  font-style: normal;
+  color: var(--sur-nuit);
 }
-.marque .vitrine-claire.la-traversee .fonction:hover .fonction-num {
-  background: #fff;
-  color: var(--nuit);
-  transform: rotate(-6deg);
+.marque .vitrine-claire.la-traversee .atouts strong {
+  font: 700 16px/1.3 var(--titre);
 }
-.marque .vitrine-claire.la-traversee .fonction b {
-  display: block;
-  color: #fff;
-  font-size: 16px;
-  margin-bottom: 2px;
+.marque .vitrine-claire.la-traversee .atouts span {
+  color: var(--sur-nuit);
+  font-size: 14px;
+  line-height: 1.45;
 }
-.marque .vitrine-claire.la-traversee .fonction span {
-  color: rgb(255 255 255 / 0.72);
-  font-size: 14.5px;
-  line-height: 1.5;
-}
-
-.marque .vitrine-claire.la-traversee .billet-grille {
+.marque .vitrine-claire.la-traversee .vente {
   display: grid;
-  gap: 22px;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 20px;
   align-items: stretch;
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .billet-grille {
-    grid-template-columns: 1.2fr 1fr;
-  }
+  perspective: 1400px;
 }
 .marque .vitrine-claire.la-traversee .pass {
-  background: #fff;
-  border: 1px solid var(--ligne);
-  border-radius: var(--r-l);
+  border-radius: 16px;
+  background: var(--blanc);
   box-shadow: var(--ombre);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
+  transition: transform 0.5s var(--elan);
 }
-.marque .vitrine-claire.la-traversee .pass-haut {
-  background-image: var(--bouton-rouge);
-  color: #fff;
-  padding: 26px 28px;
+.marque .vitrine-claire.la-traversee .pass .tete {
+  padding: clamp(16px, 3vh, 26px) 28px;
+  background: var(--bouton);
+  color: var(--blanc);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 16px;
-  align-items: flex-end;
-  position: relative;
-  overflow: hidden;
+  align-items: end;
+  gap: 12px;
 }
-.marque .vitrine-claire.la-traversee .pass-haut::after {
+.marque .vitrine-claire.la-traversee .pass .nom {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 11px/1 var(--titre);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.marque .vitrine-claire.la-traversee .pass .nom::before {
   content: "";
-  position: absolute;
-  right: -40px;
-  top: -60px;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.08);
+  width: 28px;
+  height: 2px;
+  background: var(--blanc);
 }
-.marque .vitrine-claire.la-traversee .pass-haut .surtitre {
-  color: #fff;
+.marque .vitrine-claire.la-traversee .prix {
+  font: 800 clamp(34px, min(5vw, 6.4vh), 52px)/1 var(--titre);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
-.marque .vitrine-claire.la-traversee .pass-haut .surtitre::before {
-  background: #fff;
-}
-.marque .vitrine-claire.la-traversee .pass-prix {
-  font-family: var(--titre);
-  font-size: clamp(40px, 4vw, 54px);
-  line-height: 1;
-  margin-top: 10px;
-}
-.marque .vitrine-claire.la-traversee .pass-prix small {
-  font-size: 0.45em;
-  font-family: var(--texte-police);
-  font-weight: 600;
+.marque .vitrine-claire.la-traversee .prix small {
+  font: 700 17px/1 var(--titre);
   margin-left: 6px;
+  letter-spacing: 0;
 }
-.marque .vitrine-claire.la-traversee .pass-haut .quand {
-  font-size: 13.5px;
-  color: rgb(255 255 255 / 0.9);
-  font-weight: 600;
+.marque .vitrine-claire.la-traversee .pass .cote {
   text-align: right;
+  font-size: 13px;
   line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
 }
-.marque .vitrine-claire.la-traversee .perfo {
-  height: 0;
-  border-top: 2px dashed var(--ligne);
-  margin: 0 26px;
-  position: relative;
-}
-.marque .vitrine-claire.la-traversee .perfo::before,
-.marque .vitrine-claire.la-traversee .perfo::after {
-  content: "";
-  position: absolute;
-  top: -13px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--papier);
-}
-.marque .vitrine-claire.la-traversee .perfo::before {
-  left: -39px;
-}
-.marque .vitrine-claire.la-traversee .perfo::after {
-  right: -39px;
-}
-.marque .vitrine-claire.la-traversee .pass-corps {
-  padding: 26px 28px 28px;
+.marque .vitrine-claire.la-traversee .pass .corps {
+  padding: clamp(16px, 3vh, 26px) 28px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: clamp(12px, 2.4vh, 22px);
   flex: 1;
 }
-.marque .vitrine-claire.la-traversee .inclus {
+.marque .vitrine-claire.la-traversee .pass ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  gap: 12px;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 1.5vh, 12px) 22px;
 }
-@media (min-width: 640px) {
-  .marque .vitrine-claire.la-traversee .inclus {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-.marque .vitrine-claire.la-traversee .inclus li {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
+.marque .vitrine-claire.la-traversee .pass li {
+  padding-left: 26px;
+  position: relative;
   font-size: 15px;
   line-height: 1.45;
 }
-.marque .vitrine-claire.la-traversee .inclus svg {
-  flex-shrink: 0;
-  color: var(--nuit);
-  margin-top: 3px;
-}
-.marque .vitrine-claire.la-traversee .inclus b {
-  color: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .paiements {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.marque .vitrine-claire.la-traversee .paiements-lbl {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--texte-2);
-  font-weight: 600;
-}
-.marque .vitrine-claire.la-traversee .paiements-fenetre {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 8%,
-    #000 92%,
-    transparent
-  );
-}
-.marque .vitrine-claire.la-traversee .paiements-piste {
-  display: flex;
-  width: max-content;
-  animation: traversee-paiements-defile 22s linear infinite;
-}
-.marque .vitrine-claire.la-traversee .paiements-fenetre:hover .paiements-piste,
-.marque
-  .vitrine-claire.la-traversee
-  .paiements-fenetre:focus-within
-  .paiements-piste {
-  animation-play-state: paused;
-}
-.marque .vitrine-claire.la-traversee .paiements-piste ul {
-  display: flex;
-  gap: 10px;
-  padding-right: 10px;
-  flex-shrink: 0;
-}
-.marque .vitrine-claire.la-traversee .paiements-piste li {
-  width: 120px;
-  height: 60px;
-  border-radius: var(--r-s);
-  overflow: hidden;
-  background: #fff;
-  display: grid;
-  place-items: center;
-  transition: transform 0.3s var(--courbe);
-}
-.marque .vitrine-claire.la-traversee .paiements-piste li:hover {
-  transform: translateY(-2px);
-}
-.marque .vitrine-claire.la-traversee .paiements-piste img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-@keyframes traversee-paiements-defile {
-  to {
-    transform: translateX(-50%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marque .vitrine-claire.la-traversee .paiements-fenetre {
-    mask-image: none;
-    overflow-x: auto;
-  }
-  .marque .vitrine-claire.la-traversee .paiements-piste ul[aria-hidden] {
-    display: none;
-  }
-}
-.marque .vitrine-claire.la-traversee .pass .btn-action {
-  align-self: flex-start;
-}
-.marque .vitrine-claire.la-traversee .encarts {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.marque .vitrine-claire.la-traversee .encart {
-  flex: 1;
-  position: relative;
-  border-radius: var(--r-l);
-  padding: 28px;
-  background: var(--nuit);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  overflow: hidden;
-}
-.marque .vitrine-claire.la-traversee .encart.photo {
-  min-height: 240px;
-  justify-content: flex-end;
-}
-.marque .vitrine-claire.la-traversee .encart.photo img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.42;
-}
-.marque .vitrine-claire.la-traversee .encart.photo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgb(15 29 44 / 0.1), rgb(15 29 44 / 0.9));
-}
-.marque .vitrine-claire.la-traversee .encart > *:not(img) {
-  position: relative;
-  z-index: 1;
-}
-.marque .vitrine-claire.la-traversee .encart h3 {
-  font-size: clamp(22px, 2vw, 26px);
-}
-.marque .vitrine-claire.la-traversee .encart p {
-  color: rgb(255 255 255 / 0.78);
-  font-size: 15px;
-}
-.marque .vitrine-claire.la-traversee .pulse {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.marque .vitrine-claire.la-traversee .pulse i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--rouge-vif);
-  box-shadow: 0 0 0 0 rgb(255 90 110 / 0.7);
-  animation: traversee-pulse 1.8s infinite;
-}
-@keyframes traversee-pulse {
-  70% {
-    box-shadow: 0 0 0 12px rgb(255 90 110 / 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgb(255 90 110 / 0);
-  }
-}
-.marque .vitrine-claire.la-traversee .encart .btn-contour {
-  align-self: flex-start;
-}
-
-.marque .vitrine-claire.la-traversee .hope {
-  border-radius: var(--r-l);
-  overflow: hidden;
-  color: #fff;
-  background: linear-gradient(135deg, #0f5028 0%, #007140 60%, #1b7e3e 100%);
-  display: grid;
-}
-@media (min-width: 900px) {
-  .marque .vitrine-claire.la-traversee .hope {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-.marque .vitrine-claire.la-traversee .hope-img {
-  position: relative;
-  min-height: 300px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3px;
-}
-.marque .vitrine-claire.la-traversee .hope-img > div {
-  position: relative;
-  min-height: 300px;
-}
-.marque .vitrine-claire.la-traversee .hope-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.marque .vitrine-claire.la-traversee .hope-txt {
-  padding: 40px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-@media (min-width: 900px) {
-  .marque .vitrine-claire.la-traversee .hope-txt {
-    padding: 56px 52px;
-  }
-}
-.marque .vitrine-claire.la-traversee .hope-txt .surtitre {
-  color: #fff;
-}
-.marque .vitrine-claire.la-traversee .hope-txt h2 {
-  font-size: clamp(30px, 3.6vw, 46px);
-}
-.marque .vitrine-claire.la-traversee .hope-txt p {
-  color: #ddf1e6;
-  font-size: 17px;
-}
-.marque .vitrine-claire.la-traversee .hope-nums {
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-.marque .vitrine-claire.la-traversee .hope-nums b {
-  display: block;
+.marque .vitrine-claire.la-traversee .pass li b {
   font-family: var(--titre);
-  font-weight: 700;
-  font-size: 44px;
-  line-height: 1;
 }
-.marque .vitrine-claire.la-traversee .hope-nums span {
-  font-size: 13.5px;
-  color: #bfe6d1;
-  font-weight: 600;
-}
-.marque .vitrine-claire.la-traversee .hope .btn-blanc {
-  align-self: flex-start;
-}
-
-.marque .vitrine-claire.la-traversee .partenaires {
-  position: relative;
-  overflow: hidden;
-}
-.marque .vitrine-claire.la-traversee .partenaires::before {
+.marque .vitrine-claire.la-traversee .pass li::before {
   content: "";
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      800px 420px at 100% 0%,
-      rgb(173 7 7 / 0.28),
-      transparent 60%
-    ),
-    radial-gradient(
-      800px 420px at 0% 100%,
-      rgb(0 113 64 / 0.26),
-      transparent 60%
-    );
-  pointer-events: none;
-}
-.marque .vitrine-claire.la-traversee .partenaires .conteneur {
-  position: relative;
-}
-.marque .vitrine-claire.la-traversee .sponsors {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-@media (min-width: 768px) {
-  .marque .vitrine-claire.la-traversee .sponsors {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.marque .vitrine-claire.la-traversee .sponsor {
-  position: relative;
-  border-radius: var(--r-m);
-  overflow: hidden;
-  min-height: 180px;
-  display: flex;
-  align-items: flex-end;
-  text-decoration: none;
-  color: #fff;
-  background: var(--nuit-2);
-  border: 1px solid rgb(255 255 255 / 0.1);
-  transition:
-    transform 0.35s var(--courbe),
-    border-color 0.3s;
-}
-.marque .vitrine-claire.la-traversee .sponsor:hover {
-  transform: translateY(-4px);
-  border-color: rgb(255 255 255 / 0.3);
-}
-.marque .vitrine-claire.la-traversee .sponsor img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.35;
-  filter: saturate(0.6);
-  transition:
-    transform 0.9s var(--courbe),
-    opacity 0.5s;
-}
-.marque .vitrine-claire.la-traversee .sponsor:hover img {
-  transform: scale(1.06);
-  opacity: 0.5;
-}
-.marque .vitrine-claire.la-traversee .sponsor::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgb(15 29 44 / 0.1) 10%,
-    rgb(15 29 44 / 0.92) 100%
-  );
-}
-.marque .vitrine-claire.la-traversee .sponsor-in {
-  position: relative;
-  z-index: 1;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-.marque .vitrine-claire.la-traversee .sponsor .niveau {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #ffd5db;
-}
-.marque .vitrine-claire.la-traversee .marque-vide {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  color: var(--nuit);
-  border-radius: 6px;
-  padding: 6px 12px 6px 6px;
-  font-weight: 700;
-  font-size: 14px;
-}
-.marque .vitrine-claire.la-traversee .marque-vide i {
-  font-style: normal;
-  width: 28px;
-  height: 28px;
-  border-radius: 5px;
-  background: var(--nuit);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-family: var(--titre);
-  font-size: 12px;
-}
-.marque .vitrine-claire.la-traversee .sponsor.officiel {
-  grid-column: 1/-1;
-  min-height: 260px;
-}
-.marque .vitrine-claire.la-traversee .sponsor.officiel .marque-vide {
-  font-size: 19px;
-  padding: 8px 16px 8px 8px;
-}
-.marque .vitrine-claire.la-traversee .sponsor.officiel .marque-vide i {
-  width: 40px;
-  height: 40px;
-  background-image: var(--bouton-rouge);
-  font-size: 16px;
-}
-.marque .vitrine-claire.la-traversee .sponsor .sous {
-  font-size: 13px;
-  color: rgb(255 255 255 / 0.78);
-}
-.marque .vitrine-claire.la-traversee .partenaires .legende {
-  color: rgb(255 255 255 / 0.5);
-}
-.marque .vitrine-claire.la-traversee .offres {
-  display: grid;
-  gap: 16px;
-  margin-top: 28px;
-  grid-template-columns: 1fr;
-}
-@media (min-width: 768px) {
-  .marque .vitrine-claire.la-traversee .offres {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-.marque .vitrine-claire.la-traversee .offre {
-  border-radius: var(--r-l);
-  padding: 28px;
-  background: rgb(255 255 255 / 0.05);
-  border: 1px solid rgb(255 255 255 / 0.12);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.marque .vitrine-claire.la-traversee .offre h3 {
-  font-size: clamp(22px, 2vw, 26px);
-}
-.marque .vitrine-claire.la-traversee .offre p {
-  color: rgb(255 255 255 / 0.74);
-  font-size: 15px;
-}
-.marque .vitrine-claire.la-traversee .offre .btn-contour,
-.marque .vitrine-claire.la-traversee .offre .btn-action {
-  align-self: flex-start;
-  margin-top: auto;
-}
-
-.marque .vitrine-claire.la-traversee .faq-grille {
-  display: grid;
-  gap: 24px;
-  align-items: start;
-}
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .faq-grille {
-    grid-template-columns: 1.4fr 1fr;
-    gap: 36px;
-  }
-}
-.marque .vitrine-claire.la-traversee .faq {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.marque .vitrine-claire.la-traversee .faq details {
-  border-radius: var(--r-m);
-  background: #fff;
-  border: 1px solid var(--ligne);
-  padding: 0 22px;
-  transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
-}
-.marque .vitrine-claire.la-traversee .faq details[open] {
-  border-color: var(--nuit);
-  box-shadow: var(--ombre);
-}
-.marque .vitrine-claire.la-traversee .faq summary {
-  min-height: 62px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-weight: 600;
-  font-size: 16.5px;
-  color: var(--nuit);
-  cursor: pointer;
-  list-style: none;
-  padding-block: 12px;
-}
-.marque .vitrine-claire.la-traversee .faq summary::-webkit-details-marker {
-  display: none;
-}
-.marque .vitrine-claire.la-traversee .faq summary::after {
-  content: "";
-  margin-left: auto;
+  left: 2px;
+  top: 0.45em;
   width: 12px;
-  height: 12px;
-  border-right: 2px solid var(--rouge);
-  border-bottom: 2px solid var(--rouge);
-  transform: rotate(45deg);
-  transition: transform 0.3s var(--courbe);
-  flex-shrink: 0;
+  height: 6px;
+  border-left: 2px solid var(--vert);
+  border-bottom: 2px solid var(--vert);
+  transform: rotate(-45deg);
 }
-.marque .vitrine-claire.la-traversee .faq details[open] summary::after {
-  transform: rotate(-135deg);
+.marque .vitrine-claire.la-traversee .pass .paie {
+  font-size: 13px;
+  color: var(--doux);
 }
-.marque .vitrine-claire.la-traversee .faq p {
-  padding: 0 0 20px;
-  color: var(--texte-2);
-  line-height: 1.6;
+.marque .vitrine-claire.la-traversee .pass .btn {
+  align-self: flex-start;
 }
-.marque .vitrine-claire.la-traversee .contact-carte {
-  border-radius: var(--r-l);
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid var(--ligne);
-  box-shadow: var(--ombre);
-  display: flex;
-  flex-direction: column;
-  transition:
-    transform 0.35s var(--courbe),
-    box-shadow 0.35s var(--courbe);
+.marque .vitrine-claire.la-traversee .cote-d {
+  display: grid;
+  gap: 20px;
 }
-.marque .vitrine-claire.la-traversee .contact-carte:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 24px 48px -28px rgb(15 29 44 / 0.45);
-}
-.marque .vitrine-claire.la-traversee .contact-photo {
-  margin: 0;
+.marque .vitrine-claire.la-traversee .bloc-n {
   position: relative;
-  aspect-ratio: 16/9;
-  max-width: 100%;
-  background: var(--nuit);
+  border-radius: 16px;
   overflow: hidden;
+  isolation: isolate;
+  background: var(--nuit);
+  color: var(--blanc);
+  padding: clamp(18px, 3.2vh, 28px) 26px;
+  display: grid;
+  gap: 8px;
+  align-content: center;
 }
-.marque .vitrine-claire.la-traversee .contact-photo img {
-  transition: transform 1.2s var(--courbe);
+.marque .vitrine-claire.la-traversee .bloc-n img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
 }
-.marque .vitrine-claire.la-traversee .contact-carte:hover .contact-photo img {
-  transform: scale(1.05);
-}
-.marque .vitrine-claire.la-traversee .contact-photo::after {
+.marque .vitrine-claire.la-traversee .bloc-n.photo::before {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--degrade);
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    rgba(15, 29, 44, 0.94),
+    rgba(15, 29, 44, 0.7)
+  );
 }
-.marque .vitrine-claire.la-traversee .contact-photo figcaption {
-  position: absolute;
-  left: 14px;
-  bottom: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgb(15 29 44 / 0.75);
-  color: #fff;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  backdrop-filter: blur(6px);
-}
-.marque .vitrine-claire.la-traversee .contact-corps {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.marque .vitrine-claire.la-traversee .contact-corps h3 {
-  font-size: clamp(22px, 2.2vw, 26px);
-}
-.marque .vitrine-claire.la-traversee .contact-corps > p {
-  color: var(--texte-2);
-  font-size: 15px;
-}
-.marque .vitrine-claire.la-traversee .contact-lignes {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.marque .vitrine-claire.la-traversee .contact-lignes li {
-  display: flex;
+.marque .vitrine-claire.la-traversee .bloc-n b {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--r-m);
-  background: var(--papier);
-  border: 1px solid var(--ligne);
-}
-.marque .vitrine-claire.la-traversee .contact-lignes svg {
-  flex-shrink: 0;
-  color: var(--nuit);
-}
-.marque .vitrine-claire.la-traversee .contact-lignes span {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-  min-width: 0;
-}
-.marque .vitrine-claire.la-traversee .contact-lignes small {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  gap: 10px;
+  font: 700 11px/1 var(--titre);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--texte-3);
 }
-.marque .vitrine-claire.la-traversee .contact-lignes b {
-  font-size: 15px;
-  color: var(--nuit);
-  user-select: all;
-  overflow-wrap: anywhere;
+.marque .vitrine-claire.la-traversee .bloc-n b::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--rouge-clair);
+  animation: traversee-pouls 1.8s ease-in-out infinite;
 }
-.marque .vitrine-claire.la-traversee .contact-corps .btn-action {
-  align-self: flex-start;
-  margin-top: 4px;
+.marque .vitrine-claire.la-traversee .bloc-n strong {
+  font: 800 clamp(18px, 2.2vw, 23px)/1.15 var(--titre);
 }
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .contact-carte {
-    position: sticky;
-    top: 110px;
-  }
+.marque .vitrine-claire.la-traversee .bloc-n span {
+  color: var(--sur-nuit);
+  font-size: 14.5px;
+  line-height: 1.5;
 }
-
 .marque .vitrine-claire.la-traversee .final {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
-  color: #fff;
-  text-align: center;
-  background: var(--nuit);
 }
 .marque .vitrine-claire.la-traversee .final > img {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.35;
+  z-index: -2;
 }
-.marque .vitrine-claire.la-traversee .final::after {
+.marque .vitrine-claire.la-traversee .final::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: -1;
   background: linear-gradient(
     135deg,
-    rgb(139 10 31 / 0.82) 0%,
-    rgb(15 29 44 / 0.9) 50%,
-    rgb(15 80 40 / 0.82) 100%
+    rgba(122, 10, 28, 0.94) 0%,
+    rgba(173, 7, 7, 0.88) 22%,
+    rgba(15, 29, 44, 0.92) 52%,
+    rgba(15, 80, 40, 0.9) 82%,
+    rgba(0, 113, 64, 0.93) 100%
   );
+  background-size: 160% 160%;
+  animation: traversee-glisse 10s ease-in-out infinite alternate;
 }
-.marque .vitrine-claire.la-traversee .final-in {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding-block: 88px;
+.marque .vitrine-claire.la-traversee .final .wrap {
+  display: grid;
+  gap: clamp(14px, 3vh, 26px);
+  justify-items: center;
+  text-align: center;
 }
 .marque .vitrine-claire.la-traversee .final h2 {
-  font-size: clamp(34px, 5vw, 64px);
-  max-width: 18ch;
+  font-size: clamp(32px, min(5.8vw, 8vh), 68px);
+  font-weight: 800;
+  line-height: 1.04;
 }
-.marque .vitrine-claire.la-traversee .final p {
-  color: rgb(255 255 255 / 0.85);
+.marque .vitrine-claire.la-traversee .final h2 em {
+  display: block;
+  font-weight: 700;
+  font-style: italic;
+  color: #ffb3bd;
+}
+.marque .vitrine-claire.la-traversee .final .ou {
+  font: 600 12px/1.5 var(--titre);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sur-nuit);
+}
+.marque .vitrine-claire.la-traversee .final .rappel {
+  color: var(--sur-nuit);
   font-size: 17px;
-  max-width: 56ch;
+  max-width: 50ch;
 }
-.marque .vitrine-claire.la-traversee .final .compte {
-  background: rgb(255 255 255 / 0.08);
+.marque .vitrine-claire.la-traversee .final .actions {
+  justify-content: center;
 }
-
-.marque .vitrine-claire.la-traversee .flottante {
-  position: fixed;
-  left: 12px;
-  right: 84px;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  z-index: 45;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 10px 10px 18px;
-  border-radius: var(--r-m);
-  background: rgb(15 29 44 / 0.96);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  box-shadow: 0 20px 40px -16px rgb(0 0 0 / 0.6);
-  border: 1px solid rgb(255 255 255 / 0.12);
-  transform: translateY(140%);
-  transition: transform 0.45s var(--courbe);
+.marque .vitrine-claire.la-traversee.js [data-r] {
+  transform: translateY(34px);
+  transition: transform 1.1s var(--elan);
 }
-.marque .vitrine-claire.la-traversee .flottante.visible {
+.marque .vitrine-claire.la-traversee.js [data-r].vu {
   transform: none;
 }
-.marque .vitrine-claire.la-traversee .flottante > div {
-  flex: 1;
-  line-height: 1.25;
-  min-width: 0;
+.marque .vitrine-claire.la-traversee.js [data-s] > * {
+  transform: translateY(34px);
+  transition: transform 1s var(--elan);
 }
-.marque .vitrine-claire.la-traversee .flottante b {
+.marque .vitrine-claire.la-traversee.js [data-s].vu > * {
+  transform: none;
+}
+.marque .vitrine-claire.la-traversee.js [data-s].vu > *:nth-child(2) {
+  transition-delay: 0.08s;
+}
+.marque .vitrine-claire.la-traversee.js [data-s].vu > *:nth-child(3) {
+  transition-delay: 0.16s;
+}
+.marque .vitrine-claire.la-traversee.js [data-s].vu > *:nth-child(4) {
+  transition-delay: 0.24s;
+}
+.marque .vitrine-claire.la-traversee.js [data-s].vu > .carte:hover,
+.marque .vitrine-claire.la-traversee.js [data-s].vu > .defi:hover {
+  transition-delay: 0s;
+}
+.marque .vitrine-claire.la-traversee .h2,
+.marque .vitrine-claire.la-traversee .final h2 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.marque .vitrine-claire.la-traversee .carte h3,
+.marque .vitrine-claire.la-traversee .defi h3,
+.marque .vitrine-claire.la-traversee .panels h3,
+.marque .vitrine-claire.la-traversee .ecran h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.marque .vitrine-claire.la-traversee .hero h1 {
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.marque .vitrine-claire.la-traversee em.r,
+.marque .vitrine-claire.la-traversee em.v,
+.marque .vitrine-claire.la-traversee .hero h1 em,
+.marque .vitrine-claire.la-traversee .final h2 em {
+  font-weight: 600;
+}
+.marque .vitrine-claire.la-traversee .hero h1 em {
+  font-size: 0.78em;
+}
+.marque .vitrine-claire.la-traversee .sur,
+.marque .vitrine-claire.la-traversee .btn,
+.marque .vitrine-claire.la-traversee .carte .heure,
+.marque .vitrine-claire.la-traversee .carte .vue span,
+.marque .vitrine-claire.la-traversee .defi .tag,
+.marque .vitrine-claire.la-traversee .gagner .etiq,
+.marque .vitrine-claire.la-traversee .pass .nom,
+.marque .vitrine-claire.la-traversee .bloc-n b,
+.marque .vitrine-claire.la-traversee .final .ou,
+.marque .vitrine-claire.la-traversee .compte small,
+.marque .vitrine-claire.la-traversee .comment b {
+  font-family: var(--corps);
+}
+.marque .vitrine-claire.la-traversee .sur {
+  font-weight: 600;
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+}
+.marque .vitrine-claire.la-traversee .btn {
+  font-size: 13px;
+  letter-spacing: 0.09em;
+  border-radius: 5px;
+}
+.marque .vitrine-claire.la-traversee .carte .heure {
+  background: #fdeaed;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+}
+.marque .vitrine-claire.la-traversee .prix {
+  font-weight: 400;
+}
+.marque .vitrine-claire.la-traversee .final {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+.marque .vitrine-claire.la-traversee .final .joindre {
+  font-size: 13.5px;
+  color: var(--sur-nuit);
+  user-select: all;
+}
+.marque .vitrine-claire.la-traversee .lotc {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  isolation: isolate;
+  height: clamp(220px, 46vh, 420px);
+  color: var(--blanc);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(18px, 3.2vh, 30px);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
+  transition: transform 0.5s var(--elan);
+}
+.marque .vitrine-claire.la-traversee .lotc:hover {
+  transform: translateY(-6px);
+}
+.marque .vitrine-claire.la-traversee .lotc img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  object-position: 50% 22%;
+  transition: transform 1.4s var(--elan);
+}
+.marque .vitrine-claire.la-traversee .lotc:hover img {
+  transform: scale(1.06);
+}
+.marque .vitrine-claire.la-traversee .lotc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    0deg,
+    rgba(15, 29, 44, 0.96) 0%,
+    rgba(15, 29, 44, 0.55) 48%,
+    rgba(15, 29, 44, 0.12) 100%
+  );
+}
+.marque .vitrine-claire.la-traversee .lotc .tag {
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--nuit);
+  font: 700 10.5px/1 var(--corps);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee .lotc .gros {
+  font: 800 clamp(30px, min(4.8vw, 7.4vh), 62px)/1 var(--titre);
+  letter-spacing: -0.03em;
+}
+.marque .vitrine-claire.la-traversee .lotc .ligne {
+  margin-top: 10px;
+  color: var(--sur-nuit);
+  font-size: clamp(14.5px, 1.5vw, 16.5px);
+}
+.marque .vitrine-claire.la-traversee.js [data-s].vu > .lotc:hover {
+  transition-delay: 0s;
+}
+.marque .vitrine-claire.la-traversee .sur {
+  gap: 0;
+}
+.marque .vitrine-claire.la-traversee .sur::before,
+.marque .vitrine-claire.la-traversee .pass .nom::before {
+  content: none;
+}
+.marque .vitrine-claire.la-traversee .cadres {
+  list-style: none;
+  margin: clamp(14px, 2.6vh, 24px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  counter-reset: k;
+}
+.marque .vitrine-claire.la-traversee .cadres li {
+  counter-increment: k;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: clamp(12px, 2.2vh, 18px) 18px;
+  border-radius: 12px;
+  background: rgba(15, 29, 44, 0.5);
+  border: 1px solid var(--trait-nuit);
+  backdrop-filter: blur(6px);
+  font: 600 15px/1.35 var(--titre);
+  transition:
+    transform 0.4s var(--elan),
+    background 0.3s,
+    border-color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .cadres li:hover {
+  transform: translateY(-4px);
+  background: rgba(15, 29, 44, 0.7);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.marque .vitrine-claire.la-traversee .cadres li::before {
+  content: counter(k);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--blanc);
+  color: var(--nuit);
+  display: grid;
+  place-items: center;
+  font: 800 15px/1 var(--titre);
+}
+@media (max-width: 980px) {
+  .marque .vitrine-claire.la-traversee .cadres {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .marque .vitrine-claire.la-traversee .cadres li {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+.marque .vitrine-claire.la-traversee .hero .fonds img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.08);
+  transition:
+    opacity 1.1s ease,
+    transform 6s ease-out;
+}
+.marque .vitrine-claire.la-traversee .hero .fonds img.actif {
+  opacity: 1;
+  transform: scale(1);
+}
+.marque .vitrine-claire.la-traversee .hero .moment {
+  min-height: 3.2em;
+  font-size: clamp(15.5px, 1.7vw, 18px);
+  color: var(--sur-nuit);
+  max-width: 50ch;
+}
+.marque .vitrine-claire.la-traversee .hero .moment b {
+  color: var(--blanc);
+  font-family: var(--titre);
+  font-weight: 700;
+}
+.marque .vitrine-claire.la-traversee .temps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.marque .vitrine-claire.la-traversee .onglet {
+  position: relative;
+  text-align: left;
+  padding: clamp(10px, 1.8vh, 14px) 16px clamp(12px, 2vh, 16px);
+  border-radius: 12px;
+  border: 1px solid var(--trait-nuit);
+  background: rgba(15, 29, 44, 0.55);
+  backdrop-filter: blur(10px);
+  color: var(--blanc);
+  cursor: pointer;
+  overflow: hidden;
+  font: inherit;
+  transition:
+    background 0.4s,
+    transform 0.4s var(--elan),
+    border-color 0.4s;
+}
+.marque .vitrine-claire.la-traversee .onglet:focus-visible {
+  outline: 3px solid #7fb0ff;
+  outline-offset: 2px;
+}
+.marque .vitrine-claire.la-traversee .onglet small {
   display: block;
-  font-size: 14px;
+  font: 700 10.5px/1 var(--corps);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--vert-clair);
+  margin-bottom: 7px;
 }
-.marque .vitrine-claire.la-traversee .flottante span {
-  font-size: 12px;
-  color: rgb(255 255 255 / 0.65);
+.marque .vitrine-claire.la-traversee .onglet strong {
+  font: 700 clamp(14px, 1.5vw, 17px)/1.2 var(--titre);
 }
-.marque .vitrine-claire.la-traversee .flottante .btn-action {
-  padding: 12px 16px;
-  min-height: 44px;
-  font-size: 12px;
+.marque .vitrine-claire.la-traversee .onglet i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, #d81f3a, #ffffff, #3fc98a);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
 }
-@media (max-width: 640px) {
-  .marque .vitrine-claire.la-traversee .flottante span {
+.marque .vitrine-claire.la-traversee .onglet.actif {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.45);
+  transform: translateY(-4px);
+}
+.marque .vitrine-claire.la-traversee .onglet.actif i {
+  animation: traversee-barre 5s linear forwards;
+}
+.marque .vitrine-claire.la-traversee .hero.pause .onglet.actif i {
+  animation-play-state: paused;
+}
+@keyframes traversee-barre {
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (max-height: 720px) and (min-width: 981px) {
+  .marque .vitrine-claire.la-traversee .hero .reperes {
     display: none;
   }
 }
-@media (min-width: 1024px) {
-  .marque .vitrine-claire.la-traversee .flottante {
-    left: auto;
-    right: 96px;
-    bottom: 24px;
-    width: 420px;
+@media (max-width: 760px) {
+  .marque .vitrine-claire.la-traversee .temps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .marque .vitrine-claire.la-traversee .onglet {
+    padding: 10px 12px 12px;
+  }
+  .marque .vitrine-claire.la-traversee .hero .compte {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .hero .moment {
+    min-height: 4.6em;
   }
 }
-
-@keyframes traversee-reveler {
+.marque .vitrine-claire.la-traversee .sur {
+  color: #ad0707;
+}
+.marque .vitrine-claire.la-traversee .nuit .sur,
+.marque .vitrine-claire.la-traversee .defis .sur {
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .hero::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 29, 44, 0.94) 0%,
+      rgba(15, 29, 44, 0.76) 44%,
+      rgba(15, 29, 44, 0.28) 100%
+    ),
+    linear-gradient(0deg, rgba(15, 29, 44, 0.96) 0%, transparent 42%);
+}
+.marque .vitrine-claire.la-traversee .lueur-a,
+.marque .vitrine-claire.la-traversee .lueur-b {
+  opacity: 0.72;
+}
+.marque .vitrine-claire.la-traversee .onglet.actif {
+  background: var(--bouton);
+  border-color: transparent;
+  box-shadow: 0 18px 34px -16px rgba(216, 31, 58, 0.9);
+}
+.marque .vitrine-claire.la-traversee .onglet.actif small {
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .onglet.actif i {
+  background: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .carte {
+  border-color: transparent;
+  box-shadow: var(--ombre);
+}
+.marque .vitrine-claire.la-traversee .carte:nth-child(1) .heure,
+.marque .vitrine-claire.la-traversee .carte:nth-child(1) .vue span {
+  background: #ad0707;
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .carte:nth-child(2) .heure,
+.marque .vitrine-claire.la-traversee .carte:nth-child(2) .vue span {
+  background: #1b3a6b;
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .carte:nth-child(3) .heure,
+.marque .vitrine-claire.la-traversee .carte:nth-child(3) .vue span {
+  background: #007140;
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .carte.phare {
+  background: var(--degrade);
+  border-color: transparent;
+}
+.marque .vitrine-claire.la-traversee .carte.phare .heure {
+  background: #ffffff;
+  color: #0f1d2c;
+}
+.marque .vitrine-claire.la-traversee .carte.phare .chips li {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.marque .vitrine-claire.la-traversee .panels.nuit {
+  background: var(--degrade);
+}
+.marque .vitrine-claire.la-traversee .panels .chips li {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #0f1d2c;
+}
+.marque .vitrine-claire.la-traversee .panels .chips li:hover {
+  background: #fdeaed;
+}
+.marque .vitrine-claire.la-traversee .cadres li::before {
+  background: var(--bouton);
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .plateforme::before {
+  background:
+    radial-gradient(
+      50% 60% at 0% 100%,
+      rgba(0, 113, 64, 0.62),
+      transparent 65%
+    ),
+    radial-gradient(46% 56% at 100% 0%, rgba(173, 7, 7, 0.58), transparent 65%);
+}
+.marque .vitrine-claire.la-traversee .atouts div {
+  background: #16283c;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.marque .vitrine-claire.la-traversee .atouts i {
+  border: 0;
+  color: #ffffff;
+  background: var(--bouton);
+}
+.marque .vitrine-claire.la-traversee .atouts div:nth-child(2) i,
+.marque .vitrine-claire.la-traversee .atouts div:nth-child(4) i {
+  background: linear-gradient(135deg, #0f5028 0%, #007140 60%, #1b7e3e 100%);
+}
+.marque .vitrine-claire.la-traversee .atouts div:nth-child(3) i {
+  background: #1b3a6b;
+}
+.marque .vitrine-claire.la-traversee .bloc-n:not(.photo) {
+  background: linear-gradient(135deg, #0f5028 0%, #007140 60%, #1b7e3e 100%);
+}
+.marque .vitrine-claire.la-traversee .bloc-n.photo::before {
+  background: linear-gradient(
+    90deg,
+    rgba(122, 10, 28, 0.93),
+    rgba(15, 29, 44, 0.72)
+  );
+}
+.marque .vitrine-claire.la-traversee .bloc-n b::before {
+  background: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .final h2 em {
+  color: #ff5a6e;
+}
+.marque .vitrine-claire.la-traversee .hero .actions {
+  align-items: stretch;
+}
+.marque .vitrine-claire.la-traversee .hero .compte {
+  padding: 0;
+  gap: 1px;
+  border-radius: 5px;
+  overflow: hidden;
+  min-height: 50px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.marque .vitrine-claire.la-traversee .hero .compte div {
+  min-width: 62px;
+  padding: 0 12px;
+  border-radius: 0;
+  background: rgba(15, 29, 44, 0.78);
+  display: grid;
+  align-content: center;
+}
+.marque .vitrine-claire.la-traversee .hero .compte b {
+  font-size: 20px;
+}
+.marque .vitrine-claire.la-traversee .hero .compte small {
+  margin-top: 4px;
+  font-size: 8.5px;
+}
+.marque .vitrine-claire.la-traversee .hero h1 .dx {
+  font-size: 1.6em;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+  margin-inline: 0.04em;
+}
+.marque .vitrine-claire.la-traversee .hero h1 .ligne:nth-child(3) {
+  padding-top: 0.06em;
+}
+.marque .vitrine-claire.la-traversee .bloc-n .btn {
+  justify-self: start;
+  margin-top: 6px;
+  min-height: 44px;
+  padding: 11px 20px;
+}
+.marque .vitrine-claire.la-traversee .bloc-n .joindre-e {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.8);
+  user-select: all;
+}
+.marque .vitrine-claire.la-traversee .plateforme .wrap {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.marque .vitrine-claire.la-traversee .tel {
+  position: relative;
+  height: clamp(430px, 72vh, 600px);
+  aspect-ratio: 9/19.3;
+  border-radius: 44px;
+  padding: 9px;
+  background: #0a1420;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow:
+    inset 0 0 0 2px #1d3450,
+    0 50px 90px -30px rgba(0, 0, 0, 0.9);
+}
+.marque .vitrine-claire.la-traversee .tel::before,
+.marque .vitrine-claire.la-traversee .tel::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  background: #1d3450;
+}
+.marque .vitrine-claire.la-traversee .tel::before {
+  left: -4px;
+  top: 21%;
+  height: 8%;
+  border-radius: 2px 0 0 2px;
+}
+.marque .vitrine-claire.la-traversee .tel::after {
+  right: -4px;
+  top: 27%;
+  height: 13%;
+  border-radius: 0 2px 2px 0;
+}
+.marque .vitrine-claire.la-traversee .ecran {
+  height: 100%;
+  border-radius: 36px;
+  display: flex;
+  flex-direction: column;
+}
+.marque .vitrine-claire.la-traversee .statut {
+  position: relative;
+  flex: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 20px 8px;
+  background: #0f1d2c;
+  color: #ffffff;
+  font: 700 11px/1 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .statut .ile {
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 66px;
+  height: 19px;
+  margin-left: -33px;
+  border-radius: 10px;
+  background: #000000;
+}
+.marque .vitrine-claire.la-traversee .statut .ic {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.marque .vitrine-claire.la-traversee .statut .res {
+  width: 14px;
+  height: 9px;
+  background: #ffffff;
+  clip-path: polygon(0 100%, 0 62%, 100% 0, 100% 100%);
+}
+.marque .vitrine-claire.la-traversee .statut .bat {
+  position: relative;
+  width: 20px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid #ffffff;
+}
+.marque .vitrine-claire.la-traversee .statut .bat::before {
+  content: "";
+  position: absolute;
+  inset: 1px 5px 1px 1px;
+  border-radius: 1px;
+  background: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .ecran .bandeau-tel {
+  flex: none;
+}
+.marque .vitrine-claire.la-traversee .ecran .dedans {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  align-content: start;
+}
+.marque .vitrine-claire.la-traversee .ecran .onglets {
+  flex: none;
+}
+.marque .vitrine-claire.la-traversee .maison {
+  flex: none;
+  height: 17px;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+}
+.marque .vitrine-claire.la-traversee .maison::before {
+  content: "";
+  width: 88px;
+  height: 4px;
+  border-radius: 2px;
+  background: #0f1d2c;
+}
+.marque .vitrine-claire.la-traversee .ecran .dedans {
+  padding: 12px 11px;
+  gap: 8px;
+}
+.marque .vitrine-claire.la-traversee .ecran h3 {
+  font-size: 13px;
+  line-height: 1.3;
+}
+.marque .vitrine-claire.la-traversee .ecran .mini {
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 9px;
+  padding: 7px;
+}
+.marque .vitrine-claire.la-traversee .ecran .mini strong {
+  font-size: 11.5px;
+}
+.marque .vitrine-claire.la-traversee .ecran .mini b {
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+.marque .vitrine-claire.la-traversee .ecran .mini span {
+  padding: 4px 7px;
+  font-size: 8px;
+}
+@keyframes traversee-monte {
   from {
-    opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(110%);
   }
   to {
+    transform: none;
+  }
+}
+@keyframes traversee-derive {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(9vw, 7vw) scale(1.25);
+  }
+}
+@keyframes traversee-flotte {
+  from {
+    transform: translateY(-8px);
+  }
+  to {
+    transform: translateY(8px);
+  }
+}
+@keyframes traversee-glisse {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+@keyframes traversee-eclat {
+  0%,
+  55% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes traversee-pouls {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.5);
+  }
+  60% {
+    box-shadow: 0 0 0 9px rgba(255, 255, 255, 0);
+  }
+}
+@keyframes traversee-alterne {
+  0%,
+  42% {
+    opacity: 1;
+    transform: none;
+  }
+  50%,
+  92% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
     opacity: 1;
     transform: none;
   }
 }
-@keyframes traversee-reveler-zoom {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
+@media (max-height: 720px) and (min-width: 981px) {
+  .marque .vitrine-claire.la-traversee .carte p {
+    display: none;
   }
-  to {
-    opacity: 1;
-    transform: none;
+  .marque .vitrine-claire.la-traversee .carte.phare .chips {
+    display: none;
   }
-}
-@keyframes traversee-reveler-gauche {
-  from {
-    opacity: 0;
-    transform: translateX(-28px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+  .marque .vitrine-claire.la-traversee .hero .chapo {
+    font-size: 15px;
   }
 }
-@keyframes traversee-reveler-trait {
-  from {
-    transform: scaleX(0);
+@media (max-width: 980px) {
+  .marque .vitrine-claire.la-traversee .entete {
+    grid-template-columns: minmax(0, 1fr);
   }
-  to {
-    transform: none;
+  .marque .vitrine-claire.la-traversee .entete p {
+    font-size: 15px;
+  }
+  .marque .vitrine-claire.la-traversee .frise-h {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .rail {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: -20px;
+    padding-inline: 20px;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .marque .vitrine-claire.la-traversee .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .rail > * {
+    flex: 0 0 min(78%, 320px);
+    scroll-snap-align: center;
+  }
+  .marque .vitrine-claire.la-traversee .rail.large > * {
+    flex-basis: min(88%, 420px);
+  }
+  .marque .vitrine-claire.la-traversee .plateforme .wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .marque .vitrine-claire.la-traversee .tel {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .vente {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .marque .vitrine-claire.la-traversee .cote-d {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .marque .vitrine-claire.la-traversee .panels {
+    padding: 12px 16px;
+  }
+  .marque .vitrine-claire.la-traversee .panels .chips li {
+    font-size: 11.5px;
+    padding: 6px 10px;
   }
 }
-@keyframes traversee-apparition {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+@media (max-width: 640px) {
+  .marque .vitrine-claire.la-traversee .hero .chapo {
+    font-size: 15px;
   }
-  to {
-    opacity: 1;
-    transform: none;
+  .marque .vitrine-claire.la-traversee .compte {
+    width: 100%;
   }
-}
-@media (scripting: enabled) {
-  .marque .vitrine-claire.la-traversee .scene .reveler,
-  .marque .vitrine-claire.la-traversee .scene .reveler-zoom,
-  .marque .vitrine-claire.la-traversee .scene .reveler-gauche,
-  .marque .vitrine-claire.la-traversee .scene .reveler-trait {
-    animation: traversee-reveler 0.6s var(--courbe) var(--retard, 0ms) backwards
-      paused;
+  .marque .vitrine-claire.la-traversee .compte div {
+    min-width: 0;
+    flex: 1;
   }
-  .marque .vitrine-claire.la-traversee .scene .reveler-zoom {
-    animation-name: traversee-reveler-zoom;
+  .marque .vitrine-claire.la-traversee .gagner {
+    width: 100%;
   }
-  .marque .vitrine-claire.la-traversee .scene .reveler-gauche {
-    animation-name: traversee-reveler-gauche;
+  .marque .vitrine-claire.la-traversee .gagner a {
+    display: none;
   }
-  .marque .vitrine-claire.la-traversee .scene .reveler-trait {
-    animation-name: traversee-reveler-trait;
-    animation-duration: 0.9s;
-    transform-origin: left center;
+  .marque .vitrine-claire.la-traversee .actions .btn {
+    flex: 1 1 100%;
   }
-  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler,
-  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler-zoom,
-  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler-gauche,
-  .marque .vitrine-claire.la-traversee .scene[data-visible] .reveler-trait {
-    animation-play-state: running;
+  .marque .vitrine-claire.la-traversee .hero .btn-trait {
+    display: none;
   }
-}
-.marque .vitrine-claire.la-traversee .apparition {
-  animation: traversee-apparition 0.8s var(--courbe) var(--retard, 0ms) both;
+  .marque .vitrine-claire.la-traversee .atouts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .marque .vitrine-claire.la-traversee .atouts span {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .atouts div {
+    align-items: center;
+  }
+  .marque .vitrine-claire.la-traversee .atouts i {
+    grid-row: auto;
+  }
+  .marque .vitrine-claire.la-traversee .pass ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .marque .vitrine-claire.la-traversee .pass .cote {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .cote-d {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .marque .vitrine-claire.la-traversee .bloc-n span {
+    display: none;
+  }
+  .marque .vitrine-claire.la-traversee .defis .note {
+    display: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .marque .vitrine-claire.la-traversee *,
@@ -2497,7 +1798,377 @@
     animation: none !important;
     transition: none !important;
   }
-  .marque .vitrine-claire.la-traversee .traversee {
+  .marque .vitrine-claire.la-traversee.js [data-r],
+  .marque .vitrine-claire.la-traversee.js [data-s] > * {
     transform: none;
   }
+  .marque .vitrine-claire.la-traversee.js .frise-h:not(.vu)::before {
+    transform: none;
+  }
+  .marque .vitrine-claire.la-traversee .gagner .lots {
+    height: auto;
+  }
+  .marque .vitrine-claire.la-traversee .gagner .lots div {
+    position: static;
+  }
+}
+.marque .vitrine-claire.la-traversee .cur {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  display: none;
+}
+.marque .vitrine-claire.la-traversee.fx-curseur .cur {
+  display: block;
+}
+.marque .vitrine-claire.la-traversee.fx-curseur,
+.marque .vitrine-claire.la-traversee.fx-curseur * {
+  cursor: none !important;
+}
+.marque .vitrine-claire.la-traversee .cur::before {
+  content: "";
+  position: absolute;
+  left: -18px;
+  top: -18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+  mix-blend-mode: difference;
+  transition:
+    transform 0.35s var(--elan),
+    background 0.3s,
+    border-color 0.3s;
+}
+.marque .vitrine-claire.la-traversee .cur::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  mix-blend-mode: difference;
+  transition: opacity 0.2s;
+}
+.marque .vitrine-claire.la-traversee .cur.act::before {
+  transform: scale(1.6);
+  background: rgba(255, 255, 255, 0.14);
+}
+.marque .vitrine-claire.la-traversee .lent {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.45s;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    circle clamp(150px, 17vw, 240px) at var(--lx, 50%) var(--ly, 50%),
+    #000 0,
+    #000 55%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    circle clamp(150px, 17vw, 240px) at var(--lx, 50%) var(--ly, 50%),
+    #000 0,
+    #000 55%,
+    transparent 100%
+  );
+}
+.marque .vitrine-claire.la-traversee.fx-lentille .lent {
+  display: block;
+}
+.marque .vitrine-claire.la-traversee.fx-lentille .hero:hover .lent {
+  opacity: 1;
+}
+.marque .vitrine-claire.la-traversee .lent img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.14);
+  transition: opacity 0.8s;
+}
+.marque .vitrine-claire.la-traversee .lent img.actif {
+  opacity: 1;
+}
+.marque .vitrine-claire.la-traversee .frise-h .mk {
+  position: absolute;
+  top: -6px;
+  left: var(--mx, 0px);
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #d81f3a;
+  box-shadow: 0 0 0 8px rgba(216, 31, 58, 0.18);
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    left 0.12s ease-out;
+  z-index: 2;
+}
+.marque .vitrine-claire.la-traversee.fx-frise .frise-h::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  height: 6px;
+  width: var(--mx, 0px);
+  border-radius: 3px;
+  background: linear-gradient(90deg, #d81f3a, #ad0707 40%, #007140);
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    width 0.12s ease-out;
+}
+.marque .vitrine-claire.la-traversee.fx-frise .frise-h.suivi::after,
+.marque .vitrine-claire.la-traversee.fx-frise .frise-h.suivi .mk {
+  opacity: 1;
+}
+.marque .vitrine-claire.la-traversee.fx-frise .carte {
+  position: relative;
+  transition:
+    transform 0.55s var(--elan),
+    opacity 0.4s,
+    filter 0.4s,
+    box-shadow 0.5s;
+}
+.marque .vitrine-claire.la-traversee.fx-frise .cartes.a-foc .carte {
+  opacity: 0.4;
+  filter: saturate(0.4);
+  transform: scale(0.95);
+}
+.marque .vitrine-claire.la-traversee.fx-frise .cartes.a-foc .carte.foc {
+  opacity: 1;
+  filter: none;
+  transform: translateY(-16px) scale(1.06);
+  box-shadow: 0 44px 70px -30px rgba(15, 29, 44, 0.65);
+  z-index: 2;
+}
+.marque .vitrine-claire.la-traversee .lotc .dos {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(8px, 1.6vh, 14px);
+  padding: clamp(18px, 3.2vh, 30px);
+  background: linear-gradient(
+    135deg,
+    #7a0a1c 0%,
+    #ad0707 22%,
+    #0f1d2c 55%,
+    #0f5028 85%,
+    #007140 100%
+  );
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee.fx-flip .lotc.verso .dos {
+  display: flex;
+}
+.marque .vitrine-claire.la-traversee .dos h4 {
+  margin: 0;
+  font: 700 11.5px/1 var(--corps);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+.marque .vitrine-claire.la-traversee .dos ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(4px, 1vh, 8px);
+}
+.marque .vitrine-claire.la-traversee .dos li {
+  position: relative;
+  padding-left: 26px;
+  font: 600 clamp(14px, 1.5vw, 17px)/1.3 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .dos li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.4em;
+  width: 12px;
+  height: 6px;
+  border-left: 2px solid #3fc98a;
+  border-bottom: 2px solid #3fc98a;
+  transform: rotate(-45deg);
+}
+.marque .vitrine-claire.la-traversee .lotc .indice {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 4;
+  display: none;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(15, 29, 44, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font: 700 10.5px/1 var(--corps);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.marque .vitrine-claire.la-traversee.fx-flip .lotc .indice {
+  display: block;
+}
+.marque .vitrine-claire.la-traversee.fx-flip .lotc {
+  cursor: pointer;
+}
+.marque .vitrine-claire.la-traversee.fx-flip .lotc:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+.marque .vitrine-claire.la-traversee.fx-tel .tel {
+  animation: none;
+  transition: transform 0.3s ease-out;
+}
+.marque .vitrine-claire.la-traversee.fx-tel .onglets b {
+  color: inherit;
+  font-weight: 600;
+}
+.marque .vitrine-claire.la-traversee.fx-tel .onglets > * {
+  cursor: pointer;
+  padding: 4px 2px;
+  transition: color 0.3s;
+}
+.marque .vitrine-claire.la-traversee.fx-tel .onglets .ici {
+  color: #ad0707;
+  font-weight: 700;
+}
+.marque .vitrine-claire.la-traversee.fx-tel .ecran .dedans.entre {
+  animation: traversee-glisseE 0.45s var(--elan);
+}
+@keyframes traversee-glisseE {
+  from {
+    transform: translateX(26px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.marque .vitrine-claire.la-traversee.fx-tel .atouts div.on {
+  transform: translateY(-6px);
+  border-color: #ffffff;
+  background: #1d3450;
+}
+.marque .vitrine-claire.la-traversee .rang {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 9px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid var(--trait);
+}
+.marque .vitrine-claire.la-traversee .rang i {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bouton);
+}
+.marque .vitrine-claire.la-traversee .rang:nth-child(3) i {
+  background: #1b3a6b;
+}
+.marque .vitrine-claire.la-traversee .rang:nth-child(4) i {
+  background: #007140;
+}
+.marque .vitrine-claire.la-traversee .rang strong {
+  display: block;
+  font: 700 12.5px/1.2 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .rang small {
+  font-size: 11px;
+  color: var(--doux);
+}
+.marque .vitrine-claire.la-traversee .ligne-p {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--trait);
+  font: 700 12.5px/1.25 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .ligne-p em {
+  font: 700 10px/1.6 var(--corps);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ad0707;
+}
+.marque .vitrine-claire.la-traversee .qr {
+  width: 124px;
+  height: 124px;
+  margin: 4px auto;
+  padding: 8px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--trait);
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 2px;
+}
+.marque .vitrine-claire.la-traversee .qr i {
+  background: #0f1d2c;
+  border-radius: 1px;
+}
+.marque .vitrine-claire.la-traversee .qr i.v {
+  background: transparent;
+}
+.marque .vitrine-claire.la-traversee .billet-m {
+  text-align: center;
+  font: 700 12.5px/1.4 var(--titre);
+}
+.marque .vitrine-claire.la-traversee .billet-m small {
+  display: block;
+  font: 400 11px/1.4 var(--corps);
+  color: var(--doux);
+}
+.marque .vitrine-claire.la-traversee .etape-m {
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #fdeaed;
+  color: #ad0707;
+  font: 700 11.5px/1.35 var(--titre);
+}
+
+.marque .vitrine-claire.la-traversee {
+  --barre: 0px;
+}
+@media (min-width: 1024px) {
+  .marque .vitrine-claire.la-traversee {
+    --barre: 112px;
+  }
+}
+.marque .vitrine-claire.la-traversee .progres {
+  top: 0;
+}
+.marque .vitrine-claire.la-traversee a {
+  color: inherit;
+}
+.marque .vitrine-claire.la-traversee .btn-rouge {
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .btn-rouge:hover {
+  color: #ffffff;
+}
+.marque .vitrine-claire.la-traversee .onglet {
+  font-family: var(--corps);
+}
+.marque .vitrine-claire.la-traversee .gagner a {
+  text-decoration: none;
 }

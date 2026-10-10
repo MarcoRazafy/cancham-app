@@ -1,30 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Check } from "lucide-react";
-import { Paiements } from "@/components/public/traversee/Paiements";
+import { COORDONNEES } from "@/lib/coordonnees";
 import { fmtMoney } from "@/lib/format";
-import { EVENEMENT, retard } from "@/lib/traversee";
-
-const INCLUS = [
-  <>
-    <b>Expositions</b> toute la journée
-  </>,
-  <>
-    <b>Doing Business in Canada</b>, la formation
-  </>,
-  <>
-    <b>5 à 7 d’affaires</b> et rendez-vous B2B
-  </>,
-  <>
-    <b>Gala des 10 ans</b> : cocktail, dîner, spectacle, prix
-  </>,
-  <>
-    <b>Les trois défis</b> : 10 000 000 Ar et une MECC
-  </>,
-  <>
-    <b>L’application</b> : pass QR, réseautage, direct
-  </>,
-];
+import { EVENEMENT, LIENS } from "@/lib/traversee";
 
 export function Billet({
   billetterie,
@@ -34,102 +12,93 @@ export function Billet({
   prixPass: number;
 }) {
   return (
-    <section
-      className="section clair papier scene"
-      id="billet"
-      aria-labelledby="titre-billet"
-    >
-      <div className="conteneur">
-        <div className="tete ligne">
-          <div>
-            <h2
-              id="titre-billet"
-              className="titre-section reveler"
-              style={retard(80)}
-            >
-              Un seul pass.{" "}
-              <span className="saillant rouge">Accès à tout.</span>
+    <section className="plein brume" id="billet">
+      <div className="wrap">
+        <div className="entete" data-r>
+          <div className="g">
+            <p className="sur">Billetterie</p>
+            <h2 className="h2">
+              Un seul billet. <em className="r">Accès à tout.</em>
             </h2>
           </div>
-          <p className="chapeau reveler" style={retard(160)}>
-            Expositions, formation, 5 à 7 et Gala : votre pass nominatif ouvre
-            chaque temps de la Traversée, et l’application dès aujourd’hui.
-          </p>
+          <p>La journée, le Gala, les deux défis et la plateforme.</p>
         </div>
-
-        <div className="billet-grille">
-          <article className="pass reveler" style={retard(120)}>
-            <div className="pass-haut">
+        <div className="vente" data-s>
+          <div className="pass" data-pass>
+            <div className="tete">
               <div>
-                <span className="surtitre">Pass La Traversée</span>
-                <div className="pass-prix tnum">
-                  {prixPass
-                    .toLocaleString("fr-FR")
-                    .replace(/[\u202f\u00a0]/g, " ")}
+                <p className="nom">Billet {EVENEMENT.nom}</p>
+                <p className="prix">
+                  {prixPass.toLocaleString("fr-FR")}
                   <small>Ar</small>
-                </div>
+                </p>
               </div>
-              <p className="quand">
+              <p className="cote">
                 Par personne
                 <br />
                 {EVENEMENT.dateLisible}
                 <br />
-                {EVENEMENT.lieuCourt} · toute la journée
+                {EVENEMENT.lieuCourt}
               </p>
             </div>
-            <div className="perfo" aria-hidden="true" />
-            <div className="pass-corps">
-              <ul className="inclus">
-                {INCLUS.map((contenu, i) => (
-                  <li key={i}>
-                    <Check size={18} strokeWidth={2.6} aria-hidden="true" />
-                    <span>{contenu}</span>
-                  </li>
-                ))}
+            <div className="corps">
+              <ul>
+                <li>
+                  <b>Expositions</b> des membres
+                </li>
+                <li>
+                  <b>Six panels</b> d’experts
+                </li>
+                <li>
+                  <b>Réseautage 5 à 7</b>
+                </li>
+                <li>
+                  <b>Gala des 10 ans</b>
+                </li>
+                <li>
+                  <b>Les deux défis</b> : MECC 2027 et{" "}
+                  {fmtMoney(EVENEMENT.lotTombola)}
+                </li>
+                <li>
+                  <b>La plateforme</b> des participants
+                </li>
               </ul>
-              <Paiements />
-              <Link className="btn-action" href={billetterie}>
-                Réserver ma journée{" "}
-                <span className="fleche" aria-hidden="true">
-                  →
-                </span>
+              <p className="paie">
+                Paiement : MVola, Orange Money, Airtel Money, carte bancaire ou
+                virement.
+              </p>
+              <Link className="btn btn-rouge" href={billetterie}>
+                Réserver mon billet →
               </Link>
             </div>
-          </article>
-
-          <div className="encarts">
-            <div className="encart photo reveler" style={retard(220)}>
+          </div>
+          <div className="cote-d">
+            <div className="bloc-n photo">
               <Image
                 src="/traversee/salle.jpg"
                 alt=""
                 fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                style={{ objectFit: "cover" }}
+                sizes="(max-width: 980px) 50vw, 460px"
               />
-              <span className="pulse">
-                <i aria-hidden="true" />
-                Places limitées
-              </span>
-              <h3>La capacité de la salle fixe la limite</h3>
-              <p>
-                Une fois la jauge atteinte, la billetterie ferme. Réservez tant
-                qu’il reste des places.
-              </p>
+              <b>Places limitées</b>
+              <strong>La salle du Carlton fixe la limite.</strong>
+              <span>Quand elle est pleine, la billetterie ferme.</span>
             </div>
-            <div className="encart reveler" style={retard(320)}>
-              <h3>Vous venez en équipe ?</h3>
-              <p>
-                Réservez plusieurs pass en une fois. Chaque collaborateur reçoit
-                son billet nominatif et son accès à l’application. Facture au
-                nom de l’entreprise.
-              </p>
-              <Link className="btn-contour" href={billetterie}>
-                Réserver pour mon équipe
-              </Link>
+            <div className="bloc-n">
+              <strong>Vous venez en équipe ?</strong>
+              <span>
+                Écrivez-nous, nous vous guidons : tarif préférentiel et facture
+                au nom de votre entreprise.
+              </span>
+              <a className="btn btn-trait" href={LIENS.equipe}>
+                Nous envoyer un message →
+              </a>
+              <small className="joindre-e">
+                {COORDONNEES.email} · {COORDONNEES.telephone}
+              </small>
             </div>
           </div>
         </div>
-        <p className="sr-only">Pass à {fmtMoney(prixPass)} par personne.</p>
       </div>
     </section>
   );

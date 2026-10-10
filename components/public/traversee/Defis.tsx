@@ -1,122 +1,109 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Check, Heart, Image as ImageIcon } from "lucide-react";
 import { fmtMoney } from "@/lib/format";
-import { EVENEMENT, retard } from "@/lib/traversee";
+import { EVENEMENT } from "@/lib/traversee";
 
-const DEFIS = [
+export const DOS = [
   {
-    num: 1,
-    quand: "Avant le gala",
-    titre: "« J’y serai »",
-    lot: fmtMoney(EVENEMENT.prixDefi),
-    texte:
-      "Annoncez votre venue sur Facebook ou Instagram en taguant la CanCham. La publication la plus populaire remporte le prix, annoncé pendant la soirée.",
-    regle: "Le plus de réactions l’emporte",
-    icone: Heart,
-    photo: "/traversee/oratrice.jpg",
-    alt: "Participante au micro lors d’un événement CanCham",
+    titre: "Pitch MECC 2027 · le lot comprend",
+    points: [
+      "Participation à la MECC 2027",
+      "Billet d’avion aller-retour",
+      "Hébergement",
+      "Transport",
+      "Restauration",
+      "Un mois sur place",
+    ],
   },
   {
-    num: 2,
-    quand: "Vote le 18 déc.",
-    titre: "Pitch MECC",
-    lot: "Mission tout inclus",
-    texte:
-      "Déposez la vidéo de pitch de votre entreprise. Le jury retient dix projets, dévoilés au gala, et le public désigne le lauréat en direct.",
-    regle: "Une voix par pass",
-    icone: Check,
-    photo: "/traversee/pitch.jpg",
-    alt: "Intervenante présentant son projet lors d’une rencontre CanCham",
-  },
-  {
-    num: 3,
-    quand: "Après le gala",
-    titre: "« J’y étais »",
-    lot: fmtMoney(EVENEMENT.prixDefi),
-    texte:
-      "Partagez votre plus belle photo de la journée en taguant la CanCham. Le 28 décembre à 19 h, la publication la plus populaire l’emporte.",
-    regle: "Résultat en direct à J+10",
-    icone: ImageIcon,
-    photo: "/traversee/diner.jpg",
-    alt: "Canapés servis lors d’un cocktail CanCham",
+    titre: "Tombola « J’y serai » · comment ça marche",
+    points: [
+      `${fmtMoney(EVENEMENT.lotTombola)}, soit 1 000 CAD`,
+      "Votre photo au template CanCham 10 ans",
+      "Taguez la CanCham",
+      "Annoncez votre venue",
+      "Gagnant tiré au sort",
+    ],
   },
 ];
 
-export function Defis({ billetterie }: { billetterie: string }) {
+export function Defis() {
   return (
-    <section
-      className="section defis scene"
-      id="defis"
-      aria-labelledby="titre-defis"
-    >
-      <div className="conteneur">
-        <div className="tete ligne">
-          <div>
-            <h2
-              id="titre-defis"
-              className="titre-section reveler"
-              style={retard(80)}
-            >
-              Venez pour le réseau.{" "}
-              <span className="saillant" style={{ color: "var(--vert-vif)" }}>
-                Repartez avec un lot.
-              </span>
-            </h2>
+    <section className="plein defis" id="defis">
+      <div className="wrap">
+        <div className="entete" data-r>
+          <div className="g">
+            <p className="sur">Deux défis</p>
+            <h2 className="h2">Venez pour le réseau. Repartez avec un lot.</h2>
           </div>
-          <p
-            className="chapeau reveler"
-            style={{ ...retard(160), color: "rgb(255 255 255 / .8)" }}
-          >
-            10 000 000 Ar et une mission au Canada se jouent avant, pendant et
-            après la journée, depuis l’application de la Traversée.
+          <p>
+            Deux lots se jouent entre les participants de la Traversée. Voici ce
+            que vous pouvez gagner.
           </p>
         </div>
-
-        <div className="cartes-defis">
-          {DEFIS.map((d, i) => {
-            const Icone = d.icone;
-            return (
-              <article
-                key={d.num}
-                className="defi reveler-zoom"
-                style={retard(120 + i * 120)}
-              >
-                <div className="defi-visuel">
-                  <Image
-                    src={d.photo}
-                    alt={d.alt}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    style={{ objectFit: "cover" }}
-                  />
-                  <span className="defi-num">{d.num}</span>
-                  <span className="defi-quand">{d.quand}</span>
-                </div>
-                <div className="defi-corps">
-                  <h3>{d.titre}</h3>
-                  <span className="lot tnum">{d.lot}</span>
-                  <p>{d.texte}</p>
-                  <span className="regle">
-                    <Icone size={16} aria-hidden="true" />
-                    {d.regle}
-                  </span>
-                </div>
-              </article>
-            );
-          })}
+        <div className="deux rail large" data-s>
+          <article className="lotc" tabIndex={0} role="button">
+            <Image
+              src="/traversee/oratrice.jpg"
+              alt="Prise de parole au pupitre lors d’un événement CanCham"
+              fill
+              sizes="(max-width: 980px) 90vw, 560px"
+            />
+            <span className="tag">Défi 1 · Pitch MECC 2027</span>
+            <div>
+              <p className="gros">Un mois au Canada</p>
+              <p className="ligne">
+                Tous frais payés : vol, hébergement, transport et repas.
+              </p>
+            </div>
+            <Dos index={0} />
+          </article>
+          <article className="lotc" tabIndex={0} role="button">
+            <Image
+              src="/traversee/equipe.jpg"
+              alt="L’équipe CanCham à l’accueil d’une rencontre"
+              fill
+              sizes="(max-width: 980px) 90vw, 560px"
+            />
+            <span className="tag">Défi 2 · Tombola « J’y serai »</span>
+            <div>
+              <p className="gros" data-gros={EVENEMENT.lotTombola}>
+                {fmtMoney(EVENEMENT.lotTombola)}
+              </p>
+              <p className="ligne">
+                L’équivalent de 1 000 CAD, par tirage au sort.
+              </p>
+            </div>
+            <Dos index={1} />
+          </article>
         </div>
-
-        <p className="note reveler" style={retard(460)}>
-          <span>
-            Ouvert aux détenteurs d’un pass nominatif. Une participation par
-            personne et par défi. Règlement complet publié dans l’application.
-          </span>
-          <Link className="btn-contour" href={billetterie}>
-            Réserver pour participer
-          </Link>
-        </p>
+        <ol className="cadres" data-s>
+          <li>Inscrivez-vous à la Traversée.</li>
+          <li>Remplissez votre profil sur la plateforme.</li>
+          <li>Suivez le guide pour être éligible.</li>
+        </ol>
+        <div className="actions">
+          <a className="btn btn-rouge" href="#billet">
+            Réserver pour participer →
+          </a>
+        </div>
       </div>
     </section>
+  );
+}
+
+function Dos({ index }: { index: 0 | 1 }) {
+  const d = DOS[index];
+  return (
+    <>
+      <div className="dos">
+        <h4>{d.titre}</h4>
+        <ul>
+          {d.points.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ul>
+      </div>
+      <span className="indice">Cliquer ↻</span>
+    </>
   );
 }
