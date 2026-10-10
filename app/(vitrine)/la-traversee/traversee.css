@@ -1812,43 +1812,6 @@
     position: static;
   }
 }
-.marque .vitrine-claire.la-traversee .lent {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  display: none;
-  opacity: 0;
-  transition: opacity 0.45s;
-  pointer-events: none;
-  -webkit-mask-image: radial-gradient(
-    circle clamp(150px, 17vw, 240px) at var(--lx, 50%) var(--ly, 50%),
-    #000 0,
-    #000 55%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    circle clamp(150px, 17vw, 240px) at var(--lx, 50%) var(--ly, 50%),
-    #000 0,
-    #000 55%,
-    transparent 100%
-  );
-}
-.marque .vitrine-claire.la-traversee.fx-lentille .lent {
-  display: block;
-}
-.marque .vitrine-claire.la-traversee.fx-lentille .hero:hover .lent {
-  opacity: 1;
-}
-.marque .vitrine-claire.la-traversee .lent img {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transform: scale(1.14);
-  transition: opacity 0.8s;
-}
-.marque .vitrine-claire.la-traversee .lent img.actif {
-  opacity: 1;
-}
 .marque .vitrine-claire.la-traversee .frise-h .mk {
   position: absolute;
   top: -6px;

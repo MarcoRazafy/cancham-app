@@ -209,44 +209,6 @@ export function Interactions() {
     }
 
     if (!calme) {
-      if (hero) {
-        const lent = document.createElement("div");
-        lent.className = "lent";
-        fonds.forEach((f) => {
-          const i = new Image();
-          i.alt = "";
-          i.src =
-            (f as HTMLImageElement).currentSrc || f.getAttribute("src") || "";
-          lent.appendChild(i);
-        });
-        const wrap = $(".wrap", hero);
-        hero.insertBefore(lent, wrap);
-        nettoyage.push(() => lent.remove());
-        const syncLent = () =>
-          fonds.forEach((f, k) =>
-            lent.children[k]?.classList.toggle(
-              "actif",
-              f.classList.contains("actif"),
-            ),
-          );
-        syncLent();
-        const mo = new MutationObserver(syncLent);
-        if (fond)
-          mo.observe(fond, {
-            attributes: true,
-            subtree: true,
-            attributeFilter: ["class"],
-          });
-        nettoyage.push(() => mo.disconnect());
-        ecoute(hero, "pointermove", (e) => {
-          const ev = e as PointerEvent;
-          if (ev.pointerType === "touch") return;
-          const r = hero.getBoundingClientRect();
-          lent.style.setProperty("--lx", `${ev.clientX - r.left}px`);
-          lent.style.setProperty("--ly", `${ev.clientY - r.top}px`);
-        });
-      }
-
       const cartes = $("#programme .cartes");
       const fr = $("#programme .frise-h");
       if (cartes && fr) {
@@ -381,17 +343,9 @@ export function Interactions() {
         });
       }
 
-      ["lentille", "frise", "flip", "tel"].forEach((k) =>
-        racine.classList.add(`fx-${k}`),
-      );
+      ["frise", "flip", "tel"].forEach((k) => racine.classList.add(`fx-${k}`));
       nettoyage.push(() =>
-        racine.classList.remove(
-          "js",
-          "fx-lentille",
-          "fx-frise",
-          "fx-flip",
-          "fx-tel",
-        ),
+        racine.classList.remove("js", "fx-frise", "fx-flip", "fx-tel"),
       );
     }
 
