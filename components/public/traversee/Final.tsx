@@ -38,3 +38,19 @@ export function Final({
     </section>
   );
 }
+
+export function BarreFlottante({ prixPass }: { prixPass: number }) {
+  return (
+    <div className="flottante" data-flottante aria-hidden="true">
+      <div>
+        <b>
+          {EVENEMENT.nom} · 18 décembre · {EVENEMENT.lieuCourt}
+        </b>
+        <small>Un billet pour toute la journée · places limitées</small>
+      </div>
+      <a className="btn btn-rouge" href="#billet" tabIndex={-1}>
+        Réserver · {fmtMoney(prixPass)}
+      </a>
+    </div>
+  );
+}

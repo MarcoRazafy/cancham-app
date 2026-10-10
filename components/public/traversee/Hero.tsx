@@ -101,6 +101,9 @@ export function Hero({
               Réserver mon billet · {fmtMoney(prixPass)} →
             </a>
             <Compte decompte={decompte} libelle="Temps restant avant le Gala" />
+            <a className="btn-lien" href="#programme">
+              Voir le programme
+            </a>
           </div>
           <div className="gagner">
             <span className="etiq">À gagner</span>

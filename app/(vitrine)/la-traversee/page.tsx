@@ -3,7 +3,7 @@ import { Montserrat, Open_Sans } from "next/font/google";
 import { connection } from "next/server";
 import { Billet } from "@/components/public/traversee/Billet";
 import { Defis } from "@/components/public/traversee/Defis";
-import { Final } from "@/components/public/traversee/Final";
+import { BarreFlottante, Final } from "@/components/public/traversee/Final";
 import { Hero } from "@/components/public/traversee/Hero";
 import { Interactions } from "@/components/public/traversee/Interactions";
 import { Plateforme } from "@/components/public/traversee/Plateforme";
@@ -65,6 +65,7 @@ export default async function LaTraverseePage() {
       <Plateforme decompte={compte} />
       <Billet billetterie={billetterie} prixPass={prixPass} />
       <Final prixPass={prixPass} decompte={compte} />
+      <BarreFlottante prixPass={prixPass} />
     </main>
   );
 }

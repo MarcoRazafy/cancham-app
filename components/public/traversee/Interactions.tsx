@@ -46,7 +46,6 @@ export function Interactions() {
       r: Element = racine,
     ) => Array.from(r.querySelectorAll<T>(s));
     const calme = matchMedia("(prefers-reduced-motion:reduce)").matches;
-    const fin = matchMedia("(hover:hover) and (pointer:fine)").matches;
     const nettoyage: (() => void)[] = [];
     const ecoute = <K extends keyof HTMLElementEventMap>(
       el: Element | Window | Document,
@@ -150,6 +149,34 @@ export function Interactions() {
       });
     });
 
+    const flottante = $("[data-flottante]");
+    const billet = $("#billet");
+    if (flottante && hero && billet && "IntersectionObserver" in window) {
+      let heroVu = true;
+      let billetVu = false;
+      const montrer = () => {
+        const v = !heroVu && !billetVu;
+        flottante.classList.toggle("visible", v);
+        flottante.setAttribute("aria-hidden", String(!v));
+        flottante
+          .querySelectorAll("a")
+          .forEach((a) => (a.tabIndex = v ? 0 : -1));
+      };
+      const ioF = new IntersectionObserver(
+        (es) => {
+          es.forEach((e) => {
+            if (e.target === hero) heroVu = e.isIntersecting;
+            if (e.target === billet) billetVu = e.isIntersecting;
+          });
+          montrer();
+        },
+        { threshold: 0.15 },
+      );
+      ioF.observe(hero);
+      ioF.observe(billet);
+      nettoyage.push(() => ioF.disconnect());
+    }
+
     if (!calme && "IntersectionObserver" in window) {
       const pass = $("[data-pass]");
       if (pass) {
@@ -182,43 +209,6 @@ export function Interactions() {
     }
 
     if (!calme) {
-      const cur = document.createElement("div");
-      cur.className = "cur";
-      racine.appendChild(cur);
-      nettoyage.push(() => cur.remove());
-      let cx = -100;
-      let cy = -100;
-      let tx = -100;
-      let ty = -100;
-      ecoute(
-        document,
-        "pointermove",
-        (e) => {
-          const ev = e as PointerEvent;
-          tx = ev.clientX;
-          ty = ev.clientY;
-          const cible = ev.target as Element | null;
-          cur.classList.toggle(
-            "act",
-            Boolean(
-              cible?.closest?.(
-                "a,button,.onglet,.lotc,.carte,.atouts div,.onglets > *",
-              ),
-            ),
-          );
-        },
-        { passive: true },
-      );
-      let anim = 0;
-      const suit = () => {
-        cx += (tx - cx) * 0.24;
-        cy += (ty - cy) * 0.24;
-        cur.style.transform = `translate(${cx}px,${cy}px)`;
-        anim = requestAnimationFrame(suit);
-      };
-      suit();
-      nettoyage.push(() => cancelAnimationFrame(anim));
-
       if (hero) {
         const lent = document.createElement("div");
         lent.className = "lent";
@@ -394,11 +384,9 @@ export function Interactions() {
       ["lentille", "frise", "flip", "tel"].forEach((k) =>
         racine.classList.add(`fx-${k}`),
       );
-      if (fin) racine.classList.add("fx-curseur");
       nettoyage.push(() =>
         racine.classList.remove(
           "js",
-          "fx-curseur",
           "fx-lentille",
           "fx-frise",
           "fx-flip",
