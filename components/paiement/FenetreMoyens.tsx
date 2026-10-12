@@ -62,7 +62,7 @@ export function FenetreMoyens({
             {modes.length ? (
               <form action={ouvrirReglement} className="mt-4">
                 <input type="hidden" name="factureId" value={facture.id} />
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {ORDRE_MODES.map((m) =>
                     modes.includes(m) ? (
                       <SubmitButton

@@ -119,8 +119,9 @@ export default async function CotisationsPage({
 
           <p className="text-[12.5px] text-faint mt-5 mb-0 flex items-center gap-2">
             <CreditCard size={14} />
-            Le paiement en ligne n’est pas branché : l’équipe CanCham enregistre
-            les règlements reçus en espèces ou par virement.
+            {modes.length
+              ? "Réglez en ligne par carte bancaire ou mobile money. L’équipe CanCham enregistre aussi les règlements reçus par virement ou en espèces."
+              : "Le paiement en ligne n’est pas branché : l’équipe CanCham enregistre les règlements reçus en espèces ou par virement."}
           </p>
         </Card>
 

@@ -15,6 +15,11 @@ export interface DescriptionMode {
 }
 
 export const MODES: Record<ModeReglement, DescriptionMode> = {
+  carte: {
+    titre: "Carte bancaire",
+    detail: "Visa, Mastercard. Paiement immédiat, sur la page du prestataire.",
+    enLigne: true,
+  },
   mvola: {
     titre: "MVola",
     detail: "Portefeuille Telma. Validation sur votre téléphone.",
@@ -45,11 +50,6 @@ export const MODES: Record<ModeReglement, DescriptionMode> = {
     detail: "Remise en main propre à l’équipe, contre reçu.",
     enLigne: false,
   },
-  carte: {
-    titre: "Carte bancaire",
-    detail: "Visa, Mastercard. Paiement immédiat, sur la page du prestataire.",
-    enLigne: true,
-  },
   plateforme: {
     titre: "Plateformes de paiement",
     detail: "PayPal, Wise et consorts.",
@@ -58,6 +58,13 @@ export const MODES: Record<ModeReglement, DescriptionMode> = {
 };
 
 export const ORDRE_MODES = Object.keys(MODES) as ModeReglement[];
+
+export const MODES_EN_LIGNE: ModeReglement[] = [
+  "carte",
+  "mvola",
+  "orange_money",
+  "airtel_money",
+];
 
 export function estModeReglement(v: string): v is ModeReglement {
   return (ORDRE_MODES as string[]).includes(v);

@@ -1,13 +1,16 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
-import { MONTANT_MINIMUM_EN_LIGNE, vanillaPayActif } from "@/lib/vanillapay";
+import {
+  mobileMoneyEnLigne,
+  MONTANT_MINIMUM_EN_LIGNE,
+  vanillaPayActif,
+} from "@/lib/vanillapay";
 import {
   COORDONNEES_VIDES,
-  estPortefeuille,
   modeDisponible,
+  MODES_EN_LIGNE,
   numeroPortefeuille,
-  ORDRE_MODES,
   type Coordonnees,
   type ModeReglement,
 } from "@/lib/modes-reglement";
@@ -39,17 +42,15 @@ export async function getCoordonneesPaiement(): Promise<Coordonnees> {
 export async function modesProposes(): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
   const enLigne = vanillaPayActif();
-  return ORDRE_MODES.filter((m) => modeDisponible(m, c, enLigne));
+  return MODES_EN_LIGNE.filter((m) => modeDisponible(m, c, enLigne));
 }
 
 export async function modesPublics(montant: number): Promise<ModeReglement[]> {
   const c = await getCoordonneesPaiement();
-  return ORDRE_MODES.filter((m) =>
+  return MODES_EN_LIGNE.filter((m) =>
     m === "carte"
       ? vanillaPayActif() && montant >= MONTANT_MINIMUM_EN_LIGNE
-      : estPortefeuille(m)
-        ? Boolean(numeroPortefeuille(m, c))
-        : modeDisponible(m, c, false),
+      : Boolean(numeroPortefeuille(m, c)) || mobileMoneyEnLigne(),
   );
 }
 

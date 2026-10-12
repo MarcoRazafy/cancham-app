@@ -72,7 +72,7 @@ export function PaiementPublic({
         {modes.length ? (
           <form action={choisirPaiementPublic} className="mt-4">
             {cles}
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
               {ORDRE_MODES.filter((m) => modes.includes(m)).map((m) => (
                 <SubmitButton
                   key={m}
