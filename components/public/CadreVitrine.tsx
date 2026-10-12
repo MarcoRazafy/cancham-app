@@ -25,6 +25,7 @@ const LIENS = [
   { href: "/", libelle: "Accueil" },
   { href: "/#evenements", libelle: "Événements" },
   { href: "/#actualites", libelle: "Actualités" },
+  { href: "/la-traversee", libelle: "La Traversée" },
   {
     href: "/auth/inscription",
     libelle: "Devenir membre",
