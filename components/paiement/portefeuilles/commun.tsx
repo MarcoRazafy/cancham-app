@@ -66,10 +66,11 @@ export function PaiementDirect({
             Payer maintenant, depuis {titre}
           </h2>
           <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed text-muted">
-            Sur la page de paiement, choisissez {titre} : votre téléphone
-            {p.telephone ? ` (${numeroLisible(p.telephone)})` : ""} reçoit une
-            demande de confirmation. Validez-la avec votre code secret {titre},
-            et {somme} sont débités. Votre reçu
+            Sur la page de paiement, confirmez votre numéro
+            {p.telephone ? ` (${numeroLisible(p.telephone)})` : ""} : votre
+            téléphone reçoit une demande de confirmation. Validez-la avec votre
+            code secret {titre}, et {somme} sont débités, plus les frais de
+            l’opérateur. Votre reçu
             {billets ? " et vos billets arrivent" : " arrive"} aussitôt.
           </p>
         </div>
