@@ -126,7 +126,12 @@ export async function payerParPortefeuille(formData: FormData) {
   }
 
   const ouverture = await ouvrirChezLePrestataire(
-    { id: p.id, montant: p.montant, numeroFacture: p.invoice?.numero ?? null },
+    {
+      id: p.id,
+      montant: p.montant,
+      numeroFacture: p.invoice?.numero ?? null,
+      portefeuille: p.mode,
+    },
     "mobile_money",
   );
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
@@ -330,7 +335,7 @@ export async function payerInscriptionPublique(
   if (!p) redirectWithFlash(page, DEJA_ANNONCE);
 
   const ouverture = await ouvrirChezLePrestataire(
-    { id: p.id, montant, numeroFacture: null },
+    { id: p.id, montant, numeroFacture: null, portefeuille: mode },
     canal,
     {
       inscription: code,

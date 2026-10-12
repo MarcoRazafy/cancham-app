@@ -137,6 +137,37 @@ export function referenceDuLien(url: string): string | null {
   }
 }
 
+const OPERATEURS: Partial<Record<ModeReglement, string>> = {
+  mvola: "MVOLA",
+  orange_money: "ORANGE",
+  airtel_money: "AIRTEL",
+};
+
+export function lienDirectPortefeuille(
+  url: string,
+  mode: ModeReglement,
+): string {
+  const operateur = OPERATEURS[mode];
+  if (!operateur) return url;
+  try {
+    const u = new URL(url);
+    const id = u.searchParams.get("id");
+    if (!id || !/\/api\/mobileMoney\/selectChoice\/?$/.test(u.pathname)) {
+      return url;
+    }
+    const direct = new URL(
+      `${u.pathname.replace(/\/$/, "")}/addNumero`,
+      u.origin,
+    );
+    direct.searchParams.set("id", id);
+    direct.searchParams.set("type", operateur);
+    direct.searchParams.set("lang", "Français");
+    return direct.href;
+  } catch {
+    return url;
+  }
+}
+
 const PANIER_MAX = 20;
 
 export async function ouvrirPaiement(v: {

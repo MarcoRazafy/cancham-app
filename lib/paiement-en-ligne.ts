@@ -6,7 +6,12 @@ import { prisma } from "@/lib/db";
 import { referenceReglement } from "@/lib/reglements";
 import { versRelais } from "@/lib/retour-paiement";
 import { baseSite } from "@/lib/site";
-import { ouvrirPaiement, type ModePaiement } from "@/lib/vanillapay";
+import type { ModeReglement } from "@/lib/modes-reglement";
+import {
+  lienDirectPortefeuille,
+  ouvrirPaiement,
+  type ModePaiement,
+} from "@/lib/vanillapay";
 
 function basePrestataire(): string {
   const domaine = process.env.DOMAINE_PRINCIPAL?.trim().toLowerCase();
@@ -25,7 +30,12 @@ async function baseRetour(): Promise<string> {
 }
 
 export async function ouvrirChezLePrestataire(
-  p: { id: string; montant: number; numeroFacture: string | null },
+  p: {
+    id: string;
+    montant: number;
+    numeroFacture: string | null;
+    portefeuille?: ModeReglement;
+  },
   mode: ModePaiement,
   detail?: Prisma.InputJsonValue,
   cheminRetour: (reference: string) => string = (reference) =>
@@ -57,5 +67,9 @@ export async function ouvrirChezLePrestataire(
       data: { transaction: ouverture.id },
     });
   }
-  return { url: ouverture.url };
+  return {
+    url: p.portefeuille
+      ? lienDirectPortefeuille(ouverture.url, p.portefeuille)
+      : ouverture.url,
+  };
 }

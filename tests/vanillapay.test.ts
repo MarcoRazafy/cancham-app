@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   chargeDepuisCorps,
   lireEtat,
+  lienDirectPortefeuille,
   referenceDuLien,
   referencePaiement,
   signatureValide,
@@ -244,6 +245,35 @@ describe("référence de la transaction, lue sur le lien de paiement", () => {
       ),
     ).toBe("CC-2026-AB12CD");
     expect(referenceDuLien("pas une adresse")).toBeNull();
+  });
+});
+
+describe("lien direct vers l’opérateur mobile money", () => {
+  const choix =
+    "https://bo.vanilla-pay.net/api/mobileMoney/selectChoice?id=eyJhbGciOiJIUzI1NiJ9.TU0yNTExMDUxNzAyMjQ1Ng.signature";
+
+  it("saute la page de choix et ouvre l’étape de l’opérateur retenu", () => {
+    expect(lienDirectPortefeuille(choix, "mvola")).toBe(
+      "https://bo.vanilla-pay.net/api/mobileMoney/selectChoice/addNumero?id=eyJhbGciOiJIUzI1NiJ9.TU0yNTExMDUxNzAyMjQ1Ng.signature&type=MVOLA&lang=Fran%C3%A7ais",
+    );
+    expect(lienDirectPortefeuille(choix, "orange_money")).toContain(
+      "&type=ORANGE&",
+    );
+    expect(lienDirectPortefeuille(choix, "airtel_money")).toContain(
+      "&type=AIRTEL&",
+    );
+  });
+
+  it("laisse les autres liens tels quels", () => {
+    expect(lienDirectPortefeuille(choix, "carte")).toBe(choix);
+    const carte = "https://bo.vanilla-pay.net/webpayment?id=abc.def.ghi";
+    expect(lienDirectPortefeuille(carte, "mvola")).toBe(carte);
+    const simulateur =
+      "http://localhost:3000/bac-a-sable/paiement?id=CC-2026-AB12CD";
+    expect(lienDirectPortefeuille(simulateur, "mvola")).toBe(simulateur);
+    expect(lienDirectPortefeuille("pas une adresse", "mvola")).toBe(
+      "pas une adresse",
+    );
   });
 });
 
