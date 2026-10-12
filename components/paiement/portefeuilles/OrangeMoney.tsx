@@ -92,7 +92,7 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
               <PaiementDirect p={p} className="mt-6 rounded-none" />
               <div className="mt-6">
                 <Link
-                  href="/membre/cotisations"
+                  href={p.plusTard}
                   className="text-[15px] text-black underline underline-offset-4 hover:text-[#595959]"
                 >
                   Payer plus tard

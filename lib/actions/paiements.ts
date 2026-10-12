@@ -38,6 +38,12 @@ const texte = (fd: FormData, k: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+function detailExistant(detail: unknown): Prisma.InputJsonObject {
+  return detail && typeof detail === "object" && !Array.isArray(detail)
+    ? (detail as Prisma.InputJsonObject)
+    : {};
+}
+
 export async function payerParCarte(formData: FormData) {
   const user = await getCurrentUser("membre");
   const id = texte(formData, "reglementId");
@@ -64,9 +70,10 @@ export async function payerParCarte(formData: FormData) {
     redirectWithErreur(page, "Indiquez le nom du titulaire de la carte.");
   }
 
+  const detail = { ...detailExistant(p.detail), titulaire };
   await prisma.paiement.update({
     where: { id: p.id },
-    data: { detail: { titulaire } },
+    data: { detail },
   });
 
   if (!vanillaPayActif()) {
@@ -82,7 +89,7 @@ export async function payerParCarte(formData: FormData) {
   const ouverture = await ouvrirChezLePrestataire(
     { id: p.id, montant: p.montant, numeroFacture: p.invoice?.numero ?? null },
     "international",
-    { titulaire },
+    detail,
   );
   if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
 

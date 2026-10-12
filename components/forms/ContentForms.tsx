@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
+import type { ModeReglement } from "@/lib/modes-reglement";
 import {
   ArrowDown,
   ArrowUp,
@@ -36,11 +38,13 @@ export function DownloadResourceButton({
   space,
   accessible,
   video,
+  achat,
 }: {
   resourceId: string;
   space: Space;
   accessible: boolean;
   video: boolean;
+  achat?: { titre: string; somme: string; modes: ModeReglement[] };
 }) {
   if (accessible || space === "admin") {
     return (
@@ -51,6 +55,26 @@ export function DownloadResourceButton({
         {video ? <PlayCircle size={13} /> : <BookOpen size={13} />}
         {video ? "Regarder" : "Lire"}
       </Link>
+    );
+  }
+
+  if (achat?.modes.length) {
+    return (
+      <FenetreMoyens
+        achat={{
+          type: "ressource",
+          id: resourceId,
+          titre: achat.titre,
+          somme: achat.somme,
+        }}
+        modes={achat.modes}
+        declencheur={
+          <>
+            <ShoppingCart size={13} /> Acheter
+          </>
+        }
+        classeDeclencheur="w-full inline-flex cursor-pointer items-center justify-center gap-[7px] rounded-[var(--radius-s)] font-semibold border border-line bg-transparent text-ink hover:border-faint hover:bg-surface-2 text-[12.4px] px-[11px] py-1.5"
+      />
     );
   }
 

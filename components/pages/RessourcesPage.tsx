@@ -18,7 +18,13 @@ import {
   type Filtre,
   type Vue,
 } from "@/components/pages/BibliothequeCommun";
-import { FORMULAIRE, Lignes, VueDossier } from "@/components/pages/VueDossier";
+import {
+  achatRessource,
+  FORMULAIRE,
+  Lignes,
+  VueDossier,
+} from "@/components/pages/VueDossier";
+import { modesProposes } from "@/lib/reglements";
 import { copierRessources } from "@/lib/actions/content";
 import { lirePressePapier } from "@/lib/presse-papier";
 import {
@@ -88,6 +94,7 @@ export async function RessourcesPage({
         list.filter((r) => r.type === "payant").map((r) => r.id),
       )
     : {};
+  const modes = admin ? [] : await modesProposes();
 
   return (
     <>
@@ -195,6 +202,7 @@ export async function RessourcesPage({
                 arborescence,
                 rangeable: false,
                 ordonne: false,
+                modes,
               }}
             />
           </Card>
@@ -269,6 +277,7 @@ export async function RessourcesPage({
                         space={space}
                         accessible={r.accessible ?? r.type === "gratuit"}
                         video={r.fmt === "Vidéo"}
+                        achat={achatRessource(r, modes)}
                       />
                     </div>
                   )

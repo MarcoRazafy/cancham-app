@@ -15,7 +15,7 @@ export type Acces =
         pages: number | null;
       };
     }
-  | { ok: false; statut: 403 | 404; message: string };
+  | { ok: false; statut: 403 | 404; message: string; aAcheter?: boolean };
 
 export async function verifierAcces(id: string): Promise<Acces> {
   const user = await utilisateurConnecte();
@@ -63,6 +63,7 @@ export async function verifierAcces(id: string): Promise<Acces> {
         ok: false,
         statut: 403,
         message: "Ressource payante : accès après achat.",
+        aAcheter: true,
       };
     }
   }

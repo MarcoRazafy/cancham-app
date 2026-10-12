@@ -28,6 +28,9 @@ import {
   type MembreChoisissable,
 } from "@/components/forms/BibliothequeOutils";
 import { DownloadResourceButton } from "@/components/forms/ContentForms";
+import { modesProposes } from "@/lib/reglements";
+import { MONTANT_MINIMUM_EN_LIGNE } from "@/lib/vanillapay";
+import type { ModeReglement } from "@/lib/modes-reglement";
 import { ListeTriable } from "@/components/forms/ListeTriable";
 import {
   BoutonNouveauDossier,
@@ -72,6 +75,15 @@ export interface Contexte {
   arborescence: Arborescence;
   rangeable: boolean;
   ordonne: boolean;
+  modes: ModeReglement[];
+}
+
+export function achatRessource(r: Resource, modes: ModeReglement[]) {
+  return {
+    titre: r.titre,
+    somme: fmtMoney(r.prix),
+    modes: r.prix >= MONTANT_MINIMUM_EN_LIGNE ? modes : [],
+  };
 }
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? "s" : ""}`;
@@ -102,15 +114,23 @@ export async function VueDossier({
   const admin = space === "admin";
   const dossierId = fil[fil.length - 1].id;
 
-  const [dossier, directes, sectionsBrutes, arborescence, membres, presse] =
-    await Promise.all([
-      getDossierOuvert(dossierId),
-      getResources(undefined, dossierId),
-      getSectionsDossier(dossierId),
-      admin ? getArborescenceDossiers() : Promise.resolve([]),
-      admin ? getMembresPourAcces() : Promise.resolve([]),
-      admin ? lirePressePapier() : Promise.resolve(null),
-    ]);
+  const [
+    dossier,
+    directes,
+    sectionsBrutes,
+    arborescence,
+    membres,
+    presse,
+    modes,
+  ] = await Promise.all([
+    getDossierOuvert(dossierId),
+    getResources(undefined, dossierId),
+    getSectionsDossier(dossierId),
+    admin ? getArborescenceDossiers() : Promise.resolve([]),
+    admin ? getMembresPourAcces() : Promise.resolve([]),
+    admin ? lirePressePapier() : Promise.resolve(null),
+    admin ? Promise.resolve([]) : modesProposes(),
+  ]);
   if (!dossier) return null;
 
   const toutes = [...sectionsBrutes.flatMap(aPlat), ...directes];
@@ -138,6 +158,7 @@ export async function VueDossier({
     acces,
     membres,
     arborescence,
+    modes,
   };
 
   const terminees = toutes.filter((r) => r.terminee).length;
@@ -740,6 +761,7 @@ function ContenuLigne({ r, ctx }: { r: Resource; ctx: Contexte }) {
                 space={space}
                 accessible={false}
                 video={video}
+                achat={achatRessource(r, ctx.modes)}
               />
             </div>
           </>

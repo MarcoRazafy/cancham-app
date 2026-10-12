@@ -9,6 +9,8 @@ import { courrielReglementEcarte } from "@/lib/modeles-courriels";
 import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
 import { vanillaPayActif } from "@/lib/vanillapay";
 import { ouvrirFactureCotisation, payableEnLigne } from "@/lib/cotisation";
+import { detailAchat, estTypeAchat, pageAchat } from "@/lib/achat";
+import { examinerAchat } from "@/lib/achats-en-ligne";
 import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -144,6 +146,72 @@ export async function ouvrirReglement(formData: FormData) {
     `/membre/cotisations?regler=${factureId}`,
   );
   await ouvrirTunnel(user, factureId, mode);
+}
+
+export async function reglerAchat(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const type = texte(formData, "achat");
+  const cible = texte(formData, "cible");
+  if (!estTypeAchat(type) || !cible || !user.memberId) {
+    redirectWithErreur("/membre", "Achat introuvable.");
+  }
+  const retour = pageAchat({ type, id: cible });
+
+  const examen = await examinerAchat(type, cible);
+  if (!examen.ok) {
+    if (examen.dejaOuvert) redirectWithFlash(retour, examen.raison);
+    redirectWithErreur(
+      type === "ressource" ? "/membre/ressources" : retour,
+      examen.raison,
+    );
+  }
+  const { achat } = examen;
+  const mode = await modeDemande(formData, retour);
+  const detail = detailAchat(achat, user.id);
+
+  const ouvert = await prisma.paiement.findFirst({
+    where: {
+      memberId: user.memberId,
+      invoiceId: null,
+      mode,
+      statut: "en_cours",
+      AND: [
+        { detail: { path: ["achat"], equals: achat.type } },
+        { detail: { path: ["cible"], equals: achat.id } },
+      ],
+    },
+    select: { id: true },
+  });
+  const p = ouvert
+    ? await prisma.paiement.update({
+        where: { id: ouvert.id },
+        data: { montant: achat.prix, detail },
+        select: { id: true },
+      })
+    : await prisma.paiement.create({
+        data: {
+          reference: referenceReglement(),
+          memberId: user.memberId,
+          montant: achat.prix,
+          devise: "MGA",
+          mode,
+          detail,
+        },
+        select: { id: true },
+      });
+  const page = `/membre/cotisations/payer/${p.id}`;
+
+  if (mode === "carte") {
+    const ouverture = await ouvrirChezLePrestataire(
+      { id: p.id, montant: achat.prix, numeroFacture: null },
+      "international",
+      { ...detail, titulaire: user.nom },
+    );
+    if ("raison" in ouverture) redirectWithErreur(page, ouverture.raison);
+    redirect(ouverture.url);
+  }
+
+  redirect(page);
 }
 
 export async function reglerCotisation(formData: FormData) {

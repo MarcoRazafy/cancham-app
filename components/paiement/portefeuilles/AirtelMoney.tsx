@@ -81,7 +81,7 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
             <PaiementDirect p={p} className="mt-6" />
             <div className="mt-5 text-center">
               <Link
-                href="/membre/cotisations"
+                href={p.plusTard}
                 className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
               >
                 Payer plus tard

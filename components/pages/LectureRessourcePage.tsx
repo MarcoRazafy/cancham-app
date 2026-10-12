@@ -11,6 +11,11 @@ import { EtapesDossier } from "@/components/ressources/EtapesDossier";
 import { PageRessource } from "@/components/ressources/PageRessource";
 import { BtnLink, Card, Kicker } from "@/components/ui";
 import { terminerRessource } from "@/lib/actions/content";
+import { reglerAchat } from "@/lib/actions/reglements";
+import { GrilleMoyens } from "@/components/paiement/GrilleMoyens";
+import { fmtMoney } from "@/lib/format";
+import { modesProposes } from "@/lib/reglements";
+import { MONTANT_MINIMUM_EN_LIGNE } from "@/lib/vanillapay";
 import { verifierAcces } from "@/lib/acces-ressources";
 import {
   getFilDossier,
@@ -30,6 +35,13 @@ export async function LectureRessourcePage({
   if (!r) notFound();
 
   const acces = await verifierAcces(id);
+  const modes =
+    !acces.ok &&
+    acces.aAcheter &&
+    space === "membre" &&
+    r.prix >= MONTANT_MINIMUM_EN_LIGNE
+      ? await modesProposes()
+      : [];
   const video = r.fmt === "video";
   const page = r.fmt === "page";
   const retour = `/${space}/ressources${r.dossierId ? `?dossier=${r.dossierId}` : ""}`;
@@ -97,11 +109,47 @@ export async function LectureRessourcePage({
                 />
               )}
             </LecteurProtege>
+          ) : acces.aAcheter && space === "membre" && modes.length ? (
+            <Card className="mx-auto max-w-[720px] p-6 sm:p-8">
+              <div className="text-center">
+                <Lock size={28} className="mx-auto text-faint" />
+                <p className="m-0 mt-3 text-[15px] font-semibold">
+                  Ressource payante
+                </p>
+                <p className="m-0 mt-1 font-[family-name:var(--font-mono)] text-[24px] font-bold tabular-nums text-ink">
+                  {fmtMoney(r.prix)}
+                </p>
+                <p className="m-0 mt-1.5 text-[13px] text-muted">
+                  Choisissez votre moyen de paiement : la ressource s’ouvre dès
+                  le paiement confirmé.
+                </p>
+              </div>
+              <form action={reglerAchat} className="mt-5">
+                <input type="hidden" name="achat" value="ressource" />
+                <input type="hidden" name="cible" value={id} />
+                <GrilleMoyens
+                  modes={modes}
+                  colonnes="grid-cols-2 sm:grid-cols-4"
+                />
+              </form>
+              <p className="m-0 mt-4 text-center text-[12.5px] text-muted">
+                Les frais de l’opérateur ou de change s’ajoutent au montant.
+                Pour payer autrement,{" "}
+                <Link
+                  href="/membre/contact"
+                  className="font-semibold text-accent"
+                >
+                  écrivez à l’équipe
+                </Link>
+                .
+              </p>
+            </Card>
           ) : (
             <Card className="p-8 text-center max-w-[520px] mx-auto">
               <Lock size={28} className="mx-auto text-faint" />
               <p className="m-0 mt-3 text-[15px] font-semibold">
                 {acces.message}
+                {acces.aAcheter ? ` ${fmtMoney(r.prix)}.` : ""}
               </p>
               <p className="m-0 mt-1.5 text-[13px] text-muted">
                 Contactez l’équipe CanCham pour toute question sur l’accès à

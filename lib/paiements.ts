@@ -1,5 +1,7 @@
 import { estCodeInscription } from "@/lib/codes-accueil";
 import "server-only";
+import { achatDe } from "@/lib/achat";
+import { conclureAchat } from "@/lib/achats-en-ligne";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { delivrerBillets, delivrerBilletsPublics } from "@/lib/billets";
 import { prisma } from "@/lib/db";
@@ -35,6 +37,7 @@ export async function conclurePaiement(
       invoice: {
         include: { member: { select: { id: true, nom: true, statut: true } } },
       },
+      member: { select: { nom: true } },
     },
   });
   if (!p) return "inconnue";
@@ -71,6 +74,22 @@ export async function conclurePaiement(
   }
 
   const f = p.invoice;
+  const achat = f ? null : achatDe(p.detail);
+  if (achat && p.memberId) {
+    return conclureAchat(
+      {
+        id: p.id,
+        montant: p.montant,
+        devise: p.devise,
+        mode: p.mode,
+        memberId: p.memberId,
+        nomMembre: p.member?.nom ?? "Membre",
+      },
+      achat,
+      etat.transaction,
+      trace,
+    );
+  }
   const membre = f?.member ?? null;
   const cotisation =
     membre !== null &&

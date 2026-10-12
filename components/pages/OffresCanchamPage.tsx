@@ -1,14 +1,18 @@
 import { ServiceCard } from "@/components/domain";
 import { BoutonReservation } from "@/components/forms/BoutonReservation";
 import { EmptyState, Saillant, SectionTitle, ViewHead } from "@/components/ui";
+import { fmtMoney } from "@/lib/format";
 import { getServices } from "@/lib/queries";
+import { modesProposes } from "@/lib/reglements";
+import { MONTANT_MINIMUM_EN_LIGNE } from "@/lib/vanillapay";
 import { getTypesRendezvous } from "@/lib/rendezvous-donnees";
 import { typeDuLienRendezvous } from "@/lib/liens";
 
 export async function OffresCanchamPage() {
-  const [services, types] = await Promise.all([
+  const [services, types, modes] = await Promise.all([
     getServices(),
     getTypesRendezvous(),
+    modesProposes(),
   ]);
   const ouverts = new Set(
     types.filter((t) => t.plages.length).map((t) => t.id),
@@ -58,6 +62,11 @@ export async function OffresCanchamPage() {
                   serviceId={s.id}
                   payant
                   lien={lienDe(s.lien)}
+                  achat={{
+                    titre: s.titre,
+                    somme: fmtMoney(s.prix),
+                    modes: s.prix >= MONTANT_MINIMUM_EN_LIGNE ? modes : [],
+                  }}
                 />
               }
             />

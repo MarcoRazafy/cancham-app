@@ -4,12 +4,18 @@ import { useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
 import { GrilleMoyens } from "@/components/paiement/GrilleMoyens";
-import { ouvrirReglement, reglerCotisation } from "@/lib/actions/reglements";
+import {
+  ouvrirReglement,
+  reglerAchat,
+  reglerCotisation,
+} from "@/lib/actions/reglements";
+import type { TypeAchat } from "@/lib/achat";
 import type { ModeReglement } from "@/lib/modes-reglement";
 
 export function FenetreMoyens({
   facture,
   cotisation,
+  achat,
   modes,
   bientot = [],
   ouverteAuDepart = false,
@@ -18,6 +24,7 @@ export function FenetreMoyens({
 }: {
   facture?: { id: string; numero: string; objet: string; montant: string };
   cotisation?: { formule: string | null; somme: string };
+  achat?: { type: TypeAchat; id: string; titre: string; somme: string };
   modes: ModeReglement[];
   bientot?: ModeReglement[];
   ouverteAuDepart?: boolean;
@@ -61,6 +68,14 @@ export function FenetreMoyens({
                 · {facture.objet} ·{" "}
                 <b className="text-ink">{facture.montant}</b>
               </p>
+            ) : achat ? (
+              <p className="m-0 text-[14px] text-muted">
+                {achat.type === "ressource" ? "Ressource" : "Service"} ·{" "}
+                {achat.titre} · <b className="text-ink">{achat.somme}</b>.{" "}
+                {achat.type === "ressource"
+                  ? "Elle s’ouvre dès le paiement confirmé."
+                  : "L’équipe vous écrit dès le paiement confirmé."}
+              </p>
             ) : (
               <p className="m-0 text-[14px] text-muted">
                 Cotisation annuelle
@@ -72,11 +87,22 @@ export function FenetreMoyens({
 
             {modes.length ? (
               <form
-                action={facture ? ouvrirReglement : reglerCotisation}
+                action={
+                  facture
+                    ? ouvrirReglement
+                    : achat
+                      ? reglerAchat
+                      : reglerCotisation
+                }
                 className="mt-4"
               >
                 {facture ? (
                   <input type="hidden" name="factureId" value={facture.id} />
+                ) : achat ? (
+                  <>
+                    <input type="hidden" name="achat" value={achat.type} />
+                    <input type="hidden" name="cible" value={achat.id} />
+                  </>
                 ) : null}
                 <GrilleMoyens modes={modes} bientot={bientot} />
               </form>

@@ -604,6 +604,8 @@ export async function getRessourceLisible(id: string): Promise<{
   description: string | null;
   blocs: Bloc[];
   dossierId: string | null;
+  type: "gratuit" | "payant";
+  prix: number;
   terminee: boolean;
 } | null> {
   const user = await utilisateurConnecte();
@@ -616,6 +618,8 @@ export async function getRessourceLisible(id: string): Promise<{
       description: true,
       contenu: true,
       dossierId: true,
+      type: true,
+      prix: true,
       lectures: user
         ? { where: { userId: user.id }, select: { id: true } }
         : false,

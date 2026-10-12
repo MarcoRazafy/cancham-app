@@ -12,6 +12,7 @@ import type { PropsReglement } from "@/components/paiement/tunnels/commun";
 import { TunnelDepot } from "@/components/paiement/tunnels/Depot";
 import { TunnelEspeces } from "@/components/paiement/tunnels/Especes";
 import { TunnelVirement } from "@/components/paiement/tunnels/Virement";
+import { achatDe, objetAchat, pageAchat } from "@/lib/achat";
 import { prisma } from "@/lib/db";
 import {
   estPortefeuilleConnu,
@@ -48,12 +49,16 @@ export default async function PageReglement({
   if (!p || !user.memberId || p.memberId !== user.memberId) notFound();
 
   const c = await getCoordonneesPaiement();
+  const achat = p.invoice ? null : achatDe(p.detail);
+  const objetCourt =
+    p.invoice?.objet ?? (achat ? objetAchat(achat) : "Règlement");
   const objet = p.invoice
     ? `${p.invoice.objet} · facture ${p.invoice.numero}`
-    : "Règlement";
+    : objetCourt;
+  const plusTard = achat ? pageAchat(achat) : "/membre/cotisations";
   const retour = p.invoiceId
     ? `/membre/cotisations?regler=${p.invoiceId}`
-    : "/membre/cotisations";
+    : plusTard;
 
   const detail = (
     p.detail && typeof p.detail === "object" && !Array.isArray(p.detail)
@@ -67,7 +72,7 @@ export default async function PageReglement({
         reglementId={p.id}
         montant={p.montant}
         devise={p.devise}
-        objet={p.invoice?.objet ?? "Règlement"}
+        objet={objetCourt}
         titulaire={
           typeof detail.titulaire === "string" ? detail.titulaire : user.nom
         }
@@ -85,7 +90,7 @@ export default async function PageReglement({
       reference: p.reference,
       montant: p.montant,
       devise: p.devise,
-      objet: p.invoice?.objet ?? "Règlement",
+      objet: objetCourt,
       numeroFacture: p.invoice?.numero ?? null,
       statut: p.statut,
       retour,
@@ -109,10 +114,11 @@ export default async function PageReglement({
         reference={p.reference}
         montant={p.montant}
         devise={p.devise}
-        objet={p.invoice?.objet ?? "Règlement"}
+        objet={objetCourt}
         titulaire={c.titulaire}
         statut={p.statut}
         retour={retour}
+        plusTard={plusTard}
         raccorde={
           mobileMoneyEnLigne() &&
           p.devise === "MGA" &&

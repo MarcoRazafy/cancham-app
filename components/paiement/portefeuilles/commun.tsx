@@ -18,6 +18,7 @@ export interface PropsTunnel {
   titulaire: string;
   statut: string;
   retour: string;
+  plusTard: string;
   raccorde: boolean;
   marchand?: string | null;
 }

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowUpRight, CalendarCheck, CreditCard } from "lucide-react";
 import { SubmitButton } from "@/components/form-bits";
+import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
+import type { ModeReglement } from "@/lib/modes-reglement";
 import { reserverService } from "@/lib/actions/messages";
 import { estLienInterne } from "@/lib/liens";
 
@@ -10,12 +12,33 @@ export function BoutonReservation({
   serviceId,
   payant,
   lien,
+  achat,
 }: {
   serviceId: string;
   payant: boolean;
   lien?: string | null;
+  achat?: { titre: string; somme: string; modes: ModeReglement[] };
 }) {
   if (lien) return <BoutonLien lien={lien} />;
+  if (payant && achat?.modes.length) {
+    return (
+      <FenetreMoyens
+        achat={{
+          type: "service",
+          id: serviceId,
+          titre: achat.titre,
+          somme: achat.somme,
+        }}
+        modes={achat.modes}
+        declencheur={
+          <>
+            <CreditCard size={15} /> Payer
+          </>
+        }
+        classeDeclencheur="btn-action btn-action-sm w-full"
+      />
+    );
+  }
   return (
     <form action={reserverService} className="w-full">
       <input type="hidden" name="serviceId" value={serviceId} />
