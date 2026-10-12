@@ -3,20 +3,21 @@
 import { useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Modal } from "@/components/Modal";
-import { SubmitButton } from "@/components/form-bits";
-import { VisuelMode } from "@/components/paiement/IconeMode";
-import { ouvrirReglement } from "@/lib/actions/reglements";
-import { MODES, ORDRE_MODES, type ModeReglement } from "@/lib/modes-reglement";
+import { GrilleMoyens } from "@/components/paiement/GrilleMoyens";
+import { ouvrirReglement, reglerCotisation } from "@/lib/actions/reglements";
+import type { ModeReglement } from "@/lib/modes-reglement";
 
 export function FenetreMoyens({
   facture,
+  cotisation,
   modes,
   bientot = [],
   ouverteAuDepart = false,
   declencheur,
   classeDeclencheur = "",
 }: {
-  facture: { id: string; numero: string; objet: string; montant: string };
+  facture?: { id: string; numero: string; objet: string; montant: string };
+  cotisation?: { formule: string | null; somme: string };
   modes: ModeReglement[];
   bientot?: ModeReglement[];
   ouverteAuDepart?: boolean;
@@ -51,52 +52,33 @@ export function FenetreMoyens({
       >
         {() => (
           <div className="px-5 py-5">
-            <p className="m-0 text-[14px] text-muted">
-              Facture{" "}
-              <span className="font-[family-name:var(--font-mono)] text-ink">
-                {facture.numero}
-              </span>{" "}
-              · {facture.objet} · <b className="text-ink">{facture.montant}</b>
-            </p>
+            {facture ? (
+              <p className="m-0 text-[14px] text-muted">
+                Facture{" "}
+                <span className="font-[family-name:var(--font-mono)] text-ink">
+                  {facture.numero}
+                </span>{" "}
+                · {facture.objet} ·{" "}
+                <b className="text-ink">{facture.montant}</b>
+              </p>
+            ) : (
+              <p className="m-0 text-[14px] text-muted">
+                Cotisation annuelle
+                {cotisation?.formule ? ` · ${cotisation.formule}` : ""} ·{" "}
+                <b className="text-ink">{cotisation?.somme}</b>. Votre espace
+                s’ouvre dès le paiement confirmé.
+              </p>
+            )}
 
             {modes.length ? (
-              <form action={ouvrirReglement} className="mt-4">
-                <input type="hidden" name="factureId" value={facture.id} />
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {ORDRE_MODES.map((m) =>
-                    modes.includes(m) ? (
-                      <SubmitButton
-                        key={m}
-                        name="mode"
-                        value={m}
-                        variant="line"
-                        pendingLabel="Ouverture…"
-                        className="h-full min-h-[112px] w-full min-w-0 flex-col items-center justify-center gap-2.5 px-4 py-4 text-center whitespace-normal!"
-                      >
-                        <VisuelMode mode={m} />
-                        <span className="text-[15px] font-semibold text-ink">
-                          {MODES[m].titre}
-                        </span>
-                      </SubmitButton>
-                    ) : bientot.includes(m) ? (
-                      <div
-                        key={m}
-                        aria-disabled="true"
-                        className="flex h-full min-h-[112px] min-w-0 cursor-not-allowed flex-col items-center justify-center gap-2.5 rounded-[var(--radius-s)] border border-dashed border-line bg-surface-2 px-4 py-4 text-center"
-                      >
-                        <span className="opacity-50 grayscale">
-                          <VisuelMode mode={m} />
-                        </span>
-                        <span className="text-[15px] font-semibold text-muted">
-                          {MODES[m].titre}
-                        </span>
-                        <span className="rounded-full bg-surface-3 px-2.5 py-0.5 text-[12px] font-semibold text-muted">
-                          Bientôt disponible
-                        </span>
-                      </div>
-                    ) : null,
-                  )}
-                </div>
+              <form
+                action={facture ? ouvrirReglement : reglerCotisation}
+                className="mt-4"
+              >
+                {facture ? (
+                  <input type="hidden" name="factureId" value={facture.id} />
+                ) : null}
+                <GrilleMoyens modes={modes} bientot={bientot} />
               </form>
             ) : (
               <p className="m-0 mt-4 rounded-[var(--radius-m)] border border-line bg-surface-2 px-4 py-3.5 text-[14px] text-muted">

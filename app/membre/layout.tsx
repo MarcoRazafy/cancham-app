@@ -5,8 +5,11 @@ import { BulleSupport } from "@/components/support/BulleSupport";
 import { getMember, getStatsPubliques, getUnreadTotal } from "@/lib/queries";
 import { getNotifications } from "@/lib/notifications";
 import { getCurrentUser } from "@/lib/session";
-import { isAccessLocked } from "@/lib/membership";
+import { isAccessLocked, joursDeRetard, retardBloque } from "@/lib/membership";
 import { NAV_MEMBRE } from "@/lib/nav";
+import { BandeauCotisation } from "@/components/paiement/Cotisation";
+import { cotisationDue } from "@/lib/cotisation";
+import { modesProposes } from "@/lib/reglements";
 
 export default async function MembreLayout({
   children,
@@ -17,10 +20,12 @@ export default async function MembreLayout({
   const membre = user.memberId ? await getMember(user.memberId) : null;
   if (!membre) notFound();
 
-  const [unread, stats, notifications] = await Promise.all([
+  const [unread, stats, notifications, cotisation, modes] = await Promise.all([
     getUnreadTotal(user.id),
     getStatsPubliques(),
     getNotifications("membre", membre.id, user.id),
+    cotisationDue(membre),
+    modesProposes(),
   ]);
 
   const verrouille = isAccessLocked(membre);
@@ -37,6 +42,22 @@ export default async function MembreLayout({
         "/membre/messagerie": unread,
       }}
       notifications={notifications}
+      bandeau={
+        cotisation ? (
+          <BandeauCotisation
+            cotisation={cotisation}
+            modes={modes}
+            situation={
+              membre.statut === "en_retard"
+                ? retardBloque(membre)
+                  ? "bloque"
+                  : "retard"
+                : "attente"
+            }
+            jours={joursDeRetard(membre)}
+          />
+        ) : null
+      }
       lockedHrefs={
         verrouille
           ? NAV_MEMBRE.flatMap((g) => g.items)

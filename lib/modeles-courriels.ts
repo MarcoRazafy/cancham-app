@@ -97,6 +97,7 @@ export function courrielRelanceCotisation(
     montant: string | null;
     formule: string | null;
     retardJours: number | null;
+    enLigne: boolean;
     lien: string;
   },
 ): Courriel {
@@ -114,9 +115,14 @@ export function courrielRelanceCotisation(
             ? ` depuis ${d.retardJours} jour${d.retardJours > 1 ? "s" : ""}`
             : ""
         }.`,
-        "Vous pouvez la régler auprès de l’équipe CanCham, en espèces, par virement ou par chèque. Votre espace membre indique votre situation et vos factures.",
+        d.enLigne
+          ? "Vous pouvez la régler en ligne depuis votre espace membre, par carte bancaire ou mobile money, ou auprès de l’équipe CanCham, en espèces ou par virement."
+          : "Vous pouvez la régler auprès de l’équipe CanCham, en espèces, par virement ou par chèque. Votre espace membre indique votre situation et vos factures.",
       ],
-      bouton: { libelle: "Voir mes cotisations", url: d.lien },
+      bouton: {
+        libelle: d.enLigne ? "Régler ma cotisation" : "Voir mes cotisations",
+        url: d.lien,
+      },
       apres: [
         "Si vous avez déjà réglé, merci de ne pas tenir compte de ce message : l’enregistrement peut prendre quelques jours.",
       ],
@@ -131,6 +137,7 @@ export function courrielDemandeApprouvee(
     entreprise: string;
     montant: string | null;
     formule: string | null;
+    enLigne: boolean;
     lien: string;
     creerMotDePasse: boolean;
   },
@@ -147,7 +154,11 @@ export function courrielDemandeApprouvee(
           ? "Créez votre mot de passe pour vous connecter à CanCham Connect : quelques étapes vous permettent ensuite de compléter votre fiche — activité, logo, couverture, produits et services."
           : "Connectez-vous dès maintenant avec votre adresse et votre mot de passe : quelques étapes vous permettent de compléter votre fiche — activité, logo, couverture, produits et services.",
         d.formule && d.montant
-          ? `Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle (${d.formule}, ${d.montant}), auprès de l’équipe, en espèces, par virement ou par chèque.`
+          ? `Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle (${d.formule}, ${d.montant}). ${
+              d.enLigne
+                ? "Vous la réglez en ligne depuis votre espace, par carte bancaire ou mobile money, ou auprès de l’équipe, en espèces ou par virement."
+                : "Elle se règle auprès de l’équipe, en espèces, par virement ou par chèque."
+            }`
           : "Votre espace s’ouvre ensuite entièrement dès le règlement de la cotisation annuelle. Choisissez d’abord votre formule en complétant votre dossier : c’est elle qui en fixe le montant.",
       ],
       bouton: {

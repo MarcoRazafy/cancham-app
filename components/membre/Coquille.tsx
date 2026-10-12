@@ -21,6 +21,7 @@ interface CoquilleProps {
   badges?: Record<string, number>;
   lockedHrefs?: string[];
   notifications?: Notification[];
+  bandeau?: ReactNode;
   children: ReactNode;
 }
 
@@ -31,6 +32,7 @@ export function Coquille({
   badges = {},
   lockedHrefs = [],
   notifications = [],
+  bandeau,
   children,
 }: CoquilleProps) {
   const pathname = usePathname();
@@ -103,7 +105,7 @@ export function Coquille({
                   return (
                     <span
                       key={item.href}
-                      title="Accès disponible après validation de votre adhésion"
+                      title="Accès ouvert dès le règlement de votre cotisation"
                       className="flex items-center gap-3 pl-4 pr-3 py-2.5 rounded-lg text-[14px] opacity-35 cursor-not-allowed"
                     >
                       <Cadenas size={18} className="shrink-0" />
@@ -198,6 +200,9 @@ export function Coquille({
 
         <main className="px-4 md:px-6 pt-6 pb-12 max-w-[1600px] w-full mx-auto print:p-0">
           <TirerPourRafraichir />
+          {bandeau && !pathname.startsWith("/membre/cotisations") ? (
+            <div className="mb-5 print:hidden">{bandeau}</div>
+          ) : null}
           {children}
         </main>
       </div>

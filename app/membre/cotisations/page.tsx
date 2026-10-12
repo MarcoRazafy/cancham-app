@@ -26,6 +26,8 @@ import {
 } from "@/lib/membership";
 import { getInvoices, getMember } from "@/lib/queries";
 import { modesBientot, modesProposes } from "@/lib/reglements";
+import { BlocCotisation } from "@/components/paiement/Cotisation";
+import { cotisationDue } from "@/lib/cotisation";
 import { FenetreMoyens } from "@/components/paiement/FenetreMoyens";
 import { getCurrentUser } from "@/lib/session";
 
@@ -39,9 +41,10 @@ export default async function CotisationsPage({
   const m = await getMember(user.memberId!);
   if (!m) notFound();
 
-  const [factures, modes] = await Promise.all([
+  const [factures, modes, cotisation] = await Promise.all([
     getInvoices(m.id),
     modesProposes(),
+    cotisationDue(m),
   ]);
   const enAttente = ADHESION_PENDING.includes(m.statut);
   const renouvellement = renouvellementCotisation({
@@ -100,6 +103,10 @@ export default async function CotisationsPage({
             <StatusPill status={m.statut} />
           </div>
 
+          {cotisation ? (
+            <BlocCotisation cotisation={cotisation} modes={modes} />
+          ) : null}
+
           <div className="grid gap-4 mt-6 pt-5 border-t border-line sm:grid-cols-3">
             <Donnee libelle="Membre depuis" valeur={fmtDate(m.adhesion)} />
             <Donnee
@@ -117,12 +124,14 @@ export default async function CotisationsPage({
             />
           </div>
 
-          <p className="text-[12.5px] text-faint mt-5 mb-0 flex items-center gap-2">
-            <CreditCard size={14} />
-            {modes.length
-              ? "Réglez en ligne par carte bancaire ou mobile money. L’équipe CanCham enregistre aussi les règlements reçus par virement ou en espèces."
-              : "Le paiement en ligne n’est pas branché : l’équipe CanCham enregistre les règlements reçus en espèces ou par virement."}
-          </p>
+          {cotisation ? null : (
+            <p className="text-[12.5px] text-faint mt-5 mb-0 flex items-center gap-2">
+              <CreditCard size={14} />
+              {modes.length
+                ? "Réglez en ligne par carte bancaire ou mobile money. L’équipe CanCham enregistre aussi les règlements reçus par virement ou en espèces."
+                : "Le paiement en ligne n’est pas branché : l’équipe CanCham enregistre les règlements reçus en espèces ou par virement."}
+            </p>
+          )}
         </Card>
 
         <Card className="p-6">

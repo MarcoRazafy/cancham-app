@@ -8,6 +8,7 @@ import { envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { courrielReglementEcarte } from "@/lib/modeles-courriels";
 import { ouvrirChezLePrestataire } from "@/lib/paiement-en-ligne";
 import { vanillaPayActif } from "@/lib/vanillapay";
+import { ouvrirFactureCotisation, payableEnLigne } from "@/lib/cotisation";
 import { prisma } from "@/lib/db";
 import { exigerEquipe } from "@/lib/autorisations";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
@@ -72,11 +73,7 @@ export async function enregistrerCoordonneesPaiement(formData: FormData) {
   redirectWithFlash(retour, "Coordonnées enregistrées");
 }
 
-export async function ouvrirReglement(formData: FormData) {
-  const user = await getCurrentUser("membre");
-  const factureId = texte(formData, "factureId");
-  const retour = `/membre/cotisations?regler=${factureId}`;
-
+async function modeDemande(formData: FormData, retour: string) {
   const mode = texte(formData, "mode");
   if (!estModeReglement(mode)) {
     redirectWithErreur(retour, "Choisissez un moyen de paiement.");
@@ -84,7 +81,14 @@ export async function ouvrirReglement(formData: FormData) {
   if (!(await modesProposes()).includes(mode)) {
     redirectWithErreur(retour, `${MODES[mode].titre} : pas encore disponible.`);
   }
+  return mode;
+}
 
+async function ouvrirTunnel(
+  user: { memberId: string | null; nom: string },
+  factureId: string,
+  mode: ModeReglement,
+): Promise<never> {
   const f = await prisma.invoice.findUnique({
     where: { id: factureId },
     select: {
@@ -107,7 +111,7 @@ export async function ouvrirReglement(formData: FormData) {
   }
 
   const ouvert = await prisma.paiement.findFirst({
-    where: { invoiceId: f.id, mode: mode as ModeReglement, statut: "en_cours" },
+    where: { invoiceId: f.id, mode, statut: "en_cours" },
     select: { id: true, montant: true },
   });
   const p =
@@ -119,7 +123,7 @@ export async function ouvrirReglement(formData: FormData) {
         memberId: f.memberId,
         montant: f.montant,
         devise: f.devise,
-        mode: mode as ModeReglement,
+        mode,
       },
       select: { id: true, montant: true },
     }));
@@ -136,6 +140,39 @@ export async function ouvrirReglement(formData: FormData) {
   }
 
   redirect(page);
+}
+
+export async function ouvrirReglement(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const factureId = texte(formData, "factureId");
+  const mode = await modeDemande(
+    formData,
+    `/membre/cotisations?regler=${factureId}`,
+  );
+  await ouvrirTunnel(user, factureId, mode);
+}
+
+export async function reglerCotisation(formData: FormData) {
+  const user = await getCurrentUser("membre");
+  const retour = "/membre/cotisations";
+  const mode = await modeDemande(formData, retour);
+
+  const facture = user.memberId
+    ? await ouvrirFactureCotisation(user.memberId)
+    : null;
+  if (!facture) {
+    redirectWithErreur(
+      retour,
+      "Aucune cotisation à régler en ligne pour le moment : écrivez à l’équipe.",
+    );
+  }
+  if (!payableEnLigne(facture.montant, facture.devise)) {
+    redirectWithErreur(
+      retour,
+      "Cette cotisation ne se règle pas en ligne : réglez-la auprès de l’équipe CanCham.",
+    );
+  }
+  await ouvrirTunnel(user, facture.id, mode);
 }
 
 export async function enregistrerNumeroPortefeuille(formData: FormData) {

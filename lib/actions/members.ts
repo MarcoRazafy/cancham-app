@@ -9,6 +9,12 @@ import {
   numeroFacture,
   SELECTION_DESTINATAIRE,
 } from "@/lib/factures";
+import {
+  cotisationEnLigne,
+  factureCotisationOuverte,
+  OBJET_ADHESION,
+  OBJET_RENOUVELLEMENT,
+} from "@/lib/cotisation";
 import { jourBase, jourSaisi } from "@/lib/format";
 import { creerJeton } from "@/lib/jetons";
 import {
@@ -190,6 +196,7 @@ export async function donnerAcces(formData: FormData) {
           entreprise: m.nom,
           formule: m.formule ? libelleFormule(m.formule) : null,
           montant: m.formule ? fmtCotisation(m.formule) : null,
+          enLigne: cotisationEnLigne(m.formule),
           lien,
           creerMotDePasse: !contact.motDePasse,
         })
@@ -445,7 +452,8 @@ export async function registerPayment(formData: FormData) {
   const devise: Devise = tarif.devise;
 
   const premier = !avant.paiementNote;
-  const numero = await numeroFacture(date);
+  const ouverte = await factureCotisationOuverte(id);
+  const numero = ouverte?.numero ?? (await numeroFacture(date));
 
   await prisma.$transaction([
     prisma.member.update({
@@ -457,20 +465,23 @@ export async function registerPayment(formData: FormData) {
         paiementNote: `Payé par ${mode.toLowerCase()} · ${fmtMontant(montant, devise)} · le ${date.toLocaleDateString("fr-FR", { timeZone: "UTC" })}${note ? ` · ${note}` : ""}`,
       },
     }),
-    prisma.invoice.create({
-      data: {
-        numero,
-        date,
-        objet: premier
-          ? "Cotisation annuelle — adhésion"
-          : "Cotisation annuelle",
-        montant,
-        devise,
-        statut: "payee",
-        payeeLe: date,
-        memberId: id,
-      },
-    }),
+    ouverte
+      ? prisma.invoice.update({
+          where: { id: ouverte.id },
+          data: { montant, devise, statut: "payee", payeeLe: date },
+        })
+      : prisma.invoice.create({
+          data: {
+            numero,
+            date,
+            objet: premier ? OBJET_ADHESION : OBJET_RENOUVELLEMENT,
+            montant,
+            devise,
+            statut: "payee",
+            payeeLe: date,
+            memberId: id,
+          },
+        }),
     prisma.auditLog.create({
       data: {
         action: "paiement_enregistre",
@@ -495,7 +506,7 @@ export async function registerPayment(formData: FormData) {
   revalideTout();
   redirectWithFlash(
     `/admin/membres/${id}`,
-    `${premier ? "Adhésion activée" : "Paiement enregistré"} pour ${avant.nom} · facture ${numero} générée`,
+    `${premier ? "Adhésion activée" : "Paiement enregistré"} pour ${avant.nom} · facture ${numero} ${ouverte ? "réglée" : "générée"}`,
   );
 }
 
@@ -531,6 +542,7 @@ export async function sendReminder(formData: FormData) {
       formule: m.formule ? libelleFormule(m.formule) : null,
       montant: m.formule ? fmtCotisation(m.formule) : null,
       retardJours: retardJours || null,
+      enLigne: cotisationEnLigne(m.formule),
       lien: await urlPublique("/membre/cotisations"),
     }),
   );

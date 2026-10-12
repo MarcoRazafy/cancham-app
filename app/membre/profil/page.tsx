@@ -4,9 +4,7 @@ import { CertificatAdhesion } from "@/components/Certificat";
 import {
   Building2,
   Globe,
-  Clock,
   CreditCard,
-  Lock,
   User as UserIcon,
   MapPin,
   Sparkles,
@@ -56,13 +54,7 @@ import { positionObjet } from "@/lib/cadrage";
 import { fmtJour, renouvellementCotisation } from "@/lib/agenda";
 import { fmtDate, fmtDateShort } from "@/lib/format";
 import { fmtCotisation, fmtMontant, libelleFormule } from "@/lib/membership";
-import {
-  ADHESION_PENDING,
-  isOverdueWarning,
-  joursDeRetard,
-  retardBloque,
-  RETARD_BLOCAGE_JOURS,
-} from "@/lib/membership";
+import { ADHESION_PENDING } from "@/lib/membership";
 
 const CADRE_COUVERTURE = "h-[190px] w-full sm:h-[260px]";
 
@@ -81,8 +73,6 @@ export default async function ProfilPage() {
     adhesion: m.adhesion,
     aJour: m.statut === "a_jour",
   });
-  const blocked = retardBloque(m);
-  const overdue = isOverdueWarning(m);
 
   return (
     <>
@@ -130,43 +120,6 @@ export default async function ProfilPage() {
             Présentez-vous, votre entreprise, votre formule et votre activité en
             quatre étapes rapides : votre fiche sera complète dans l’annuaire,
             et l’équipe pourra examiner votre demande.
-          </Banner>
-        </div>
-      ) : null}
-
-      {pending ? (
-        <div className="mb-5">
-          <Banner
-            tone="warn"
-            icon={<Clock size={18} />}
-            title="Adhésion en attente de validation"
-          >
-            Votre profil est enregistré et vous pouvez le compléter dès
-            maintenant. L’accès aux autres sections sera activé dès le paiement
-            de la cotisation — en ligne, ou validé manuellement par notre équipe
-            si vous avez réglé en espèces ou par virement.
-          </Banner>
-        </div>
-      ) : blocked ? (
-        <div className="mb-5">
-          <Banner
-            tone="bad"
-            icon={<Lock size={18} />}
-            title={`Accès restreint — ${joursDeRetard(m)} jours de retard de cotisation`}
-          >
-            Passé {RETARD_BLOCAGE_JOURS} jours de retard, l’accès aux autres
-            sections de l’espace membre est automatiquement restreint.
-          </Banner>
-        </div>
-      ) : overdue ? (
-        <div className="mb-5">
-          <Banner
-            tone="bad"
-            icon={<Clock size={18} />}
-            title="Cotisation en retard"
-          >
-            Régularisez avant {RETARD_BLOCAGE_JOURS} jours de retard (
-            {joursDeRetard(m)}/{RETARD_BLOCAGE_JOURS} jours écoulés).
           </Banner>
         </div>
       ) : null}
