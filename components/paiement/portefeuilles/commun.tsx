@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { ArrowRight, ShieldCheck, Smartphone } from "lucide-react";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
-import { Copiable } from "@/components/paiement/Copiable";
 import { payerParPortefeuille } from "@/lib/actions/paiements";
 import { fmtMontant, type Devise } from "@/lib/membership";
+import { MONTANT_MINIMUM_EN_LIGNE } from "@/lib/vanillapay";
 import { MODES } from "@/lib/modes-reglement";
 import {
   numeroLisible,
@@ -19,7 +20,6 @@ export interface PropsTunnel {
   devise: Devise;
   objet: string;
   titulaire: string;
-  numeroChambre: string;
   telephone: string | null;
   statut: string;
   modifier?: boolean;
@@ -35,10 +35,24 @@ export function PaiementDirect({
   p: PropsTunnel;
   className?: string;
 }) {
-  if (!p.raccorde) return null;
   const titre = MODES[p.mode].titre;
   const somme = fmtMontant(p.montant, p.devise);
   const billets = /^participation/i.test(p.objet);
+  if (!p.raccorde) {
+    return (
+      <div
+        role="alert"
+        className={`rounded-[var(--radius-m)] border border-warn/40 bg-warn-soft p-5 text-[14px] leading-relaxed text-warn ${className}`}
+      >
+        Le paiement par {titre} n’est pas disponible pour ce règlement : il faut
+        un montant d’au moins {fmtMontant(MONTANT_MINIMUM_EN_LIGNE, "MGA")}, en
+        ariary.{" "}
+        <Link href={p.retour} className="font-semibold text-warn underline">
+          Choisir un autre moyen
+        </Link>
+      </div>
+    );
+  }
   return (
     <div
       className={`rounded-[var(--radius-m)] border-2 border-[var(--pf-fond)] p-5 ${className}`}
@@ -68,9 +82,6 @@ export function PaiementDirect({
         <BoutonMarque className="rounded-[var(--radius-m)]">
           Payer {somme} par {titre} <ArrowRight size={17} />
         </BoutonMarque>
-        <span className="text-[13px] text-muted">
-          ou faites l’envoi vous-même, ci-dessous.
-        </span>
       </form>
       {p.marchand ? (
         <p className="m-0 mt-3 text-[12.5px] leading-snug text-muted">
@@ -85,7 +96,7 @@ export function PaiementDirect({
 
 export type Etape = 1 | 2 | 3;
 
-export const ETAPES = ["Montant", "Envoi", "Reçu"] as const;
+export const ETAPES = ["Montant", "Paiement", "Reçu"] as const;
 
 export function etapeDu(p: PropsTunnel): Etape {
   if (p.statut === "annonce" || p.statut === "reussie") return 3;
@@ -167,70 +178,6 @@ export function ChampNumero({
         La ligne {operateur} depuis laquelle vous payez — elle commence par{" "}
         {prefixes.join(" ou ")}.
       </p>
-    </div>
-  );
-}
-
-export function CoordonneesEnvoi({
-  mode,
-  reference,
-  numeroChambre,
-  titulaire,
-}: {
-  mode: Portefeuille;
-  reference: string;
-  numeroChambre: string;
-  titulaire: string;
-}) {
-  const titre = MODES[mode].titre;
-  return (
-    <div className="grid gap-2.5">
-      {numeroChambre ? (
-        <Copiable
-          libelle={`Numéro ${titre} de la chambre`}
-          valeur={numeroLisible(numeroChambre)}
-        />
-      ) : (
-        <p
-          role="alert"
-          className="m-0 rounded-[var(--radius-m)] border border-warn/40 bg-warn-soft px-4 py-3 text-[14px] text-warn"
-        >
-          Le numéro {titre} de la chambre n’est pas encore publié. Écrivez à
-          l’équipe : elle vous l’indiquera.
-        </p>
-      )}
-      {titulaire ? (
-        <Copiable libelle="Au nom de" valeur={titulaire} mono={false} />
-      ) : null}
-      <Copiable
-        libelle="Référence à mettre en note du transfert"
-        valeur={reference}
-        accent
-      />
-      <p className="m-0 text-[13px] text-muted">
-        C’est la référence qui permet à l’équipe de retrouver votre règlement.
-      </p>
-    </div>
-  );
-}
-
-export function ChampRefSms({ champ }: { champ: string }) {
-  return (
-    <div>
-      <label
-        htmlFor="ref-sms"
-        className="mb-1.5 block text-[14px] font-bold text-ink"
-      >
-        Référence du SMS de confirmation{" "}
-        <span className="font-normal text-muted">(facultatif)</span>
-      </label>
-      <input
-        id="ref-sms"
-        name="refBancaire"
-        maxLength={60}
-        placeholder="Celle que votre opérateur vous envoie"
-        className={`min-h-12 w-full border border-line bg-surface px-4 text-[16px] text-ink placeholder:text-faint focus:border-[var(--pf-bouton)] focus:outline-none ${champ}`}
-      />
     </div>
   );
 }

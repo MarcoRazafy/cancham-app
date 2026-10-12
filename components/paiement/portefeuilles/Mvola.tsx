@@ -5,8 +5,6 @@ import { Copiable } from "@/components/paiement/Copiable";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import {
   ChampNumero,
-  ChampRefSms,
-  CoordonneesEnvoi,
   couleurs,
   etapeDu,
   LOGOS,
@@ -14,23 +12,22 @@ import {
   PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
-import {
-  annoncerReglement,
-  enregistrerNumeroPortefeuille,
-} from "@/lib/actions/reglements";
+import { enregistrerNumeroPortefeuille } from "@/lib/actions/reglements";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
-import { numeroLisible, PORTEFEUILLES } from "@/lib/portefeuilles";
+import { numeroLisible } from "@/lib/portefeuilles";
 
 export function TunnelMvola(p: PropsTunnel) {
-  const { ussd } = PORTEFEUILLES[p.mode];
   const titre = MODES[p.mode].titre;
   const somme = fmtMontant(p.montant, p.devise);
   const etape = etapeDu(p);
 
   const ETAPES = [
     { titre: "Montant", detail: "Ce que vous réglez, et depuis quel numéro." },
-    { titre: "Envoi", detail: `Depuis ${ussd}, vers le numéro de la chambre.` },
+    {
+      titre: "Paiement",
+      detail: "Validez la demande reçue sur votre téléphone.",
+    },
     {
       titre: "Confirmation",
       detail: p.raccorde
@@ -73,8 +70,8 @@ export function TunnelMvola(p: PropsTunnel) {
           Votre règlement, en trois gestes
         </h2>
         <p className="m-0 mt-3 text-[14px] leading-relaxed text-[var(--pf-douce)]">
-          Le paiement se fait dans {titre}, depuis votre téléphone. La chambre
-          reçoit votre règlement et vous le confirme.
+          Vous validez le paiement sur votre téléphone, avec votre code secret{" "}
+          {titre}. Votre reçu arrive aussitôt.
         </p>
 
         <ol className="m-0 mt-6 list-none p-0">
@@ -195,39 +192,14 @@ export function TunnelMvola(p: PropsTunnel) {
         ) : etape === 2 ? (
           <>
             <PaiementDirect p={p} className="mt-5" />
-            <h1 className="m-0 mt-5 text-[27px] font-bold leading-[1.15] tracking-[-0.015em]">
-              Envoyez {somme} depuis votre téléphone
-            </h1>
-            <p className="m-0 mt-2 text-[14px] text-muted">
-              Composez <b className="text-ink">{ussd}</b>, choisissez le
-              transfert d’argent, et suivez les indications ci-dessous.
-            </p>
             <div className="mt-5">
-              <CoordonneesEnvoi
-                mode={p.mode}
-                reference={p.reference}
-                numeroChambre={p.numeroChambre}
-                titulaire={p.titulaire}
-              />
+              <Link
+                href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
+                className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
+              >
+                Changer de numéro
+              </Link>
             </div>
-            <form action={annoncerReglement} className="mt-6">
-              <input type="hidden" name="reglementId" value={p.reglementId} />
-              <ChampRefSms champ="rounded-[var(--radius-m)]" />
-              <div className="mt-5 flex flex-wrap items-center gap-4">
-                <BoutonMarque
-                  enCours="Envoi…"
-                  className="rounded-[var(--radius-m)]"
-                >
-                  <Check size={17} /> J’ai payé · prévenir l’équipe
-                </BoutonMarque>
-                <Link
-                  href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
-                  className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
-                >
-                  Changer de numéro
-                </Link>
-              </div>
-            </form>
           </>
         ) : (
           <Merci {...p} somme={somme} />

@@ -1,12 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, ChevronLeft, Smartphone } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft } from "lucide-react";
 import { Copiable } from "@/components/paiement/Copiable";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import {
   ChampNumero,
-  ChampRefSms,
-  CoordonneesEnvoi,
   couleurs,
   etapeDu,
   ETAPES,
@@ -16,12 +14,9 @@ import {
   PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
-import {
-  annoncerReglement,
-  enregistrerNumeroPortefeuille,
-} from "@/lib/actions/reglements";
+import { enregistrerNumeroPortefeuille } from "@/lib/actions/reglements";
 import { fmtMontant } from "@/lib/membership";
-import { numeroLisible, PORTEFEUILLES } from "@/lib/portefeuilles";
+import { numeroLisible } from "@/lib/portefeuilles";
 
 export function TunnelAirtelMoney(p: PropsTunnel) {
   const etape = etapeDu(p);
@@ -111,58 +106,21 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
           </form>
         ) : etape === 2 ? (
           <>
-            <PaiementDirect p={p} className="mb-6" />
-            <h1 className="m-0 text-[24px] font-bold leading-tight tracking-[-0.01em]">
-              Envoyez {somme} depuis votre téléphone
-            </h1>
-
-            <div className="mt-5 flex items-center gap-4 rounded-[20px] bg-[#101418] px-5 py-4 text-white">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10">
-                <Smartphone size={20} aria-hidden />
-              </span>
-              <span className="min-w-0 text-[14px] leading-snug text-white/85">
-                Composez
-                <span className="block font-[family-name:var(--font-mono)] text-[24px] font-bold tracking-[0.08em] text-[#ffd200]">
-                  {PORTEFEUILLES[p.mode].ussd}
-                </span>
-                puis choisissez le transfert d’argent.
-              </span>
-            </div>
-
-            <div className="mt-5">
-              <CoordonneesEnvoi
-                mode={p.mode}
-                reference={p.reference}
-                numeroChambre={p.numeroChambre}
-                titulaire={p.titulaire}
-              />
-            </div>
-
+            <PaiementDirect p={p} />
             <Ticket
               lignes={[
                 ["Depuis", p.telephone ? numeroLisible(p.telephone) : "—"],
               ]}
               pied={["Montant", somme]}
             />
-
-            <form action={annoncerReglement} className="mt-6">
-              <input type="hidden" name="reglementId" value={p.reglementId} />
-              <ChampRefSms champ="rounded-full px-5" />
-              <BoutonMarque
-                enCours="Envoi…"
-                className="mt-6 w-full rounded-full"
+            <div className="mt-5 text-center">
+              <Link
+                href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
+                className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
               >
-                <Check size={17} /> J’ai payé · prévenir l’équipe
-              </BoutonMarque>
-              <div className="mt-4 text-center">
-                <Link
-                  href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
-                  className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
-                >
-                  Changer de numéro
-                </Link>
-              </div>
-            </form>
+                Changer de numéro
+              </Link>
+            </div>
           </>
         ) : (
           <div className="text-center">

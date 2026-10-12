@@ -17,7 +17,6 @@ import {
   estPortefeuilleConnu,
   getCoordonneesPaiement,
   MODES,
-  numeroPortefeuille,
 } from "@/lib/reglements";
 import { aujourdhuiISO } from "@/lib/format";
 import { getCurrentUser } from "@/lib/session";
@@ -115,7 +114,6 @@ export default async function PageReglement({
         devise={p.devise}
         objet={p.invoice?.objet ?? "Règlement"}
         titulaire={c.titulaire}
-        numeroChambre={numeroPortefeuille(p.mode, c)}
         telephone={telephone}
         statut={p.statut}
         modifier={numero === "modifier"}

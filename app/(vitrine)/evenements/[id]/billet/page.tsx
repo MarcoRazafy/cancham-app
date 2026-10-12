@@ -21,7 +21,7 @@ import {
   getCoordonneesPaiement,
   modesPublics,
 } from "@/lib/reglements";
-import { marchandAffiche } from "@/lib/vanillapay";
+import { marchandAffiche, canalVanillaPay } from "@/lib/vanillapay";
 import { plageHoraire } from "@/lib/agenda";
 import { fmtDate } from "@/lib/format";
 import { matriceQr } from "@/lib/qr";
@@ -128,8 +128,8 @@ export default async function BilletsPublics({
             modes={modes}
             reglement={
               reglement &&
-              reglement.mode !== "carte" &&
-              (moyen !== "choix" || reglement.statut === "annonce")
+              (reglement.statut === "annonce" ||
+                (!canalVanillaPay(reglement.mode) && moyen !== "choix"))
                 ? reglement
                 : null
             }

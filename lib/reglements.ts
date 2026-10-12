@@ -8,9 +8,7 @@ import {
 } from "@/lib/vanillapay";
 import {
   COORDONNEES_VIDES,
-  modeDisponible,
   MODES_EN_LIGNE,
-  numeroPortefeuille,
   type Coordonnees,
   type ModeReglement,
 } from "@/lib/modes-reglement";
@@ -40,18 +38,14 @@ export async function getCoordonneesPaiement(): Promise<Coordonnees> {
 }
 
 export async function modesProposes(): Promise<ModeReglement[]> {
-  const c = await getCoordonneesPaiement();
-  const enLigne = vanillaPayActif();
-  return MODES_EN_LIGNE.filter((m) => modeDisponible(m, c, enLigne));
+  return MODES_EN_LIGNE.filter((m) =>
+    m === "carte" ? vanillaPayActif() : mobileMoneyEnLigne(),
+  );
 }
 
 export async function modesPublics(montant: number): Promise<ModeReglement[]> {
-  const c = await getCoordonneesPaiement();
-  return MODES_EN_LIGNE.filter((m) =>
-    m === "carte"
-      ? vanillaPayActif() && montant >= MONTANT_MINIMUM_EN_LIGNE
-      : Boolean(numeroPortefeuille(m, c)) || mobileMoneyEnLigne(),
-  );
+  if (montant < MONTANT_MINIMUM_EN_LIGNE) return [];
+  return modesProposes();
 }
 
 export function modesBientot(): ModeReglement[] {

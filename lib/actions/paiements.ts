@@ -27,6 +27,7 @@ import {
 } from "@/lib/reglements";
 import { getCurrentUser } from "@/lib/session";
 import {
+  canalVanillaPay,
   mobileMoneyEnLigne,
   MONTANT_MINIMUM_EN_LIGNE,
   vanillaPayActif,
@@ -226,7 +227,14 @@ const DEJA_ANNONCE =
 
 export async function choisirPaiementPublic(formData: FormData) {
   const mode = texte(formData, "mode");
-  if (mode === "carte") return payerInscriptionPublique(formData);
+  if (
+    mode === "carte" ||
+    (estModeReglement(mode) &&
+      estPortefeuilleConnu(mode) &&
+      mobileMoneyEnLigne())
+  ) {
+    return payerInscriptionPublique(formData, mode);
+  }
 
   const { eventId, code, page, lignes, montant } =
     await inscriptionAPayer(formData);
@@ -293,18 +301,27 @@ export async function annoncerPaiementPublic(formData: FormData) {
   );
 }
 
-export async function payerInscriptionPublique(formData: FormData) {
+export async function payerInscriptionPublique(
+  formData: FormData,
+  mode: ModeReglement = "carte",
+) {
   const { eventId, code, page, lignes, montant } =
     await inscriptionAPayer(formData);
 
-  if (!vanillaPayActif() || montant < MONTANT_MINIMUM_EN_LIGNE) {
+  const canal = canalVanillaPay(mode);
+  if (
+    !canal ||
+    !vanillaPayActif() ||
+    montant < MONTANT_MINIMUM_EN_LIGNE ||
+    (canal === "mobile_money" && !mobileMoneyEnLigne())
+  ) {
     redirectWithErreur(
       page,
       "Le paiement en ligne n’est pas disponible pour cette inscription : réglez-la auprès de l’équipe CanCham.",
     );
   }
 
-  const p = await reglementPublic(eventId, code, "carte", montant, {
+  const p = await reglementPublic(eventId, code, mode, montant, {
     inscription: code,
     eventId,
     titulaire: lignes[0].nom,
@@ -314,7 +331,7 @@ export async function payerInscriptionPublique(formData: FormData) {
 
   const ouverture = await ouvrirChezLePrestataire(
     { id: p.id, montant, numeroFacture: null },
-    "international",
+    canal,
     {
       inscription: code,
       eventId,

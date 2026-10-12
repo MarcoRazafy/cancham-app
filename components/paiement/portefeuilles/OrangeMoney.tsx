@@ -5,8 +5,6 @@ import { Copiable } from "@/components/paiement/Copiable";
 import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import {
   ChampNumero,
-  ChampRefSms,
-  CoordonneesEnvoi,
   couleurs,
   etapeDu,
   ETAPES,
@@ -16,12 +14,8 @@ import {
   PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
-import {
-  annoncerReglement,
-  enregistrerNumeroPortefeuille,
-} from "@/lib/actions/reglements";
+import { enregistrerNumeroPortefeuille } from "@/lib/actions/reglements";
 import { fmtMontant } from "@/lib/membership";
-import { PORTEFEUILLES } from "@/lib/portefeuilles";
 
 export function TunnelOrangeMoney(p: PropsTunnel) {
   const etape = etapeDu(p);
@@ -128,39 +122,15 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
             </form>
           ) : etape === 2 ? (
             <>
-              <PaiementDirect p={p} className="mb-6" />
-              <h2 className="m-0 text-[22px] font-bold leading-snug">
-                Envoyez {somme} depuis votre téléphone
-              </h2>
-              <p className="m-0 mt-2 text-[15px] text-[#595959]">
-                Composez{" "}
-                <b className="text-black">{PORTEFEUILLES[p.mode].ussd}</b>,
-                choisissez le transfert d’argent, et suivez les indications
-                ci-dessous.
-              </p>
-              <div className="mt-5">
-                <CoordonneesEnvoi
-                  mode={p.mode}
-                  reference={p.reference}
-                  numeroChambre={p.numeroChambre}
-                  titulaire={p.titulaire}
-                />
+              <PaiementDirect p={p} />
+              <div className="mt-6">
+                <Link
+                  href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
+                  className="text-[15px] text-black underline underline-offset-4 hover:text-[#595959]"
+                >
+                  Changer de numéro
+                </Link>
               </div>
-              <form action={annoncerReglement} className="mt-6">
-                <input type="hidden" name="reglementId" value={p.reglementId} />
-                <ChampRefSms champ="rounded-none border-[#b3b3b3]" />
-                <div className="mt-6 flex flex-wrap items-center gap-6">
-                  <BoutonMarque enCours="Envoi…" className="rounded-none">
-                    <Check size={17} /> J’ai payé · prévenir l’équipe
-                  </BoutonMarque>
-                  <Link
-                    href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
-                    className="text-[15px] text-black underline underline-offset-4 hover:text-[#595959]"
-                  >
-                    Changer de numéro
-                  </Link>
-                </div>
-              </form>
             </>
           ) : (
             <>

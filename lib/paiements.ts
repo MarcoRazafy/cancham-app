@@ -7,7 +7,11 @@ import { jourBase } from "@/lib/format";
 import { nomFacture } from "@/lib/factures";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
-import { interrogerStatut, type EtatPaiement } from "@/lib/vanillapay";
+import {
+  canalVanillaPay,
+  interrogerStatut,
+  type EtatPaiement,
+} from "@/lib/vanillapay";
 
 export const estCotisation = (objet: string) => /^cotisation/i.test(objet);
 
@@ -198,16 +202,17 @@ export async function suivrePaiementPublic(
       invoiceId: true,
     },
   });
+  const canal = p ? canalVanillaPay(p.mode) : null;
   if (
     !p ||
+    !canal ||
     p.invoiceId ||
-    p.mode !== "carte" ||
     inscriptionPublique(p.detail)?.code !== code
   ) {
     return null;
   }
   if (p.statut === "en_cours" && p.transaction) {
-    const etat = await interrogerStatut(p.transaction, "international");
+    const etat = await interrogerStatut(p.transaction, canal);
     if (etat) {
       await conclurePaiement(etat, etat);
       const apres = await prisma.paiement.findUnique({
