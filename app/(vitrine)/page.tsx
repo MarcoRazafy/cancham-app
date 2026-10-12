@@ -303,10 +303,11 @@ export default async function PublicHome() {
 
               <h1 className="m-0 mt-6">
                 <Image
-                  src="/marque/10-ans.png"
+                  src="/marque/10-ans-or.png"
                   alt="CanCham — 10 ans"
-                  width={1100}
-                  height={386}
+                  width={2115}
+                  height={744}
+                  quality={90}
                   priority
                   sizes="(max-width: 640px) 80vw, 520px"
                   className="apparition w-[min(520px,80%)] h-auto"

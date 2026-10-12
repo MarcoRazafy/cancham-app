@@ -98,6 +98,7 @@ const nextConfig: NextConfig = {
     proxyClientMaxBodySize: `${PLAFOND_ENVOI_MO}mb`,
   },
   images: {
+    qualities: [75, 90],
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "images.pexels.com" },
