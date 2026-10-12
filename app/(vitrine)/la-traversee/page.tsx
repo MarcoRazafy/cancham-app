@@ -40,8 +40,16 @@ export const metadata: Metadata = {
     description:
       "Une journée pour voir plus grand. Une nuit pour fêter 10 ans. Vendredi 18 décembre 2026, Hôtel Carlton.",
     type: "website",
-    images: ["/traversee/hero.jpg"],
+    images: [
+      {
+        url: "/traversee/partage.jpg",
+        width: 1200,
+        height: 630,
+        alt: "La Traversée — Une journée pour voir plus grand. Une nuit pour fêter 10 ans.",
+      },
+    ],
   },
+  twitter: { card: "summary_large_image" },
 };
 
 export default async function LaTraverseePage() {
