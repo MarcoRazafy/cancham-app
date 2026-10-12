@@ -121,11 +121,11 @@ export const LOGOS: Record<
   Portefeuille,
   { src: string; largeur: number; hauteur: number }
 > = {
-  mvola: { src: "/paiement/mvola.png", largeur: 811, hauteur: 378 },
+  mvola: { src: "/paiement/mvola-detoure.png", largeur: 769, hauteur: 349 },
   orange_money: {
-    src: "/paiement/orange-money.png",
-    largeur: 738,
-    hauteur: 366,
+    src: "/paiement/orange-money-detoure.png",
+    largeur: 626,
+    hauteur: 255,
   },
   airtel_money: {
     src: "/paiement/airtel-money.png",

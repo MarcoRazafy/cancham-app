@@ -34,28 +34,24 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
         >
           <ChevronLeft size={20} />
         </Link>
-        <span className="flex h-11 shrink-0 items-center bg-white px-2">
-          <Image
-            src={LOGOS.orange_money.src}
-            alt="Orange Money"
-            width={LOGOS.orange_money.largeur}
-            height={LOGOS.orange_money.hauteur}
-            className="h-9 w-auto object-contain"
-          />
-        </span>
+        <Image
+          src={LOGOS.orange_money.src}
+          alt="Orange Money"
+          width={LOGOS.orange_money.largeur}
+          height={LOGOS.orange_money.hauteur}
+          className="h-10 w-auto shrink-0 object-contain"
+        />
         <p className="m-0 min-w-0 flex-1 text-[15px]">
           <b>Paiement Orange Money</b>
           <span className="text-white/75"> · Règlement CanCham</span>
         </p>
-        <span className="hidden h-11 shrink-0 items-center bg-white px-3 sm:flex">
-          <Image
-            src="/marque/logo-couleur.png"
-            alt="CanCham"
-            width={2536}
-            height={711}
-            className="h-8 w-auto object-contain"
-          />
-        </span>
+        <Image
+          src="/marque/logo-blanc.png"
+          alt="CanCham"
+          width={2383}
+          height={711}
+          className="hidden h-10 w-auto shrink-0 object-contain sm:block"
+        />
       </header>
 
       <div className="bg-white px-5 pb-10 pt-9 text-black sm:px-10">

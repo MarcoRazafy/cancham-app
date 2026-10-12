@@ -42,28 +42,24 @@ export function TunnelMvola(p: PropsTunnel) {
       className="grid overflow-hidden rounded-[var(--radius-l)] border border-line bg-surface lg:grid-cols-[minmax(0,400px)_1fr]"
     >
       <aside className="bg-[var(--pf-fond)] p-7 text-[var(--pf-encre)]">
-        <div className="flex items-center gap-3">
-          <span className="flex h-14 items-center rounded-[var(--radius-m)] bg-white px-4">
-            <Image
-              src="/marque/logo-vertical.png"
-              alt="CanCham"
-              width={760}
-              height={547}
-              className="h-10 w-auto object-contain"
-            />
-          </span>
+        <div className="flex items-center gap-4">
+          <Image
+            src="/marque/logo-vertical.png"
+            alt="CanCham"
+            width={760}
+            height={547}
+            className="h-16 w-auto object-contain"
+          />
           <span aria-hidden className="text-[15px] font-semibold opacity-60">
             ×
           </span>
-          <span className="flex h-14 items-center rounded-[var(--radius-m)] bg-white px-4">
-            <Image
-              src={LOGOS.mvola.src}
-              alt={titre}
-              width={LOGOS.mvola.largeur}
-              height={LOGOS.mvola.hauteur}
-              className="h-8 w-auto object-contain"
-            />
-          </span>
+          <Image
+            src={LOGOS.mvola.src}
+            alt={titre}
+            width={LOGOS.mvola.largeur}
+            height={LOGOS.mvola.hauteur}
+            className="h-11 w-auto object-contain"
+          />
         </div>
 
         <h2 className="m-0 mt-6 text-[26px] font-bold leading-[1.15] tracking-[-0.01em]">
