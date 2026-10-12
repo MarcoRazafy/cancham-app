@@ -53,7 +53,7 @@ Sur le service de l'application, onglet **Variables** :
 | `VANILLAPAY_CLIENT_SECRET` | « Client Secret » de l'espace marchand |
 | `VANILLAPAY_KEY_SECRET` | « Key Secret » de l'espace marchand : elle signe leurs confirmations de paiement. Sans ces quatre variables, le paiement en ligne n'est pas proposé. |
 | `VANILLAPAY_MOBILE_MONEY` | `1` une fois « l'offre mobile money » (MVola, Orange Money, Airtel Money) ouverte sur le compte marchand. Vide : seule la carte bancaire se paie en ligne. |
-| `VANILLAPAY_MARCHAND` | Le nom que leur page affiche au payeur, s'il n'est pas « CanCham » (aujourd'hui `Heaven Network`). Le membre en est prévenu avant de payer. |
+| `VANILLAPAY_MARCHAND` | Le nom que leur page affiche au payeur, s'il n'est pas celui de la chambre. Vide avec le compte de la chambre : leur page affiche « Chambre de commerce et de coopération Canada MDG ». Sinon, le membre en est prévenu avant de payer. |
 
 Générer `AUTH_SECRET` :
 
