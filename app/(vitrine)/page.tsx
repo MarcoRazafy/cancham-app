@@ -225,18 +225,20 @@ export default async function PublicHome() {
   ]);
 
   const chiffres = [
-    { nombre: 10, apres: " ans", libelle: "de coopération" },
+    { nombre: 10, avant: "", apres: " ans", libelle: "de coopération" },
     {
-      nombre: stats.membres,
+      nombre: 100,
+      avant: "+",
       apres: "",
-      libelle: `entreprise${stats.membres > 1 ? "s" : ""} dans le réseau`,
+      libelle: "entreprises dans le réseau",
     },
     {
       nombre: stats.secteurs,
+      avant: "",
       apres: "",
       libelle: `secteur${stats.secteurs > 1 ? "s représentés" : " représenté"}`,
     },
-    { nombre: 2, apres: " pays", libelle: "une ambition commune" },
+    { nombre: 2, avant: "", apres: " pays", libelle: "une ambition commune" },
   ];
 
   return (
@@ -405,6 +407,7 @@ export default async function PublicHome() {
                 }`}
               >
                 <dt className="titre text-[clamp(26px,3.4vw,34px)] text-white">
+                  {c.avant}
                   <Compteur valeur={c.nombre} />
                   {c.apres}
                 </dt>
