@@ -3,7 +3,7 @@ import { ArrowLeft, CheckCircle2, Clock, Ticket, XCircle } from "lucide-react";
 import { Banner, BtnLink, Card, ViewHead } from "@/components/ui";
 import { prisma } from "@/lib/db";
 import { fmtMontant } from "@/lib/membership";
-import { conclurePaiement } from "@/lib/paiements";
+import { conclurePaiement, estCotisation } from "@/lib/paiements";
 import { getCurrentUser } from "@/lib/session";
 import { canalVanillaPay, interrogerStatut } from "@/lib/vanillapay";
 
@@ -19,7 +19,14 @@ export default async function RetourPaiementPage({
     ? await prisma.paiement.findUnique({
         where: { reference: ref },
         include: {
-          invoice: { select: { numero: true, memberId: true, eventId: true } },
+          invoice: {
+            select: {
+              numero: true,
+              objet: true,
+              memberId: true,
+              eventId: true,
+            },
+          },
         },
       })
     : null;
@@ -68,7 +75,9 @@ export default async function RetourPaiementPage({
             La facture {p.invoice?.numero} est réglée : {montant} encaissés.
             {evenement
               ? " Votre inscription est confirmée : vos billets, avec leur QR code, partent à l’adresse donnée à l’inscription, et vous les retrouvez sur la fiche de l’événement."
-              : " Votre adhésion est à jour, et votre certificat le dit déjà."}
+              : p.invoice && estCotisation(p.invoice.objet)
+                ? " Votre adhésion est à jour, et votre certificat le dit déjà."
+                : " La facture apparaît réglée dans vos cotisations."}
           </Banner>
         ) : statut === "echouee" ? (
           <Banner

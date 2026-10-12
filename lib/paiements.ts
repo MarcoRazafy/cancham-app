@@ -9,7 +9,7 @@ import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
 import { interrogerStatut, type EtatPaiement } from "@/lib/vanillapay";
 
-const estCotisation = (objet: string) => /^cotisation/i.test(objet);
+export const estCotisation = (objet: string) => /^cotisation/i.test(objet);
 
 export type Issue =
   | "reglee"
