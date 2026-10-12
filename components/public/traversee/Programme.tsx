@@ -29,15 +29,6 @@ const CARTES = [
   },
 ];
 
-const PANELS = [
-  "Culture d’affaires canadienne",
-  "Investissement",
-  "Commerce",
-  "Accès au financement",
-  "Entreprendre et immigrer au Canada",
-  "Réseautage",
-];
-
 export function Programme() {
   return (
     <section className="plein" id="programme">
@@ -99,14 +90,6 @@ export function Programme() {
               </ul>
             </div>
           </article>
-        </div>
-        <div className="panels nuit" data-r>
-          <h3>Les six panels</h3>
-          <ul className="chips">
-            {PANELS.map((p) => (
-              <li key={p}>{p}</li>
-            ))}
-          </ul>
         </div>
       </div>
     </section>

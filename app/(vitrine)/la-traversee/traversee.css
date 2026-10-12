@@ -568,19 +568,6 @@
   background: rgba(255, 255, 255, 0.16);
   transform: translateY(-2px);
 }
-.marque .vitrine-claire.la-traversee .panels {
-  margin-top: 14px;
-  border-radius: 14px;
-  padding: clamp(12px, 2.2vh, 20px) 24px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 22px;
-  align-items: center;
-}
-.marque .vitrine-claire.la-traversee .panels h3 {
-  font-size: 17px;
-  font-weight: 800;
-}
 .marque .vitrine-claire.la-traversee .defis {
   background: var(--degrade);
   background-size: 160% 160%;
@@ -1022,7 +1009,6 @@
 }
 .marque .vitrine-claire.la-traversee .carte h3,
 .marque .vitrine-claire.la-traversee .defi h3,
-.marque .vitrine-claire.la-traversee .panels h3,
 .marque .vitrine-claire.la-traversee .ecran h3 {
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -1372,17 +1358,6 @@
   background: rgba(255, 255, 255, 0.16);
   border-color: rgba(255, 255, 255, 0.3);
 }
-.marque .vitrine-claire.la-traversee .panels.nuit {
-  background: var(--degrade);
-}
-.marque .vitrine-claire.la-traversee .panels .chips li {
-  background: #ffffff;
-  border-color: #ffffff;
-  color: #0f1d2c;
-}
-.marque .vitrine-claire.la-traversee .panels .chips li:hover {
-  background: #fdeaed;
-}
 .marque .vitrine-claire.la-traversee .cadres li::before {
   background: var(--bouton);
   color: #ffffff;
@@ -1730,13 +1705,6 @@
   .marque .vitrine-claire.la-traversee .cote-d {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
-  }
-  .marque .vitrine-claire.la-traversee .panels {
-    padding: 12px 16px;
-  }
-  .marque .vitrine-claire.la-traversee .panels .chips li {
-    font-size: 11.5px;
-    padding: 6px 10px;
   }
 }
 @media (max-width: 640px) {
@@ -2243,10 +2211,6 @@
   transition:
     background 0.2s,
     transform 0.2s var(--elan);
-}
-.marque .vitrine-claire.la-traversee .panels {
-  margin-top: 20px;
-  border-radius: 12px;
 }
 .marque .vitrine-claire.la-traversee .lotc {
   border-radius: 12px;
