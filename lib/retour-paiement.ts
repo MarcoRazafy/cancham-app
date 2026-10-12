@@ -7,8 +7,26 @@ const PAGES_DE_RETOUR = [
   /^\/evenements\/[A-Za-z0-9_-]+\/billet\?/,
 ];
 
-export function versRelais(chemin: string): string {
-  return `${RELAIS_RETOUR}?${new URLSearchParams({ vers: chemin })}`;
+const HOTES_LOCAUX: Record<string, string> = {
+  "1": "localhost",
+  "2": "127.0.0.1",
+};
+
+export function marqueLocale(nomHote: string): string | null {
+  return (
+    Object.keys(HOTES_LOCAUX).find((m) => HOTES_LOCAUX[m] === nomHote) ?? null
+  );
+}
+
+export function hoteLocal(marque: string | null | undefined): string | null {
+  return (marque && HOTES_LOCAUX[marque]) || null;
+}
+
+export function versRelais(chemin: string, local?: string): string {
+  return `${RELAIS_RETOUR}?${new URLSearchParams({
+    vers: chemin,
+    ...(local ? { local } : {}),
+  })}`;
 }
 
 export function destinationDuRetour(vers: string | null | undefined): string {

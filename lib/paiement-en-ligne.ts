@@ -1,10 +1,11 @@
 import "server-only";
 
+import { networkInterfaces } from "node:os";
 import { headers } from "next/headers";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { referenceReglement } from "@/lib/reglements";
-import { versRelais } from "@/lib/retour-paiement";
+import { marqueLocale, versRelais } from "@/lib/retour-paiement";
 import { baseSite } from "@/lib/site";
 import type { ModeReglement } from "@/lib/modes-reglement";
 import {
@@ -27,6 +28,34 @@ async function baseRetour(): Promise<string> {
     h.get("x-forwarded-proto") ??
     (/^(localhost|127\.0\.0\.1)(:|$)/.test(hote) ? "http" : "https");
   return `${protocole}://${hote}`;
+}
+
+function adresseReseau(): string | null {
+  for (const cartes of Object.values(networkInterfaces())) {
+    for (const carte of cartes ?? []) {
+      if (carte.family === "IPv4" && !carte.internal) return carte.address;
+    }
+  }
+  return null;
+}
+
+async function adresseRetour(
+  chemin: string,
+  portefeuille?: ModeReglement,
+): Promise<string> {
+  const base = await baseRetour();
+  if (
+    process.env.NODE_ENV !== "production" &&
+    portefeuille === "orange_money"
+  ) {
+    const { hostname, port } = new URL(base);
+    const marque = marqueLocale(hostname);
+    const ip = marque ? adresseReseau() : null;
+    if (marque && ip) {
+      return `http://${ip}${port ? `:${port}` : ""}${versRelais(chemin, marque)}`;
+    }
+  }
+  return `${base}${versRelais(chemin)}`;
 }
 
 export async function ouvrirChezLePrestataire(
@@ -57,7 +86,7 @@ export async function ouvrirChezLePrestataire(
     panier: p.numeroFacture ?? reference,
     mode,
     notifUrl: `${basePrestataire()}/api/paiements/vanillapay`,
-    redirectUrl: `${await baseRetour()}${versRelais(cheminRetour(reference))}`,
+    redirectUrl: await adresseRetour(cheminRetour(reference), p.portefeuille),
   });
   if ("raison" in ouverture) return ouverture;
 

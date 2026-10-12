@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   destinationDuRetour,
+  hoteLocal,
+  marqueLocale,
   RELAIS_RETOUR,
   REPLI_RETOUR,
   versRelais,
@@ -21,6 +23,34 @@ describe("adresse du relais", () => {
       "https://exemple.mg",
     ).searchParams.get("vers");
     expect(destinationDuRetour(vers)).toBe(chemin);
+  });
+});
+
+describe("retour vers un poste de développement", () => {
+  it("désigne la machine locale par un repère, jamais par son nom", () => {
+    expect(marqueLocale("localhost")).toBe("1");
+    expect(marqueLocale("127.0.0.1")).toBe("2");
+    for (const h of ["cancham.mg", "192.168.1.20", "localhost.evil.example"]) {
+      expect(marqueLocale(h)).toBeNull();
+    }
+  });
+
+  it("ne ramène que vers la machine locale", () => {
+    expect(hoteLocal("1")).toBe("localhost");
+    expect(hoteLocal("2")).toBe("127.0.0.1");
+    for (const m of [null, undefined, "", "3", "evil.example", "localhost"]) {
+      expect(hoteLocal(m)).toBeNull();
+    }
+  });
+
+  it("garde l'adresse de retour sans le mot « localhost »", () => {
+    const chemin = "/membre/cotisations/retour?ref=CC-2026-ABC123";
+    const relais = versRelais(chemin, "1");
+    expect(relais).not.toMatch(/localhost|127\.0\.0\.1/);
+    const url = new URL(relais, "http://192.168.1.20:3000");
+    expect(url.searchParams.get("local")).toBe("1");
+    expect(destinationDuRetour(url.searchParams.get("vers"))).toBe(chemin);
+    expect(versRelais(chemin)).not.toContain("local=");
   });
 });
 
