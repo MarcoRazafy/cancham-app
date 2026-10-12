@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronLeft } from "lucide-react";
 import { Copiable } from "@/components/paiement/Copiable";
-import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import {
-  ChampNumero,
   couleurs,
   etapeDu,
   ETAPES,
@@ -14,9 +12,7 @@ import {
   PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
-import { enregistrerNumeroPortefeuille } from "@/lib/actions/reglements";
 import { fmtMontant } from "@/lib/membership";
-import { numeroLisible } from "@/lib/portefeuilles";
 
 export function TunnelAirtelMoney(p: PropsTunnel) {
   const etape = etapeDu(p);
@@ -69,20 +65,10 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
 
       <section className="relative -mt-8 rounded-[28px] border border-line bg-surface p-6 shadow-[0_24px_60px_-30px_rgba(60,10,10,0.45)] sm:p-8">
         {etape === 1 ? (
-          <form action={enregistrerNumeroPortefeuille}>
-            <input type="hidden" name="reglementId" value={p.reglementId} />
+          <>
             <h1 className="m-0 text-[24px] font-bold leading-tight tracking-[-0.01em]">
-              Depuis quel numéro payez-vous&nbsp;?
+              Votre règlement par Airtel Money
             </h1>
-            <div className="mt-5">
-              <ChampNumero
-                mode={p.mode}
-                telephone={p.telephone}
-                cadre="rounded-full border-2 border-line p-1 transition-colors focus-within:border-[var(--pf-bouton)]"
-                prefixe="rounded-full bg-[#ffe9ea] text-[#b30d14]"
-                champ="rounded-full"
-              />
-            </div>
 
             <Ticket
               lignes={[
@@ -92,33 +78,13 @@ export function TunnelAirtelMoney(p: PropsTunnel) {
               pied={["Montant", somme]}
             />
 
-            <BoutonMarque className="mt-6 w-full rounded-full">
-              Continuer vers Airtel Money <ArrowRight size={17} />
-            </BoutonMarque>
-            <div className="mt-4 text-center">
+            <PaiementDirect p={p} className="mt-6" />
+            <div className="mt-5 text-center">
               <Link
                 href="/membre/cotisations"
                 className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
               >
                 Payer plus tard
-              </Link>
-            </div>
-          </form>
-        ) : etape === 2 ? (
-          <>
-            <PaiementDirect p={p} />
-            <Ticket
-              lignes={[
-                ["Depuis", p.telephone ? numeroLisible(p.telephone) : "—"],
-              ]}
-              pied={["Montant", somme]}
-            />
-            <div className="mt-5 text-center">
-              <Link
-                href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
-                className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
-              >
-                Changer de numéro
               </Link>
             </div>
           </>

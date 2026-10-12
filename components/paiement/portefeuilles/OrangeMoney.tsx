@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronLeft } from "lucide-react";
 import { Copiable } from "@/components/paiement/Copiable";
-import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import {
-  ChampNumero,
   couleurs,
   etapeDu,
   ETAPES,
@@ -14,7 +12,6 @@ import {
   PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
-import { enregistrerNumeroPortefeuille } from "@/lib/actions/reglements";
 import { fmtMontant } from "@/lib/membership";
 
 export function TunnelOrangeMoney(p: PropsTunnel) {
@@ -64,9 +61,7 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
 
         <div className="mx-auto mt-10 max-w-[480px]">
           {etape === 1 ? (
-            <form action={enregistrerNumeroPortefeuille}>
-              <input type="hidden" name="reglementId" value={p.reglementId} />
-
+            <>
               <p className="m-0 mb-1.5 text-[14px] font-bold">
                 Montant à régler
               </p>
@@ -77,16 +72,6 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
                 <span className="flex items-center border-l border-[#b3b3b3] bg-[#f4f4f4] px-4 text-[16px] font-bold">
                   {p.devise === "CAD" ? "$" : "Ar"}
                 </span>
-              </div>
-
-              <div className="mt-6">
-                <ChampNumero
-                  mode={p.mode}
-                  telephone={p.telephone}
-                  cadre="border border-[#b3b3b3] focus-within:border-black focus-within:outline focus-within:outline-2 focus-within:outline-offset-0 focus-within:outline-[var(--pf-bouton)]"
-                  prefixe="border-r border-[#b3b3b3] bg-[#f4f4f4] text-black"
-                  champ="text-black"
-                />
               </div>
 
               <dl className="m-0 mt-6 bg-[#f4f4f4] px-4 py-3.5 text-[14px]">
@@ -104,27 +89,13 @@ export function TunnelOrangeMoney(p: PropsTunnel) {
                 </div>
               </dl>
 
-              <div className="mt-6 flex flex-wrap items-center gap-6">
-                <BoutonMarque className="min-w-[200px] rounded-none">
-                  Suivant
-                </BoutonMarque>
+              <PaiementDirect p={p} className="mt-6 rounded-none" />
+              <div className="mt-6">
                 <Link
                   href="/membre/cotisations"
                   className="text-[15px] text-black underline underline-offset-4 hover:text-[#595959]"
                 >
                   Payer plus tard
-                </Link>
-              </div>
-            </form>
-          ) : etape === 2 ? (
-            <>
-              <PaiementDirect p={p} />
-              <div className="mt-6">
-                <Link
-                  href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
-                  className="text-[15px] text-black underline underline-offset-4 hover:text-[#595959]"
-                >
-                  Changer de numéro
                 </Link>
               </div>
             </>

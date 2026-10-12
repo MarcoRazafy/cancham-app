@@ -23,12 +23,6 @@ import {
   referenceReglement,
   type ModeReglement,
 } from "@/lib/reglements";
-import {
-  estPortefeuilleConnu,
-  normaliserNumero,
-  numeroDeLOperateur,
-  PORTEFEUILLES,
-} from "@/lib/portefeuilles";
 import { after } from "next/server";
 import { notifierEquipe, notifierMembre } from "@/lib/push";
 
@@ -173,48 +167,6 @@ export async function reglerCotisation(formData: FormData) {
     );
   }
   await ouvrirTunnel(user, facture.id, mode);
-}
-
-export async function enregistrerNumeroPortefeuille(formData: FormData) {
-  const user = await getCurrentUser("membre");
-  const id = texte(formData, "reglementId");
-
-  const p = await prisma.paiement.findUnique({
-    where: { id },
-    select: { id: true, memberId: true, mode: true, statut: true },
-  });
-  if (!p || !user.memberId || p.memberId !== user.memberId) {
-    redirectWithErreur("/membre/cotisations", "Règlement introuvable.");
-  }
-  const retour = `/membre/cotisations/payer/${p.id}`;
-  if (!estPortefeuilleConnu(p.mode)) {
-    redirectWithErreur(
-      retour,
-      "Ce règlement n’est pas un portefeuille mobile.",
-    );
-  }
-
-  const numero = normaliserNumero(texte(formData, "telephone"));
-  if (!numero) {
-    redirectWithErreur(
-      `${retour}?numero=modifier`,
-      "Numéro incomplet : dix chiffres, comme 034 12 345 67.",
-    );
-  }
-  if (!numeroDeLOperateur(p.mode, numero)) {
-    const { prefixes } = PORTEFEUILLES[p.mode];
-    redirectWithErreur(
-      `${retour}?numero=modifier`,
-      `Un numéro ${MODES[p.mode].titre} commence par ${prefixes.join(" ou ")}.`,
-    );
-  }
-
-  await prisma.paiement.update({
-    where: { id: p.id },
-    data: { detail: { telephone: numero } },
-  });
-  revalidatePath(retour);
-  redirect(retour);
 }
 
 export async function preparerRemiseEspeces(formData: FormData) {

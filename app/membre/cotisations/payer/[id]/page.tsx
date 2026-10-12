@@ -32,10 +32,10 @@ export default async function PageReglement({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ numero?: string; etape?: string; modifier?: string }>;
+  searchParams: Promise<{ etape?: string; modifier?: string }>;
 }) {
   const { id } = await params;
-  const { numero, etape, modifier } = await searchParams;
+  const { etape, modifier } = await searchParams;
   const user = await getCurrentUser("membre");
 
   const p = await prisma.paiement.findUnique({
@@ -102,9 +102,6 @@ export default async function PageReglement({
   }
 
   if (estPortefeuilleConnu(p.mode)) {
-    const telephone =
-      typeof detail.telephone === "string" ? detail.telephone : null;
-
     return (
       <TunnelPortefeuille
         mode={p.mode}
@@ -114,9 +111,7 @@ export default async function PageReglement({
         devise={p.devise}
         objet={p.invoice?.objet ?? "Règlement"}
         titulaire={c.titulaire}
-        telephone={telephone}
         statut={p.statut}
-        modifier={numero === "modifier"}
         retour={retour}
         raccorde={
           mobileMoneyEnLigne() &&

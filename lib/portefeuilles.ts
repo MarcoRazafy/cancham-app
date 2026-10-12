@@ -6,9 +6,6 @@ export type Portefeuille = Extract<
 >;
 
 export interface DescriptionPortefeuille {
-  operateur: string;
-  ussd: string;
-  prefixes: string[];
   palette: {
     fond: string;
     encre: string;
@@ -22,9 +19,6 @@ export interface DescriptionPortefeuille {
 
 export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
   mvola: {
-    operateur: "Telma",
-    ussd: "#111#",
-    prefixes: ["034", "038"],
     palette: {
       fond: "#ffde00",
       encre: "#10241a",
@@ -36,9 +30,6 @@ export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
     },
   },
   orange_money: {
-    operateur: "Orange",
-    ussd: "#144#",
-    prefixes: ["032", "037"],
     palette: {
       fond: "#fe6601",
       encre: "#1c1008",
@@ -50,9 +41,6 @@ export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
     },
   },
   airtel_money: {
-    operateur: "Airtel",
-    ussd: "#436#",
-    prefixes: ["033"],
     palette: {
       fond: "#ed1c24",
       encre: "#ffffff",
@@ -67,23 +55,4 @@ export const PORTEFEUILLES: Record<Portefeuille, DescriptionPortefeuille> = {
 
 export function estPortefeuilleConnu(m: ModeReglement): m is Portefeuille {
   return m === "mvola" || m === "orange_money" || m === "airtel_money";
-}
-
-export function normaliserNumero(saisi: string): string | null {
-  const chiffres = saisi.replace(/[^\d]/g, "").replace(/^261/, "0");
-  const dix = chiffres.startsWith("0") ? chiffres : `0${chiffres}`;
-  return /^0\d{9}$/.test(dix) ? dix : null;
-}
-
-export function numeroDeLOperateur(
-  mode: Portefeuille,
-  numero: string,
-): boolean {
-  return PORTEFEUILLES[mode].prefixes.some((p) => numero.startsWith(p));
-}
-
-export function numeroLisible(numero: string): string {
-  const n = normaliserNumero(numero);
-  if (!n) return numero;
-  return `${n.slice(0, 3)} ${n.slice(3, 5)} ${n.slice(5, 8)} ${n.slice(8)}`;
 }

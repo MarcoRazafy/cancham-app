@@ -6,11 +6,7 @@ import { payerParPortefeuille } from "@/lib/actions/paiements";
 import { fmtMontant, type Devise } from "@/lib/membership";
 import { MONTANT_MINIMUM_EN_LIGNE } from "@/lib/vanillapay";
 import { MODES } from "@/lib/modes-reglement";
-import {
-  numeroLisible,
-  PORTEFEUILLES,
-  type Portefeuille,
-} from "@/lib/portefeuilles";
+import { PORTEFEUILLES, type Portefeuille } from "@/lib/portefeuilles";
 
 export interface PropsTunnel {
   mode: Portefeuille;
@@ -20,9 +16,7 @@ export interface PropsTunnel {
   devise: Devise;
   objet: string;
   titulaire: string;
-  telephone: string | null;
   statut: string;
-  modifier?: boolean;
   retour: string;
   raccorde: boolean;
   marchand?: string | null;
@@ -66,11 +60,9 @@ export function PaiementDirect({
             Payer maintenant, depuis {titre}
           </h2>
           <p className="m-0 mt-1.5 text-[13.5px] leading-relaxed text-muted">
-            Sur la page de paiement, confirmez votre numéro
-            {p.telephone ? ` (${numeroLisible(p.telephone)})` : ""} : votre
-            téléphone reçoit une demande de confirmation. Validez-la avec votre
-            code secret {titre}, et {somme} sont débités, plus les frais de
-            l’opérateur. Votre reçu
+            La page de paiement vous demande votre numéro {titre}, puis la
+            validation avec votre code secret. {somme} sont alors débités, plus
+            les frais de l’opérateur. Votre reçu
             {billets ? " et vos billets arrivent" : " arrive"} aussitôt.
           </p>
         </div>
@@ -100,8 +92,7 @@ export type Etape = 1 | 2 | 3;
 export const ETAPES = ["Montant", "Paiement", "Reçu"] as const;
 
 export function etapeDu(p: PropsTunnel): Etape {
-  if (p.statut === "annonce" || p.statut === "reussie") return 3;
-  return p.telephone && !p.modifier ? 2 : 1;
+  return p.statut === "annonce" || p.statut === "reussie" ? 3 : 1;
 }
 
 export function couleurs(mode: Portefeuille): CSSProperties {
@@ -133,55 +124,6 @@ export const LOGOS: Record<
     hauteur: 229,
   },
 };
-
-export function ChampNumero({
-  mode,
-  telephone,
-  cadre,
-  prefixe,
-  champ,
-}: {
-  mode: Portefeuille;
-  telephone: string | null;
-  cadre: string;
-  prefixe: string;
-  champ: string;
-}) {
-  const { prefixes, operateur } = PORTEFEUILLES[mode];
-  return (
-    <div>
-      <label
-        htmlFor="telephone-portefeuille"
-        className="mb-1.5 block text-[14px] font-bold text-ink"
-      >
-        Votre numéro {MODES[mode].titre}
-      </label>
-      <div className={`flex overflow-hidden ${cadre}`}>
-        <span
-          className={`flex shrink-0 items-center px-4 text-[15px] font-bold ${prefixe}`}
-        >
-          +261
-        </span>
-        <input
-          id="telephone-portefeuille"
-          name="telephone"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel-national"
-          required
-          defaultValue={telephone ? numeroLisible(telephone) : ""}
-          placeholder={`${prefixes[0]} 12 345 67`}
-          aria-describedby="aide-telephone"
-          className={`min-h-12 w-full min-w-0 border-0 bg-surface px-4 text-[16px] text-ink outline-none placeholder:text-faint ${champ}`}
-        />
-      </div>
-      <p id="aide-telephone" className="m-0 mt-1.5 text-[13px] text-muted">
-        La ligne {operateur} depuis laquelle vous payez — elle commence par{" "}
-        {prefixes.join(" ou ")}.
-      </p>
-    </div>
-  );
-}
 
 export function MentionSecret({
   mode,

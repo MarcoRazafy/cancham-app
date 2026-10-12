@@ -2,9 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronLeft } from "lucide-react";
 import { Copiable } from "@/components/paiement/Copiable";
-import { BoutonMarque } from "@/components/paiement/BoutonMarque";
 import {
-  ChampNumero,
   couleurs,
   etapeDu,
   LOGOS,
@@ -12,10 +10,8 @@ import {
   PaiementDirect,
   type PropsTunnel,
 } from "@/components/paiement/portefeuilles/commun";
-import { enregistrerNumeroPortefeuille } from "@/lib/actions/reglements";
 import { fmtMontant } from "@/lib/membership";
 import { MODES } from "@/lib/modes-reglement";
-import { numeroLisible } from "@/lib/portefeuilles";
 
 export function TunnelMvola(p: PropsTunnel) {
   const titre = MODES[p.mode].titre;
@@ -23,10 +19,10 @@ export function TunnelMvola(p: PropsTunnel) {
   const etape = etapeDu(p);
 
   const ETAPES = [
-    { titre: "Montant", detail: "Ce que vous réglez, et depuis quel numéro." },
+    { titre: "Montant", detail: "Ce que vous réglez, et pour quoi." },
     {
       titre: "Paiement",
-      detail: "Validez la demande reçue sur votre téléphone.",
+      detail: "Votre numéro, puis la validation avec votre code secret.",
     },
     {
       titre: "Confirmation",
@@ -110,9 +106,8 @@ export function TunnelMvola(p: PropsTunnel) {
             </span>
           </Ligne>
           <Ligne libelle="Pour">{p.objet}</Ligne>
-          <Ligne libelle="Vers">{p.titulaire || "CanCham Madagascar"}</Ligne>
-          <Ligne libelle="Depuis" dernier>
-            {p.telephone ? numeroLisible(p.telephone) : "—"}
+          <Ligne libelle="Vers" dernier>
+            {p.titulaire || "CanCham Madagascar"}
           </Ligne>
         </dl>
 
@@ -136,7 +131,7 @@ export function TunnelMvola(p: PropsTunnel) {
         {etape === 1 ? (
           <>
             <h1 className="m-0 mt-5 text-[27px] font-bold leading-[1.15] tracking-[-0.015em]">
-              Depuis quel numéro payez-vous&nbsp;?
+              Votre règlement par {titre}
             </h1>
             <div className="mt-5 overflow-hidden rounded-[var(--radius-m)]">
               <div className="bg-[var(--pf-fond)] px-6 py-5 text-[var(--pf-encre)]">
@@ -163,37 +158,13 @@ export function TunnelMvola(p: PropsTunnel) {
               </div>
             </div>
 
-            <form action={enregistrerNumeroPortefeuille} className="mt-6">
-              <input type="hidden" name="reglementId" value={p.reglementId} />
-              <ChampNumero
-                mode={p.mode}
-                telephone={p.telephone}
-                cadre="rounded-[var(--radius-m)] border-2 border-[var(--pf-fond)] focus-within:border-[var(--pf-encre)]"
-                prefixe="bg-[var(--pf-fond)] text-[var(--pf-encre)]"
-                champ=""
-              />
-              <div className="mt-6 flex flex-wrap items-center gap-4">
-                <BoutonMarque className="rounded-[var(--radius-m)]">
-                  Continuer vers {titre} <ArrowRight size={17} />
-                </BoutonMarque>
-                <Link
-                  href="/membre/cotisations"
-                  className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
-                >
-                  Payer plus tard
-                </Link>
-              </div>
-            </form>
-          </>
-        ) : etape === 2 ? (
-          <>
-            <PaiementDirect p={p} className="mt-5" />
+            <PaiementDirect p={p} className="mt-6" />
             <div className="mt-5">
               <Link
-                href={`/membre/cotisations/payer/${p.reglementId}?numero=modifier`}
+                href="/membre/cotisations"
                 className="text-[14px] font-semibold text-muted underline-offset-4 hover:text-ink hover:underline"
               >
-                Changer de numéro
+                Payer plus tard
               </Link>
             </div>
           </>
