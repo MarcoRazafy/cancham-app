@@ -9,7 +9,8 @@ import { Interactions } from "@/components/public/traversee/Interactions";
 import { Plateforme } from "@/components/public/traversee/Plateforme";
 import { Programme } from "@/components/public/traversee/Programme";
 import { getProchainEvenementIntitule } from "@/lib/queries";
-import { decompte, EVENEMENT, lienBilletterie } from "@/lib/traversee";
+import { basePlateforme, decompte, EVENEMENT } from "@/lib/traversee";
+import { Reservation } from "@/components/public/traversee/Reservation";
 import "./traversee.css";
 
 const montserrat = Montserrat({
@@ -55,7 +56,6 @@ export const metadata: Metadata = {
 export default async function LaTraverseePage() {
   await connection();
   const evenement = await getProchainEvenementIntitule(EVENEMENT.nom);
-  const billetterie = lienBilletterie(evenement?.id ?? null);
   const prixPass =
     evenement && evenement.prixPublic > 0
       ? evenement.prixPublic
@@ -71,9 +71,13 @@ export default async function LaTraverseePage() {
       <Programme />
       <Defis />
       <Plateforme decompte={compte} />
-      <Billet billetterie={billetterie} prixPass={prixPass} />
+      <Billet prixPass={prixPass} />
       <Final prixPass={prixPass} decompte={compte} />
       <BarreFlottante prixPass={prixPass} />
+      <Reservation
+        plateforme={basePlateforme(process.env.TRAVERSEE_PLATEFORME_URL)}
+        prixPass={prixPass}
+      />
     </main>
   );
 }

@@ -1,16 +1,9 @@
 import Image from "next/image";
-import Link from "next/link";
 import { COORDONNEES } from "@/lib/coordonnees";
 import { fmtMoney } from "@/lib/format";
 import { EVENEMENT, LIENS } from "@/lib/traversee";
 
-export function Billet({
-  billetterie,
-  prixPass,
-}: {
-  billetterie: string;
-  prixPass: number;
-}) {
+export function Billet({ prixPass }: { prixPass: number }) {
   return (
     <section className="plein brume" id="billet">
       <div className="wrap">
@@ -67,9 +60,9 @@ export function Billet({
                 Paiement : MVola, Orange Money, Airtel Money, carte bancaire ou
                 virement.
               </p>
-              <Link className="btn btn-rouge" href={billetterie}>
+              <a className="btn btn-rouge" href="#billet" data-reserver>
                 Réserver mon billet →
-              </Link>
+              </a>
             </div>
           </div>
           <div className="cote-d">

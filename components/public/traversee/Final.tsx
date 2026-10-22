@@ -27,7 +27,7 @@ export function Final({
         </p>
         <Compte decompte={decompte} />
         <div className="actions">
-          <a className="btn btn-rouge" href="#billet">
+          <a className="btn btn-rouge" href="#billet" data-reserver>
             Réserver mon billet · {fmtMoney(prixPass)} →
           </a>
         </div>
@@ -48,7 +48,7 @@ export function BarreFlottante({ prixPass }: { prixPass: number }) {
         </b>
         <small>Un billet pour toute la journée · places limitées</small>
       </div>
-      <a className="btn btn-rouge" href="#billet" tabIndex={-1}>
+      <a className="btn btn-rouge" href="#billet" data-reserver tabIndex={-1}>
         Réserver · {fmtMoney(prixPass)}
       </a>
     </div>

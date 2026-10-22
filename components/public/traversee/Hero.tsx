@@ -97,7 +97,7 @@ export function Hero({
         </div>
         <div className="bas">
           <div className="actions">
-            <a className="btn btn-rouge" href="#billet">
+            <a className="btn btn-rouge" href="#billet" data-reserver>
               Réserver mon billet · {fmtMoney(prixPass)} →
             </a>
             <Compte decompte={decompte} libelle="Temps restant avant le Gala" />

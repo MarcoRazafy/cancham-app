@@ -82,7 +82,7 @@ export function Defis() {
           <li>Suivez le guide pour être éligible.</li>
         </ol>
         <div className="actions">
-          <a className="btn btn-rouge" href="#billet">
+          <a className="btn btn-rouge" href="#billet" data-reserver>
             Réserver pour participer →
           </a>
         </div>
