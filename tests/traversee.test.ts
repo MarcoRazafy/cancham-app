@@ -61,7 +61,15 @@ describe("réservation de La Traversée", () => {
     expect(adresse).toContain("prenom=Marie%20Claire");
     expect(adresse).toContain("entreprise=Bio%20Sud%20%26%20Fils");
     expect(adresse).toContain("telephone=%2B261341234567");
-    expect(adresse.endsWith("&via=cancham")).toBe(true);
+    expect(adresse.endsWith("&telephone=%2B261341234567")).toBe(true);
+    expect([...new URL(adresse).searchParams.keys()]).toEqual([
+      "prenom",
+      "nom",
+      "entreprise",
+      "role",
+      "email",
+      "telephone",
+    ]);
     const lu = new URL(adresse).searchParams;
     expect(lu.get("email")).toBe("marie@biosud.mg");
     expect(lu.get("role")).toBe("Directrice générale");

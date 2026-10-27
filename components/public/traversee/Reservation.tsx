@@ -41,7 +41,7 @@ const CHAMPS: {
   },
   {
     cle: "role",
-    libelle: "Rôle dans l’entreprise",
+    libelle: "Rôle ou fonction",
     type: "text",
     autoComplete: "organization-title",
     max: 80,

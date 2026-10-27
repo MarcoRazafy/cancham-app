@@ -16,8 +16,7 @@ export const LIENS = {
   )}`,
 } as const;
 
-export const PLATEFORME_PAR_DEFAUT =
-  "https://event-cancham-event-cancham-4358.128.140.36.96.sslip.io";
+export const PLATEFORME_PAR_DEFAUT = "https://impact261.com";
 
 export function basePlateforme(valeur?: string | null): string {
   const saisie = valeur?.trim().replace(/\/+$/, "");
@@ -47,7 +46,7 @@ const MANQUANT: Record<ChampReservation, string> = {
   nom: "Indiquez votre nom.",
   prenom: "Indiquez votre prénom.",
   entreprise: "Indiquez votre entreprise.",
-  role: "Indiquez votre rôle dans l’entreprise.",
+  role: "Indiquez votre rôle ou votre fonction.",
   email: "Indiquez votre adresse e-mail.",
   telephone: "Indiquez votre numéro de téléphone.",
 };
@@ -103,7 +102,6 @@ export function adresseInscription(plateforme: string, r: Reservation): string {
     ["role", r.role],
     ["email", r.email],
     ["telephone", r.telephone],
-    ["via", "cancham"],
   ];
   return `${basePlateforme(plateforme)}/inscription?${parametres
     .map(([cle, valeur]) => `${cle}=${encodeURIComponent(valeur)}`)

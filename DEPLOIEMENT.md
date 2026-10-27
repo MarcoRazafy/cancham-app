@@ -54,7 +54,7 @@ Sur le service de l'application, onglet **Variables** :
 | `VANILLAPAY_KEY_SECRET` | « Key Secret » de l'espace marchand : elle signe leurs confirmations de paiement. Sans ces quatre variables, le paiement en ligne n'est pas proposé. |
 | `VANILLAPAY_MOBILE_MONEY` | `1` une fois « l'offre mobile money » (MVola, Orange Money, Airtel Money) ouverte sur le compte marchand. Vide : seule la carte bancaire se paie en ligne. |
 | `VANILLAPAY_MARCHAND` | Le nom que leur page affiche au payeur, s'il n'est pas celui de la chambre. Vide avec le compte de la chambre : leur page affiche « Chambre de commerce et de coopération Canada MDG ». Sinon, le membre en est prévenu avant de payer. |
-| `TRAVERSEE_PLATEFORME_URL` | L'adresse de la plateforme d'inscription de La Traversée, en `https`, sans chemin. Le bouton « Réserver mon billet » de `/la-traversee` y envoie le visiteur, sur `/inscription`, avec ses coordonnées préremplies. Vide : l'adresse provisoire `https://event-cancham-event-cancham-4358.128.140.36.96.sslip.io`. |
+| `TRAVERSEE_PLATEFORME_URL` | L'adresse de la plateforme d'inscription de La Traversée, en `https`, sans chemin. Le bouton « Réserver mon billet » de `/la-traversee` y envoie le visiteur, sur `/inscription`, avec ses coordonnées préremplies. Vide : `https://impact261.com`. |
 
 Générer `AUTH_SECRET` :
 
