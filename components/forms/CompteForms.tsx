@@ -13,15 +13,11 @@ import {
 import { supprimerMonCompte } from "@/lib/actions/compte";
 
 export function SupprimerMonCompteButton({
-  espace,
   nom,
   email,
-  entreprise,
 }: {
-  espace: "membre" | "admin";
   nom: string;
   email: string;
-  entreprise?: string | null;
 }) {
   return (
     <Modal
@@ -38,7 +34,6 @@ export function SupprimerMonCompteButton({
     >
       {(fermer) => (
         <form action={supprimerMonCompte}>
-          <input type="hidden" name="espace" value={espace} />
           <ModalBody>
             <div
               role="alert"
@@ -61,10 +56,9 @@ export function SupprimerMonCompteButton({
                 commentaires, vos « j’aime » et vos rappels d’agenda.
               </li>
               <li>
-                <b className="text-ink">Ce qui reste</b> —{" "}
-                {espace === "membre"
-                  ? `la fiche de ${entreprise ?? "votre entreprise"}, ses factures et ses inscriptions, ainsi que vos échanges avec l’équipe.`
-                  : "vos messages dans les conversations, et vos actions au journal d’activité, à votre nom."}
+                <b className="text-ink">Ce qui reste</b> — vos messages dans les
+                conversations, et vos actions au journal d’activité, à votre
+                nom.
               </li>
             </ul>
 

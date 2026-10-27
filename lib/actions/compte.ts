@@ -10,9 +10,8 @@ import { getCurrentUser } from "@/lib/session";
 const ESSAIS = 5;
 
 export async function supprimerMonCompte(formData: FormData) {
-  const equipe = String(formData.get("espace") ?? "") === "admin";
-  const retour = equipe ? "/admin/profil" : "/membre/profil";
-  const user = await getCurrentUser(equipe ? "admin" : "membre");
+  const retour = "/admin/profil";
+  const user = await getCurrentUser("admin");
   const erreur = (message: string): never =>
     redirectWithErreur(retour, message);
 
@@ -26,13 +25,7 @@ export async function supprimerMonCompte(formData: FormData) {
 
   const compte = await prisma.user.findUniqueOrThrow({
     where: { id: user.id },
-    select: {
-      email: true,
-      motDePasse: true,
-      memberId: true,
-      niveauEquipe: true,
-      member: { select: { nom: true } },
-    },
+    select: { email: true, motDePasse: true, niveauEquipe: true },
   });
   if (!verifier(String(formData.get("motDePasse") ?? ""), compte.motDePasse)) {
     erreur(
@@ -41,18 +34,7 @@ export async function supprimerMonCompte(formData: FormData) {
   }
   oublier(cle);
 
-  if (compte.memberId) {
-    const contacts = await prisma.user.count({
-      where: { memberId: compte.memberId, role: "membre" },
-    });
-    if (contacts <= 1) {
-      erreur(
-        `Vous êtes le seul contact de ${compte.member?.nom ?? "votre entreprise"} : ajoutez un collègue avant de partir, ou demandez à l’équipe CanCham de retirer la fiche.`,
-      );
-    }
-  }
-
-  if (user.role === "admin" && compte.niveauEquipe === "administrateur") {
+  if (compte.niveauEquipe === "administrateur") {
     const restants = await prisma.user.count({
       where: { role: "admin", niveauEquipe: "administrateur" },
     });
@@ -67,12 +49,10 @@ export async function supprimerMonCompte(formData: FormData) {
     prisma.auditLog.create({
       data: {
         action: "compte_supprime",
-        entite: compte.memberId ? "Member" : "User",
-        entiteId: compte.memberId ?? user.id,
+        entite: "User",
+        entiteId: user.id,
         acteur: user.nom,
-        detail: `${user.nom} (${compte.email}) a supprimé son compte${
-          compte.member ? ` · ${compte.member.nom}` : " · équipe CanCham"
-        }.`,
+        detail: `${user.nom} (${compte.email}) a supprimé son compte · équipe CanCham.`,
       },
     }),
     prisma.user.delete({ where: { id: user.id } }),

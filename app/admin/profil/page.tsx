@@ -34,11 +34,7 @@ export default async function MonProfil() {
               Vos actions restent au journal, à votre nom. Le dernier
               administrateur ne peut pas partir sans successeur.
             </p>
-            <SupprimerMonCompteButton
-              espace="admin"
-              nom={user.nom}
-              email={user.email}
-            />
+            <SupprimerMonCompteButton nom={user.nom} email={user.email} />
           </Card>
         </div>
 
