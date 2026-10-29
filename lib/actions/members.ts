@@ -1103,7 +1103,7 @@ export async function removeContact(formData: FormData) {
   if (!contact?.memberId) redirectWithErreur(retour, "Contact introuvable.");
 
   const reste = await prisma.user.count({
-    where: { memberId: contact.memberId },
+    where: { memberId: contact.memberId, role: "membre" },
   });
   if (reste <= 1) {
     redirectWithErreur(
@@ -1116,7 +1116,7 @@ export async function removeContact(formData: FormData) {
 
   if (contact.contactPrincipal) {
     const suivant = await prisma.user.findFirst({
-      where: { memberId: contact.memberId },
+      where: { memberId: contact.memberId, role: "membre" },
       orderBy: { createdAt: "asc" },
     });
     if (suivant) {

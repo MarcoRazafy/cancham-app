@@ -114,8 +114,12 @@ export async function exigerContact(
 ): Promise<{ user: User; memberId: string; estEquipe: boolean }> {
   const contact = await prisma.user.findUnique({
     where: { id: contactId },
-    select: { memberId: true },
+    select: { memberId: true, role: true },
   });
-  if (!contact?.memberId) redirectWithErreur(retour, "Contact introuvable.");
+  // Un compte d’équipe garde son entreprise : ce n’est pas pour autant un
+  // contact que ses collègues, ou un manager, peuvent modifier ou supprimer.
+  if (!contact?.memberId || contact.role !== "membre") {
+    redirectWithErreur(retour, "Contact introuvable.");
+  }
   return exigerFiche(contact.memberId, retour);
 }

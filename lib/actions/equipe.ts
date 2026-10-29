@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { nomDepuisCourriel } from "@/lib/accueil";
+import { nomDepuisCourriel, telephoneValide } from "@/lib/accueil";
 import { courrielsActifs, envoyerCourriel, urlPublique } from "@/lib/courriel";
 import { exigerAdministrateur } from "@/lib/autorisations";
 import { rattacherEquipe } from "@/lib/fil-equipe";
@@ -21,13 +21,19 @@ export async function modifierProfilEquipe(formData: FormData) {
   const retour = "/admin/profil";
   const user = await getCurrentUser("admin");
 
-  const nom = texte(formData, "nom");
-  const fonction = texte(formData, "fonction");
+  const nom = texte(formData, "nom").slice(0, 80);
+  const fonction = texte(formData, "fonction").slice(0, 80);
   const email = texte(formData, "email").toLowerCase();
   const tel = texte(formData, "tel") || null;
 
   if (!nom || !fonction) {
     redirectWithErreur(retour, "Le nom et la fonction sont obligatoires.");
+  }
+  if (tel && !telephoneValide(tel)) {
+    redirectWithErreur(
+      retour,
+      `« ${tel} » n’est pas un numéro de téléphone valide.`,
+    );
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     redirectWithErreur(retour, "Indiquez une adresse e-mail valide.");

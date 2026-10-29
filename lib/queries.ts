@@ -1740,7 +1740,7 @@ export async function getEntreprisesInscrites(
 
 export async function getContacts(memberId: string): Promise<Contact[]> {
   const rows = await prisma.user.findMany({
-    where: { memberId },
+    where: { memberId, role: "membre" },
     orderBy: [{ contactPrincipal: "desc" }, { createdAt: "asc" }],
   });
   return rows.map((u) => ({
