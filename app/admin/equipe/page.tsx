@@ -1,18 +1,16 @@
 import Link from "next/link";
-import { Lock, Mail, Phone, Search } from "lucide-react";
+import { Lock, Search } from "lucide-react";
 import { EnTeteAdmin, Panneau, Vide } from "@/components/admin/ui";
 import { FiltresAuto } from "@/components/FiltresAuto";
 import {
-  ChangerNiveauButton,
+  CarteEquipier,
   FormulaireNouvelEquipier,
   PromouvoirButton,
-  RetirerAdminButton,
 } from "@/components/forms/EquipeForms";
 import { Pastille } from "@/components/messagerie/outils";
-import { Pill, Saillant, StatusPill } from "@/components/ui";
+import { Saillant, StatusPill } from "@/components/ui";
 import { estAdministrateur } from "@/lib/autorisations";
 import { initialesDe } from "@/lib/avatars";
-import { NIVEAU_EQUIPE_LABEL } from "@/lib/enums";
 import { fmtDate } from "@/lib/format";
 import {
   chercherComptes,
@@ -123,71 +121,15 @@ export default async function AdminEquipe({
           corpsClassName="px-6 pb-3"
         >
           <ul className="list-none m-0 p-0 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {admins.map((a) => {
-              const cest_moi = a.id === moi.id;
-              return (
-                <li
-                  key={a.id}
-                  className="flex gap-3 p-4 rounded-[var(--radius-m)] border border-line min-w-0"
-                >
-                  <Pastille
-                    src={a.photo}
-                    alt=""
-                    initiales={initialesDe(a.nom)}
-                    taille={40}
-                    className="bg-navy-soft text-navy"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14.5px] font-semibold text-ink">
-                        {a.nom}
-                      </span>
-                      <Pill
-                        tone={a.niveau === "administrateur" ? "ok" : "muted"}
-                      >
-                        {NIVEAU_EQUIPE_LABEL[a.niveau]}
-                      </Pill>
-                      {cest_moi ? <Pill>Vous</Pill> : null}
-                      {a.sansMotDePasse ? (
-                        <Pill tone="warn">Jamais connecté</Pill>
-                      ) : null}
-                    </div>
-                    <div className="text-[12.8px] text-muted">{a.fonction}</div>
-                    <div className="flex flex-col gap-0.5 mt-1.5 text-[12.5px]">
-                      <a
-                        href={`mailto:${a.email}`}
-                        className="inline-flex items-center gap-1.5 text-ink no-underline hover:underline"
-                      >
-                        <Mail size={13} className="text-faint shrink-0" />
-                        <span className="truncate">{a.email}</span>
-                      </a>
-                      {a.tel ? (
-                        <a
-                          href={`tel:${a.tel.replace(/\s/g, "")}`}
-                          className="inline-flex items-center gap-1.5 text-ink no-underline hover:underline"
-                        >
-                          <Phone size={13} className="text-faint shrink-0" />
-                          {a.tel}
-                        </a>
-                      ) : null}
-                    </div>
-                    <div className="text-[11.5px] text-faint mt-1.5">
-                      Dans l’équipe depuis le {fmtDate(a.depuis)}
-                    </div>
-                    {gere && !cest_moi ? (
-                      <div className="mt-2.5 flex gap-2 flex-wrap">
-                        <ChangerNiveauButton
-                          userId={a.id}
-                          nom={a.nom}
-                          niveau={a.niveau}
-                        />
-                        <RetirerAdminButton userId={a.id} nom={a.nom} />
-                      </div>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
+            {admins.map((a) => (
+              <li key={a.id} className="min-w-0">
+                <CarteEquipier
+                  compte={a}
+                  cestMoi={a.id === moi.id}
+                  gere={gere}
+                />
+              </li>
+            ))}
           </ul>
           <p className="m-0 mt-4 mb-3 text-[12px] text-faint">
             Un administrateur ne peut ni retirer son propre accès ni changer son

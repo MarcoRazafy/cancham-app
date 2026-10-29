@@ -101,7 +101,7 @@ export function SubmitButton({
 
 export function ModalFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="px-5 py-4 border-t border-line flex justify-end gap-2.5">
+    <div className="px-5 py-4 border-t border-line flex flex-wrap justify-end gap-2.5">
       {children}
     </div>
   );
