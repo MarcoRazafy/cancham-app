@@ -49,7 +49,7 @@ export default async function AdminEquipe({
         }
       />
 
-      <div className="grid gap-4 items-start lg:grid-cols-[1fr_380px]">
+      <div className="flex flex-col gap-4">
         {gere ? (
           <div className="flex flex-col gap-4 min-w-0">
             <Panneau
@@ -122,13 +122,13 @@ export default async function AdminEquipe({
           teinte="degrade"
           corpsClassName="px-6 pb-3"
         >
-          <ul className="list-none m-0 p-0">
+          <ul className="list-none m-0 p-0 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {admins.map((a) => {
               const cest_moi = a.id === moi.id;
               return (
                 <li
                   key={a.id}
-                  className="flex gap-3 py-3.5 border-t border-line first:border-t-0"
+                  className="flex gap-3 p-4 rounded-[var(--radius-m)] border border-line min-w-0"
                 >
                   <Pastille
                     src={a.photo}
@@ -189,7 +189,7 @@ export default async function AdminEquipe({
               );
             })}
           </ul>
-          <p className="m-0 mt-1 mb-3 text-[12px] text-faint">
+          <p className="m-0 mt-4 mb-3 text-[12px] text-faint">
             Un administrateur ne peut ni retirer son propre accès ni changer son
             propre rôle : la plateforme en garde toujours au moins un.
           </p>
