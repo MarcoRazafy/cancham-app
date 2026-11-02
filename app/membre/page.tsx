@@ -146,7 +146,7 @@ export default async function VueDEnsemble() {
         )}
       </Card>
 
-      <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
+      <div className="grid gap-4 mb-5 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_360px] items-start">
         <Card className="carte-filet filet-fixe filet-degrade p-0">
           <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-4">
             <h2 className="text-[19px] m-0">Votre prochain rendez-vous</h2>

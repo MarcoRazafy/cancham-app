@@ -76,7 +76,7 @@ export function NouvelleFactureButton({
                 className={INPUT}
               />
             </Field>
-            <div className="grid gap-3.5 grid-cols-[1fr_130px]">
+            <div className="grid gap-3.5 grid-cols-[minmax(0,1fr)_130px]">
               <Field label="Montant">
                 <input
                   type="number"

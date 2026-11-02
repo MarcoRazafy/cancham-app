@@ -461,7 +461,7 @@ function EtapeProduits({ membre }: { membre: Member }) {
         </div>
       ) : null}
 
-      <div className="grid gap-3.5 sm:grid-cols-[1fr_180px]">
+      <div className="grid gap-3.5 grid-cols-[minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_180px]">
         <ChampAuth label="Titre de l’offre">
           <Saisie
             name="label"

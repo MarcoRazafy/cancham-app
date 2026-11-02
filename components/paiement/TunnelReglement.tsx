@@ -33,7 +33,7 @@ export function TunnelReglement({
   const somme = fmtMontant(montant, devise);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
+    <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
       <Card className="p-6">
         <h2 className="m-0 text-[17px] font-semibold">
           {MODES[mode].titre} · {somme}

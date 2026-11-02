@@ -63,7 +63,7 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
     <form action={saveEvent} className="flex flex-col gap-4">
       {event ? <input type="hidden" name="eventId" value={event.id} /> : null}
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_340px] items-start">
+      <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px] items-start">
         <div className="flex flex-col gap-4 min-w-0">
           <Rubrique titre="L’essentiel">
             <ChampPhoto
@@ -119,7 +119,7 @@ export function FormulaireEvenement({ event }: { event?: CanchamEvent }) {
                 </select>
               </Field>
             </div>
-            <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
+            <div className="grid gap-4 grid-cols-[minmax(0,1fr)] sm:grid-cols-[minmax(0,1fr)_160px]">
               <Field label="Lieu" hint="Ville, salle, ou « En ligne ».">
                 <input
                   name="lieu"

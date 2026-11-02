@@ -1263,7 +1263,7 @@ function ChampGalerie({ actuelles }: { actuelles: string[] }) {
 function ChampsService({ produit }: { produit?: Produit }) {
   return (
     <>
-      <div className="grid gap-3.5 md:grid-cols-[1fr_180px]">
+      <div className="grid gap-3.5 grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_180px]">
         <Field label="Titre">
           <input
             type="text"

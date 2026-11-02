@@ -204,7 +204,7 @@ export default async function AdminMembreDetail({
         </div>
       </Card>
 
-      <div className="grid gap-4 items-start lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-4 items-start grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-4 min-w-0">
           <Panneau titre="Présentation" teinte="degrade">
             <p className="m-0 font-semibold text-[14.5px]">

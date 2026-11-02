@@ -61,7 +61,7 @@ export default async function RendezvousEquipePage() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px] items-start">
+      <div className="grid gap-6 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px] items-start">
         <section>
           <SectionTitle>
             À venir

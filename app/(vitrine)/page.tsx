@@ -292,7 +292,7 @@ export default async function PublicHome() {
         </div>
 
         <div className={`relative w-full ${CONTENEUR} pt-10 md:pt-14 pb-0`}>
-          <div className="grid gap-9 lg:grid-cols-[1fr_minmax(0,540px)] items-center">
+          <div className="grid gap-9 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] items-center">
             <div>
               <span
                 className="surtitre apparition inline-block px-3.5 py-1.5 rounded-full border border-white/30 text-white/85"

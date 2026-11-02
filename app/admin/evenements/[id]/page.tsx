@@ -442,7 +442,7 @@ export default async function EvenementAdmin({
           ) : null}
         </Card>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_400px] items-start">
+        <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_400px] items-start">
           <Panneau titre="Présentation" teinte="vert">
             <p className="m-0 text-[14.3px] text-muted leading-[1.75] whitespace-pre-line">
               <TexteLie texte={e.desc} />

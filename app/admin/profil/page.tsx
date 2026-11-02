@@ -22,7 +22,7 @@ export default async function MonProfil() {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
+      <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_320px] items-start">
         <div className="flex flex-col gap-4 min-w-0">
           <FormulaireProfilEquipe user={user} />
           <FormulaireMotDePasse email={user.email} minimum={MOT_DE_PASSE_MIN} />

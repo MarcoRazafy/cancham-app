@@ -60,7 +60,7 @@ export function FormulaireActualite({ news }: { news?: NewsItem }) {
   return (
     <form
       action={enregistrerActualite}
-      className="grid gap-4 lg:grid-cols-[1fr_340px] items-start"
+      className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px] items-start"
     >
       {news ? <input type="hidden" name="newsId" value={news.id} /> : null}
 
@@ -413,7 +413,7 @@ export function FormulaireRessource({
   return (
     <form
       action={enregistrerRessource}
-      className="grid gap-4 lg:grid-cols-[1fr_340px] items-start"
+      className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px] items-start"
     >
       {ressource ? (
         <input type="hidden" name="resourceId" value={ressource.id} />

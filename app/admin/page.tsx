@@ -132,7 +132,7 @@ export default async function TableauDeBord() {
         />
       </div>
 
-      <div className="grid gap-4 mb-5 lg:grid-cols-[1fr_360px] items-start">
+      <div className="grid gap-4 mb-5 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_360px] items-start">
         <Panneau
           titre={
             <>
@@ -374,7 +374,7 @@ export default async function TableauDeBord() {
         </Panneau>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px] items-start">
+      <div className="grid gap-4 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_360px] items-start">
         <Panneau
           titre={
             <>
