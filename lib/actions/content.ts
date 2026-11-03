@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { EMPLACEMENTS_OFFRE, estEmplacementOffre } from "@/lib/offres";
+import {
+  EMPLACEMENTS_OFFRE,
+  OFFRE_CANCHAM,
+  estEmplacementOffre,
+} from "@/lib/offres";
 import { RESOURCE_CAT_DB } from "@/lib/enums";
 import { redirectWithErreur, redirectWithFlash } from "@/lib/flash";
 import { jourBase, jourSaisi } from "@/lib/format";
@@ -1075,12 +1079,15 @@ export async function enregistrerOffre(formData: FormData) {
       "Le lien « En profiter » n’est pas une adresse web valide.",
     );
   }
-  const membre = await prisma.member.findUnique({
-    where: { id: memberId },
-    select: { nom: true },
-  });
-  if (!membre)
-    redirectWithErreur(retour, "Choisissez le membre qui propose l’offre.");
+  const parCancham = memberId === OFFRE_CANCHAM;
+  const membre = parCancham
+    ? { nom: "CanCham" }
+    : await prisma.member.findUnique({
+        where: { id: memberId },
+        select: { nom: true },
+      });
+  if (!membre) redirectWithErreur(retour, "Choisissez qui propose l’offre.");
+  const proposePar = parCancham ? null : memberId;
 
   const saisieEmplacement = texte(formData, "emplacement");
   const emplacement = estEmplacementOffre(saisieEmplacement)
@@ -1105,7 +1112,7 @@ export async function enregistrerOffre(formData: FormData) {
       data: {
         titre,
         desc,
-        memberId,
+        memberId: proposePar,
         lien,
         emplacement,
         ...(image ? { image } : retirerImage ? { image: null } : {}),
@@ -1113,7 +1120,7 @@ export async function enregistrerOffre(formData: FormData) {
     });
   } else {
     await prisma.offer.create({
-      data: { titre, desc, memberId, lien, image, emplacement },
+      data: { titre, desc, memberId: proposePar, lien, image, emplacement },
     });
   }
   revalideTout();

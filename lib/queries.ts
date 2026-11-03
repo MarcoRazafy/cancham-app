@@ -1,3 +1,4 @@
+import { COORDONNEES } from "@/lib/coordonnees";
 import type { EmplacementOffre } from "@/lib/offres";
 import "server-only";
 
@@ -892,7 +893,7 @@ export async function getDernieresOffres(
 
 function versOffre(o: {
   id: string;
-  memberId: string;
+  memberId: string | null;
   titre: string;
   desc: string;
   image: string | null;
@@ -913,8 +914,31 @@ function versOffre(o: {
       email: string;
       tel: string | null;
     }[];
-  };
+  } | null;
 }): Offer {
+  if (!o.member) {
+    return {
+      id: o.id,
+      membreId: null,
+      membre: "CanCham Madagascar",
+      titre: o.titre,
+      desc: o.desc,
+      image: o.image,
+      cover: o.image,
+      lien: o.lien,
+      emplacement: o.emplacement,
+      membreSecteur: "Chambre de commerce et de coopération",
+      membreVille: "Antananarivo",
+      membreLogo: "/marque/sigle.png",
+      membreSite: COORDONNEES.site,
+      contact: {
+        nom: "Équipe CanCham",
+        fonction: "Chambre de Commerce et de Coopération Canada–Madagascar",
+        email: COORDONNEES.email,
+        tel: COORDONNEES.telephone,
+      },
+    };
+  }
   return {
     id: o.id,
     membreId: o.memberId,

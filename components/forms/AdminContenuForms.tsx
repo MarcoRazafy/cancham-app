@@ -43,7 +43,11 @@ import {
 } from "@/lib/actions/content";
 import { ChoixDiffusion } from "@/components/forms/ChoixDiffusion";
 import { CouvertureRessource } from "@/components/forms/CouvertureRessource";
-import { EMPLACEMENTS_OFFRE, type EmplacementOffre } from "@/lib/offres";
+import {
+  EMPLACEMENTS_OFFRE,
+  OFFRE_CANCHAM,
+  type EmplacementOffre,
+} from "@/lib/offres";
 import type { NewsCategory, NewsItem, Offer } from "@/lib/types";
 
 const CATEGORIES: NewsCategory[] = [
@@ -234,18 +238,24 @@ export function OffreButton({
               apercu={offre?.image}
               aide="Sans photo, la carte reprend la couverture de l’entreprise."
             />
-            <Field label="Membre qui propose l’offre">
+            <Field label="Qui propose l’offre">
               <select
                 name="memberId"
                 required
-                defaultValue={offre?.membreId}
+                defaultValue={offre ? (offre.membreId ?? OFFRE_CANCHAM) : ""}
                 className={INPUT}
               >
-                {membres.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nom}
-                  </option>
-                ))}
+                <option value="" disabled>
+                  Choisir…
+                </option>
+                <option value={OFFRE_CANCHAM}>CanCham Madagascar</option>
+                <optgroup label="Membres">
+                  {membres.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.nom}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </Field>
             <Field label="Titre">

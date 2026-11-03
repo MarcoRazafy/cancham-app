@@ -161,7 +161,7 @@ export interface NewsItem {
 
 export interface Offer {
   id: string;
-  membreId: string;
+  membreId: string | null;
   membre: string;
   titre: string;
   desc: string;

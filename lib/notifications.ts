@@ -303,7 +303,7 @@ async function notificationsMembre(
       select: { event: { select: { id: true, titre: true, date: true } } },
     }),
     prisma.offer.findFirst({
-      where: { memberId: { not: memberId } },
+      where: { OR: [{ memberId: null }, { memberId: { not: memberId } }] },
       orderBy: { createdAt: "desc" },
       select: {
         titre: true,
@@ -407,9 +407,11 @@ async function notificationsMembre(
   if (offre)
     liste.push({
       id: "offre",
-      titre: `Offre de ${offre.member.nom} : ${offre.titre}`,
-      temps: "Offres membres",
-      href: `/membre/annuaire/${offre.memberId}`,
+      titre: `Offre de ${offre.member?.nom ?? "CanCham"} : ${offre.titre}`,
+      temps: offre.member ? "Offres membres" : "Offre CanCham",
+      href: offre.memberId
+        ? `/membre/annuaire/${offre.memberId}`
+        : "/membre/actualites",
       ton: "info",
       categorie: "offre",
     });

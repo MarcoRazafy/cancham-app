@@ -11,3 +11,6 @@ export function estEmplacementOffre(v: string): v is EmplacementOffre {
 }
 
 export const OFFRES_DU_RAIL = 4;
+
+// Valeur du choix « CanCham » dans le formulaire : l’offre n’a pas de membre.
+export const OFFRE_CANCHAM = "cancham";
