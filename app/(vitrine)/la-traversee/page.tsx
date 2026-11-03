@@ -29,8 +29,7 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
-const DESCRIPTION =
-  "Vendredi 18 décembre 2026, Hôtel Carlton Antananarivo : une journée d’affaires et le Gala des 10 ans de la CanCham. Expositions, panels d’experts, réseautage 5 à 7, deux défis à gagner.";
+const DESCRIPTION = `${EVENEMENT.dateLisible}, Hôtel Carlton Antananarivo : une journée d’affaires et le Gala des 10 ans de la CanCham. Expositions, panels d’experts, réseautage 5 à 7, deux défis à gagner.`;
 
 export const metadata: Metadata = {
   title: "La Traversée — Gala des 10 ans",
@@ -38,12 +37,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/la-traversee" },
   openGraph: {
     title: "La Traversée — Gala des 10 ans · CanCham",
-    description:
-      "Une journée pour voir plus grand. Une nuit pour fêter 10 ans. Vendredi 18 décembre 2026, Hôtel Carlton.",
+    description: `Une journée pour voir plus grand. Une nuit pour fêter 10 ans. ${EVENEMENT.dateLisible}, Hôtel Carlton.`,
     type: "website",
     images: [
       {
-        url: "/traversee/partage.jpg",
+        url: "/traversee/partage.jpg?v=2027-02-26",
         width: 1200,
         height: 630,
         alt: "La Traversée — Une journée pour voir plus grand. Une nuit pour fêter 10 ans.",

@@ -30,7 +30,7 @@ const VUES: Record<string, string> = {
     '<h3>Qui sera là ?</h3><div class="rang"><i></i><div><strong>Dirigeants et entrepreneurs</strong><small>Voir les profils</small></div></div><div class="rang"><i></i><div><strong>Banques et financement</strong><small>Prendre rendez-vous</small></div></div><div class="rang"><i></i><div><strong>Experts du marché canadien</strong><small>Poser une question</small></div></div>',
   Infos:
     '<h3>Le programme</h3><div class="ligne-p"><em>Journée</em>Expositions des membres</div><div class="ligne-p"><em>Journée</em>Panels d’experts</div><div class="ligne-p"><em>17 h 00</em>Réseautage 5 à 7</div><div class="ligne-p"><em>19 h 00</em>Gala des 10 ans</div>',
-  Billet: `<h3>Votre billet</h3><div class="qr">${qr()}</div><p class="billet-m">${EVENEMENT.nom} · 18 décembre 2026<small>${EVENEMENT.lieu}</small></p>`,
+  Billet: `<h3>Votre billet</h3><div class="qr">${qr()}</div><p class="billet-m">${EVENEMENT.nom} · ${EVENEMENT.dateSansJour}<small>${EVENEMENT.lieu}</small></p>`,
 };
 
 export function Interactions() {

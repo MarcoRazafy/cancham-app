@@ -19,7 +19,7 @@ export function Final({
           {EVENEMENT.dateLisible} · {EVENEMENT.lieuCourt} · Places limitées
         </p>
         <h2>
-          Le 18 décembre, <em>traversez avec nous.</em>
+          Le {EVENEMENT.dateCourte}, <em>traversez avec nous.</em>
         </h2>
         <p className="rappel">
           Une journée pour faire affaire, une nuit pour célébrer 10 ans de pont
@@ -44,7 +44,7 @@ export function BarreFlottante({ prixPass }: { prixPass: number }) {
     <div className="flottante" data-flottante aria-hidden="true">
       <div>
         <b>
-          {EVENEMENT.nom} · 18 décembre · {EVENEMENT.lieuCourt}
+          {EVENEMENT.nom} · {EVENEMENT.dateCourte} · {EVENEMENT.lieuCourt}
         </b>
         <small>Un billet pour toute la journée · places limitées</small>
       </div>

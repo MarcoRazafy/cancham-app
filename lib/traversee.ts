@@ -2,8 +2,10 @@ import { COORDONNEES } from "@/lib/coordonnees";
 
 export const EVENEMENT = {
   nom: "La Traversée",
-  dateGala: "2026-12-18T19:00:00+03:00",
-  dateLisible: "Vendredi 18 décembre 2026",
+  dateGala: "2027-02-26T19:00:00+03:00",
+  dateLisible: "Vendredi 26 février 2027",
+  dateSansJour: "26 février 2027",
+  dateCourte: "26 février",
   lieu: "Hôtel Carlton, Antananarivo",
   lieuCourt: "Hôtel Carlton",
   prixPass: 500_000,

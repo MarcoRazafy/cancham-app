@@ -153,7 +153,7 @@ export function Reservation({
           <X size={18} aria-hidden />
         </button>
         <p className="reservation-sur">
-          {EVENEMENT.nom} · 18 décembre · {EVENEMENT.lieuCourt}
+          {EVENEMENT.nom} · {EVENEMENT.dateCourte} · {EVENEMENT.lieuCourt}
         </p>
         <h2 id="reservation-titre">Réserver mon billet</h2>
         <p className="reservation-intro">
