@@ -26,6 +26,9 @@ import { telephoneValide } from "@/lib/accueil";
 import { exigerEquipe } from "@/lib/autorisations";
 import { getCurrentUser } from "@/lib/session";
 import { enregistrerImage, ImageRefusee } from "@/lib/uploads";
+import { INTERVENANTS_MAX, lireIntervenants } from "@/lib/intervenants";
+import { poserTags } from "@/lib/poser-tags";
+import { lireTags } from "@/lib/tags";
 import type { EventFormat } from "@/lib/types";
 import {
   notifierEquipe,
@@ -175,6 +178,8 @@ export async function registerForEvent(formData: FormData) {
   }
 
   const ecrit = await prisma.$transaction(ecritures);
+  // L'entreprise inscrite reçoit les tags de l'événement
+  await poserTags([user.memberId], event.etiquettes);
   const facture = event.payant
     ? (ecrit[ecrit.length - 1] as { id: string })
     : null;
@@ -448,6 +453,43 @@ export async function saveEvent(formData: FormData) {
     throw e;
   }
 
+  // Intervenants : chaque photo envoyée est enregistrée avant la transaction, comme celle de l'événement
+  const noms = formData.getAll("intervenantNom").map(String);
+  const nouvelles: (string | null)[] = [];
+  let gardes = 0;
+  for (let i = 0; i < noms.length; i++) {
+    // Pas de photo enregistrée pour une ligne ignorée (sans nom, ou au-delà du maximum)
+    if (!noms[i].trim() || gardes >= INTERVENANTS_MAX) {
+      nouvelles.push(null);
+      continue;
+    }
+    gardes++;
+    try {
+      nouvelles.push(
+        await enregistrerImage(formData.get(`intervenantPhoto-${i}`), {
+          prefixe: "intervenant",
+          largeur: 600,
+        }),
+      );
+    } catch (e) {
+      if (e instanceof ImageRefusee) {
+        redirectWithErreur(retour, `Photo de ${noms[i].trim()} : ${e.message}`);
+      }
+      throw e;
+    }
+  }
+  const intervenants = lireIntervenants({
+    noms,
+    fonctions: formData.getAll("intervenantFonction").map(String),
+    entreprises: formData.getAll("intervenantEntreprise").map(String),
+    bios: formData.getAll("intervenantBio").map(String),
+    actuelles: formData.getAll("intervenantPhotoActuelle").map(String),
+    nouvelles,
+    retirees: noms.map(
+      (_, i) => texte(formData, `intervenantRetirer-${i}`) === "1",
+    ),
+  });
+
   const heures = formData.getAll("etapeHeure").map(String);
   const titres = formData.getAll("etapeTitre").map(String);
   const details = formData.getAll("etapeDetail").map(String);
@@ -477,6 +519,7 @@ export async function saveEvent(formData: FormData) {
     prixPublic,
     desc: texte(formData, "desc") || "Détails à venir.",
     pourQui: texte(formData, "pourQui") || null,
+    etiquettes: lireTags(formData.getAll("etiquettes")),
   };
   const retirerPhoto = texte(formData, "retirerPhoto") === "1";
 
@@ -496,8 +539,25 @@ export async function saveEvent(formData: FormData) {
         data: programme.map((etape) => ({ ...etape, eventId: ev.id })),
       });
     }
+    await tx.eventIntervenant.deleteMany({ where: { eventId: ev.id } });
+    if (intervenants.length) {
+      await tx.eventIntervenant.createMany({
+        data: intervenants.map((p) => ({ ...p, eventId: ev.id })),
+      });
+    }
     return ev;
   });
+
+  // Les entreprises déjà inscrites reçoivent les tags de l'événement
+  const inscrites = data.etiquettes.length
+    ? (
+        await prisma.registration.findMany({
+          where: { eventId: e.id },
+          select: { memberId: true },
+        })
+      ).map((r) => r.memberId)
+    : [];
+  const taguees = await poserTags(inscrites, data.etiquettes);
 
   await prisma.auditLog.create({
     data: {
@@ -523,7 +583,7 @@ export async function saveEvent(formData: FormData) {
   redirectWithFlash(
     pageEvenement(e.id),
     id
-      ? `« ${e.titre} » mis à jour`
+      ? `« ${e.titre} » mis à jour${taguees ? ` · tags posés sur ${taguees} entreprise${taguees > 1 ? "s" : ""} inscrite${taguees > 1 ? "s" : ""}` : ""}`
       : `« ${e.titre} » créé · ${e.public ? "publié sur la plateforme et la page publique" : "publié sur la plateforme"}`,
   );
 }
@@ -938,4 +998,32 @@ export async function retirerParticipant(formData: FormData) {
   await prisma.attendee.delete({ where: { id: attendeeId } });
   revalideTout();
   redirectWithFlash(retour, `${a.nom} retiré de la liste`);
+}
+
+// Tags des inscrits, depuis la page de l'événement : enregistrés, et posés sur les entreprises déjà inscrites
+export async function majTagsEvenement(formData: FormData) {
+  await exigerEquipe();
+  const eventId = texte(formData, "eventId");
+  const page = pageEvenement(eventId);
+  const ev = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { titre: true },
+  });
+  if (!ev) redirectWithErreur("/admin/evenements", "Événement introuvable.");
+  const etiquettes = lireTags(formData.getAll("etiquettes"));
+  await prisma.event.update({ where: { id: eventId }, data: { etiquettes } });
+  const inscrites = (
+    await prisma.registration.findMany({
+      where: { eventId },
+      select: { memberId: true },
+    })
+  ).map((r) => r.memberId);
+  const taguees = await poserTags(inscrites, etiquettes);
+  revalidatePath("/admin", "layout");
+  redirectWithFlash(
+    page,
+    etiquettes.length
+      ? `Tags des inscrits enregistrés${taguees ? ` · posés sur ${taguees} entreprise${taguees > 1 ? "s" : ""}` : ""}`
+      : "Plus aucun tag pour les prochains inscrits",
+  );
 }

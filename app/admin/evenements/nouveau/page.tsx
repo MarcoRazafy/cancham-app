@@ -3,8 +3,9 @@ import { ArrowLeft } from "lucide-react";
 import { EnTeteAdmin } from "@/components/admin/ui";
 import { FormulaireEvenement } from "@/components/forms/FormulaireEvenement";
 import { Saillant } from "@/components/ui";
+import { getTousLesTags } from "@/lib/contacts-admin";
 
-export default function NouvelEvenement() {
+export default async function NouvelEvenement() {
   return (
     <>
       <Link
@@ -21,7 +22,7 @@ export default function NouvelEvenement() {
           </>
         }
       />
-      <FormulaireEvenement />
+      <FormulaireEvenement tousTags={await getTousLesTags()} />
     </>
   );
 }

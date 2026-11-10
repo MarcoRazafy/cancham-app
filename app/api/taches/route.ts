@@ -1,8 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { appliquerReglesTags } from "@/lib/tags-auto";
 import { envoyerLettresDues } from "@/lib/newsletter";
+import { envoyerRappelsDus } from "@/lib/rappels-envoi";
 
-// Tâches régulières : newsletters programmées dont l'heure est venue, et tags automatiques.
+// Tâches régulières : newsletters programmées dont l'heure est venue, rappels d'événements dus,
+// et tags automatiques.
 // Appelé toutes les 5 minutes par le serveur lui-même (instrumentation.ts, jeton tiré au démarrage),
 // ou par une tâche planifiée externe avec le secret TACHES_SECRET.
 function autorise(recu: string | null): boolean {
@@ -21,10 +23,11 @@ export async function POST(req: Request) {
   if (!autorise(req.headers.get("x-taches-jeton")))
     return new Response("non autorisé", { status: 401 });
   const lettres = await envoyerLettresDues();
+  const rappels = await envoyerRappelsDus();
   // Tags automatiques : suivent la situation des entreprises (paiements, retards…)
   await appliquerReglesTags();
   return Response.json(
-    { lettres },
+    { lettres, rappels },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
