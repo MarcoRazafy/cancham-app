@@ -6,6 +6,7 @@ import {
   CalendarDays,
   CalendarClock,
   CalendarRange,
+  Contact,
   CreditCard,
   FolderClosed,
   Gauge,
@@ -14,9 +15,11 @@ import {
   History,
   Home,
   Lock,
+  Mail,
   MessageSquare,
   Newspaper,
   ShieldCheck,
+  Tag,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -41,4 +44,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   support: Headset,
   shield: ShieldCheck,
   lock: Lock,
+  newsletter: Mail,
+  contacts: Contact,
+  tag: Tag,
 };

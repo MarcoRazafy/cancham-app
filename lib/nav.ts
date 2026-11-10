@@ -94,8 +94,13 @@ export const NAV_ADMIN: NavGroup[] = [
     ],
   },
   {
-    label: "Échanges",
-    items: [{ href: "/admin/messagerie", label: "Messagerie", icon: "chat" }],
+    label: "Communication",
+    items: [
+      { href: "/admin/messagerie", label: "Messagerie", icon: "chat" },
+      { href: "/admin/newsletter", label: "Newsletter", icon: "newsletter" },
+      { href: "/admin/contacts", label: "Contacts", icon: "contacts" },
+      { href: "/admin/etiquettes", label: "Tags", icon: "tag" },
+    ],
   },
   {
     label: "Compta",
@@ -145,6 +150,9 @@ export const TITLES: Record<string, [string, string]> = {
   "/membre/cotisations/payer": ["Espace membre", "Régler"],
   "/admin/offres-cancham": ["Back-office", "Services CanCham"],
   "/admin/messagerie": ["Back-office", "Messagerie"],
+  "/admin/newsletter": ["Back-office", "Newsletter"],
+  "/admin/contacts": ["Back-office", "Contacts"],
+  "/admin/etiquettes": ["Back-office", "Tags"],
   "/admin/actualites": ["Back-office", "Actualités"],
   "/admin/ressources": ["Back-office", "Ressources"],
 };

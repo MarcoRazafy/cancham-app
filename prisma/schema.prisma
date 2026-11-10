@@ -161,6 +161,9 @@ model Member {
   logo   String?
   video  String?
 
+  // Tags : repères internes de l’équipe sur l’entreprise (cibler une newsletter, suivre un groupe)
+  etiquettes String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -208,9 +211,16 @@ model User {
   notesMembres       NoteMembre[]
   abonnementsPush    AbonnementPush[]
 
+  // Rendez-vous : ce que la personne de l’équipe reçoit (spécialité, salle de visio fixe, ouverte ou non)
+  specialite String?
+  lienVisio  String?
+  recoitRdv  Boolean @default(false)
+
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
-  rendezvous Rendezvous[]
+  rendezvous Rendezvous[]       @relation("rdvPris")
+  rdvRecus   Rendezvous[]       @relation("rdvHote")
+  typesRdv   TypeRendezvous[]
   lectures   LectureRessource[]
 
   @@index([memberId])
@@ -272,13 +282,27 @@ model Event {
   fin        String?
   pourQui    String?
 
+  // Rappels automatiques aux inscrits (7 jours avant, la veille, 2 heures avant) et leur courriel ;
+  // sujet et message vides : le texte par défaut
+  rappelJ7      Boolean @default(true)
+  rappelJ1      Boolean @default(true)
+  rappelH2      Boolean @default(false)
+  rappelSujet   String?
+  rappelMessage String?
+
+  // Tags posés automatiquement sur les entreprises inscrites (à l’enregistrement et à chaque inscription)
+  etiquettes String[] @default([])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  inscriptions Registration[]
-  participants Attendee[]
-  programme    EventAgenda[]
-  factures     Invoice[]
+  inscriptions      Registration[]
+  rappels           RappelEnvoye[]
+  rappelsProgrammes RappelEvenement[]
+  participants      Attendee[]
+  programme         EventAgenda[]
+  intervenants      EventIntervenant[]
+  factures          Invoice[]
 
   @@index([date])
   @@map("events")
@@ -796,6 +820,11 @@ model Abonne {
 
   synchroniseLe DateTime?
 
+  // Adresse refusée par le serveur du destinataire (rebond définitif) : plus aucune lettre ne part
+  erreurLe DateTime?
+  // Dernière invitation à adhérer envoyée par l’équipe
+  inviteLe DateTime?
+
   createdAt DateTime @default(now())
 
   @@map("abonnes")
@@ -808,6 +837,15 @@ model TypeRendezvous {
   duree  Int     @default(30)
   actif  Boolean @default(true)
   ordre  Int     @default(0)
+
+  // La personne de l’équipe qui reçoit (vide : l’équipe CanCham), où (visio, bureau, téléphone),
+  // la couleur de repère, le prix affiché, et si chaque réservation attend la confirmation de l’équipe
+  hoteId     String?
+  hote       User?   @relation(fields: [hoteId], references: [id], onDelete: SetNull)
+  lieu       String  @default("bureau")
+  couleur    String?
+  prix       String?
+  aConfirmer Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -840,7 +878,7 @@ model Rendezvous {
   type   TypeRendezvous @relation(fields: [typeId], references: [id])
 
   userId   String
-  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User    @relation("rdvPris", fields: [userId], references: [id], onDelete: Cascade)
   memberId String?
   member   Member? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
@@ -849,6 +887,14 @@ model Rendezvous {
   fin   String
 
   motif String?
+
+  // Qui reçoit (repris du type à la réservation), où, et l’état : « a_confirmer » ou « confirme »
+  hoteId     String?
+  hote       User?     @relation("rdvHote", fields: [hoteId], references: [id], onDelete: SetNull)
+  lieu       String    @default("bureau")
+  lienVisio  String?
+  statut     String    @default("confirme")
+  confirmeLe DateTime?
 
   annuleLe  DateTime?
   annulePar String?
@@ -859,4 +905,111 @@ model Rendezvous {
   @@index([jour])
   @@index([userId])
   @@map("rendezvous")
+}
+
+// Un rappel parti : une adresse ne reçoit chaque rappel d’un événement qu’une fois
+model RappelEnvoye {
+  id       String   @id @default(cuid())
+  eventId  String
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type     String
+  email    String
+  envoyeLe DateTime @default(now())
+
+  @@unique([eventId, type, email])
+  @@map("rappels_envoyes")
+}
+
+// Intervenant d’un événement (un ou plusieurs) : affiché dans l’ordre, avec sa photo
+model EventIntervenant {
+  id         String  @id @default(cuid())
+  nom        String
+  fonction   String?
+  entreprise String?
+  bio        String?
+  photo      String?
+  ordre      Int
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, ordre])
+  @@map("event_intervenants")
+}
+
+// Un rappel automatique aux inscrits d’un événement : ses moments d’envoi, son objet et sa lettre.
+// Un événement en a autant que l’équipe en ajoute ; les envois sont notés dans RappelEnvoye (type = id du rappel).
+model RappelEvenement {
+  id        String     @id @default(cuid())
+  eventId   String
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  titre     String?
+  dates     DateTime[] @default([])
+  avant     Int        @default(0)
+  sujet     String?
+  message   String?
+  createdAt DateTime   @default(now())
+
+  @@index([eventId])
+  @@map("rappels_evenement")
+}
+
+// Newsletter : une lettre écrite par l’équipe, envoyée par courriel à une audience choisie
+// (contacts des membres selon leur statut et les tags de l’entreprise, abonnés à la lettre)
+model Lettre {
+  id            String        @id @default(cuid())
+  sujet         String
+  contenu       String
+  audience      Json          @default("{}")
+  statut        String        @default("brouillon")
+  destinataires Int           @default(0)
+  envoyes       Int           @default(0)
+  envoyeeLe     DateTime?
+  // Envoi programmé : les courriels attendent chez Resend jusqu’à cette date (statut « programmee »)
+  programmeeLe  DateTime?
+  auteur        String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  envois        EnvoiLettre[]
+
+  @@map("lettres")
+}
+
+// Un courriel d’une lettre, suivi grâce aux webhooks de Resend (remise, ouverture, clic, rebond)
+model EnvoiLettre {
+  id        String    @id @default(cuid())
+  lettreId  String
+  lettre    Lettre    @relation(fields: [lettreId], references: [id], onDelete: Cascade)
+  email     String
+  resendId  String?   @unique
+  livreLe   DateTime?
+  ouvertLe  DateTime?
+  clicLe    DateTime?
+  erreurLe  DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([lettreId])
+  @@index([email])
+  @@map("envois_lettres")
+}
+
+// Un tag de l’équipe, qui existe même sans entreprise ; les entreprises le portent dans « etiquettes »
+model Tag {
+  id        String   @id @default(cuid())
+  nom       String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("tags")
+}
+
+// Tag automatique : toute entreprise dans cette situation reçoit le tag, et le perd quand elle n’y est plus
+model RegleTag {
+  id        String       @id @default(cuid())
+  statut    MemberStatus
+  tag       String
+  actif     Boolean      @default(true)
+  createdAt DateTime     @default(now())
+
+  @@unique([statut, tag])
+  @@map("regles_tags")
 }
