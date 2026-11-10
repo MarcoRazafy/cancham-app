@@ -29,6 +29,15 @@ export function courrielsActifs(): boolean {
 }
 
 export async function envoyerCourriel(c: Courriel): Promise<boolean> {
+  return (await envoyerCourrielSuivi(c)) !== null;
+}
+
+// Envoie par Resend et renvoie l’identifiant du courriel chez Resend ; null si rien n’est parti.
+// « suivi » revient dans les webhooks de Resend (étiquette) pour relier remises, ouvertures et clics.
+export async function envoyerCourrielSuivi(
+  c: Courriel,
+  { suivi }: { suivi?: string } = {},
+): Promise<string | null> {
   const cle = process.env.RESEND_API_KEY;
   if (!cle) {
     const jointes = c.pieces?.length
@@ -37,9 +46,10 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
     console.info(
       `[courriel] non envoyé (RESEND_API_KEY absente) — à ${c.a} — « ${c.sujet} »\n${c.texte}${jointes}`,
     );
-    return false;
+    return null;
   }
   const idempotence = randomUUID();
+  let limites = 0;
   for (let essai = 1; essai <= ESSAIS_ENVOI; essai++) {
     try {
       const reponse = await fetch("https://api.resend.com/emails", {
@@ -66,15 +76,35 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
               }
             : {}),
           reply_to: COURRIEL_EQUIPE,
+          ...(suivi
+            ? {
+                tags: [
+                  {
+                    name: "suivi",
+                    value: suivi.replace(/[^A-Za-z0-9_-]/g, ""),
+                  },
+                ],
+              }
+            : {}),
         }),
       });
+      // Trop de courriels à la seconde (envoi d’une lettre) : on attend et on recommence, sans compter l’essai
+      if (reponse.status === 429 && limites < LIMITES_TOLEREES) {
+        limites++;
+        essai--;
+        await new Promise((r) => setTimeout(r, 1100));
+        continue;
+      }
       if (!reponse.ok) {
         console.error(
           `[courriel] échec ${reponse.status} — à ${c.a} — « ${c.sujet} » : ${await reponse.text()}`,
         );
-        return false;
+        return null;
       }
-      return true;
+      const { id } = (await reponse.json().catch(() => ({}))) as {
+        id?: string;
+      };
+      return id ?? "";
     } catch (e) {
       if (essai < ESSAIS_ENVOI) {
         await new Promise((r) => setTimeout(r, 800));
@@ -83,8 +113,10 @@ export async function envoyerCourriel(c: Courriel): Promise<boolean> {
       console.error(`[courriel] échec réseau — à ${c.a} — « ${c.sujet} »`, e);
     }
   }
-  return false;
+  return null;
 }
+
+const LIMITES_TOLEREES = 20;
 
 const ESSAIS_ENVOI = 2;
 
@@ -113,7 +145,7 @@ export async function urlPublique(chemin: string): Promise<string> {
   return `${protocole}://${hote}${chemin}`;
 }
 
-function enTete(): string {
+export function enTete(): string {
   const base = baseLiens();
   const site = base && !estAdresseLocale(base) ? base : ADRESSE_PLATEFORME;
   return `<img src="${echapper(`${site}/marque/logo-courriel.png`)}" width="220" height="66" alt="CanCham — Chambre de Commerce et de Coopération Canada-Madagascar" style="display:block;border:0;outline:none;text-decoration:none;width:220px;height:auto;color:#ffffff;font-size:16px;font-weight:bold">`;
