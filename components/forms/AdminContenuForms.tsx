@@ -203,7 +203,7 @@ export function OffreButton({
 }) {
   return (
     <Modal
-      title={offre ? "Modifier l’offre" : "Nouvelle offre de membre"}
+      title={offre ? "Modifier l’offre" : "Nouvelle offre"}
       trigger={(ouvrir) =>
         offre ? (
           <button
@@ -264,6 +264,15 @@ export function OffreButton({
                 required
                 defaultValue={offre?.titre}
                 placeholder="Ex. -15 % sur l’audit énergétique"
+                className={INPUT}
+              />
+            </Field>
+            <Field label="Prix">
+              <input
+                name="prix"
+                maxLength={60}
+                defaultValue={offre?.prix ?? ""}
+                placeholder="Ex. 150 000 Ar, -15 %, Gratuit"
                 className={INPUT}
               />
             </Field>

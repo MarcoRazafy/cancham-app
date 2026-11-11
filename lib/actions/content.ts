@@ -1079,6 +1079,7 @@ export async function enregistrerOffre(formData: FormData) {
       "Le lien « En profiter » n’est pas une adresse web valide.",
     );
   }
+  const prix = texte(formData, "prix").slice(0, 60) || null;
   const parCancham = memberId === OFFRE_CANCHAM;
   const membre = parCancham
     ? { nom: "CanCham" }
@@ -1114,13 +1115,22 @@ export async function enregistrerOffre(formData: FormData) {
         desc,
         memberId: proposePar,
         lien,
+        prix,
         emplacement,
         ...(image ? { image } : retirerImage ? { image: null } : {}),
       },
     });
   } else {
     await prisma.offer.create({
-      data: { titre, desc, memberId: proposePar, lien, image, emplacement },
+      data: {
+        titre,
+        desc,
+        memberId: proposePar,
+        lien,
+        prix,
+        image,
+        emplacement,
+      },
     });
   }
   revalideTout();
