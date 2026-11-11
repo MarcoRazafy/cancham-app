@@ -42,6 +42,18 @@ const pluriel = (n: number) => `${n} entreprise${n > 1 ? "s" : ""}`;
 const garderTag = (nom: string) =>
   prisma.tag.upsert({ where: { nom }, create: { nom }, update: {} });
 
+// « Créer » dans le choix des tags (événement, contacts) : le tag rejoint tout de suite la liste des tags
+export async function enregistrerTag(
+  nom: string,
+): Promise<{ nom: string } | { erreur: string }> {
+  await exigerEquipe();
+  const propre = propreEtiquette(nom);
+  if (!propre) return { erreur: "Nom de tag vide." };
+  await garderTag(propre);
+  revalidatePath("/admin/etiquettes");
+  return { nom: propre };
+}
+
 // Créer un tag : son nom suffit, les entreprises s'ajoutent ensuite depuis sa page
 export async function creerTag(formData: FormData) {
   await exigerEquipe();
@@ -79,6 +91,21 @@ export async function renommerEtiquette(formData: FormData) {
       },
     });
   }
+  // Les événements qui rattachent ce tag à leurs inscrits suivent le nouveau nom
+  const evs = await prisma.event.findMany({
+    where: { etiquettes: { has: ancien } },
+    select: { id: true, etiquettes: true },
+  });
+  for (const e of evs) {
+    await prisma.event.update({
+      where: { id: e.id },
+      data: {
+        etiquettes: [
+          ...new Set(e.etiquettes.map((x) => (x === ancien ? nouveau : x))),
+        ],
+      },
+    });
+  }
   revalidatePath("/admin", "layout");
   redirectWithFlash(
     `/admin/etiquettes?e=${encodeURIComponent(nouveau)}`,
@@ -98,6 +125,16 @@ export async function supprimerEtiquette(formData: FormData) {
     await prisma.member.update({
       where: { id: m.id },
       data: { etiquettes: m.etiquettes.filter((e) => e !== nom) },
+    });
+  // Un tag supprimé n'est plus rattaché aux inscrits des événements (sinon il reviendrait à la prochaine inscription)
+  const evs = await prisma.event.findMany({
+    where: { etiquettes: { has: nom } },
+    select: { id: true, etiquettes: true },
+  });
+  for (const e of evs)
+    await prisma.event.update({
+      where: { id: e.id },
+      data: { etiquettes: e.etiquettes.filter((x) => x !== nom) },
     });
   revalidatePath("/admin", "layout");
   redirectWithFlash(

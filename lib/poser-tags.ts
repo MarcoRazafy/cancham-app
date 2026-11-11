@@ -9,9 +9,10 @@ export async function poserTags(
   memberIds: string[],
   tags: string[],
 ): Promise<number> {
-  if (!memberIds.length || !tags.length) return 0;
+  // Un tag nouveau rejoint la liste des tags même s'il n'y a encore personne à taguer (événement sans inscrit)
   for (const nom of tags)
     await prisma.tag.upsert({ where: { nom }, create: { nom }, update: {} });
+  if (!memberIds.length || !tags.length) return 0;
   const ms = await prisma.member.findMany({
     where: { id: { in: [...new Set(memberIds)] } },
     select: { id: true, etiquettes: true },

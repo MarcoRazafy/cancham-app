@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { Plus, Tag } from "lucide-react";
 import { INPUT } from "@/components/form-bits";
+import { enregistrerTag } from "@/lib/actions/tags";
 import { plat } from "@/lib/texte";
+
+const LIMITE = 5;
 
 // Tags à cocher, avec la création d'un nouveau tag (« Ajouter des tags »)
 export function ChoixTags({
@@ -19,6 +22,7 @@ export function ChoixTags({
 }) {
   const [choisis, setChoisis] = useState<string[]>(initiaux);
   const [saisie, setSaisie] = useState("");
+  const [tout, setTout] = useState(false);
   const proposes = [...new Set([...options, ...choisis])].filter(
     (t) => !saisie || plat(t).includes(plat(saisie)),
   );
@@ -26,8 +30,19 @@ export function ChoixTags({
     creation &&
     saisie.trim() &&
     ![...options, ...choisis].some((t) => plat(t) === plat(saisie.trim()));
+  // Au-delà de LIMITE, seuls les premiers (et ceux déjà choisis) s'affichent, sauf pendant une recherche
+  const replie = !tout && !saisie && proposes.length > LIMITE;
+  const visibles = replie
+    ? proposes.filter((t, i) => i < LIMITE || choisis.includes(t))
+    : proposes;
   const basculer = (t: string) =>
     setChoisis((c) => (c.includes(t) ? c.filter((x) => x !== t) : [...c, t]));
+  // Nouveau tag : choisi tout de suite et enregistré dans la liste des tags (sinon il le sera avec le formulaire)
+  const creer = (t: string) => {
+    basculer(t);
+    setSaisie("");
+    enregistrerTag(t).catch(() => {});
+  };
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -43,9 +58,14 @@ export function ChoixTags({
               e.preventDefault();
               const t = saisie.trim().replace(/\s+/g, " ");
               if (t && creation) {
-                const existant = options.find((o) => plat(o) === plat(t)) ?? t;
-                if (!choisis.includes(existant)) basculer(existant);
-                setSaisie("");
+                const existant = options.find((o) => plat(o) === plat(t));
+                if (!existant && !choisis.some((c) => plat(c) === plat(t)))
+                  creer(t);
+                else {
+                  if (existant && !choisis.includes(existant))
+                    basculer(existant);
+                  setSaisie("");
+                }
               }
             }
           }}
@@ -58,7 +78,7 @@ export function ChoixTags({
         />
       ) : null}
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Tags">
-        {proposes.map((t) => {
+        {visibles.map((t) => {
           const actif = choisis.includes(t);
           return (
             <button
@@ -79,13 +99,20 @@ export function ChoixTags({
         {nouveau ? (
           <button
             type="button"
-            onClick={() => {
-              basculer(saisie.trim().replace(/\s+/g, " "));
-              setSaisie("");
-            }}
+            onClick={() => creer(saisie.trim().replace(/\s+/g, " "))}
             className="inline-flex items-center gap-1 rounded-full border border-dashed border-accent bg-surface px-2.5 py-1 text-[12.5px] font-semibold text-accent cursor-pointer hover:bg-accent-soft"
           >
             <Plus size={12} aria-hidden /> Créer « {saisie.trim()} »
+          </button>
+        ) : null}
+        {!saisie && proposes.length > LIMITE ? (
+          <button
+            type="button"
+            onClick={() => setTout((v) => !v)}
+            aria-expanded={tout}
+            className="inline-flex items-center rounded-full border-0 bg-transparent px-2 py-1 text-[12.5px] font-semibold text-accent cursor-pointer hover:underline"
+          >
+            {tout ? "Voir moins" : `Voir tout (${proposes.length})`}
           </button>
         ) : null}
         {!proposes.length && !nouveau ? (

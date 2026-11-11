@@ -1,9 +1,20 @@
 // Lettre de la newsletter, faite de sections libres (logo, bandeau, titre, texte, image, bouton, encadré
 // d'appel, réseaux sociaux, pied, séparateur, espace) : chacune s'ajoute, se déplace, se supprime et se règle
-// (taille, couleurs de la palette IMPACT 261, alignement). Lecture sûre, nettoyage du texte mis en forme,
+// (taille, couleurs de la palette CanCham, alignement). Lecture sûre, nettoyage du texte mis en forme,
 // rendu HTML de courriel et texte brut — partagés par l'éditeur et l'envoi.
 
 export const LARGEUR = 600;
+export const COLONNES_MAX = 5;
+// Ce qu'une colonne peut contenir
+export const TYPES_DANS_COLONNE = [
+  "titre",
+  "texte",
+  "image",
+  "bouton",
+  "logo",
+  "separateur",
+  "espace",
+] as const;
 export const POLICE = "Inter, 'Helvetica Neue', Arial, sans-serif";
 
 // Palette de la plateforme (charte CanCham) : seules ces couleurs sont proposées
@@ -51,6 +62,7 @@ export type Section =
     })
   | (Base & { type: "titre"; texte: string; taille: number; couleur: Couleur })
   | (Base & { type: "texte"; html: string; taille: number; couleur: Couleur })
+  | (Base & { type: "colonnes"; colonnes: Section[][] })
   | (Base & {
       type: "image";
       url: string;
@@ -101,6 +113,7 @@ export const TYPES_SECTION: { type: TypeSection; libelle: string }[] = [
   { type: "bandeau", libelle: "Bandeau" },
   { type: "titre", libelle: "Titre" },
   { type: "texte", libelle: "Texte" },
+  { type: "colonnes", libelle: "Colonnes" }, // choisie par le « + » (nombre de colonnes), pas dans la liste
   { type: "image", libelle: "Image" },
   { type: "bouton", libelle: "Bouton" },
   { type: "appel", libelle: "Encadré d’appel" },
@@ -292,6 +305,8 @@ export function sectionVide(
         taille: 15,
         couleur: "ardoise",
       };
+    case "colonnes":
+      return { id, type, fond: "", align: "left", colonnes: [[], []] };
     case "image":
       return {
         id,
@@ -384,6 +399,11 @@ export function docVide(
       sectionVide("pied"),
     ],
   };
+}
+
+// Nouvelle lettre : aucune section, on part du « + »
+export function docBlanc(): DocLettre {
+  return { v: 3, apercu: "", fond: "brume", sections: [] };
 }
 
 // Une lettre écrite en texte simple devient une lettre de ce modèle
@@ -483,6 +503,26 @@ function lireSection(s: unknown): Section | null {
         taille: entier(o.taille, 11, 24, d.taille),
         couleur: couleur(o.couleur, d.couleur),
       };
+    case "colonnes": {
+      // Chaque colonne : ses sections (un ancien texte simple devient une section de texte)
+      const c = (Array.isArray(o.colonnes) ? o.colonnes : [])
+        .slice(0, COLONNES_MAX)
+        .map((col): Section[] => {
+          if (typeof col === "string")
+            return col.trim()
+              ? [lireSection({ ...sectionVide("texte"), html: col })!]
+              : [];
+          return (Array.isArray(col) ? col : [])
+            .slice(0, 20)
+            .map(lireSection)
+            .filter(
+              (x): x is Section =>
+                !!x &&
+                (TYPES_DANS_COLONNE as readonly string[]).includes(x.type),
+            );
+        });
+      return { ...d, ...base, colonnes: c.length ? c : d.colonnes };
+    }
     case "image":
       return {
         ...d,
@@ -653,6 +693,7 @@ export type OptionsRendu = {
     confidentialite: string;
   };
   apres?: string; // lignes HTML (<tr>) ajoutées après les sections, ex. les QR codes d'un rappel
+  logo?: string; // logo de l'entreprise (« Mon entreprise »), pour une section Logo sans image choisie
 };
 
 // Fond d'une section, pour un courriel (couleur de repli quand le dégradé n'est pas affiché)
@@ -690,19 +731,25 @@ export function versHtml(doc: DocLettre, o: OptionsRendu): string {
     riche(h)
       .replace(/<p( style="text-align:\w+")?>/g, "<div$1>")
       .replace(/<\/p>/g, "</div>");
+  // Dans une colonne, les marges sur les côtés se resserrent
+  let imbrique = false;
+  const serre = (p: string) => {
+    const t = p.split(" ");
+    return t.length >= 2 ? [t[0], "4px", ...t.slice(2)].join(" ") : p;
+  };
   const cellule = (s: Section, contenu: string, pad = "12px 32px") =>
-    `<tr><td align="${s.align}" style="${styleFond(s.fond)}padding:${pad};text-align:${s.align}">${contenu}</td></tr>`;
+    `<tr><td align="${s.align}" style="${styleFond(s.fond)}padding:${imbrique ? serre(pad) : pad};text-align:${s.align}">${contenu}</td></tr>`;
 
   const section = (s: Section): string => {
     switch (s.type) {
       case "logo":
         return cellule(
           s,
-          `<img src="${echapper(s.image ? abs(s.image) : `${o.base}/marque/logo-couleur.png`)}" width="${s.largeur}" alt="Logo" style="display:inline-block;width:${s.largeur}px;max-width:100%;height:auto;border:0">`,
+          `<img src="${echapper(abs(s.image || o.logo || "/marque/logo-couleur.png"))}" width="${s.largeur}" alt="Logo" style="display:inline-block;width:${s.largeur}px;max-width:100%;height:auto;border:0">`,
           "24px 32px 18px",
         );
       case "bandeau":
-        return `<tr><td style="padding:0 0 24px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="${s.align}" ${s.image ? `background="${echapper(abs(s.image))}" ` : ""}style="${styleFond(s.fond, s.image, abs)}padding:56px 40px;text-align:${s.align}">${s.titre ? `<div style="font-size:${s.taille}px;line-height:1.12;font-weight:800;letter-spacing:-0.02em;color:${hex(s.couleur)}">${r(s.titre)}</div>` : ""}${s.sousTitre ? `<div style="margin-top:10px;font-size:${Math.round(s.taille * 0.5)}px;line-height:1.35;font-weight:600;color:${hex(s.couleur)}">${r(s.sousTitre)}</div>` : ""}</td></tr></table></td></tr>`;
+        return `<tr><td style="padding:0"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="${s.align}" ${s.image ? `background="${echapper(abs(s.image))}" ` : ""}style="${styleFond(s.fond, s.image, abs)}padding:56px 40px;text-align:${s.align}">${s.titre ? `<div style="font-size:${s.taille}px;line-height:1.12;font-weight:800;letter-spacing:-0.02em;color:${hex(s.couleur)}">${r(s.titre)}</div>` : ""}${s.sousTitre ? `<div style="margin-top:10px;font-size:${Math.round(s.taille * 0.5)}px;line-height:1.35;font-weight:600;color:${hex(s.couleur)}">${r(s.sousTitre)}</div>` : ""}</td></tr></table></td></tr>`;
       case "titre":
         return cellule(
           s,
@@ -714,6 +761,22 @@ export function versHtml(doc: DocLettre, o: OptionsRendu): string {
           s,
           `<div style="font-size:${s.taille}px;line-height:1.65;color:${hex(s.couleur)}">${riche(s.html)}</div>`,
         );
+      case "colonnes": {
+        const l = Math.floor(100 / s.colonnes.length);
+        imbrique = true;
+        const cols = s.colonnes
+          .map(
+            (col) =>
+              `<td class="col" valign="top" width="${l}%" style="width:${l}%;padding:0 4px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${col.map(section).join("")}</table></td>`,
+          )
+          .join("");
+        imbrique = false;
+        return cellule(
+          s,
+          `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>${cols}</tr></table>`,
+          "12px 24px",
+        );
+      }
       case "image": {
         if (!s.url) return "";
         const l = Math.round(((LARGEUR - 64) * s.largeur) / 100);
@@ -776,7 +839,7 @@ export function versHtml(doc: DocLettre, o: OptionsRendu): string {
   const bas = `<tr><td style="padding:16px 24px;text-align:center;font-size:11.5px;line-height:1.5;color:${hex("ardoise")}">${echapper(o.mention)}${o.desabonnement ? ` Pour ne plus recevoir ces courriels, <a href="${echapper(o.desabonnement)}" style="${lien}">cliquez ici</a>.` : ""}</td></tr>`;
 
   return `<!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"><style>@media (max-width:520px){.col{display:block!important;width:100%!important}}</style></head>
 <body style="margin:0;padding:24px 8px;background:${hex(doc.fond)};font-family:${POLICE}">
 ${doc.apercu ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0">${v(doc.apercu)}</div>` : ""}
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center">
@@ -806,7 +869,7 @@ export function versTexte(
       .replace(/&gt;/g, ">")
       .trim();
   const r = (t: string) => sansBalise(remplacer(nettoyerHtml(t), o.vars));
-  const lignes = doc.sections.flatMap((s) => {
+  const lignesDe = (s: Section): string[] => {
     switch (s.type) {
       case "bandeau":
         return [r(s.titre), r(s.sousTitre), ""];
@@ -814,6 +877,8 @@ export function versTexte(
         return [r(s.texte), ""];
       case "texte":
         return [brut(s.html), ""];
+      case "colonnes":
+        return s.colonnes.flat().flatMap(lignesDe);
       case "bouton":
         return s.url ? [`${r(s.libelle)} : ${s.url}`, ""] : [];
       case "appel":
@@ -832,7 +897,8 @@ export function versTexte(
       default:
         return [];
     }
-  });
+  };
+  const lignes = doc.sections.flatMap(lignesDe);
   return [
     ...lignes,
     o.mention,

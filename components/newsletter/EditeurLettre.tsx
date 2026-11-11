@@ -4,15 +4,16 @@ import { enregistrerLettre } from "@/lib/actions/newsletter";
 import { DELAI_MAX_JOURS, programmationParDefaut } from "@/lib/lettres";
 import type { Audience } from "@/lib/newsletter";
 import { EditeurBlocs } from "@/components/newsletter/EditeurBlocs";
+import { SauvegardeAuto } from "@/components/newsletter/SauvegardeAuto";
 import { SelecteurTags } from "@/components/newsletter/SelecteurTags";
-import { docDepuisTexte, docVide, lireDoc } from "@/lib/lettre-blocs";
+import { docBlanc, docDepuisTexte, lireDoc } from "@/lib/lettre-blocs";
 import { COORDONNEES } from "@/lib/coordonnees";
 
 const CHAMP =
   "w-full rounded-[var(--radius-s)] border border-line bg-surface text-ink px-3 py-2.5 text-[13.6px] outline-none focus:border-accent";
 
 // Rédaction d'une lettre : objet, éditeur visuel en blocs, audience ; brouillon, test, envoi
-export function EditeurLettre({
+export async function EditeurLettre({
   lettre,
   audience,
   etiquettes,
@@ -36,13 +37,12 @@ export function EditeurLettre({
     lireDoc(contenu, reseaux) ??
     (contenu.trim()
       ? docDepuisTexte(lettre?.sujet ?? "", contenu, reseaux)
-      : docVide(reseaux));
+      : docBlanc());
   return (
     <form
       action={enregistrerLettre}
       className="grid gap-4 items-start grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_340px]"
     >
-      {lettre?.id ? <input type="hidden" name="id" value={lettre.id} /> : null}
       <Panneau titre="La lettre" teinte="degrade">
         <div className="flex flex-col gap-3">
           <label className="block">
@@ -58,7 +58,11 @@ export function EditeurLettre({
               className={CHAMP}
             />
           </label>
-          <EditeurBlocs initial={initial} reseaux={reseaux} />
+          <EditeurBlocs
+            initial={initial}
+            reseaux={reseaux}
+            logo="/marque/logo-couleur.png"
+          />
         </div>
       </Panneau>
 
@@ -148,6 +152,7 @@ export function EditeurLettre({
             >
               <Save size={14} /> Enregistrer le brouillon
             </button>
+            <SauvegardeAuto id={lettre?.id} />
           </div>
         </Panneau>
       </div>

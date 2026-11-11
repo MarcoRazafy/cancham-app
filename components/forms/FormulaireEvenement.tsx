@@ -388,6 +388,15 @@ export function FormulaireEvenement({
         </div>
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-[88px]">
+          <Rubrique titre="Rattacher un tag aux inscrits">
+            <ChoixTags
+              name="etiquettes"
+              options={tousTags}
+              initiaux={tags}
+              creation
+            />
+          </Rubrique>
+
           <Rubrique titre="Diffusion">
             <ChoixDiffusion publique={publique} onChange={setPublique} />
           </Rubrique>
@@ -458,18 +467,6 @@ export function FormulaireEvenement({
                 ) : null}
               </>
             ) : null}
-          </Rubrique>
-
-          <Rubrique
-            titre="Tags des inscrits"
-            aide="Chaque entreprise membre qui s’inscrit reçoit ces tags (celles déjà inscrites aussi, à l’enregistrement). Pratique pour leur écrire ensuite."
-          >
-            <ChoixTags
-              name="etiquettes"
-              options={tousTags}
-              initiaux={tags}
-              creation
-            />
           </Rubrique>
 
           <SubmitButton pendingLabel="Enregistrement…" className="w-full">

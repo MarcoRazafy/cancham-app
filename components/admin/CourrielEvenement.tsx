@@ -95,6 +95,7 @@ export async function CourrielEvenement({
           rappel={ouvert}
           retour={base}
           debut={debut}
+          logo="/marque/logo-couleur.png"
         />
       ) : (
         <div>
@@ -218,7 +219,9 @@ function FormulaireRappel({
   rappel,
   retour,
   debut,
+  logo,
 }: {
+  logo: string;
   eventId: string;
   titre: string;
   rappel: {
@@ -302,7 +305,7 @@ function FormulaireRappel({
             reseaux={reseaux}
             name="message"
             variables={VARIABLES_RAPPEL}
-            apercuBoite={false}
+            logo={logo}
             mention="Vous recevez ce rappel car vous êtes inscrit(e) à cet événement."
           />
           <p className="m-0 mt-2 text-[12px] text-faint">

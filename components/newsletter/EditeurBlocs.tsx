@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -15,9 +16,11 @@ import {
   AlignLeft,
   AlignRight,
   ArrowDown,
+  ArrowRight,
   ArrowUp,
   Baseline,
   Bold,
+  Columns3,
   BadgeCheck,
   Copy,
   Eraser,
@@ -29,7 +32,9 @@ import {
   List,
   ListOrdered,
   Loader2,
+  Maximize2,
   Megaphone,
+  Minimize2,
   Minus,
   MousePointerClick,
   MoveVertical,
@@ -37,10 +42,12 @@ import {
   PanelBottom,
   PanelTop,
   Plus,
+  Redo2,
   Share2,
   Trash2,
   Type,
   Underline,
+  Undo2,
   X,
 } from "lucide-react";
 import { televerserImageLettre } from "@/lib/actions/newsletter";
@@ -48,12 +55,14 @@ import {
   COULEURS,
   DEGRADE,
   hex,
+  COLONNES_MAX,
   LARGEUR,
   nettoyerHtml,
   nouvelId,
   PALETTE,
   RESEAUX,
   sectionVide,
+  TYPES_DANS_COLONNE,
   TYPES_SECTION,
   urlSure,
   VARIABLES,
@@ -76,6 +85,14 @@ const COORDONNEES_APERCU = {
 // Variables proposées dans la barre de mise en forme (newsletter par défaut ; un rappel a les siennes)
 const VariablesProposees =
   createContext<readonly { cle: string; libelle: string }[]>(VARIABLES);
+// Logo de l'entreprise, montré par une section Logo sans image choisie
+const LogoDefaut = createContext("/marque/logo-couleur.png");
+// Une section posée dans une colonne : marges des côtés resserrées
+const DansColonne = createContext(false);
+const serre = (p: string) => {
+  const t = p.split(" ");
+  return t.length >= 2 ? [t[0], "4px", ...t.slice(2)].join(" ") : p;
+};
 const BLEU = "#3b82f6"; // repères de l'éditeur (survol, sélection) : jamais dans la lettre
 
 // Lettre envoyée : son rendu exact, dans un cadre
@@ -187,7 +204,7 @@ function TexteRiche({
     >
       {actif ? (
         <div
-          className="absolute -top-12 left-0 z-30 flex items-center gap-0.5 rounded-xl border border-[#e5eaf0] bg-white px-1.5 py-1 shadow-[0_8px_24px_-8px_rgb(15_29_44/0.25)]"
+          className="absolute top-full mt-2 left-0 z-30 flex flex-wrap w-max max-w-full items-center gap-0.5 rounded-xl border border-[#e5eaf0] bg-white px-1.5 py-1 shadow-[0_8px_24px_-8px_rgb(15_29_44/0.25)]"
           onMouseDown={(e) => e.preventDefault()}
           style={{ fontFamily: "var(--font-texte)" }}
         >
@@ -416,6 +433,7 @@ const CATALOGUE: Record<TypeSection, { icone: ReactNode; aide: string }> = {
   },
   titre: { icone: <Heading size={18} />, aide: "Titre de rubrique" },
   texte: { icone: <Type size={18} />, aide: "Paragraphe mis en forme" },
+  colonnes: { icone: <Columns3 size={18} />, aide: "Textes côte à côte" },
   image: { icone: <IconeImage size={18} />, aide: "Téléversée ou par lien" },
   bouton: { icone: <MousePointerClick size={18} />, aide: "Lien bien visible" },
   appel: { icone: <Megaphone size={18} />, aide: "Titre et bouton sur fond" },
@@ -429,67 +447,237 @@ const CATALOGUE: Record<TypeSection, { icone: ReactNode; aide: string }> = {
 };
 
 // « + » entre deux sections : une carte avec toutes les sections possibles
-function Inserer({ onAjout }: { onAjout: (t: TypeSection) => void }) {
+// Le choix du type de section (le « + » d'un emplacement vide)
+function Catalogue({
+  onChoix,
+  onFermer,
+  types,
+}: {
+  onChoix: (t: TypeSection) => void;
+  onFermer: () => void;
+  types?: readonly TypeSection[];
+}) {
+  return (
+    <div
+      className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-30 w-[min(560px,92vw)] rounded-2xl border border-[#e5eaf0] bg-white p-3 shadow-[0_18px_40px_-12px_rgb(15_29_44/0.35)] text-left max-sm:fixed max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-auto max-sm:left-3 max-sm:translate-x-0 max-sm:mt-0 max-sm:w-auto max-sm:max-h-[70vh] max-sm:overflow-y-auto"
+      style={{ fontFamily: "var(--font-texte)" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between px-1 pb-2">
+        <b className="text-[13px] text-[#16202b]">Ajouter une section</b>
+        <button
+          type="button"
+          onClick={onFermer}
+          aria-label="Fermer"
+          className="w-7 h-7 grid place-items-center rounded-md border-0 bg-transparent text-[#5b6b7a] cursor-pointer hover:bg-[#f1f4f7]"
+        >
+          <X size={15} />
+        </button>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+        {TYPES_SECTION.filter(
+          (t) => t.type !== "colonnes" && (!types || types.includes(t.type)),
+        ).map((t) => (
+          <button
+            key={t.type}
+            type="button"
+            onClick={() => onChoix(t.type)}
+            className="flex items-start gap-2.5 rounded-xl border border-[#e5eaf0] bg-white p-2.5 text-left cursor-pointer transition-colors duration-150 hover:border-[#ad0707] hover:bg-[#fdeaed]/50 group/carte"
+          >
+            <span className="w-9 h-9 shrink-0 rounded-lg bg-[#f1f4f7] text-[#16202b] grid place-items-center group-hover/carte:bg-[#ad0707] group-hover/carte:text-white transition-colors duration-150">
+              {CATALOGUE[t.type].icone}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold text-[#16202b]">
+                {t.libelle}
+              </span>
+              <span className="block text-[11.5px] leading-snug text-[#5b6b7a]">
+                {CATALOGUE[t.type].aide}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Bouton rond « + »
+function BoutonPlus({
+  onClick,
+  libelle,
+  cache = false,
+  ouvert = false,
+  discret = false,
+}: {
+  onClick: () => void;
+  libelle: string;
+  cache?: boolean;
+  ouvert?: boolean;
+  discret?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-label={libelle}
+      title={libelle}
+      aria-expanded={ouvert}
+      className={`relative w-7 h-7 rounded-full grid place-items-center cursor-pointer transition-[opacity,transform,background-color,color] duration-150 ${discret ? "border-0 bg-[#e5eaf0] text-[#5b6b7a] hover:bg-[#d5dce4] hover:text-[#16202b]" : "border-2 border-white text-white shadow"} ${ouvert ? "rotate-45" : ""} ${cache ? "opacity-0 group-hover/ins:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100" : ""}`}
+      style={discret ? undefined : { background: BLEU }}
+    >
+      <Plus size={15} />
+    </button>
+  );
+}
+
+// Entre deux sections, au survol : ajoute un emplacement vide
+// Ferme un menu d'un clic ailleurs ou avec Échap (sans quitter le plein écran en même temps)
+function useFermeture(ouvert: boolean, fermer: () => void) {
+  const zone = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ouvert) return;
+    const dehors = (e: PointerEvent) => {
+      if (!zone.current?.contains(e.target as Node)) fermer();
+    };
+    const echap = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        fermer();
+      }
+    };
+    document.addEventListener("pointerdown", dehors);
+    document.addEventListener("keydown", echap, true);
+    return () => {
+      document.removeEventListener("pointerdown", dehors);
+      document.removeEventListener("keydown", echap, true);
+    };
+  }, [ouvert, fermer]);
+  return zone;
+}
+
+// Nombre de colonnes de la nouvelle section (1 à COLONNES_MAX), chacune dessinée
+function ChoixColonnes({ onChoix }: { onChoix: (n: number) => void }) {
+  return (
+    <div
+      className="absolute top-full mt-2 left-1/2 -translate-x-1/2 z-30 rounded-2xl border border-[#e5eaf0] bg-white p-3 shadow-[0_18px_40px_-12px_rgb(15_29_44/0.35)] max-sm:fixed max-sm:inset-x-3 max-sm:bottom-3 max-sm:top-auto max-sm:left-3 max-sm:translate-x-0 max-sm:mt-0 max-sm:w-auto max-sm:max-h-[70vh] max-sm:overflow-y-auto"
+      style={{ fontFamily: "var(--font-texte)" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <b className="block px-1 pb-2 text-[13px] text-[#16202b]">
+        Nombre de colonnes
+      </b>
+      <div className="flex gap-1.5">
+        {Array.from({ length: COLONNES_MAX }, (_, k) => k + 1).map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChoix(n)}
+            title={`${n} colonne${n > 1 ? "s" : ""}`}
+            aria-label={`${n} colonne${n > 1 ? "s" : ""}`}
+            className="group/nb w-[74px] max-sm:w-auto max-sm:flex-1 max-sm:min-w-0 flex flex-col items-center gap-1.5 rounded-xl border border-[#e5eaf0] bg-white p-2 cursor-pointer transition-colors duration-150 hover:border-[#ad0707] hover:bg-[#fdeaed]/50"
+          >
+            <span className="flex w-full h-7 gap-[3px]">
+              {Array.from({ length: n }, (_, j) => (
+                <span
+                  key={j}
+                  className="flex-1 rounded-[3px] bg-[#e5eaf0] group-hover/nb:bg-[#ad0707]/70 transition-colors duration-150"
+                />
+              ))}
+            </span>
+            <span className="text-[12px] font-semibold text-[#16202b]">
+              {n}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// « + » qui demande d'abord le nombre de colonnes
+function PlusColonnes({
+  onAjout,
+  libelle,
+  cache = false,
+}: {
+  onAjout: (n: number) => void;
+  libelle: string;
+  cache?: boolean;
+}) {
   const [ouvert, setOuvert] = useState(false);
+  const zone = useFermeture(ouvert, () => setOuvert(false));
+  return (
+    <div
+      ref={zone}
+      className={`relative ${ouvert ? "[&>button]:opacity-100" : ""}`}
+    >
+      <BoutonPlus
+        onClick={() => setOuvert((o) => !o)}
+        libelle={libelle}
+        cache={cache}
+        ouvert={ouvert}
+      />
+      {ouvert ? (
+        <ChoixColonnes
+          onChoix={(n) => {
+            setOuvert(false);
+            onAjout(n);
+          }}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+// Entre deux sections, au survol
+function Inserer({ onAjout }: { onAjout: (n: number) => void }) {
   return (
     <div className="group/ins relative h-4 -my-2 z-20 flex items-center justify-center">
       <span
-        className={`absolute inset-x-0 h-0.5 ${ouvert ? "opacity-100" : "opacity-0 group-hover/ins:opacity-100"}`}
+        className="absolute inset-x-0 h-0.5 opacity-0 group-hover/ins:opacity-100"
         style={{ background: BLEU }}
       />
-      <button
-        type="button"
+      <PlusColonnes onAjout={onAjout} libelle="Ajouter une section ici" cache />
+    </div>
+  );
+}
+
+// Emplacement vide : une petite section blanche, son « + » propose les types de section
+function Emplacement({
+  onChoix,
+  types,
+  compact = false,
+}: {
+  onChoix: (t: TypeSection) => void;
+  types?: readonly TypeSection[];
+  compact?: boolean;
+}) {
+  const [ouvert, setOuvert] = useState(false);
+  const zone = useFermeture(ouvert, () => setOuvert(false));
+  return (
+    <div
+      ref={zone}
+      className={`relative flex justify-center ${compact ? `py-1.5 ${ouvert ? "" : "opacity-0 group-hover/col:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100"}` : "py-6 border-2 border-dashed border-[#d5d8dd] rounded-sm"}`}
+    >
+      <BoutonPlus
         onClick={() => setOuvert((o) => !o)}
-        aria-label="Ajouter une section ici"
-        aria-expanded={ouvert}
-        title="Ajouter une section ici"
-        className={`relative w-7 h-7 rounded-full border-2 border-white text-white grid place-items-center cursor-pointer shadow transition-[opacity,transform] duration-150 ${ouvert ? "opacity-100 rotate-45" : "opacity-0 group-hover/ins:opacity-100 focus:opacity-100"}`}
-        style={{ background: BLEU }}
-      >
-        <Plus size={15} />
-      </button>
+        libelle="Choisir le type de section"
+        ouvert={ouvert}
+        discret
+      />
       {ouvert ? (
-        <div
-          className="absolute top-6 left-1/2 -translate-x-1/2 z-30 w-[min(560px,92vw)] rounded-2xl border border-[#e5eaf0] bg-white p-3 shadow-[0_18px_40px_-12px_rgb(15_29_44/0.35)]"
-          style={{ fontFamily: "var(--font-texte)" }}
-        >
-          <div className="flex items-center justify-between px-1 pb-2">
-            <b className="text-[13px] text-[#16202b]">Ajouter une section</b>
-            <button
-              type="button"
-              onClick={() => setOuvert(false)}
-              aria-label="Fermer"
-              className="w-7 h-7 grid place-items-center rounded-md border-0 bg-transparent text-[#5b6b7a] cursor-pointer hover:bg-[#f1f4f7]"
-            >
-              <X size={15} />
-            </button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-            {TYPES_SECTION.map((t) => (
-              <button
-                key={t.type}
-                type="button"
-                onClick={() => {
-                  onAjout(t.type);
-                  setOuvert(false);
-                }}
-                className="flex items-start gap-2.5 rounded-xl border border-[#e5eaf0] bg-white p-2.5 text-left cursor-pointer transition-colors duration-150 hover:border-[#ad0707] hover:bg-[#fdeaed]/50 group/carte"
-              >
-                <span className="w-9 h-9 shrink-0 rounded-lg bg-[#f1f4f7] text-[#16202b] grid place-items-center group-hover/carte:bg-[#ad0707] group-hover/carte:text-white transition-colors duration-150">
-                  {CATALOGUE[t.type].icone}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[13px] font-semibold text-[#16202b]">
-                    {t.libelle}
-                  </span>
-                  <span className="block text-[11.5px] leading-snug text-[#5b6b7a]">
-                    {CATALOGUE[t.type].aide}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <Catalogue
+          types={types}
+          onChoix={(t) => {
+            setOuvert(false);
+            onChoix(t);
+          }}
+          onFermer={() => setOuvert(false)}
+        />
       ) : null}
     </div>
   );
@@ -718,38 +906,152 @@ function Style({ s, maj }: { s: Section; maj: (c: Partial<Section>) => void }) {
   );
 }
 
+// Copie d'une section (ou d'un emplacement) avec de nouveaux identifiants, sections des colonnes comprises
+function copier<T extends { id: string }>(b: T): T {
+  const c = structuredClone(b) as T & { colonnes?: Section[][] };
+  c.id = nouvelId();
+  if (c.colonnes)
+    c.colonnes = c.colonnes.map((col) => col.map((x) => copier(x)));
+  return c;
+}
+
+// Dans l'éditeur seulement : un emplacement vide en attente de son type (jamais enregistré)
+type Bloc = Section | { id: string; type: "emplacement" };
+const estSection = (b: Bloc): b is Section => b.type !== "emplacement";
+
 // Éditeur : la lettre telle qu'elle sera reçue, faite de sections modifiables, déplaçables, supprimables
 export function EditeurBlocs({
   initial,
   reseaux,
   name = "contenu",
   variables = VARIABLES,
-  apercuBoite = true,
   mention = "Vous recevez ce message en tant que membre de la Chambre.",
+  logo = "/marque/logo-couleur.png",
 }: {
   initial: DocLettre;
   reseaux: Partial<Record<Reseau, string>>;
   name?: string;
   variables?: readonly { cle: string; libelle: string }[];
-  apercuBoite?: boolean;
   mention?: string;
+  logo?: string;
 }) {
-  const [doc, setDoc] = useState<DocLettre>(initial);
+  // Une lettre sans section commence par un emplacement vide
+  const [doc, setDoc] = useState<
+    Omit<DocLettre, "sections"> & { sections: Bloc[] }
+  >(() =>
+    initial.sections.length
+      ? initial
+      : { ...initial, sections: [{ id: nouvelId(), type: "emplacement" }] },
+  );
   const [choisie, setChoisie] = useState<string | null>(null);
   const [style, setStyle] = useState<string | null>(null);
+
+  // Historique (Annuler / Rétablir) : une frappe continue compte pour une seule étape
+  type Etat = typeof doc;
+  const passe = useRef<Etat[]>([]);
+  const futur = useRef<Etat[]>([]);
+  const dernier = useRef(doc);
+  const derniereEtape = useRef(0);
+  const viaHistorique = useRef(false);
+  const [pile, setPile] = useState({ passe: 0, futur: 0 });
+  // Remonte les sections après Annuler / Rétablir (les zones de texte ne relisent pas leur contenu sinon)
+  const [generation, setGeneration] = useState(0);
+  useEffect(() => {
+    if (dernier.current === doc) return;
+    if (viaHistorique.current) {
+      viaHistorique.current = false;
+    } else {
+      const maintenant = Date.now();
+      if (maintenant - derniereEtape.current > 800) {
+        passe.current = [...passe.current.slice(-99), dernier.current];
+      }
+      derniereEtape.current = maintenant;
+      futur.current = [];
+    }
+    dernier.current = doc;
+    setPile({ passe: passe.current.length, futur: futur.current.length });
+  }, [doc]);
+  const annuler = () => {
+    const precedent = passe.current.at(-1);
+    if (!precedent) return;
+    passe.current = passe.current.slice(0, -1);
+    futur.current = [doc, ...futur.current];
+    viaHistorique.current = true;
+    derniereEtape.current = 0;
+    setDoc(precedent);
+    setGeneration((g) => g + 1);
+  };
+  const retablir = () => {
+    const suivant = futur.current[0];
+    if (!suivant) return;
+    futur.current = futur.current.slice(1);
+    passe.current = [...passe.current, doc];
+    viaHistorique.current = true;
+    derniereEtape.current = 0;
+    setDoc(suivant);
+    setGeneration((g) => g + 1);
+  };
+  const [plein, setPlein] = useState(false);
+  const feuille = useRef<HTMLDivElement>(null);
+
+  // Un clic hors de la lettre désélectionne la section (et referme son style)
+  useEffect(() => {
+    if (!choisie && !style) return;
+    const dehors = (e: PointerEvent) => {
+      if (feuille.current?.contains(e.target as Node)) return;
+      setChoisie(null);
+      setStyle(null);
+    };
+    document.addEventListener("pointerdown", dehors);
+    return () => document.removeEventListener("pointerdown", dehors);
+  }, [choisie, style]);
+
+  // Plein écran : la page ne défile plus derrière, Échap le referme
+  useEffect(() => {
+    if (!plein) return;
+    const avant = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const echap = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPlein(false);
+    };
+    window.addEventListener("keydown", echap);
+    return () => {
+      document.body.style.overflow = avant;
+      window.removeEventListener("keydown", echap);
+    };
+  }, [plein]);
 
   const maj = (id: string, c: Partial<Section>) =>
     setDoc((d) => ({
       ...d,
       sections: d.sections.map((s) =>
-        s.id === id ? ({ ...s, ...c } as Section) : s,
+        s.id === id ? ({ ...s, ...c } as Bloc) : s,
       ),
     }));
-  const inserer = (i: number, t: TypeSection) => {
+  // « + » : un emplacement vide, dont on choisit ensuite le type
+  // Une colonne : un emplacement vide ; plusieurs : une section de colonnes vides
+  const inserer = (i: number, n = 1) => {
+    const e: Bloc =
+      n > 1
+        ? {
+            ...(sectionVide("colonnes") as Extract<
+              Section,
+              { type: "colonnes" }
+            >),
+            colonnes: Array.from({ length: n }, () => []),
+          }
+        : { id: nouvelId(), type: "emplacement" };
+    setDoc((d) => ({
+      ...d,
+      sections: [...d.sections.slice(0, i), e, ...d.sections.slice(i)],
+    }));
+    setChoisie(e.id);
+  };
+  const remplir = (id: string, t: TypeSection) => {
     const s = sectionVide(t, reseaux);
     setDoc((d) => ({
       ...d,
-      sections: [...d.sections.slice(0, i), s, ...d.sections.slice(i)],
+      sections: d.sections.map((b) => (b.id === id ? s : b)),
     }));
     setChoisie(s.id);
   };
@@ -762,7 +1064,7 @@ export function EditeurBlocs({
       return { ...d, sections };
     });
   const dupliquer = (i: number) => {
-    const copie = { ...structuredClone(doc.sections[i]), id: nouvelId() };
+    const copie = copier(doc.sections[i]);
     setDoc((d) => ({
       ...d,
       sections: [
@@ -777,136 +1079,193 @@ export function EditeurBlocs({
     setDoc((d) => ({ ...d, sections: d.sections.filter((s) => s.id !== id) }));
 
   return (
-    <VariablesProposees.Provider value={variables}>
-      <div className="flex flex-col gap-3">
-        <input type="hidden" name={name} value={JSON.stringify(doc)} />
-        {apercuBoite ? (
-          <label className="block">
-            <span className="block text-[12.5px] font-semibold text-muted mb-1">
-              Aperçu dans la boîte de réception
-            </span>
-            <input
-              value={doc.apercu}
-              maxLength={200}
-              onChange={(e) => setDoc({ ...doc, apercu: e.target.value })}
-              placeholder="Le texte qui suit l’objet, ex. le programme du mois"
-              className="w-full rounded-[var(--radius-s)] border border-line bg-surface text-ink px-3 py-2.5 text-[13.6px] outline-none focus:border-accent"
-            />
-          </label>
-        ) : null}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 text-[12px] text-muted">
-            Fond autour :
-            {(["brume", "blanc", "ciel", "menthe", "rose"] as Couleur[]).map(
-              (c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setDoc({ ...doc, fond: c })}
-                  title={PALETTE[c].libelle}
-                  aria-label={PALETTE[c].libelle}
-                  aria-pressed={doc.fond === c}
-                  className={`w-5 h-5 rounded-full border cursor-pointer ${doc.fond === c ? "ring-2 ring-offset-1 ring-[#3b82f6]" : "border-[#d5d8dd]"}`}
-                  style={{ background: hex(c) }}
+    <LogoDefaut.Provider value={logo}>
+      <VariablesProposees.Provider value={variables}>
+        <div
+          className={
+            plein
+              ? "fixed inset-0 z-[100] flex flex-col gap-3 bg-surface p-4 overflow-y-auto"
+              : "flex flex-col gap-3"
+          }
+        >
+          <input
+            type="hidden"
+            name={name}
+            value={JSON.stringify({
+              ...doc,
+              sections: doc.sections.filter(estSection),
+            })}
+          />
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-[12px] text-muted">
+              Fond autour :
+              {(["brume", "blanc", "ciel", "menthe", "rose"] as Couleur[]).map(
+                (c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setDoc({ ...doc, fond: c })}
+                    title={PALETTE[c].libelle}
+                    aria-label={PALETTE[c].libelle}
+                    aria-pressed={doc.fond === c}
+                    className={`w-5 h-5 rounded-full border cursor-pointer ${doc.fond === c ? "ring-2 ring-offset-1 ring-[#3b82f6]" : "border-[#d5d8dd]"}`}
+                    style={{ background: hex(c) }}
+                  />
+                ),
+              )}
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={annuler}
+                disabled={!pile.passe}
+                title="Annuler"
+                aria-label="Annuler"
+                className="btn-contour btn-contour-sm text-ink hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Undo2 size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={retablir}
+                disabled={!pile.futur}
+                title="Rétablir"
+                aria-label="Rétablir"
+                className="btn-contour btn-contour-sm text-ink hover:bg-surface-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Redo2 size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPlein((v) => !v)}
+                aria-pressed={plein}
+                className="btn-contour btn-contour-sm text-ink hover:bg-surface-2"
+              >
+                {plein ? (
+                  <>
+                    <Minimize2 size={14} /> Quitter le plein écran
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 size={14} /> Plein écran
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div
+            className={`rounded-[var(--radius-m)] border border-line px-3 py-8 overflow-x-auto flex flex-col ${plein ? "flex-1" : "min-h-[100vh]"}`}
+            style={{ background: hex(doc.fond) }}
+          >
+            {doc.sections.length ? (
+              <>
+                <div
+                  ref={feuille}
+                  className="mx-auto w-full bg-white rounded-[14px]"
+                  style={{
+                    maxWidth: LARGEUR,
+                    fontFamily: "var(--font-texte), Inter, Arial, sans-serif",
+                  }}
+                >
+                  <Inserer onAjout={(n) => inserer(0, n)} />
+                  {doc.sections.map((s, i) => {
+                    const actif = choisie === s.id;
+                    const libelle = estSection(s)
+                      ? TYPES_SECTION.find((t) => t.type === s.type)!.libelle
+                      : "Section vide";
+                    return (
+                      <div key={`${s.id}-${generation}`}>
+                        <div
+                          className="group/sec relative"
+                          onClick={() => setChoisie(s.id)}
+                        >
+                          <div
+                            className={`absolute inset-0 pointer-events-none z-[1] rounded-sm ${actif ? "ring-2" : "ring-0 group-hover/sec:ring-1"}`}
+                            style={{ ["--tw-ring-color" as string]: BLEU }}
+                          />
+                          <div
+                            className={`absolute right-1 -top-4 z-20 items-center gap-0.5 rounded-xl border border-[#e5eaf0] bg-white p-1 shadow-[0_8px_24px_-8px_rgb(15_29_44/0.25)] ${actif ? "flex" : "hidden group-hover/sec:flex"} group-has-[.sous:hover]/sec:!hidden group-has-[.sous-actif]/sec:!hidden`}
+                            style={{ fontFamily: "var(--font-texte)" }}
+                          >
+                            <span className="px-2 text-[11.5px] font-semibold text-[#5b6b7a]">
+                              {libelle}
+                            </span>
+                            {estSection(s) ? (
+                              <Outil
+                                libelle="Style"
+                                actif={style === s.id}
+                                onClick={() =>
+                                  setStyle(style === s.id ? null : s.id)
+                                }
+                              >
+                                <Paintbrush size={13} />
+                              </Outil>
+                            ) : null}
+                            <Outil
+                              libelle="Monter"
+                              onClick={() => deplacer(i, -1)}
+                              disabled={i === 0}
+                            >
+                              <ArrowUp size={13} />
+                            </Outil>
+                            <Outil
+                              libelle="Descendre"
+                              onClick={() => deplacer(i, 1)}
+                              disabled={i === doc.sections.length - 1}
+                            >
+                              <ArrowDown size={13} />
+                            </Outil>
+                            <Outil
+                              libelle="Dupliquer"
+                              onClick={() => dupliquer(i)}
+                            >
+                              <Copy size={13} />
+                            </Outil>
+                            <Outil
+                              libelle="Supprimer la section"
+                              onClick={() => supprimer(s.id)}
+                            >
+                              <Trash2 size={13} />
+                            </Outil>
+                          </div>
+                          {estSection(s) ? (
+                            <RenduSection
+                              s={s}
+                              maj={(c) => maj(s.id, c)}
+                              actif={actif}
+                            />
+                          ) : (
+                            <Emplacement onChoix={(t) => remplir(s.id, t)} />
+                          )}
+                        </div>
+                        {style === s.id && estSection(s) ? (
+                          <Style s={s} maj={(c) => maj(s.id, c)} />
+                        ) : null}
+                        <Inserer onAjout={(n) => inserer(i + 1, n)} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <p
+                  className="mx-auto mt-3 text-center text-[11.5px]"
+                  style={{ maxWidth: LARGEUR, color: hex("ardoise") }}
+                >
+                  {mention}
+                </p>
+              </>
+            ) : (
+              <div className="flex justify-center pt-4">
+                <PlusColonnes
+                  onAjout={(n) => inserer(0, n)}
+                  libelle="Ajouter une section"
                 />
-              ),
+              </div>
             )}
           </div>
         </div>
-
-        <div
-          className="rounded-[var(--radius-m)] border border-line px-3 py-8 overflow-x-auto"
-          style={{ background: hex(doc.fond) }}
-        >
-          <div
-            className="mx-auto bg-white rounded-[14px]"
-            style={{
-              maxWidth: LARGEUR,
-              fontFamily: "var(--font-texte), Inter, Arial, sans-serif",
-            }}
-          >
-            <Inserer onAjout={(t) => inserer(0, t)} />
-            {doc.sections.map((s, i) => {
-              const actif = choisie === s.id;
-              const libelle = TYPES_SECTION.find(
-                (t) => t.type === s.type,
-              )!.libelle;
-              return (
-                <div key={s.id}>
-                  <div
-                    className="group/sec relative"
-                    onClick={() => setChoisie(s.id)}
-                  >
-                    <div
-                      className={`absolute inset-0 pointer-events-none z-[1] rounded-sm ${actif ? "ring-2" : "ring-0 group-hover/sec:ring-1"}`}
-                      style={{ ["--tw-ring-color" as string]: BLEU }}
-                    />
-                    <div
-                      className={`absolute right-1 -top-4 z-20 items-center gap-0.5 rounded-xl border border-[#e5eaf0] bg-white p-1 shadow-[0_8px_24px_-8px_rgb(15_29_44/0.25)] ${actif ? "flex" : "hidden group-hover/sec:flex"}`}
-                      style={{ fontFamily: "var(--font-texte)" }}
-                    >
-                      <span className="px-2 text-[11.5px] font-semibold text-[#5b6b7a]">
-                        {libelle}
-                      </span>
-                      <Outil
-                        libelle="Style"
-                        actif={style === s.id}
-                        onClick={() => setStyle(style === s.id ? null : s.id)}
-                      >
-                        <Paintbrush size={13} />
-                      </Outil>
-                      <Outil
-                        libelle="Monter"
-                        onClick={() => deplacer(i, -1)}
-                        disabled={i === 0}
-                      >
-                        <ArrowUp size={13} />
-                      </Outil>
-                      <Outil
-                        libelle="Descendre"
-                        onClick={() => deplacer(i, 1)}
-                        disabled={i === doc.sections.length - 1}
-                      >
-                        <ArrowDown size={13} />
-                      </Outil>
-                      <Outil libelle="Dupliquer" onClick={() => dupliquer(i)}>
-                        <Copy size={13} />
-                      </Outil>
-                      <Outil
-                        libelle="Supprimer la section"
-                        onClick={() => supprimer(s.id)}
-                      >
-                        <Trash2 size={13} />
-                      </Outil>
-                    </div>
-                    <RenduSection
-                      s={s}
-                      maj={(c) => maj(s.id, c)}
-                      actif={actif}
-                    />
-                  </div>
-                  {style === s.id ? (
-                    <Style s={s} maj={(c) => maj(s.id, c)} />
-                  ) : null}
-                  <Inserer onAjout={(t) => inserer(i + 1, t)} />
-                </div>
-              );
-            })}
-            {!doc.sections.length ? (
-              <p className="m-0 py-16 text-center text-[13px] text-muted">
-                Lettre vide. Ajoutez une section avec le « + ».
-              </p>
-            ) : null}
-          </div>
-          <p
-            className="mx-auto mt-3 text-center text-[11.5px]"
-            style={{ maxWidth: LARGEUR, color: hex("ardoise") }}
-          >
-            {mention}
-          </p>
-        </div>
-      </div>
-    </VariablesProposees.Provider>
+      </VariablesProposees.Provider>
+    </LogoDefaut.Provider>
   );
 }
 
@@ -975,6 +1334,194 @@ function ActionLien({
   );
 }
 
+// Dupliquer dans une colonne : en dessous (même colonne) ou à côté (colonne de droite, ou une nouvelle)
+function DupliquerVers({
+  onDessous,
+  onACote,
+}: {
+  onDessous: () => void;
+  onACote: () => void;
+}) {
+  const [ouvert, setOuvert] = useState(false);
+  const zone = useFermeture(ouvert, () => setOuvert(false));
+  const choix =
+    "flex items-center gap-2 w-full px-2.5 py-1.5 rounded-md border-0 bg-transparent text-left text-[12.5px] font-semibold text-[#16202b] cursor-pointer hover:bg-[#f1f4f7]";
+  return (
+    <div ref={zone} className="relative">
+      <Outil
+        libelle="Dupliquer"
+        actif={ouvert}
+        onClick={() => setOuvert((o) => !o)}
+      >
+        <Copy size={13} />
+      </Outil>
+      {ouvert ? (
+        <div
+          className="absolute right-0 top-full mt-1.5 z-40 w-[150px] rounded-xl border border-[#e5eaf0] bg-white p-1 shadow-[0_12px_28px_-10px_rgb(15_29_44/0.3)]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className={choix}
+            onClick={() => {
+              setOuvert(false);
+              onDessous();
+            }}
+          >
+            <ArrowDown size={13} /> En dessous
+          </button>
+          <button
+            type="button"
+            className={choix}
+            onClick={() => {
+              setOuvert(false);
+              onACote();
+            }}
+          >
+            <ArrowRight size={13} /> À côté
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// Une colonne : ses sections (modifiables, déplaçables, supprimables) et un « + » pour en ajouter
+function Colonne({
+  sections,
+  onChange,
+  aCote,
+}: {
+  sections: Section[];
+  onChange: (c: Section[]) => void;
+  aCote?: (copie: Section) => void;
+}) {
+  const [choisie, setChoisie] = useState<string | null>(null);
+  const [style, setStyle] = useState<string | null>(null);
+  const zone = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!choisie && !style) return;
+    const dehors = (e: PointerEvent) => {
+      if (!zone.current?.contains(e.target as Node)) {
+        setChoisie(null);
+        setStyle(null);
+      }
+    };
+    document.addEventListener("pointerdown", dehors);
+    return () => document.removeEventListener("pointerdown", dehors);
+  }, [choisie, style]);
+  const maj = (id: string, c: Partial<Section>) =>
+    onChange(
+      sections.map((x) => (x.id === id ? ({ ...x, ...c } as Section) : x)),
+    );
+  const deplacer = (i: number, sens: -1 | 1) => {
+    const j = i + sens;
+    if (j < 0 || j >= sections.length) return;
+    const c = [...sections];
+    [c[i], c[j]] = [c[j], c[i]];
+    onChange(c);
+  };
+  const ajouter = (t: TypeSection) => {
+    const x = sectionVide(t);
+    onChange([...sections, x]);
+    setChoisie(x.id);
+  };
+  return (
+    <DansColonne.Provider value={true}>
+      <div ref={zone} className="group/col flex flex-col min-w-0">
+        {sections.map((x, i) => {
+          const actif = choisie === x.id;
+          return (
+            <div key={x.id}>
+              <div
+                className={`group/sous sous relative ${actif ? "sous-actif" : ""}`}
+                onClick={() => setChoisie(x.id)}
+              >
+                <div
+                  className={`absolute inset-0 pointer-events-none z-[1] rounded-sm ${actif ? "ring-2" : "ring-0 group-hover/sous:ring-1"}`}
+                  style={{ ["--tw-ring-color" as string]: BLEU }}
+                />
+                <div
+                  className={`absolute right-0 -top-4 z-20 items-center gap-0.5 rounded-xl border border-[#e5eaf0] bg-white p-1 shadow-[0_8px_24px_-8px_rgb(15_29_44/0.25)] ${actif ? "flex" : "hidden group-hover/sous:flex"}`}
+                  style={{ fontFamily: "var(--font-texte)" }}
+                >
+                  <Outil
+                    libelle="Style"
+                    actif={style === x.id}
+                    onClick={() => setStyle(style === x.id ? null : x.id)}
+                  >
+                    <Paintbrush size={13} />
+                  </Outil>
+                  <Outil
+                    libelle="Monter"
+                    onClick={() => deplacer(i, -1)}
+                    disabled={i === 0}
+                  >
+                    <ArrowUp size={13} />
+                  </Outil>
+                  <Outil
+                    libelle="Descendre"
+                    onClick={() => deplacer(i, 1)}
+                    disabled={i === sections.length - 1}
+                  >
+                    <ArrowDown size={13} />
+                  </Outil>
+                  {aCote ? (
+                    <DupliquerVers
+                      onDessous={() => {
+                        const c = copier(x);
+                        onChange([
+                          ...sections.slice(0, i + 1),
+                          c,
+                          ...sections.slice(i + 1),
+                        ]);
+                        setChoisie(c.id);
+                      }}
+                      onACote={() => aCote(copier(x))}
+                    />
+                  ) : (
+                    <Outil
+                      libelle="Dupliquer"
+                      onClick={() => {
+                        const c = copier(x);
+                        onChange([
+                          ...sections.slice(0, i + 1),
+                          c,
+                          ...sections.slice(i + 1),
+                        ]);
+                        setChoisie(c.id);
+                      }}
+                    >
+                      <Copy size={13} />
+                    </Outil>
+                  )}
+                  <Outil
+                    libelle="Supprimer"
+                    onClick={() =>
+                      onChange(sections.filter((y) => y.id !== x.id))
+                    }
+                  >
+                    <Trash2 size={13} />
+                  </Outil>
+                </div>
+                <RenduSection s={x} maj={(c) => maj(x.id, c)} actif={actif} />
+              </div>
+              {style === x.id ? (
+                <Style s={x} maj={(c) => maj(x.id, c)} />
+              ) : null}
+            </div>
+          );
+        })}
+        <Emplacement
+          types={TYPES_DANS_COLONNE}
+          compact={sections.length > 0}
+          onChoix={ajouter}
+        />
+      </div>
+    </DansColonne.Provider>
+  );
+}
+
 function RenduSection({
   s,
   maj,
@@ -985,10 +1532,16 @@ function RenduSection({
   actif: boolean;
 }) {
   const m = maj as (c: Record<string, unknown>) => void;
+  const imbrique = useContext(DansColonne);
+  const logoDefaut = useContext(LogoDefaut);
   const cadre = (contenu: ReactNode, padding: string, extra?: ReactNode) => (
     <div
       className="relative"
-      style={{ ...fondCss(s.fond), padding, textAlign: s.align }}
+      style={{
+        ...fondCss(s.fond),
+        padding: imbrique ? serre(padding) : padding,
+        textAlign: s.align,
+      }}
     >
       {actif ? extra : null}
       {contenu}
@@ -999,7 +1552,7 @@ function RenduSection({
       return cadre(
         // eslint-disable-next-line @next/next/no-img-element -- même logo que dans le courriel
         <img
-          src={s.image || "/marque/logo-couleur.png"}
+          src={s.image || logoDefaut}
           alt="Logo"
           style={{
             width: s.largeur || 150,
@@ -1033,14 +1586,14 @@ function RenduSection({
               onClick={() => m({ image: "" })}
               className="h-8 px-3 rounded-md border-0 bg-[#0f1d2c] text-white text-[12.5px] font-semibold cursor-pointer"
             >
-              Logo IMPACT 261
+              Logo CanCham
             </button>
           ) : null}
         </Actions>,
       );
     case "bandeau":
       return (
-        <div className="relative" style={{ padding: "0 0 24px" }}>
+        <div className="relative">
           {actif ? (
             <Actions>
               <BoutonImage
@@ -1136,6 +1689,64 @@ function RenduSection({
           }}
         />,
         "12px 32px",
+      );
+    case "colonnes":
+      return cadre(
+        <div
+          className="grid gap-3 max-sm:!grid-cols-1"
+          style={{
+            gridTemplateColumns: `repeat(${s.colonnes.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {s.colonnes.map((col, k) => (
+            <Colonne
+              key={k}
+              sections={col}
+              onChange={(c) =>
+                m({ colonnes: s.colonnes.map((x, j) => (j === k ? c : x)) })
+              }
+              aCote={
+                s.colonnes.length >= 2 &&
+                (k + 1 < s.colonnes.length || s.colonnes.length < COLONNES_MAX)
+                  ? (copie) =>
+                      m({
+                        colonnes:
+                          k + 1 < s.colonnes.length
+                            ? s.colonnes.map((x, j) =>
+                                j === k + 1 ? [...x, copie] : x,
+                              )
+                            : [...s.colonnes, [copie]],
+                      })
+                  : undefined
+              }
+            />
+          ))}
+        </div>,
+        "12px 24px",
+        <Actions>
+          <label className="inline-flex items-center gap-2 h-8 px-3 rounded-md bg-[#0f1d2c] text-white text-[12.5px] font-semibold">
+            Colonnes
+            <input
+              type="number"
+              min={1}
+              max={COLONNES_MAX}
+              value={s.colonnes.length}
+              onChange={(e) => {
+                const n = Math.min(
+                  COLONNES_MAX,
+                  Math.max(1, Math.round(Number(e.target.value)) || 1),
+                );
+                m({
+                  colonnes: Array.from(
+                    { length: n },
+                    (_, j) => s.colonnes[j] ?? [],
+                  ),
+                });
+              }}
+              className="w-12 h-6 rounded border-0 bg-white text-[#16202b] text-center text-[12.5px]"
+            />
+          </label>
+        </Actions>,
       );
     case "image":
       return cadre(
