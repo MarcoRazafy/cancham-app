@@ -20,7 +20,7 @@ export async function exigerAdministrateur(retour: string): Promise<User> {
   if (!estAdministrateur(user)) {
     redirectWithErreur(
       retour,
-      "Réservé aux administrateurs : un manager ne gère pas les accès de l’équipe.",
+      "Réservé aux super admins : un admin ne gère pas les accès de l’équipe.",
     );
   }
   return user;
@@ -117,7 +117,7 @@ export async function exigerContact(
     select: { memberId: true, role: true },
   });
   // Un compte d’équipe garde son entreprise : ce n’est pas pour autant un
-  // contact que ses collègues, ou un manager, peuvent modifier ou supprimer.
+  // contact que ses collègues, ou un admin, peuvent modifier ou supprimer.
   if (!contact?.memberId || contact.role !== "membre") {
     redirectWithErreur(retour, "Contact introuvable.");
   }

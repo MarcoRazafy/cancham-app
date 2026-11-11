@@ -31,8 +31,8 @@ export default async function MonProfil() {
             <div className="surtitre text-faint mb-2">Zone sensible</div>
             <p className="m-0 mb-3 text-[12.5px] text-muted">
               La suppression retire votre compte et votre accès au back-office.
-              Vos actions restent au journal, à votre nom. Le dernier
-              administrateur ne peut pas partir sans successeur.
+              Vos actions restent au journal, à votre nom. Le dernier super
+              admin ne peut pas partir sans successeur.
             </p>
             <SupprimerMonCompteButton nom={user.nom} email={user.email} />
           </Card>

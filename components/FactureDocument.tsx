@@ -45,7 +45,9 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
             <div className="text-[13px] text-[#5b6b7a] mt-1 leading-relaxed">
               {COORDONNEES.adresse}
               <br />
-              {COORDONNEES.email} · {COORDONNEES.telephone}
+              {COORDONNEES.email}
+              <br />
+              {COORDONNEES.telephone}
               <br />
               {COORDONNEES.site}
               <br />
@@ -72,7 +74,12 @@ export function FactureDocument({ facture: f }: { facture: FactureDetaillee }) {
                   <br />À l’attention de {f.contact.nom}
                   <br />
                   {f.contact.email}
-                  {f.contact.tel ? ` · ${f.contact.tel}` : ""}
+                  {f.contact.tel ? (
+                    <>
+                      <br />
+                      {f.contact.tel}
+                    </>
+                  ) : null}
                 </>
               ) : null}
             </div>
