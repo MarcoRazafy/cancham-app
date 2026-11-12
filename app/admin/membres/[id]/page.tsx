@@ -47,7 +47,7 @@ import {
 import { BoutonMessage } from "@/components/forms/MessageMembre";
 import { NotesMembre } from "@/components/forms/NotesMembre";
 import { TexteLie } from "@/components/TexteLie";
-import { Card, Pill, Saillant, StatusPill } from "@/components/ui";
+import { Card, Pill, StatusPill } from "@/components/ui";
 import { PROVISOIRE, saisi } from "@/lib/accueil";
 import { fmtDate } from "@/lib/format";
 import { affichageSite } from "@/lib/liens";
@@ -55,7 +55,6 @@ import { positionObjet } from "@/lib/cadrage";
 import {
   RETARD_BLOCAGE_JOURS,
   cotisationAnnuelle,
-  fmtCotisation,
   fmtMontant,
   joursDeRetard,
   libelleFormule,
@@ -99,7 +98,6 @@ export default async function AdminMembreDetail({
   const s = situation(m);
   const dansAnnuaire = m.statut === "a_jour" || m.statut === "en_retard";
   const jours = joursDeRetard(m);
-  const dossier = m.motivation || m.statutJuridique || m.pays;
 
   return (
     <>
@@ -234,40 +232,38 @@ export default async function AdminMembreDetail({
             ) : null}
           </Panneau>
 
-          {dossier ? (
-            <Panneau
-              titre={
-                <>
-                  Dossier de <Saillant ton="vert">candidature</Saillant>
-                </>
-              }
-              sousTitre="Les réponses données à l’inscription"
-              teinte="vert"
-            >
-              <div className="grid gap-4 mb-4 sm:grid-cols-3">
-                <Donnee libelle="Statut juridique" valeur={m.statutJuridique} />
-                <Donnee libelle="Pays d’implantation" valeur={m.pays} />
-                <Donnee
-                  libelle="Formule demandée"
-                  valeur={
-                    m.formule
-                      ? `${libelleFormule(m.formule)} · ${fmtCotisation(m.formule)}`
-                      : "Pas encore choisie"
-                  }
-                />
-              </div>
-              {m.motivation ? (
-                <>
-                  <div className="text-[12.3px] font-semibold text-muted mb-1.5">
-                    Motivation à rejoindre CanCham
-                  </div>
-                  <p className="m-0 text-[13.6px] text-ink leading-relaxed whitespace-pre-line">
-                    <TexteLie texte={m.motivation} />
-                  </p>
-                </>
-              ) : null}
-            </Panneau>
-          ) : null}
+          <Panneau
+            titre="Produits & services"
+            sousTitre={`${m.produits.length} offre${m.produits.length > 1 ? "s" : ""} au catalogue du membre`}
+            teinte="rouge"
+            action={<AjouterServiceButton memberId={m.id} retour={fiche} />}
+          >
+            {m.produits.length ? (
+              <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
+                {m.produits.map((p, i) => (
+                  <CarteService
+                    key={p.id ?? i}
+                    produit={p}
+                    seed={m.id + p.label}
+                    actions={
+                      <>
+                        <ModifierServiceButton produit={p} retour={fiche} />
+                        <SupprimerServiceButton
+                          produitId={p.id!}
+                          label={p.label}
+                          retour={fiche}
+                        />
+                      </>
+                    }
+                  />
+                ))}
+              </CarrouselSection>
+            ) : (
+              <p className="m-0 text-[13.4px] text-muted">
+                Aucune offre au catalogue pour le moment.
+              </p>
+            )}
+          </Panneau>
 
           <Card className="carte-filet filet-fixe filet-bleu px-6 pb-6">
             {contacts.length ? (
@@ -318,39 +314,6 @@ export default async function AdminMembreDetail({
               </div>
             )}
           </Card>
-
-          <Panneau
-            titre="Produits & services"
-            sousTitre={`${m.produits.length} offre${m.produits.length > 1 ? "s" : ""} au catalogue du membre`}
-            teinte="rouge"
-            action={<AjouterServiceButton memberId={m.id} retour={fiche} />}
-          >
-            {m.produits.length ? (
-              <CarrouselSection libelle={`Produits et services de ${m.nom}`}>
-                {m.produits.map((p, i) => (
-                  <CarteService
-                    key={p.id ?? i}
-                    produit={p}
-                    seed={m.id + p.label}
-                    actions={
-                      <>
-                        <ModifierServiceButton produit={p} retour={fiche} />
-                        <SupprimerServiceButton
-                          produitId={p.id!}
-                          label={p.label}
-                          retour={fiche}
-                        />
-                      </>
-                    }
-                  />
-                ))}
-              </CarrouselSection>
-            ) : (
-              <p className="m-0 text-[13.4px] text-muted">
-                Aucune offre au catalogue pour le moment.
-              </p>
-            )}
-          </Panneau>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -611,16 +574,5 @@ export default async function AdminMembreDetail({
         </div>
       </div>
     </>
-  );
-}
-
-function Donnee({ libelle, valeur }: { libelle: string; valeur?: string }) {
-  return (
-    <div>
-      <div className="text-[12.3px] font-semibold text-muted mb-1">
-        {libelle}
-      </div>
-      <div className="text-[13.6px] text-ink">{valeur || "—"}</div>
-    </div>
   );
 }
